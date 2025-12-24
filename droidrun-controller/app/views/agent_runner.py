@@ -7,9 +7,13 @@ from typing import Optional, List
 from enum import Enum
 from dataclasses import dataclass
 
-from ..theme import COLORS, RADIUS
+from ..theme import COLORS, RADIUS, get_shadow, ANIMATION, SPACING, get_colored_shadow
 from ..backend import backend
 from ..services.ai_service import get_ai_service
+
+# Animation curve constants
+EASE_OUT = ft.AnimationCurve.EASE_OUT
+EASE_IN_OUT = ft.AnimationCurve.EASE_IN_OUT
 
 
 class MessageType(Enum):
@@ -63,9 +67,15 @@ class AgentRunnerView(ft.Column):
         # UI References
         self.chat_container: Optional[ft.Column] = None
         self.input_field: Optional[ft.TextField] = None
-        self.send_button: Optional[ft.IconButton] = None
+        self.send_button: Optional[ft.Container] = None
+        self.stop_button: Optional[ft.Container] = None
         self.device_info_container: Optional[ft.Container] = None
         self.model_info_container: Optional[ft.Container] = None
+        self.input_container: Optional[ft.Container] = None
+        self.progress_container: Optional[ft.Container] = None
+        self.progress_bar: Optional[ft.ProgressBar] = None
+        self.progress_text: Optional[ft.Text] = None
+        self.execution_status_container: Optional[ft.Container] = None
 
         super().__init__(
             controls=self._build_controls(),
@@ -87,7 +97,7 @@ class AgentRunnerView(ft.Column):
         ]
 
     def _build_header(self):
-        """Build the header section."""
+        """Build the polished header section with enhanced styling."""
         return ft.Container(
             content=ft.Row(
                 [
@@ -99,24 +109,32 @@ class AgentRunnerView(ft.Column):
                                     size=24,
                                     color=COLORS["primary"],
                                 ),
-                                width=48,
-                                height=48,
-                                border_radius=12,
-                                bgcolor=COLORS["primary_glow"],
+                                width=52,
+                                height=52,
+                                border_radius=RADIUS["lg"],
+                                bgcolor=f"{COLORS['primary']}12",
                                 alignment=ft.alignment.center,
+                                border=ft.border.all(1, f"{COLORS['primary']}20"),
+                                shadow=ft.BoxShadow(
+                                    spread_radius=0,
+                                    blur_radius=16,
+                                    color=f"{COLORS['primary']}25",
+                                    offset=ft.Offset(0, 4),
+                                ),
                             ),
                             ft.Container(width=16),
                             ft.Column(
                                 [
                                     ft.Text(
                                         "AI Agent",
-                                        size=22,
-                                        weight=ft.FontWeight.W_700,
+                                        size=24,
+                                        weight=ft.FontWeight.W_800,
                                         color=COLORS["text_primary"],
                                     ),
                                     ft.Text(
-                                        "Powered by GPT-4 Vision",
+                                        "Intelligent Android Automation",
                                         size=13,
+                                        weight=ft.FontWeight.W_400,
                                         color=COLORS["text_secondary"],
                                     ),
                                 ],
@@ -131,33 +149,71 @@ class AgentRunnerView(ft.Column):
                     # Device selector card
                     self._build_device_selector_card(),
                     ft.Container(width=12),
-                    # Refresh devices button
-                    ft.IconButton(
-                        icon=ft.Icons.REFRESH,
-                        icon_color=COLORS["text_muted"],
-                        icon_size=22,
-                        tooltip="Refresh devices",
-                        on_click=self._on_refresh_devices,
-                    ),
-                    # Settings button
-                    ft.IconButton(
-                        icon=ft.Icons.TUNE,
-                        icon_color=COLORS["text_muted"],
-                        icon_size=22,
-                        tooltip="Agent settings",
-                        on_click=self._on_settings,
-                    ),
-                    # Clear chat button
-                    ft.IconButton(
-                        icon=ft.Icons.DELETE_OUTLINE,
-                        icon_color=COLORS["text_muted"],
-                        icon_size=22,
-                        tooltip="Clear chat",
-                        on_click=self._on_clear_chat,
+                    # Action buttons with polished styling
+                    ft.Row(
+                        [
+                            self._build_header_action_button(
+                                ft.Icons.REFRESH,
+                                "Refresh devices",
+                                self._on_refresh_devices,
+                            ),
+                            ft.Container(width=8),
+                            self._build_header_action_button(
+                                ft.Icons.TUNE,
+                                "Agent settings",
+                                self._on_settings,
+                            ),
+                            ft.Container(width=8),
+                            self._build_header_action_button(
+                                ft.Icons.DELETE_OUTLINE,
+                                "Clear chat",
+                                self._on_clear_chat,
+                                color=COLORS["error"],
+                            ),
+                        ],
+                        spacing=0,
                     ),
                 ],
             ),
         )
+
+    def _build_header_action_button(self, icon, tooltip, on_click, color=None):
+        """Build a polished header action button."""
+        btn_color = color or COLORS["text_secondary"]
+        return ft.Container(
+            content=ft.Icon(
+                icon,
+                size=20,
+                color=btn_color,
+            ),
+            width=44,
+            height=44,
+            border_radius=RADIUS["md"],
+            bgcolor=COLORS["bg_tertiary"],
+            alignment=ft.alignment.center,
+            border=ft.border.all(1, COLORS["border_subtle"]),
+            tooltip=tooltip,
+            animate=ft.Animation(ANIMATION["fast"], EASE_OUT),
+            on_click=on_click,
+            on_hover=lambda e: self._on_header_btn_hover(e, btn_color),
+        )
+
+    def _on_header_btn_hover(self, e, color):
+        """Handle header button hover effect."""
+        if e.data == "true":
+            e.control.bgcolor = COLORS["bg_hover"]
+            e.control.border = ft.border.all(1, f"{color}40")
+            e.control.shadow = ft.BoxShadow(
+                spread_radius=0,
+                blur_radius=8,
+                color=f"{color}15",
+                offset=ft.Offset(0, 2),
+            )
+        else:
+            e.control.bgcolor = COLORS["bg_tertiary"]
+            e.control.border = ft.border.all(1, COLORS["border_subtle"])
+            e.control.shadow = None
+        e.control.update()
 
     def _build_device_selector_card(self):
         """Build the device selector card with full info."""
@@ -948,7 +1004,7 @@ class AgentRunnerView(ft.Column):
             self.toast.warning("No devices found")
 
     def _build_main_content(self):
-        """Build the main chat content."""
+        """Build the main chat content with enhanced styling."""
         # Chat messages container
         self.chat_container = ft.Column(
             controls=self._build_welcome_message(),
@@ -957,138 +1013,451 @@ class AgentRunnerView(ft.Column):
             expand=True,
         )
 
-        # Input area
+        # Input area with polished styling
         self.input_field = ft.TextField(
             hint_text="Describe what you want the agent to do...",
             multiline=True,
             min_lines=1,
             max_lines=4,
-            border_color=COLORS["border"],
-            focused_border_color=COLORS["primary"],
-            bgcolor=COLORS["bg_card"],
+            border_color="transparent",
+            focused_border_color="transparent",
+            bgcolor="transparent",
             border_radius=RADIUS["lg"],
             text_style=ft.TextStyle(color=COLORS["text_primary"], size=14),
             hint_style=ft.TextStyle(color=COLORS["text_muted"], size=14),
             expand=True,
             on_submit=self._on_send,
+            on_focus=self._on_input_focus,
+            on_blur=self._on_input_blur,
+            cursor_color=COLORS["primary"],
+            selection_color=f"{COLORS['primary']}30",
         )
 
-        self.send_button = ft.IconButton(
-            icon=ft.Icons.SEND_ROUNDED,
-            icon_color=COLORS["text_inverse"],
-            icon_size=20,
-            bgcolor=COLORS["primary"],
-            tooltip="Send",
-            on_click=self._on_send,
+        # Enhanced send button
+        self.send_button = self._build_send_button()
+
+        # Stop button (hidden by default)
+        self.stop_button = self._build_stop_button()
+
+        # Progress bar for execution
+        self.progress_bar = ft.ProgressBar(
+            value=0,
+            bgcolor=COLORS["bg_tertiary"],
+            color=COLORS["primary"],
+            bar_height=3,
+            border_radius=2,
+        )
+
+        self.progress_text = ft.Text(
+            "Ready",
+            size=11,
+            color=COLORS["text_muted"],
+            weight=ft.FontWeight.W_500,
+        )
+
+        # Execution status container (shown during execution)
+        self.execution_status_container = ft.Container(
+            content=ft.Row(
+                [
+                    ft.Container(
+                        content=ft.ProgressRing(
+                            width=16,
+                            height=16,
+                            stroke_width=2,
+                            color=COLORS["primary"],
+                        ),
+                    ),
+                    ft.Container(width=10),
+                    self.progress_text,
+                    ft.Container(expand=True),
+                    ft.Container(
+                        content=ft.Text(
+                            "0/30 steps",
+                            size=11,
+                            color=COLORS["text_muted"],
+                        ),
+                    ),
+                ],
+            ),
+            visible=False,
+            padding=ft.padding.symmetric(horizontal=16, vertical=8),
+            bgcolor=f"{COLORS['primary']}08",
+            border_radius=RADIUS["md"],
+            border=ft.border.all(1, f"{COLORS['primary']}20"),
+        )
+
+        # Input container with enhanced styling
+        self.input_container = ft.Container(
+            content=ft.Column(
+                [
+                    # Execution status bar
+                    self.execution_status_container,
+                    # Main input row
+                    ft.Container(
+                        content=ft.Row(
+                            [
+                                # Quick actions menu with enhanced styling
+                                self._build_quick_actions_menu(),
+                                ft.Container(width=8),
+                                self.input_field,
+                                ft.Container(width=8),
+                                # Button container (send/stop)
+                                ft.Stack(
+                                    [
+                                        self.send_button,
+                                        self.stop_button,
+                                    ],
+                                ),
+                            ],
+                            vertical_alignment=ft.CrossAxisAlignment.END,
+                        ),
+                        padding=ft.padding.symmetric(horizontal=12, vertical=10),
+                    ),
+                ],
+                spacing=0,
+            ),
+            bgcolor=COLORS["bg_card"],
+            border_radius=RADIUS["lg"],
+            border=ft.border.all(1, COLORS["border"]),
+            shadow=get_shadow("sm"),
+            animate=ft.Animation(ANIMATION["normal"], EASE_OUT),
         )
 
         return ft.Container(
             content=ft.Column(
                 [
-                    # Chat area
+                    # Chat area with polished styling
                     ft.Container(
                         content=self.chat_container,
                         expand=True,
                         bgcolor=COLORS["bg_primary"],
                         border_radius=RADIUS["lg"],
                         padding=20,
+                        border=ft.border.all(1, COLORS["border_subtle"]),
                     ),
                     ft.Container(height=16),
                     # Input area
-                    ft.Container(
-                        content=ft.Row(
-                            [
-                                # Quick actions
-                                ft.PopupMenuButton(
-                                    icon=ft.Icons.ADD_CIRCLE_OUTLINE,
-                                    icon_color=COLORS["text_muted"],
-                                    icon_size=24,
-                                    tooltip="Quick actions",
-                                    items=[
-                                        ft.PopupMenuItem(
-                                            icon=ft.Icons.FACEBOOK,
-                                            text="Browse Facebook",
-                                            on_click=lambda _: self._set_input("Open Facebook and browse the feed, like some interesting posts"),
-                                        ),
-                                        ft.PopupMenuItem(
-                                            icon=ft.Icons.PLAY_CIRCLE,
-                                            text="Watch YouTube",
-                                            on_click=lambda _: self._set_input("Open YouTube and watch a video about technology"),
-                                        ),
-                                        ft.PopupMenuItem(
-                                            icon=ft.Icons.SETTINGS,
-                                            text="Check Settings",
-                                            on_click=lambda _: self._set_input("Open Settings and check the WiFi connection"),
-                                        ),
-                                        ft.PopupMenuItem(
-                                            icon=ft.Icons.CAMERA_ALT,
-                                            text="Take a Photo",
-                                            on_click=lambda _: self._set_input("Open the Camera app and take a photo"),
-                                        ),
-                                    ],
-                                ),
-                                ft.Container(width=8),
-                                self.input_field,
-                                ft.Container(width=8),
-                                self.send_button,
-                            ],
-                            vertical_alignment=ft.CrossAxisAlignment.END,
-                        ),
-                        bgcolor=COLORS["bg_card"],
-                        border_radius=RADIUS["lg"],
-                        padding=ft.padding.symmetric(horizontal=12, vertical=8),
-                        border=ft.border.all(1, COLORS["border"]),
-                    ),
+                    self.input_container,
                 ],
                 expand=True,
             ),
             expand=True,
         )
 
+    def _build_send_button(self):
+        """Build the polished send button."""
+        return ft.Container(
+            content=ft.Icon(
+                ft.Icons.SEND_ROUNDED,
+                size=20,
+                color=COLORS["text_inverse"],
+            ),
+            width=44,
+            height=44,
+            border_radius=RADIUS["md"],
+            bgcolor=COLORS["primary"],
+            alignment=ft.alignment.center,
+            tooltip="Send message",
+            animate=ft.Animation(ANIMATION["fast"], EASE_OUT),
+            shadow=ft.BoxShadow(
+                spread_radius=0,
+                blur_radius=12,
+                color=f"{COLORS['primary']}40",
+                offset=ft.Offset(0, 4),
+            ),
+            on_click=self._on_send,
+            on_hover=self._on_send_hover,
+        )
+
+    def _build_stop_button(self):
+        """Build the stop button (shown during execution)."""
+        return ft.Container(
+            content=ft.Icon(
+                ft.Icons.STOP_ROUNDED,
+                size=20,
+                color=COLORS["text_inverse"],
+            ),
+            width=44,
+            height=44,
+            border_radius=RADIUS["md"],
+            bgcolor=COLORS["error"],
+            alignment=ft.alignment.center,
+            tooltip="Stop execution",
+            visible=False,
+            animate=ft.Animation(ANIMATION["fast"], EASE_OUT),
+            shadow=ft.BoxShadow(
+                spread_radius=0,
+                blur_radius=12,
+                color=f"{COLORS['error']}40",
+                offset=ft.Offset(0, 4),
+            ),
+            on_click=self._on_stop,
+            on_hover=self._on_stop_hover,
+        )
+
+    def _on_send_hover(self, e):
+        """Handle send button hover."""
+        if e.data == "true":
+            e.control.scale = 1.05
+            e.control.shadow = ft.BoxShadow(
+                spread_radius=0,
+                blur_radius=20,
+                color=f"{COLORS['primary']}50",
+                offset=ft.Offset(0, 6),
+            )
+        else:
+            e.control.scale = 1.0
+            e.control.shadow = ft.BoxShadow(
+                spread_radius=0,
+                blur_radius=12,
+                color=f"{COLORS['primary']}40",
+                offset=ft.Offset(0, 4),
+            )
+        e.control.update()
+
+    def _on_stop_hover(self, e):
+        """Handle stop button hover."""
+        if e.data == "true":
+            e.control.scale = 1.05
+            e.control.shadow = ft.BoxShadow(
+                spread_radius=0,
+                blur_radius=20,
+                color=f"{COLORS['error']}50",
+                offset=ft.Offset(0, 6),
+            )
+        else:
+            e.control.scale = 1.0
+            e.control.shadow = ft.BoxShadow(
+                spread_radius=0,
+                blur_radius=12,
+                color=f"{COLORS['error']}40",
+                offset=ft.Offset(0, 4),
+            )
+        e.control.update()
+
+    def _on_input_focus(self, e):
+        """Handle input focus with visual feedback."""
+        if self.input_container:
+            self.input_container.border = ft.border.all(1, COLORS["primary"])
+            self.input_container.shadow = ft.BoxShadow(
+                spread_radius=0,
+                blur_radius=16,
+                color=f"{COLORS['primary']}20",
+                offset=ft.Offset(0, 4),
+            )
+            self.input_container.update()
+
+    def _on_input_blur(self, e):
+        """Handle input blur."""
+        if self.input_container:
+            self.input_container.border = ft.border.all(1, COLORS["border"])
+            self.input_container.shadow = get_shadow("sm")
+            self.input_container.update()
+
+    def _build_quick_actions_menu(self):
+        """Build enhanced quick actions menu."""
+        return ft.Container(
+            content=ft.PopupMenuButton(
+                content=ft.Container(
+                    content=ft.Icon(
+                        ft.Icons.ADD_CIRCLE_OUTLINE,
+                        size=22,
+                        color=COLORS["text_secondary"],
+                    ),
+                    width=40,
+                    height=40,
+                    border_radius=RADIUS["md"],
+                    bgcolor=COLORS["bg_tertiary"],
+                    alignment=ft.alignment.center,
+                ),
+                tooltip="Quick actions",
+                items=[
+                    ft.PopupMenuItem(
+                        content=ft.Row(
+                            [
+                                ft.Container(
+                                    content=ft.Icon(ft.Icons.FACEBOOK, size=18, color=COLORS["accent_blue"]),
+                                    width=32,
+                                    height=32,
+                                    border_radius=RADIUS["sm"],
+                                    bgcolor=f"{COLORS['accent_blue']}15",
+                                    alignment=ft.alignment.center,
+                                ),
+                                ft.Container(width=10),
+                                ft.Column(
+                                    [
+                                        ft.Text("Browse Facebook", size=13, color=COLORS["text_primary"], weight=ft.FontWeight.W_500),
+                                        ft.Text("Open and interact with feed", size=11, color=COLORS["text_muted"]),
+                                    ],
+                                    spacing=2,
+                                ),
+                            ],
+                        ),
+                        on_click=lambda _: self._set_input("Open Facebook and browse the feed, like some interesting posts"),
+                    ),
+                    ft.PopupMenuItem(
+                        content=ft.Row(
+                            [
+                                ft.Container(
+                                    content=ft.Icon(ft.Icons.PLAY_CIRCLE, size=18, color=COLORS["error"]),
+                                    width=32,
+                                    height=32,
+                                    border_radius=RADIUS["sm"],
+                                    bgcolor=f"{COLORS['error']}15",
+                                    alignment=ft.alignment.center,
+                                ),
+                                ft.Container(width=10),
+                                ft.Column(
+                                    [
+                                        ft.Text("Watch YouTube", size=13, color=COLORS["text_primary"], weight=ft.FontWeight.W_500),
+                                        ft.Text("Find and play a video", size=11, color=COLORS["text_muted"]),
+                                    ],
+                                    spacing=2,
+                                ),
+                            ],
+                        ),
+                        on_click=lambda _: self._set_input("Open YouTube and watch a video about technology"),
+                    ),
+                    ft.PopupMenuItem(
+                        content=ft.Row(
+                            [
+                                ft.Container(
+                                    content=ft.Icon(ft.Icons.SETTINGS, size=18, color=COLORS["text_secondary"]),
+                                    width=32,
+                                    height=32,
+                                    border_radius=RADIUS["sm"],
+                                    bgcolor=f"{COLORS['text_secondary']}15",
+                                    alignment=ft.alignment.center,
+                                ),
+                                ft.Container(width=10),
+                                ft.Column(
+                                    [
+                                        ft.Text("Check Settings", size=13, color=COLORS["text_primary"], weight=ft.FontWeight.W_500),
+                                        ft.Text("Verify WiFi connection status", size=11, color=COLORS["text_muted"]),
+                                    ],
+                                    spacing=2,
+                                ),
+                            ],
+                        ),
+                        on_click=lambda _: self._set_input("Open Settings and check the WiFi connection"),
+                    ),
+                    ft.PopupMenuItem(
+                        content=ft.Row(
+                            [
+                                ft.Container(
+                                    content=ft.Icon(ft.Icons.CAMERA_ALT, size=18, color=COLORS["accent_purple"]),
+                                    width=32,
+                                    height=32,
+                                    border_radius=RADIUS["sm"],
+                                    bgcolor=f"{COLORS['accent_purple']}15",
+                                    alignment=ft.alignment.center,
+                                ),
+                                ft.Container(width=10),
+                                ft.Column(
+                                    [
+                                        ft.Text("Take a Photo", size=13, color=COLORS["text_primary"], weight=ft.FontWeight.W_500),
+                                        ft.Text("Open camera and capture", size=11, color=COLORS["text_muted"]),
+                                    ],
+                                    spacing=2,
+                                ),
+                            ],
+                        ),
+                        on_click=lambda _: self._set_input("Open the Camera app and take a photo"),
+                    ),
+                ],
+            ),
+        )
+
     def _build_welcome_message(self):
-        """Build the welcome message."""
+        """Build the enhanced welcome message with polished design."""
         return [
             ft.Container(
                 content=ft.Column(
                     [
+                        # Animated AI icon with glow
                         ft.Container(
-                            content=ft.Icon(
-                                ft.Icons.SMART_TOY,
-                                size=48,
-                                color=COLORS["primary"],
+                            content=ft.Stack(
+                                [
+                                    # Outer glow ring
+                                    ft.Container(
+                                        width=100,
+                                        height=100,
+                                        border_radius=25,
+                                        bgcolor=f"{COLORS['primary']}08",
+                                        border=ft.border.all(1, f"{COLORS['primary']}15"),
+                                    ),
+                                    # Inner icon container
+                                    ft.Container(
+                                        content=ft.Icon(
+                                            ft.Icons.SMART_TOY,
+                                            size=40,
+                                            color=COLORS["primary"],
+                                        ),
+                                        width=72,
+                                        height=72,
+                                        border_radius=18,
+                                        bgcolor=f"{COLORS['primary']}15",
+                                        alignment=ft.alignment.center,
+                                        left=14,
+                                        top=14,
+                                        shadow=ft.BoxShadow(
+                                            spread_radius=0,
+                                            blur_radius=20,
+                                            color=f"{COLORS['primary']}30",
+                                            offset=ft.Offset(0, 6),
+                                        ),
+                                    ),
+                                ],
                             ),
-                            width=80,
-                            height=80,
-                            border_radius=20,
-                            bgcolor=COLORS["primary_glow"],
-                            alignment=ft.alignment.center,
+                            width=100,
+                            height=100,
                         ),
-                        ft.Container(height=20),
+                        ft.Container(height=24),
+                        # Title with gradient feel
                         ft.Text(
                             "Welcome to AI Agent",
-                            size=24,
-                            weight=ft.FontWeight.W_700,
+                            size=26,
+                            weight=ft.FontWeight.W_800,
                             color=COLORS["text_primary"],
                             text_align=ft.TextAlign.CENTER,
                         ),
                         ft.Container(height=8),
+                        # Subtitle with softer styling
                         ft.Text(
                             "I can help you automate tasks on your Android device.\nJust describe what you want me to do!",
                             size=14,
                             color=COLORS["text_secondary"],
                             text_align=ft.TextAlign.CENTER,
                         ),
-                        ft.Container(height=24),
-                        # Example prompts
+                        ft.Container(height=32),
+                        # Feature highlights
                         ft.Row(
                             [
-                                self._build_example_chip("Browse social media"),
-                                self._build_example_chip("Check notifications"),
-                                self._build_example_chip("Open an app"),
+                                self._build_feature_badge(ft.Icons.VISIBILITY, "Vision AI", "Sees your screen"),
+                                self._build_feature_badge(ft.Icons.TOUCH_APP, "Smart Actions", "Taps & swipes"),
+                                self._build_feature_badge(ft.Icons.AUTO_AWESOME, "AI Powered", "GPT-4 Vision"),
+                            ],
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            spacing=16,
+                        ),
+                        ft.Container(height=32),
+                        # Example prompts with enhanced styling
+                        ft.Text(
+                            "Try one of these:",
+                            size=12,
+                            weight=ft.FontWeight.W_500,
+                            color=COLORS["text_muted"],
+                        ),
+                        ft.Container(height=12),
+                        ft.Row(
+                            [
+                                self._build_example_chip("Browse social media", ft.Icons.PEOPLE_OUTLINE),
+                                self._build_example_chip("Check notifications", ft.Icons.NOTIFICATIONS_OUTLINED),
+                                self._build_example_chip("Open an app", ft.Icons.APPS_OUTLINED),
                             ],
                             alignment=ft.MainAxisAlignment.CENTER,
                             wrap=True,
-                            spacing=8,
+                            spacing=10,
                         ),
                     ],
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -1098,27 +1467,98 @@ class AgentRunnerView(ft.Column):
             ),
         ]
 
-    def _build_example_chip(self, text: str):
-        """Build an example prompt chip."""
+    def _build_feature_badge(self, icon, title: str, subtitle: str):
+        """Build a feature highlight badge."""
         return ft.Container(
-            content=ft.Text(
-                text,
-                size=12,
-                color=COLORS["primary"],
+            content=ft.Column(
+                [
+                    ft.Container(
+                        content=ft.Icon(icon, size=22, color=COLORS["primary"]),
+                        width=48,
+                        height=48,
+                        border_radius=RADIUS["md"],
+                        bgcolor=f"{COLORS['primary']}12",
+                        alignment=ft.alignment.center,
+                        border=ft.border.all(1, f"{COLORS['primary']}20"),
+                    ),
+                    ft.Container(height=10),
+                    ft.Text(
+                        title,
+                        size=13,
+                        weight=ft.FontWeight.W_600,
+                        color=COLORS["text_primary"],
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                    ft.Text(
+                        subtitle,
+                        size=11,
+                        color=COLORS["text_muted"],
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=0,
             ),
-            padding=ft.padding.symmetric(horizontal=14, vertical=8),
+            padding=ft.padding.symmetric(horizontal=16, vertical=12),
+            border_radius=RADIUS["lg"],
+            bgcolor=COLORS["bg_card"],
+            border=ft.border.all(1, COLORS["border_subtle"]),
+            animate=ft.Animation(ANIMATION["fast"], EASE_OUT),
+            on_hover=self._on_feature_hover,
+        )
+
+    def _on_feature_hover(self, e):
+        """Handle feature badge hover."""
+        if e.data == "true":
+            e.control.bgcolor = COLORS["bg_hover"]
+            e.control.border = ft.border.all(1, f"{COLORS['primary']}30")
+            e.control.shadow = ft.BoxShadow(
+                spread_radius=0,
+                blur_radius=12,
+                color=f"{COLORS['primary']}15",
+                offset=ft.Offset(0, 4),
+            )
+        else:
+            e.control.bgcolor = COLORS["bg_card"]
+            e.control.border = ft.border.all(1, COLORS["border_subtle"])
+            e.control.shadow = None
+        e.control.update()
+
+    def _build_example_chip(self, text: str, icon=None):
+        """Build an enhanced example prompt chip."""
+        return ft.Container(
+            content=ft.Row(
+                [
+                    ft.Icon(icon, size=16, color=COLORS["primary"]) if icon else ft.Container(),
+                    ft.Container(width=6) if icon else ft.Container(),
+                    ft.Text(
+                        text,
+                        size=12,
+                        weight=ft.FontWeight.W_500,
+                        color=COLORS["primary"],
+                    ),
+                ],
+                spacing=0,
+            ),
+            padding=ft.padding.symmetric(horizontal=16, vertical=10),
             border_radius=RADIUS["full"],
-            border=ft.border.all(1, COLORS["primary"]),
+            bgcolor=f"{COLORS['primary']}08",
+            border=ft.border.all(1, f"{COLORS['primary']}30"),
+            animate=ft.Animation(ANIMATION["fast"], EASE_OUT),
             on_click=lambda _: self._set_input(text),
             on_hover=self._on_chip_hover,
         )
 
     def _on_chip_hover(self, e):
-        """Handle chip hover."""
+        """Handle chip hover with enhanced feedback."""
         if e.data == "true":
-            e.control.bgcolor = COLORS["primary_glow"]
+            e.control.bgcolor = f"{COLORS['primary']}15"
+            e.control.border = ft.border.all(1, COLORS["primary"])
+            e.control.scale = 1.02
         else:
-            e.control.bgcolor = None
+            e.control.bgcolor = f"{COLORS['primary']}08"
+            e.control.border = ft.border.all(1, f"{COLORS['primary']}30")
+            e.control.scale = 1.0
         e.control.update()
 
     def _build_message_bubble(self, message: ChatMessage):
@@ -1562,16 +2002,13 @@ class AgentRunnerView(ft.Column):
         self.toast.info("Chat cleared")
 
     async def _run_agent(self, goal: str):
-        """Run the agent with the given goal."""
+        """Run the agent with the given goal with enhanced visual feedback."""
         self.is_running = True
         self.should_stop = False
         self.current_step = 0
 
-        # Update UI
-        self.send_button.icon = ft.Icons.STOP
-        self.send_button.bgcolor = COLORS["error"]
-        self.send_button.on_click = self._on_stop
-        self.send_button.update()
+        # Update UI - switch buttons and show execution status
+        self._show_execution_mode()
 
         # Add thinking message
         thinking_idx = self._add_message(
@@ -1586,12 +2023,14 @@ class AgentRunnerView(ft.Column):
 
             load_env('.env')
 
+            self._update_progress("Initializing agent...", 0)
             self._update_message(thinking_idx, "Initializing agent...", streaming=True)
             await asyncio.sleep(0.5)
 
             agent = Agent(device=self.selected_device, debug=False)
 
             self._update_message(thinking_idx, "Agent ready! Starting execution...", streaming=False)
+            self._update_progress("Agent ready", 0)
 
             # Add system message
             self._add_message(
@@ -1627,14 +2066,44 @@ class AgentRunnerView(ft.Column):
             self._add_message(MessageType.ERROR, f"Error: {str(ex)}")
 
         finally:
-            self.is_running = False
-            self.send_button.icon = ft.Icons.SEND_ROUNDED
-            self.send_button.bgcolor = COLORS["primary"]
-            self.send_button.on_click = self._on_send
+            self._hide_execution_mode()
+
+    def _show_execution_mode(self):
+        """Switch to execution mode UI."""
+        self.send_button.visible = False
+        self.stop_button.visible = True
+        self.execution_status_container.visible = True
+        self._update_progress("Starting...", 0)
+        if self.page:
             self.send_button.update()
+            self.stop_button.update()
+            self.execution_status_container.update()
+
+    def _hide_execution_mode(self):
+        """Switch back to normal mode UI."""
+        self.is_running = False
+        self.send_button.visible = True
+        self.stop_button.visible = False
+        self.execution_status_container.visible = False
+        if self.page:
+            self.send_button.update()
+            self.stop_button.update()
+            self.execution_status_container.update()
+
+    def _update_progress(self, message: str, step: int = None):
+        """Update execution progress display."""
+        if self.progress_text:
+            self.progress_text.value = message
+            self.progress_text.update()
+
+        # Update step counter
+        if step is not None and self.execution_status_container:
+            step_text = self.execution_status_container.content.controls[-1].content
+            step_text.value = f"{step}/{self.max_steps} steps"
+            step_text.update()
 
     async def _demo_run(self, goal: str):
-        """Demo run without actual agent."""
+        """Demo run without actual agent with enhanced progress feedback."""
         steps = [
             ("Analyzing screen content...", "thinking"),
             ("Found home screen with app icons", "agent"),
@@ -1654,6 +2123,9 @@ class AgentRunnerView(ft.Column):
             msg_type = step_data[1]
             action = step_data[2] if len(step_data) > 2 else None
 
+            # Update progress
+            self._update_progress(content[:40] + "..." if len(content) > 40 else content, i + 1)
+
             if msg_type == "thinking":
                 self._add_message(MessageType.THINKING, content, step=i+1)
             elif msg_type == "agent":
@@ -1670,7 +2142,7 @@ class AgentRunnerView(ft.Column):
             self._add_message(MessageType.SYSTEM, "Stopping agent...")
 
     async def _run_with_chat_logging(self, agent, goal: str):
-        """Run agent with chat-style logging."""
+        """Run agent with chat-style logging and enhanced progress feedback."""
         from agents.core.types import ExecutionResult
         from datetime import datetime
 
@@ -1698,6 +2170,9 @@ class AgentRunnerView(ft.Column):
                 # Get state
                 state = internal_agent.tools.get_state()
 
+                # Update progress
+                self._update_progress(f"Step {step_num}: Capturing screen...", step_num)
+
                 # Take screenshot
                 timestamp = datetime.now().strftime("%H%M%S")
                 screenshot_path = f"screenshots/agent/step_{step_num}_{timestamp}.png"
@@ -1711,6 +2186,8 @@ class AgentRunnerView(ft.Column):
                     step=step_num,
                     streaming=True,
                 )
+
+                self._update_progress(f"Step {step_num}: Analyzing with AI...", step_num)
 
                 # LLM reasoning
                 action = await internal_agent._reason(
@@ -1741,6 +2218,8 @@ class AgentRunnerView(ft.Column):
                     step=step_num,
                     action_type=action.action_type,
                 )
+
+                self._update_progress(f"Step {step_num}: Executing {action.action_type}...", step_num)
 
                 # Execute
                 success, message = await internal_agent.executor.execute(action)
