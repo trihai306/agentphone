@@ -1,7 +1,10 @@
-"""Loading and spinner components with refined animations and polish."""
+"""Loading and spinner components with refined animations and polish.
+
+Enhanced with improved shadows, better visual hierarchy, and smoother animations.
+"""
 
 import flet as ft
-from ..theme import COLORS, ANIMATION, RADIUS, SHADOWS
+from ..theme import COLORS, ANIMATION, RADIUS, get_shadow
 
 
 class LoadingSpinner(ft.Container):
@@ -21,11 +24,12 @@ class LoadingSpinner(ft.Container):
         show_glow: bool = False,
         **kwargs
     ):
-        # Size configurations
+        # Size configurations with refined proportions
         sizes = {
-            "small": {"width": 24, "stroke": 2},
-            "medium": {"width": 40, "stroke": 3},
-            "large": {"width": 56, "stroke": 4},
+            "small": {"width": 24, "stroke": 2, "glow_radius": 16},
+            "medium": {"width": 40, "stroke": 3, "glow_radius": 24},
+            "large": {"width": 56, "stroke": 4, "glow_radius": 32},
+            "xlarge": {"width": 72, "stroke": 5, "glow_radius": 40},
         }
         size_config = sizes.get(size, sizes["medium"])
 
@@ -43,10 +47,13 @@ class LoadingSpinner(ft.Container):
         if show_glow:
             content = ft.Container(
                 content=spinner,
+                width=spinner_size + 20,
+                height=spinner_size + 20,
+                alignment=ft.alignment.center,
                 shadow=ft.BoxShadow(
                     spread_radius=0,
-                    blur_radius=20,
-                    color=f"{spinner_color}40",
+                    blur_radius=size_config["glow_radius"],
+                    color=f"{spinner_color}35",
                     offset=ft.Offset(0, 0),
                 ),
             )
@@ -55,6 +62,7 @@ class LoadingSpinner(ft.Container):
 
         super().__init__(
             content=content,
+            alignment=ft.alignment.center,
             animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
             **kwargs
         )
@@ -65,41 +73,67 @@ class LoadingOverlay(ft.Container):
 
     Features:
     - Backdrop blur effect with smooth opacity
-    - Refined card styling with gradient border
+    - Refined card styling with subtle border
     - Optional sub-message for progress indication
     - Smooth fade-in animation
+    - Spinner with glow effect for visual focus
     """
 
     def __init__(
         self,
         message: str = "Loading...",
         sub_message: str = None,
-        spinner_size: int = 50,
+        spinner_size: int = 48,
+        show_spinner_glow: bool = True,
         **kwargs
     ):
-        # Build content items
-        content_items = [
-            # Spinner with glow effect
-            ft.Container(
-                content=ft.ProgressRing(
-                    width=spinner_size,
-                    height=spinner_size,
-                    stroke_width=4,
-                    color=COLORS["primary"],
+        spinner_color = COLORS["primary"]
+
+        # Build spinner with enhanced glow container
+        spinner_content = ft.ProgressRing(
+            width=spinner_size,
+            height=spinner_size,
+            stroke_width=4,
+            color=spinner_color,
+        )
+
+        if show_spinner_glow:
+            spinner_container = ft.Container(
+                content=spinner_content,
+                width=spinner_size + 32,
+                height=spinner_size + 32,
+                alignment=ft.alignment.center,
+                border_radius=RADIUS["full"],
+                bgcolor=f"{spinner_color}08",
+                border=ft.border.all(1, f"{spinner_color}12"),
+                shadow=ft.BoxShadow(
+                    spread_radius=0,
+                    blur_radius=32,
+                    color=f"{spinner_color}30",
+                    offset=ft.Offset(0, 0),
                 ),
+            )
+        else:
+            spinner_container = ft.Container(
+                content=spinner_content,
                 shadow=ft.BoxShadow(
                     spread_radius=0,
                     blur_radius=24,
                     color=COLORS["primary_glow"],
                     offset=ft.Offset(0, 0),
                 ),
-            ),
-            ft.Container(height=24),
+            )
+
+        # Build content items
+        content_items = [
+            spinner_container,
+            ft.Container(height=28),
             ft.Text(
                 message,
-                size=16,
+                size=17,
                 weight=ft.FontWeight.W_600,
                 color=COLORS["text_primary"],
+                text_align=ft.TextAlign.CENTER,
             ),
         ]
 
@@ -110,7 +144,8 @@ class LoadingOverlay(ft.Container):
                 ft.Text(
                     sub_message,
                     size=13,
-                    color=COLORS["text_secondary"],
+                    weight=ft.FontWeight.W_400,
+                    color=COLORS["text_muted"],
                     text_align=ft.TextAlign.CENTER,
                 )
             )
@@ -124,15 +159,16 @@ class LoadingOverlay(ft.Container):
                 ),
                 bgcolor=COLORS["bg_card"],
                 border_radius=RADIUS["xl"],
-                padding=ft.padding.symmetric(horizontal=48, vertical=40),
-                border=ft.border.all(1, COLORS["border_light"]),
+                padding=ft.padding.symmetric(horizontal=52, vertical=44),
+                border=ft.border.all(1, COLORS["border"]),
                 shadow=ft.BoxShadow(
                     spread_radius=0,
-                    blur_radius=48,
-                    color="#00000050",
-                    offset=ft.Offset(0, 12),
+                    blur_radius=56,
+                    color="#00000045",
+                    offset=ft.Offset(0, 16),
                 ),
                 animate=ft.Animation(ANIMATION["slow"], ft.AnimationCurve.EASE_OUT),
+                animate_scale=ft.Animation(ANIMATION["slow"], ft.AnimationCurve.EASE_OUT),
             ),
             bgcolor=COLORS["backdrop"],
             alignment=ft.alignment.center,
@@ -149,7 +185,7 @@ class SkeletonLoader(ft.Container):
     - Smooth shimmer/pulse animation
     - Multiple shape variants (rectangle, circle, text)
     - Customizable dimensions
-    - Proper border radius handling
+    - Theme-aware colors
     """
 
     def __init__(
@@ -160,7 +196,7 @@ class SkeletonLoader(ft.Container):
         animate_opacity: bool = True,
         **kwargs
     ):
-        # Shape configurations
+        # Shape configurations with refined border radii
         if shape == "circle":
             # For circle, use the larger dimension
             size = max(width or height, height)
@@ -172,6 +208,11 @@ class SkeletonLoader(ft.Container):
             border_radius = RADIUS["xs"]
             actual_width = width
             actual_height = height or 16
+        elif shape == "rounded":
+            # More rounded rectangle
+            border_radius = RADIUS["md"]
+            actual_width = width
+            actual_height = height
         else:
             # Rectangle - default
             border_radius = RADIUS["sm"]
@@ -187,7 +228,7 @@ class SkeletonLoader(ft.Container):
             bgcolor=base_color,
             border_radius=border_radius,
             animate=ft.Animation(ANIMATION["slow"], ft.AnimationCurve.EASE_IN_OUT),
-            animate_opacity=ft.Animation(1200, ft.AnimationCurve.EASE_IN_OUT) if animate_opacity else None,
+            animate_opacity=ft.Animation(1400, ft.AnimationCurve.EASE_IN_OUT) if animate_opacity else None,
             **kwargs
         )
 
@@ -200,6 +241,7 @@ class SkeletonGroup(ft.Container):
     - list_item: List item with avatar and text
     - paragraph: Multiple lines of text
     - avatar: Circular avatar placeholder
+    - stats: Stats card skeleton
     """
 
     def __init__(
@@ -210,37 +252,48 @@ class SkeletonGroup(ft.Container):
     ):
         if preset == "card":
             content = ft.Column([
-                SkeletonLoader(width=200, height=24),
+                SkeletonLoader(width=200, height=24, shape="rounded"),
+                ft.Container(height=10),
+                SkeletonLoader(width=140, height=16),
+                ft.Container(height=18),
+                SkeletonLoader(height=16),
                 ft.Container(height=8),
-                SkeletonLoader(width=150, height=16),
-                ft.Container(height=16),
                 SkeletonLoader(height=16),
-                ft.Container(height=6),
-                SkeletonLoader(height=16),
-                ft.Container(height=6),
-                SkeletonLoader(width=250, height=16),
+                ft.Container(height=8),
+                SkeletonLoader(width=220, height=16),
             ], spacing=0)
         elif preset == "list_item":
             content = ft.Row([
                 SkeletonLoader(width=48, height=48, shape="circle"),
-                ft.Container(width=12),
+                ft.Container(width=14),
                 ft.Column([
-                    SkeletonLoader(width=160, height=18),
-                    ft.Container(height=6),
+                    SkeletonLoader(width=160, height=18, shape="rounded"),
+                    ft.Container(height=8),
                     SkeletonLoader(width=100, height=14),
-                ], spacing=0),
-            ], spacing=0)
+                ], spacing=0, expand=True),
+            ], spacing=0, vertical_alignment=ft.CrossAxisAlignment.CENTER)
         elif preset == "paragraph":
             items = []
             for i in range(lines):
                 if i > 0:
-                    items.append(ft.Container(height=8))
-                # Last line is shorter
-                width = None if i < lines - 1 else 200
+                    items.append(ft.Container(height=10))
+                # Last line is shorter for natural look
+                width = None if i < lines - 1 else 180
                 items.append(SkeletonLoader(width=width, height=16))
             content = ft.Column(items, spacing=0)
         elif preset == "avatar":
             content = SkeletonLoader(width=64, height=64, shape="circle")
+        elif preset == "stats":
+            content = ft.Column([
+                ft.Row([
+                    SkeletonLoader(width=48, height=48, shape="rounded"),
+                    ft.Container(expand=True),
+                ]),
+                ft.Container(height=20),
+                SkeletonLoader(width=80, height=36, shape="rounded"),
+                ft.Container(height=10),
+                SkeletonLoader(width=120, height=16),
+            ], spacing=0)
         else:
             content = SkeletonLoader(height=20)
 
@@ -254,11 +307,11 @@ class EmptyState(ft.Container):
     """An empty state component with refined styling and animations.
 
     Features:
-    - Refined icon container with subtle gradient
+    - Refined icon container with subtle border and shadow
     - Better typography hierarchy
-    - Optional hover effects on icon
+    - Multiple visual variants (default, primary, warning, error)
+    - Compact mode for smaller spaces
     - Smooth entrance animation support
-    - Multiple visual variants
     """
 
     def __init__(
@@ -271,36 +324,78 @@ class EmptyState(ft.Container):
         compact: bool = False,
         **kwargs
     ):
-        # Variant configurations
+        # Variant configurations with refined colors
         variants = {
             "default": {
                 "icon_bg": COLORS["bg_tertiary"],
-                "icon_border": None,
+                "icon_border": ft.border.all(1, COLORS["border_light"]),
                 "icon_color": COLORS["text_muted"],
+                "icon_shadow": None,
             },
             "primary": {
-                "icon_bg": COLORS["primary_glow"],
-                "icon_border": ft.border.all(1, f"{COLORS['primary']}30"),
+                "icon_bg": f"{COLORS['primary']}12",
+                "icon_border": ft.border.all(1, f"{COLORS['primary']}20"),
                 "icon_color": COLORS["primary"],
+                "icon_shadow": ft.BoxShadow(
+                    spread_radius=0,
+                    blur_radius=20,
+                    color=f"{COLORS['primary']}20",
+                    offset=ft.Offset(0, 6),
+                ),
+            },
+            "success": {
+                "icon_bg": f"{COLORS['success']}12",
+                "icon_border": ft.border.all(1, f"{COLORS['success']}20"),
+                "icon_color": COLORS["success"],
+                "icon_shadow": ft.BoxShadow(
+                    spread_radius=0,
+                    blur_radius=20,
+                    color=f"{COLORS['success']}20",
+                    offset=ft.Offset(0, 6),
+                ),
             },
             "warning": {
-                "icon_bg": COLORS["warning_glow"],
-                "icon_border": ft.border.all(1, f"{COLORS['warning']}30"),
+                "icon_bg": f"{COLORS['warning']}12",
+                "icon_border": ft.border.all(1, f"{COLORS['warning']}20"),
                 "icon_color": COLORS["warning"],
+                "icon_shadow": ft.BoxShadow(
+                    spread_radius=0,
+                    blur_radius=20,
+                    color=f"{COLORS['warning']}20",
+                    offset=ft.Offset(0, 6),
+                ),
             },
             "error": {
-                "icon_bg": COLORS["error_glow"],
-                "icon_border": ft.border.all(1, f"{COLORS['error']}30"),
+                "icon_bg": f"{COLORS['error']}12",
+                "icon_border": ft.border.all(1, f"{COLORS['error']}20"),
                 "icon_color": COLORS["error"],
+                "icon_shadow": ft.BoxShadow(
+                    spread_radius=0,
+                    blur_radius=20,
+                    color=f"{COLORS['error']}20",
+                    offset=ft.Offset(0, 6),
+                ),
+            },
+            "info": {
+                "icon_bg": f"{COLORS['info']}12",
+                "icon_border": ft.border.all(1, f"{COLORS['info']}20"),
+                "icon_color": COLORS["info"],
+                "icon_shadow": ft.BoxShadow(
+                    spread_radius=0,
+                    blur_radius=20,
+                    color=f"{COLORS['info']}20",
+                    offset=ft.Offset(0, 6),
+                ),
             },
         }
         variant_config = variants.get(variant, variants["default"])
 
         # Size adjustments for compact mode
-        icon_container_size = 100 if compact else 120
-        icon_size = 48 if compact else 64
-        title_size = 18 if compact else 20
-        padding_size = 40 if compact else 60
+        icon_container_size = 96 if compact else 120
+        icon_size = 44 if compact else 56
+        title_size = 17 if compact else 20
+        desc_size = 13 if compact else 14
+        padding_size = 36 if compact else 56
 
         # Build the icon container with enhanced styling
         icon_container = ft.Container(
@@ -315,18 +410,13 @@ class EmptyState(ft.Container):
             bgcolor=variant_config["icon_bg"],
             border=variant_config["icon_border"],
             alignment=ft.alignment.center,
+            shadow=variant_config["icon_shadow"],
             animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
-            shadow=ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=16,
-                color=f"{variant_config['icon_color']}15",
-                offset=ft.Offset(0, 4),
-            ) if variant != "default" else None,
         )
 
         content_items = [
             icon_container,
-            ft.Container(height=20 if compact else 24),
+            ft.Container(height=20 if compact else 28),
             ft.Text(
                 title,
                 size=title_size,
@@ -337,19 +427,23 @@ class EmptyState(ft.Container):
         ]
 
         if description:
-            content_items.append(ft.Container(height=8))
+            content_items.append(ft.Container(height=10))
             content_items.append(
-                ft.Text(
-                    description,
-                    size=14,
-                    color=COLORS["text_secondary"],
-                    text_align=ft.TextAlign.CENTER,
-                    max_lines=3,
+                ft.Container(
+                    content=ft.Text(
+                        description,
+                        size=desc_size,
+                        weight=ft.FontWeight.W_400,
+                        color=COLORS["text_secondary"],
+                        text_align=ft.TextAlign.CENTER,
+                        max_lines=3,
+                    ),
+                    width=340,
                 )
             )
 
         if action_button:
-            content_items.append(ft.Container(height=20 if compact else 24))
+            content_items.append(ft.Container(height=20 if compact else 28))
             content_items.append(action_button)
 
         super().__init__(
@@ -378,7 +472,7 @@ class LoadingDots(ft.Container):
         self,
         size: int = 8,
         color: str = None,
-        spacing: int = 6,
+        spacing: int = 8,
         **kwargs
     ):
         dot_color = color or COLORS["primary"]
@@ -390,7 +484,8 @@ class LoadingDots(ft.Container):
                 height=size,
                 border_radius=size // 2,
                 bgcolor=dot_color,
-                animate_opacity=ft.Animation(600, ft.AnimationCurve.EASE_IN_OUT),
+                animate_opacity=ft.Animation(700, ft.AnimationCurve.EASE_IN_OUT),
+                opacity=0.3 + (i * 0.25),  # Staggered opacity for wave effect
             )
             dots.append(dot)
 
@@ -432,7 +527,7 @@ class InlineLoader(ft.Container):
         ]
 
         if text:
-            content_items.append(ft.Container(width=8))
+            content_items.append(ft.Container(width=10))
             content_items.append(
                 ft.Text(
                     text,
@@ -460,6 +555,7 @@ class ProgressOverlay(ft.Container):
     - Progress bar with percentage
     - Status message updates
     - Cancel button support
+    - Smooth animations
     """
 
     def __init__(
@@ -474,30 +570,32 @@ class ProgressOverlay(ft.Container):
 
         # Spinner or progress indicator
         if progress is not None:
-            # Progress bar
+            # Progress bar with refined styling
+            progress_value = max(0.0, min(1.0, progress))
             content_items.append(
                 ft.Container(
                     content=ft.ProgressBar(
-                        value=progress,
+                        value=progress_value,
                         color=COLORS["primary"],
-                        bgcolor=COLORS["bg_tertiary"],
+                        bgcolor=COLORS.get("skeleton_base", COLORS["bg_tertiary"]),
                     ),
-                    width=240,
+                    width=260,
+                    height=8,
                     border_radius=RADIUS["full"],
                     clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
                 )
             )
-            content_items.append(ft.Container(height=12))
+            content_items.append(ft.Container(height=16))
             content_items.append(
                 ft.Text(
-                    f"{int(progress * 100)}%",
-                    size=24,
+                    f"{int(progress_value * 100)}%",
+                    size=28,
                     weight=ft.FontWeight.W_700,
                     color=COLORS["primary"],
                 )
             )
         else:
-            # Indeterminate spinner
+            # Indeterminate spinner with glow
             content_items.append(
                 ft.Container(
                     content=ft.ProgressRing(
@@ -506,16 +604,21 @@ class ProgressOverlay(ft.Container):
                         stroke_width=4,
                         color=COLORS["primary"],
                     ),
+                    width=72,
+                    height=72,
+                    alignment=ft.alignment.center,
+                    border_radius=RADIUS["full"],
+                    bgcolor=f"{COLORS['primary']}08",
                     shadow=ft.BoxShadow(
                         spread_radius=0,
-                        blur_radius=20,
+                        blur_radius=24,
                         color=COLORS["primary_glow"],
                         offset=ft.Offset(0, 0),
                     ),
                 )
             )
 
-        content_items.append(ft.Container(height=20))
+        content_items.append(ft.Container(height=24))
         content_items.append(
             ft.Text(
                 message,
@@ -528,14 +631,23 @@ class ProgressOverlay(ft.Container):
 
         # Cancel button if handler provided
         if on_cancel:
-            content_items.append(ft.Container(height=20))
+            content_items.append(ft.Container(height=24))
             content_items.append(
-                ft.TextButton(
-                    "Cancel",
-                    on_click=on_cancel,
-                    style=ft.ButtonStyle(
+                ft.Container(
+                    content=ft.Text(
+                        "Cancel",
+                        size=13,
+                        weight=ft.FontWeight.W_600,
                         color=COLORS["text_secondary"],
                     ),
+                    padding=ft.padding.symmetric(horizontal=20, vertical=10),
+                    border_radius=RADIUS["md"],
+                    bgcolor=COLORS["bg_hover"],
+                    border=ft.border.all(1, COLORS["border"]),
+                    on_click=on_cancel,
+                    ink=True,
+                    ink_color=f"{COLORS['text_secondary']}10",
+                    animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
                 )
             )
 
@@ -548,17 +660,19 @@ class ProgressOverlay(ft.Container):
                 ),
                 bgcolor=COLORS["bg_card"],
                 border_radius=RADIUS["xl"],
-                padding=ft.padding.symmetric(horizontal=48, vertical=36),
-                border=ft.border.all(1, COLORS["border_light"]),
+                padding=ft.padding.symmetric(horizontal=52, vertical=40),
+                border=ft.border.all(1, COLORS["border"]),
                 shadow=ft.BoxShadow(
                     spread_radius=0,
-                    blur_radius=48,
-                    color="#00000050",
-                    offset=ft.Offset(0, 12),
+                    blur_radius=56,
+                    color="#00000045",
+                    offset=ft.Offset(0, 16),
                 ),
+                animate=ft.Animation(ANIMATION["slow"], ft.AnimationCurve.EASE_OUT),
             ),
             bgcolor=COLORS["backdrop"],
             alignment=ft.alignment.center,
             expand=True,
+            animate_opacity=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
             **kwargs
         )
