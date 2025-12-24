@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.AgentPortal" parent="Theme.Material3.Dark.NoActionBar">
+        <!-- Primary colors -->
+        <item name="colorPrimary">@color/accent_blue</item>
+        <item name="colorPrimaryContainer">@color/accent_blue_container</item>
+        <item name="colorOnPrimary">@color/background_dark</item>
+        <item name="colorOnPrimaryContainer">@color/accent_blue</item>
+
+        <!-- Secondary colors -->
+        <item name="colorSecondary">@color/accent_cyan</item>
+        <item name="colorSecondaryContainer">@color/accent_cyan_container</item>
+        <item name="colorOnSecondary">@color/background_dark</item>
+        <item name="colorOnSecondaryContainer">@color/accent_cyan</item>
+
+        <!-- Tertiary colors -->
+        <item name="colorTertiary">@color/accent_purple</item>
+        <item name="colorTertiaryContainer">@color/accent_purple_container</item>
+        <item name="colorOnTertiary">@color/background_dark</item>
+        <item name="colorOnTertiaryContainer">@color/accent_purple</item>
+
+        <!-- Background and surface -->
+        <item name="android:colorBackground">@color/background_dark</item>
+        <item name="colorSurface">@color/surface_dark</item>
+        <item name="colorSurfaceVariant">@color/surface_elevated</item>
+        <item name="colorSurfaceContainer">@color/surface_container</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+
+        <!-- Error -->
+        <item name="colorError">@color/accent_red</item>
+        <item name="colorErrorContainer">@color/accent_red_container</item>
+        <item name="colorOnError">@color/background_dark</item>
+        <item name="colorOnErrorContainer">@color/accent_red</item>
+
+        <!-- Outline -->
+        <item name="colorOutline">@color/border_default</item>
+        <item name="colorOutlineVariant">@color/divider</item>
+
+        <!-- Status bar -->
+        <item name="android:statusBarColor">@color/background_dark</item>
+        <item name="android:navigationBarColor">@color/background_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+
+        <!-- Shape -->
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Portal.Small</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Portal.Medium</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Portal.Large</item>
+
+        <!-- Switch colors -->
+        <item name="colorSwitchThumbNormal">@color/surface_container</item>
+        <item name="android:colorControlActivated">@color/accent_blue</item>
+    </style>
+
+    <!-- Shape appearances -->
+    <style name="ShapeAppearance.Portal.Small" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Portal.Medium" parent="ShapeAppearance.Material3.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Portal.Large" parent="ShapeAppearance.Material3.LargeComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">24dp</item>
+    </style>
+
+    <!-- Text Appearances -->
+    <style name="TextAppearance.Portal.Headline" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:textSize">22sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="TextAppearance.Portal.Title" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">normal</item>
+        <item name="fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="TextAppearance.Portal.Body" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+
+    <style name="TextAppearance.Portal.Label" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+    </style>
+
+    <!-- Button Styles -->
+    <style name="Widget.Portal.Button.Tonal" parent="Widget.Material3.Button.TonalButton">
+        <item name="android:textColor">@color/accent_blue</item>
+        <item name="backgroundTint">@color/accent_blue_container</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="cornerRadius">18dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="Widget.Portal.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="strokeColor">@color/border_default</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="iconTint">@color/text_secondary</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="Widget.Portal.Button.Primary" parent="Widget.Material3.Button">
+        <item name="android:textColor">@color/background_dark</item>
+        <item name="backgroundTint">@color/accent_blue</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+</resources>

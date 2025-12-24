@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="accent_blue">#FF60A5FA</color>
+    <color name="accent_blue_container">#1A60A5FA</color>
+    <color name="accent_cyan">#FF22D3EE</color>
+    <color name="accent_cyan_container">#1A22D3EE</color>
+    <color name="accent_green">#FF4ADE80</color>
+    <color name="accent_green_container">#1A4ADE80</color>
+    <color name="accent_orange">#FFFBBF24</color>
+    <color name="accent_orange_container">#1AFBBF24</color>
+    <color name="accent_purple">#FFA78BFA</color>
+    <color name="accent_purple_container">#1AA78BFA</color>
+    <color name="accent_red">#FFEF4444</color>
+    <color name="accent_red_container">#1AEF4444</color>
+    <color name="background_dark">#FF0D0D0D</color>
+    <color name="black">#FF000000</color>
+    <color name="border_default">#1AFFFFFF</color>
+    <color name="border_interactive">#FF60A5FA</color>
+    <color name="bounds_clickable">#FF60A5FA</color>
+    <color name="bounds_default">#66FFFFFF</color>
+    <color name="bounds_editable">#FF4ADE80</color>
+    <color name="bounds_focusable">#FFFBBF24</color>
+    <color name="bounds_scrollable">#FFA78BFA</color>
+    <color name="button_primary">#FF60A5FA</color>
+    <color name="button_primary_container">#1A60A5FA</color>
+    <color name="button_secondary">#FF1A1A1A</color>
+    <color name="button_secondary_container">#0DFFFFFF</color>
+    <color name="divider">#0DFFFFFF</color>
+    <color name="ic_launcher_background">#1A73E8</color>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="status_off">#FFEF4444</color>
+    <color name="status_on">#FF4ADE80</color>
+    <color name="status_warning">#FFFBBF24</color>
+    <color name="surface_container">#FF242424</color>
+    <color name="surface_dark">#FF0D0D0D</color>
+    <color name="surface_elevated">#FF1A1A1A</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="text_disabled">#33FFFFFF</color>
+    <color name="text_primary">#FFFFFFFF</color>
+    <color name="text_secondary">#B3FFFFFF</color>
+    <color name="text_tertiary">#66FFFFFF</color>
+    <color name="white">#FFFFFFFF</color>
+    <string name="accessibility_service_description">Enables AI agent to read and interact with UI elements on screen for automation purposes.</string>
+    <string name="app_name">Agent Portal</string>
+    <string name="btn_enable_accessibility">Enable Accessibility</string>
+    <string name="btn_enable_keyboard">Enable Keyboard</string>
+    <string name="btn_start_server">Start Server</string>
+    <string name="btn_stop_server">Stop Server</string>
+    <string name="keyboard_label">Agent Portal Keyboard</string>
+    <string name="notification_channel_name">Agent Portal Service</string>
+    <string name="notification_text">Listening for agent commands</string>
+    <string name="notification_title">Agent Portal Active</string>
+    <string name="status_accessibility_disabled">Accessibility Service: DISABLED</string>
+    <string name="status_accessibility_enabled">Accessibility Service: ENABLED</string>
+    <string name="status_keyboard_disabled">Keyboard: DISABLED</string>
+    <string name="status_keyboard_enabled">Keyboard: ENABLED</string>
+    <string name="status_server_running">HTTP Server: Running on port %d</string>
+    <string name="status_server_stopped">HTTP Server: Stopped</string>
+    <style name="ShapeAppearance.Portal.Large" parent="ShapeAppearance.Material3.LargeComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">24dp</item>
+    </style>
+    <style name="ShapeAppearance.Portal.Medium" parent="ShapeAppearance.Material3.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+    <style name="ShapeAppearance.Portal.Small" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+    <style name="TextAppearance.Portal.Body" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+    <style name="TextAppearance.Portal.Headline" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:textSize">22sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="fontFamily">sans-serif-medium</item>
+    </style>
+    <style name="TextAppearance.Portal.Label" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+    </style>
+    <style name="TextAppearance.Portal.Title" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">normal</item>
+        <item name="fontFamily">sans-serif-medium</item>
+    </style>
+    <style name="Theme.AgentPortal" parent="Theme.Material3.Dark.NoActionBar">
+        
+        <item name="colorPrimary">@color/accent_blue</item>
+        <item name="colorPrimaryContainer">@color/accent_blue_container</item>
+        <item name="colorOnPrimary">@color/background_dark</item>
+        <item name="colorOnPrimaryContainer">@color/accent_blue</item>
+
+        
+        <item name="colorSecondary">@color/accent_cyan</item>
+        <item name="colorSecondaryContainer">@color/accent_cyan_container</item>
+        <item name="colorOnSecondary">@color/background_dark</item>
+        <item name="colorOnSecondaryContainer">@color/accent_cyan</item>
+
+        
+        <item name="colorTertiary">@color/accent_purple</item>
+        <item name="colorTertiaryContainer">@color/accent_purple_container</item>
+        <item name="colorOnTertiary">@color/background_dark</item>
+        <item name="colorOnTertiaryContainer">@color/accent_purple</item>
+
+        
+        <item name="android:colorBackground">@color/background_dark</item>
+        <item name="colorSurface">@color/surface_dark</item>
+        <item name="colorSurfaceVariant">@color/surface_elevated</item>
+        <item name="colorSurfaceContainer">@color/surface_container</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+
+        
+        <item name="colorError">@color/accent_red</item>
+        <item name="colorErrorContainer">@color/accent_red_container</item>
+        <item name="colorOnError">@color/background_dark</item>
+        <item name="colorOnErrorContainer">@color/accent_red</item>
+
+        
+        <item name="colorOutline">@color/border_default</item>
+        <item name="colorOutlineVariant">@color/divider</item>
+
+        
+        <item name="android:statusBarColor">@color/background_dark</item>
+        <item name="android:navigationBarColor">@color/background_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+
+        
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Portal.Small</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Portal.Medium</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Portal.Large</item>
+
+        
+        <item name="colorSwitchThumbNormal">@color/surface_container</item>
+        <item name="android:colorControlActivated">@color/accent_blue</item>
+    </style>
+    <style name="Widget.Portal.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="strokeColor">@color/border_default</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="iconTint">@color/text_secondary</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+    <style name="Widget.Portal.Button.Primary" parent="Widget.Material3.Button">
+        <item name="android:textColor">@color/background_dark</item>
+        <item name="backgroundTint">@color/accent_blue</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+    <style name="Widget.Portal.Button.Tonal" parent="Widget.Material3.Button.TonalButton">
+        <item name="android:textColor">@color/accent_blue</item>
+        <item name="backgroundTint">@color/accent_blue_container</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="cornerRadius">18dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+</resources>

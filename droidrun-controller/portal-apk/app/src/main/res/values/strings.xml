@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Agent Portal</string>
+    <string name="accessibility_service_description">Enables AI agent to read and interact with UI elements on screen for automation purposes.</string>
+    <string name="keyboard_label">Agent Portal Keyboard</string>
+
+    <!-- Status messages -->
+    <string name="status_accessibility_enabled">Accessibility Service: ENABLED</string>
+    <string name="status_accessibility_disabled">Accessibility Service: DISABLED</string>
+    <string name="status_server_running">HTTP Server: Running on port %d</string>
+    <string name="status_server_stopped">HTTP Server: Stopped</string>
+    <string name="status_keyboard_enabled">Keyboard: ENABLED</string>
+    <string name="status_keyboard_disabled">Keyboard: DISABLED</string>
+
+    <!-- Buttons -->
+    <string name="btn_enable_accessibility">Enable Accessibility</string>
+    <string name="btn_start_server">Start Server</string>
+    <string name="btn_stop_server">Stop Server</string>
+    <string name="btn_enable_keyboard">Enable Keyboard</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">Agent Portal Service</string>
+    <string name="notification_title">Agent Portal Active</string>
+    <string name="notification_text">Listening for agent commands</string>
+</resources>

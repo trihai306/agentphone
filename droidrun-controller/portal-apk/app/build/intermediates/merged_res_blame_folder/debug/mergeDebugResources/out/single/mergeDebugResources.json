@@ -1,0 +1,58 @@
+[
+    {
+        "merged": "com.agent.portal.app-debug-31:/drawable_status_indicator_on.xml.flat",
+        "source": "com.agent.portal.app-main-33:/drawable/status_indicator_on.xml"
+    },
+    {
+        "merged": "com.agent.portal.app-debug-31:/drawable_ic_notification.xml.flat",
+        "source": "com.agent.portal.app-main-33:/drawable/ic_notification.xml"
+    },
+    {
+        "merged": "com.agent.portal.app-debug-31:/layout_activity_main.xml.flat",
+        "source": "com.agent.portal.app-main-33:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.agent.portal.app-debug-31:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.agent.portal.app-main-33:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.agent.portal.app-debug-31:/drawable_divider_horizontal.xml.flat",
+        "source": "com.agent.portal.app-main-33:/drawable/divider_horizontal.xml"
+    },
+    {
+        "merged": "com.agent.portal.app-debug-31:/xml_accessibility_service_config.xml.flat",
+        "source": "com.agent.portal.app-main-33:/xml/accessibility_service_config.xml"
+    },
+    {
+        "merged": "com.agent.portal.app-debug-31:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.agent.portal.app-main-33:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.agent.portal.app-debug-31:/drawable_status_indicator_warning.xml.flat",
+        "source": "com.agent.portal.app-main-33:/drawable/status_indicator_warning.xml"
+    },
+    {
+        "merged": "com.agent.portal.app-debug-31:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.agent.portal.app-main-33:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.agent.portal.app-debug-31:/drawable_ic_bounds.xml.flat",
+        "source": "com.agent.portal.app-main-33:/drawable/ic_bounds.xml"
+    },
+    {
+        "merged": "com.agent.portal.app-debug-31:/drawable_ic_refresh.xml.flat",
+        "source": "com.agent.portal.app-main-33:/drawable/ic_refresh.xml"
+    },
+    {
+        "merged": "com.agent.portal.app-debug-31:/xml_keyboard_method.xml.flat",
+        "source": "com.agent.portal.app-main-33:/xml/keyboard_method.xml"
+    },
+    {
+        "merged": "com.agent.portal.app-debug-31:/drawable_status_indicator_off.xml.flat",
+        "source": "com.agent.portal.app-main-33:/drawable/status_indicator_off.xml"
+    },
+    {
+        "merged": "com.agent.portal.app-debug-31:/drawable_ic_index.xml.flat",
+        "source": "com.agent.portal.app-main-33:/drawable/ic_index.xml"
+    }
+]

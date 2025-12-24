@@ -1,0 +1,381 @@
+{
+  "run_id": "20251223_144252",
+  "goal": "Mở app Settings",
+  "success": true,
+  "message": "Goal completed successfully!",
+  "start_time": "2025-12-23T14:42:52.856208",
+  "end_time": "2025-12-23T14:43:18.571343",
+  "duration_seconds": 25.714422,
+  "total_steps": 4,
+  "total_events": 29,
+  "events": [
+    {
+      "event_type": "run_start",
+      "message": "Run started: Mở app Settings",
+      "timestamp": "2025-12-23T14:42:52.856561",
+      "run_id": "20251223_144252",
+      "step": null,
+      "subgoal_id": null,
+      "action": null,
+      "success": null,
+      "data": {
+        "goal": "Mở app Settings",
+        "mode": "manager_executor",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "max_steps": 10
+      }
+    },
+    {
+      "event_type": "info",
+      "message": "Creating execution plan...",
+      "timestamp": "2025-12-23T14:42:52.875736",
+      "run_id": "20251223_144252",
+      "step": 0,
+      "subgoal_id": null,
+      "action": null,
+      "success": null,
+      "data": null
+    },
+    {
+      "event_type": "plan_created",
+      "message": "Plan created with 4 subgoals",
+      "timestamp": "2025-12-23T14:42:58.293729",
+      "run_id": "20251223_144252",
+      "step": null,
+      "subgoal_id": null,
+      "action": null,
+      "success": null,
+      "data": {
+        "subgoals": [
+          "Identify if the current screen is the main Settings app by checking for a recognizable Settings option or icon.",
+          "If not already in the main Settings app, scroll through the current screen to locate the 'Settings' option.",
+          "Tap on the 'Settings' option if found to open the main Settings app.",
+          "Verify that the main Settings app has opened successfully by checking for common elements like 'Network & internet', 'Connected devices', etc."
+        ]
+      }
+    },
+    {
+      "event_type": "subgoal_start",
+      "message": "Identify if the current screen is the main Settings app by checking for a recognizable Settings option or icon.",
+      "timestamp": "2025-12-23T14:42:58.293835",
+      "run_id": "20251223_144252",
+      "step": null,
+      "subgoal_id": 1,
+      "action": null,
+      "success": null,
+      "data": null
+    },
+    {
+      "event_type": "step_start",
+      "message": "Step 1 started",
+      "timestamp": "2025-12-23T14:42:58.293898",
+      "run_id": "20251223_144252",
+      "step": 1,
+      "subgoal_id": null,
+      "action": null,
+      "success": null,
+      "data": {
+        "max_steps": 10,
+        "subgoal_step": 1
+      }
+    },
+    {
+      "event_type": "action",
+      "message": "complete: The screen displays recognizable options such as 'Network & internet', 'Connected devices', and 'App...",
+      "timestamp": "2025-12-23T14:43:02.480251",
+      "run_id": "20251223_144252",
+      "step": 1,
+      "subgoal_id": null,
+      "action": "complete",
+      "success": null,
+      "data": {
+        "params": {
+          "success": true
+        },
+        "reasoning": "The screen displays recognizable options such as 'Network & internet', 'Connected devices', and 'Apps', which are typical of the main Settings app."
+      }
+    },
+    {
+      "event_type": "result",
+      "message": "Subgoal completed",
+      "timestamp": "2025-12-23T14:43:02.480340",
+      "run_id": "20251223_144252",
+      "step": 1,
+      "subgoal_id": null,
+      "action": null,
+      "success": true,
+      "data": {}
+    },
+    {
+      "event_type": "step_end",
+      "message": "Subgoal completed",
+      "timestamp": "2025-12-23T14:43:02.480386",
+      "run_id": "20251223_144252",
+      "step": 1,
+      "subgoal_id": null,
+      "action": null,
+      "success": true,
+      "data": null
+    },
+    {
+      "event_type": "subgoal_end",
+      "message": "Subgoal completed",
+      "timestamp": "2025-12-23T14:43:02.480482",
+      "run_id": "20251223_144252",
+      "step": null,
+      "subgoal_id": 1,
+      "action": null,
+      "success": true,
+      "data": null
+    },
+    {
+      "event_type": "subgoal_start",
+      "message": "If not already in the main Settings app, scroll through the current screen to locate the 'Settings' option.",
+      "timestamp": "2025-12-23T14:43:02.480749",
+      "run_id": "20251223_144252",
+      "step": null,
+      "subgoal_id": 2,
+      "action": null,
+      "success": null,
+      "data": null
+    },
+    {
+      "event_type": "step_start",
+      "message": "Step 2 started",
+      "timestamp": "2025-12-23T14:43:02.480901",
+      "run_id": "20251223_144252",
+      "step": 2,
+      "subgoal_id": null,
+      "action": null,
+      "success": null,
+      "data": {
+        "max_steps": 10,
+        "subgoal_step": 1
+      }
+    },
+    {
+      "event_type": "action",
+      "message": "complete: The current screen is already the main Settings app, as indicated by the presence of various setting...",
+      "timestamp": "2025-12-23T14:43:09.499704",
+      "run_id": "20251223_144252",
+      "step": 2,
+      "subgoal_id": null,
+      "action": "complete",
+      "success": null,
+      "data": {
+        "params": {
+          "success": true
+        },
+        "reasoning": "The current screen is already the main Settings app, as indicated by the presence of various settings options like 'Network & internet', 'Connected devices', etc."
+      }
+    },
+    {
+      "event_type": "result",
+      "message": "Subgoal completed",
+      "timestamp": "2025-12-23T14:43:09.499792",
+      "run_id": "20251223_144252",
+      "step": 2,
+      "subgoal_id": null,
+      "action": null,
+      "success": true,
+      "data": {}
+    },
+    {
+      "event_type": "step_end",
+      "message": "Subgoal completed",
+      "timestamp": "2025-12-23T14:43:09.499844",
+      "run_id": "20251223_144252",
+      "step": 2,
+      "subgoal_id": null,
+      "action": null,
+      "success": true,
+      "data": null
+    },
+    {
+      "event_type": "subgoal_end",
+      "message": "Subgoal completed",
+      "timestamp": "2025-12-23T14:43:09.499922",
+      "run_id": "20251223_144252",
+      "step": null,
+      "subgoal_id": 2,
+      "action": null,
+      "success": true,
+      "data": null
+    },
+    {
+      "event_type": "subgoal_start",
+      "message": "Tap on the 'Settings' option if found to open the main Settings app.",
+      "timestamp": "2025-12-23T14:43:09.500140",
+      "run_id": "20251223_144252",
+      "step": null,
+      "subgoal_id": 3,
+      "action": null,
+      "success": null,
+      "data": null
+    },
+    {
+      "event_type": "step_start",
+      "message": "Step 3 started",
+      "timestamp": "2025-12-23T14:43:09.500268",
+      "run_id": "20251223_144252",
+      "step": 3,
+      "subgoal_id": null,
+      "action": null,
+      "success": null,
+      "data": {
+        "max_steps": 10,
+        "subgoal_step": 1
+      }
+    },
+    {
+      "event_type": "action",
+      "message": "complete: The current screen is already the main Settings app, so the subgoal is achieved.",
+      "timestamp": "2025-12-23T14:43:13.798747",
+      "run_id": "20251223_144252",
+      "step": 3,
+      "subgoal_id": null,
+      "action": "complete",
+      "success": null,
+      "data": {
+        "params": {
+          "success": true
+        },
+        "reasoning": "The current screen is already the main Settings app, so the subgoal is achieved."
+      }
+    },
+    {
+      "event_type": "result",
+      "message": "Subgoal completed",
+      "timestamp": "2025-12-23T14:43:13.798825",
+      "run_id": "20251223_144252",
+      "step": 3,
+      "subgoal_id": null,
+      "action": null,
+      "success": true,
+      "data": {}
+    },
+    {
+      "event_type": "step_end",
+      "message": "Subgoal completed",
+      "timestamp": "2025-12-23T14:43:13.798858",
+      "run_id": "20251223_144252",
+      "step": 3,
+      "subgoal_id": null,
+      "action": null,
+      "success": true,
+      "data": null
+    },
+    {
+      "event_type": "subgoal_end",
+      "message": "Subgoal completed",
+      "timestamp": "2025-12-23T14:43:13.798929",
+      "run_id": "20251223_144252",
+      "step": null,
+      "subgoal_id": 3,
+      "action": null,
+      "success": true,
+      "data": null
+    },
+    {
+      "event_type": "subgoal_start",
+      "message": "Verify that the main Settings app has opened successfully by checking for common elements like 'Network & internet', 'Connected devices', etc.",
+      "timestamp": "2025-12-23T14:43:13.799139",
+      "run_id": "20251223_144252",
+      "step": null,
+      "subgoal_id": 4,
+      "action": null,
+      "success": null,
+      "data": null
+    },
+    {
+      "event_type": "step_start",
+      "message": "Step 4 started",
+      "timestamp": "2025-12-23T14:43:13.799283",
+      "run_id": "20251223_144252",
+      "step": 4,
+      "subgoal_id": null,
+      "action": null,
+      "success": null,
+      "data": {
+        "max_steps": 10,
+        "subgoal_step": 1
+      }
+    },
+    {
+      "event_type": "action",
+      "message": "complete: The main Settings app has opened successfully, as evidenced by the presence of common elements like ...",
+      "timestamp": "2025-12-23T14:43:18.569237",
+      "run_id": "20251223_144252",
+      "step": 4,
+      "subgoal_id": null,
+      "action": "complete",
+      "success": null,
+      "data": {
+        "params": {
+          "success": true
+        },
+        "reasoning": "The main Settings app has opened successfully, as evidenced by the presence of common elements like 'Network & internet' and 'Connected devices'."
+      }
+    },
+    {
+      "event_type": "result",
+      "message": "Subgoal completed",
+      "timestamp": "2025-12-23T14:43:18.569359",
+      "run_id": "20251223_144252",
+      "step": 4,
+      "subgoal_id": null,
+      "action": null,
+      "success": true,
+      "data": {}
+    },
+    {
+      "event_type": "step_end",
+      "message": "Subgoal completed",
+      "timestamp": "2025-12-23T14:43:18.569392",
+      "run_id": "20251223_144252",
+      "step": 4,
+      "subgoal_id": null,
+      "action": null,
+      "success": true,
+      "data": null
+    },
+    {
+      "event_type": "subgoal_end",
+      "message": "Subgoal completed",
+      "timestamp": "2025-12-23T14:43:18.569495",
+      "run_id": "20251223_144252",
+      "step": null,
+      "subgoal_id": 4,
+      "action": null,
+      "success": true,
+      "data": null
+    },
+    {
+      "event_type": "info",
+      "message": "Trajectory saved to: ./trajectories/trajectory_20251223_144318_Mở_app_Settings.json",
+      "timestamp": "2025-12-23T14:43:18.570617",
+      "run_id": "20251223_144252",
+      "step": 4,
+      "subgoal_id": null,
+      "action": null,
+      "success": null,
+      "data": null
+    },
+    {
+      "event_type": "run_end",
+      "message": "Goal completed successfully!",
+      "timestamp": "2025-12-23T14:43:18.571326",
+      "run_id": "20251223_144252",
+      "step": null,
+      "subgoal_id": null,
+      "action": null,
+      "success": true,
+      "data": {
+        "total_steps": 4,
+        "duration": 25.714422,
+        "trajectory_file": "./trajectories/trajectory_20251223_144318_Mở_app_Settings.json"
+      }
+    }
+  ]
+}

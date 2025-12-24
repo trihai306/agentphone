@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Legacy colors (keep for compatibility) -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Modern Dark Theme Colors -->
+    <color name="background_dark">#FF0D0D0D</color>
+    <color name="surface_dark">#FF0D0D0D</color>
+    <color name="surface_elevated">#FF1A1A1A</color>
+    <color name="surface_container">#FF242424</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#FFFFFFFF</color>
+    <color name="text_secondary">#B3FFFFFF</color>
+    <color name="text_tertiary">#66FFFFFF</color>
+    <color name="text_disabled">#33FFFFFF</color>
+
+    <!-- Accent Colors -->
+    <color name="accent_blue">#FF60A5FA</color>
+    <color name="accent_blue_container">#1A60A5FA</color>
+    <color name="accent_green">#FF4ADE80</color>
+    <color name="accent_green_container">#1A4ADE80</color>
+    <color name="accent_red">#FFEF4444</color>
+    <color name="accent_red_container">#1AEF4444</color>
+    <color name="accent_orange">#FFFBBF24</color>
+    <color name="accent_orange_container">#1AFBBF24</color>
+    <color name="accent_purple">#FFA78BFA</color>
+    <color name="accent_purple_container">#1AA78BFA</color>
+    <color name="accent_cyan">#FF22D3EE</color>
+    <color name="accent_cyan_container">#1A22D3EE</color>
+
+    <!-- Status Colors -->
+    <color name="status_on">#FF4ADE80</color>
+    <color name="status_off">#FFEF4444</color>
+    <color name="status_warning">#FFFBBF24</color>
+
+    <!-- Border Colors -->
+    <color name="border_default">#1AFFFFFF</color>
+    <color name="border_interactive">#FF60A5FA</color>
+
+    <!-- Overlay Bounds Colors -->
+    <color name="bounds_clickable">#FF60A5FA</color>
+    <color name="bounds_editable">#FF4ADE80</color>
+    <color name="bounds_scrollable">#FFA78BFA</color>
+    <color name="bounds_focusable">#FFFBBF24</color>
+    <color name="bounds_default">#66FFFFFF</color>
+
+    <!-- Button Colors -->
+    <color name="button_primary">#FF60A5FA</color>
+    <color name="button_primary_container">#1A60A5FA</color>
+    <color name="button_secondary">#FF1A1A1A</color>
+    <color name="button_secondary_container">#0DFFFFFF</color>
+
+    <!-- Divider -->
+    <color name="divider">#0DFFFFFF</color>
+</resources>

@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "droidrun-controller"
+version = "0.1.0"
+description = "Android phone controller using droidrun with workflow management"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    { name = "hainc" }
+]
+
+dependencies = [
+    "droidrun[openai,dev]",
+    "openai>=1.0.0",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.23.0",
+    "typer>=0.9.0",
+    "sqlalchemy>=2.0.0",
+    "aiosqlite>=0.19.0",
+    "apscheduler>=3.10.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "pillow>=10.0.0",
+    "websockets>=11.0.0",
+    "rich>=13.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+droidrun-ctl = "droidrun_controller.cli.main:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["droidrun_controller"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "W"]
