@@ -2,7 +2,7 @@
 
 from .card import Card, StatsCard, GlassCard, ListCard
 from .status_badge import StatusBadge
-from .action_button import ActionButton, IconButton, FloatingActionButton
+from .action_button import ActionButton, IconButton, FloatingActionButton, ToggleButton
 from .data_table import DataTable
 from .modal import Modal, ConfirmDialog
 from .empty_state import EmptyState
@@ -17,6 +17,7 @@ __all__ = [
     "ActionButton",
     "IconButton",
     "FloatingActionButton",
+    "ToggleButton",
     "DataTable",
     "Modal",
     "ConfirmDialog",
