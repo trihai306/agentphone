@@ -1,6 +1,7 @@
 """Empty state component with polished styling.
 
-Refined with improved icon container, better visual balance, and professional button styling.
+Refined with improved icon container, better visual balance, professional button styling,
+semantic variants, and smooth entrance animations.
 """
 
 import flet as ft
@@ -11,10 +12,12 @@ class EmptyState(ft.Container):
     """An empty state placeholder with enhanced visual styling.
 
     Features:
-    - Polished icon container with subtle border and shadow
+    - Polished icon container with subtle border, shadow, and glow effects
+    - Semantic variants (default, primary, success, warning, error, info)
     - Refined typography with proper visual hierarchy
-    - Professional action button with glow effect
+    - Professional action button with hover feedback and glow effect
     - Improved spacing and visual balance
+    - Smooth entrance animations
     """
 
     def __init__(
@@ -26,6 +29,7 @@ class EmptyState(ft.Container):
         action_text: str = None,
         on_action=None,
         size: str = "medium",
+        variant: str = "default",
         **kwargs
     ):
         # Size configurations for different contexts
@@ -66,10 +70,54 @@ class EmptyState(ft.Container):
         }
         config = sizes.get(size, sizes["medium"])
 
-        # Determine icon color - use muted by default, but allow customization
-        resolved_icon_color = icon_color or COLORS["text_muted"]
+        # Semantic variant configurations for different contexts
+        variants = {
+            "default": {
+                "icon_bg": COLORS["bg_tertiary"],
+                "icon_border": f"{COLORS['border']}60",
+                "icon_color": COLORS["text_muted"],
+                "icon_shadow_color": f"{COLORS['text_muted']}12",
+            },
+            "primary": {
+                "icon_bg": f"{COLORS['primary']}12",
+                "icon_border": f"{COLORS['primary']}25",
+                "icon_color": COLORS["primary"],
+                "icon_shadow_color": f"{COLORS['primary']}20",
+            },
+            "success": {
+                "icon_bg": f"{COLORS['success']}12",
+                "icon_border": f"{COLORS['success']}25",
+                "icon_color": COLORS["success"],
+                "icon_shadow_color": f"{COLORS['success']}20",
+            },
+            "warning": {
+                "icon_bg": f"{COLORS['warning']}12",
+                "icon_border": f"{COLORS['warning']}25",
+                "icon_color": COLORS["warning"],
+                "icon_shadow_color": f"{COLORS['warning']}20",
+            },
+            "error": {
+                "icon_bg": f"{COLORS['error']}12",
+                "icon_border": f"{COLORS['error']}25",
+                "icon_color": COLORS["error"],
+                "icon_shadow_color": f"{COLORS['error']}20",
+            },
+            "info": {
+                "icon_bg": f"{COLORS['info']}12",
+                "icon_border": f"{COLORS['info']}25",
+                "icon_color": COLORS["info"],
+                "icon_shadow_color": f"{COLORS['info']}20",
+            },
+        }
+        variant_config = variants.get(variant, variants["default"])
 
-        # Build polished icon container with subtle border and shadow
+        # Determine icon color - custom color takes precedence over variant
+        resolved_icon_color = icon_color or variant_config["icon_color"]
+        resolved_icon_bg = COLORS["bg_tertiary"] if icon_color else variant_config["icon_bg"]
+        resolved_icon_border = f"{COLORS['border']}60" if icon_color else variant_config["icon_border"]
+        resolved_shadow_color = f"{COLORS['text_muted']}12" if icon_color else variant_config["icon_shadow_color"]
+
+        # Build polished icon container with subtle border, shadow, and glow
         icon_container = ft.Container(
             content=ft.Icon(
                 icon,
@@ -79,15 +127,16 @@ class EmptyState(ft.Container):
             width=config["icon_container_size"],
             height=config["icon_container_size"],
             border_radius=config["icon_container_size"] // 2,
-            bgcolor=COLORS["bg_tertiary"],
-            border=ft.border.all(1, f"{COLORS['border']}60"),
+            bgcolor=resolved_icon_bg,
+            border=ft.border.all(1, resolved_icon_border),
             alignment=ft.alignment.center,
             shadow=ft.BoxShadow(
                 spread_radius=0,
                 blur_radius=24,
-                color=f"{COLORS['text_muted']}12",
+                color=resolved_shadow_color,
                 offset=ft.Offset(0, 8),
             ),
+            animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
         )
 
         # Build content items with refined spacing
@@ -151,5 +200,7 @@ class EmptyState(ft.Container):
             padding=config["outer_padding"],
             alignment=ft.alignment.center,
             expand=True,
+            animate=ft.Animation(ANIMATION["slow"], ft.AnimationCurve.EASE_OUT),
+            animate_opacity=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
             **kwargs
         )
