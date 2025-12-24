@@ -4,7 +4,7 @@ from .card import Card, StatsCard, GlassCard, ListCard
 from .status_badge import StatusBadge, StatusDot
 from .action_button import ActionButton, IconButton, FloatingActionButton, ToggleButton
 from .data_table import DataTable
-from .modal import Modal, ConfirmDialog
+from .modal import Modal, ConfirmDialog, InfoDialog
 from .empty_state import EmptyState
 from .toast import ToastManager
 
@@ -22,6 +22,7 @@ __all__ = [
     "DataTable",
     "Modal",
     "ConfirmDialog",
+    "InfoDialog",
     "EmptyState",
     "ToastManager",
 ]
