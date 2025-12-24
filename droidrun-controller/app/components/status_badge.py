@@ -4,31 +4,41 @@ import flet as ft
 from ..theme import COLORS, status_color, ANIMATION, RADIUS
 
 
+# Active statuses that should pulse by default
+ACTIVE_STATUSES = {"running", "active", "online", "busy", "queued", "pending"}
+
+
 class StatusBadge(ft.Container):
     """A status indicator badge with enhanced visual effects and pulse animation.
 
     Features:
     - Refined color contrast with improved opacity values
-    - Optional pulse animation for active states
-    - Smooth hover interactions
+    - Optional pulse animation for active states (auto-enabled for running/active statuses)
+    - Smooth hover interactions with enhanced feedback
     - Multiple size variants (small, medium, large)
+    - Multiple style variants (filled, outline, subtle, solid)
     """
 
     def __init__(
         self,
         status: str,
         size: str = "medium",
-        show_pulse: bool = False,
+        show_pulse: bool = None,
         show_dot: bool = True,
         variant: str = "filled",
         **kwargs
     ):
-        self._status = status
+        self._status = status.lower()
         self._color = status_color(status)
-        self._show_pulse = show_pulse
         self._variant = variant
 
-        # Size configurations with refined values
+        # Auto-enable pulse for active statuses if not explicitly set
+        if show_pulse is None:
+            self._show_pulse = self._status in ACTIVE_STATUSES
+        else:
+            self._show_pulse = show_pulse
+
+        # Size configurations with refined proportions for better visual balance
         sizes = {
             "small": {
                 "padding_h": 10,
@@ -37,6 +47,7 @@ class StatusBadge(ft.Container):
                 "dot_size": 6,
                 "spacing": 6,
                 "radius": RADIUS["sm"],
+                "font_weight": ft.FontWeight.W_600,
             },
             "medium": {
                 "padding_h": 12,
@@ -45,6 +56,7 @@ class StatusBadge(ft.Container):
                 "dot_size": 8,
                 "spacing": 8,
                 "radius": RADIUS["md"],
+                "font_weight": ft.FontWeight.W_600,
             },
             "large": {
                 "padding_h": 16,
@@ -53,6 +65,7 @@ class StatusBadge(ft.Container):
                 "dot_size": 10,
                 "spacing": 10,
                 "radius": RADIUS["lg"],
+                "font_weight": ft.FontWeight.W_600,
             },
         }
         self._config = sizes.get(size, sizes["medium"])
@@ -65,12 +78,18 @@ class StatusBadge(ft.Container):
         if dot_content:
             row_content.append(dot_content)
 
+        # Text with improved contrast
+        text_color = self._color
+        if variant == "solid":
+            # For solid variant, use inverse text color for contrast
+            text_color = COLORS.get("text_inverse", "#FFFFFF")
+
         row_content.append(
             ft.Text(
                 status.capitalize(),
                 size=self._config["font_size"],
-                color=self._color,
-                weight=ft.FontWeight.W_600,
+                color=text_color,
+                weight=self._config["font_weight"],
             )
         )
 
@@ -87,6 +106,10 @@ class StatusBadge(ft.Container):
             # Subtle variant - minimal styling
             bg_color = f"{self._color}08"
             border_color = f"{self._color}20"
+        elif variant == "solid":
+            # Solid variant - full color background
+            bg_color = self._color
+            border_color = self._color
         else:
             bg_color = f"{self._color}15"
             border_color = f"{self._color}35"
@@ -167,6 +190,10 @@ class StatusBadge(ft.Container):
             elif self._variant == "outline":
                 self.bgcolor = f"{self._color}10"
                 self.border = ft.border.all(1.5, f"{self._color}80")
+            elif self._variant == "solid":
+                # Slightly darken on hover for solid variant
+                self.bgcolor = f"{self._color}E8"
+                self.border = ft.border.all(1, self._color)
             else:
                 self.bgcolor = f"{self._color}12"
                 self.border = ft.border.all(1, f"{self._color}30")
@@ -178,6 +205,9 @@ class StatusBadge(ft.Container):
             elif self._variant == "outline":
                 self.bgcolor = "transparent"
                 self.border = ft.border.all(1, f"{self._color}60")
+            elif self._variant == "solid":
+                self.bgcolor = self._color
+                self.border = ft.border.all(1, self._color)
             else:
                 self.bgcolor = f"{self._color}08"
                 self.border = ft.border.all(1, f"{self._color}20")
@@ -188,20 +218,26 @@ class StatusDot(ft.Container):
     """A minimal status dot indicator without text.
 
     Useful for compact status displays in tables or lists.
+    Features auto-pulse for active statuses.
     """
 
     def __init__(
         self,
         status: str,
         size: int = 10,
-        show_pulse: bool = False,
+        show_pulse: bool = None,
         tooltip: str = None,
         **kwargs
     ):
-        self._status = status
+        self._status = status.lower()
         self._color = status_color(status)
         self._size = size
-        self._show_pulse = show_pulse
+
+        # Auto-enable pulse for active statuses if not explicitly set
+        if show_pulse is None:
+            self._show_pulse = self._status in ACTIVE_STATUSES
+        else:
+            self._show_pulse = show_pulse
 
         # Build the dot
         inner_dot = ft.Container(
@@ -211,7 +247,7 @@ class StatusDot(ft.Container):
             bgcolor=self._color,
         )
 
-        if show_pulse:
+        if self._show_pulse:
             # Pulsing variant with glow
             content = ft.Container(
                 content=inner_dot,
