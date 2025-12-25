@@ -485,31 +485,31 @@ SHADOWS: Dict[str, ft.BoxShadow] = {
 SHADOWS_COLORED = {
     "primary": lambda: ft.BoxShadow(
         spread_radius=0,
-        blur_radius=20,
+        blur_radius=8,
         color=get_colors()["primary_glow"],
         offset=ft.Offset(0, 8),
     ),
     "success": lambda: ft.BoxShadow(
         spread_radius=0,
-        blur_radius=20,
+        blur_radius=8,
         color=get_colors()["success_glow"],
         offset=ft.Offset(0, 8),
     ),
     "warning": lambda: ft.BoxShadow(
         spread_radius=0,
-        blur_radius=20,
+        blur_radius=8,
         color=get_colors()["warning_glow"],
         offset=ft.Offset(0, 8),
     ),
     "error": lambda: ft.BoxShadow(
         spread_radius=0,
-        blur_radius=20,
+        blur_radius=8,
         color=get_colors()["error_glow"],
         offset=ft.Offset(0, 8),
     ),
     "info": lambda: ft.BoxShadow(
         spread_radius=0,
-        blur_radius=20,
+        blur_radius=8,
         color=get_colors()["info_glow"],
         offset=ft.Offset(0, 8),
     ),
