@@ -168,10 +168,10 @@ class ActionButton(ft.Container):
             e.control.bgcolor = self.style_config["hover_bg"]
             e.control.scale = 1.02
 
-            # Enhanced shadow on hover with increased glow
+            # Enhanced shadow on hover with moderate glow
             e.control.shadow = ft.BoxShadow(
                 spread_radius=1,
-                blur_radius=28 if has_glow else 16,
+                blur_radius=10 if has_glow else 8,
                 color=self.style_config["shadow_hover_color"],
                 offset=ft.Offset(0, 8),
             )
