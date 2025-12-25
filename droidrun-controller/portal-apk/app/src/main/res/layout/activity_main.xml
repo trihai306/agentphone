@@ -413,8 +413,8 @@
                     android:orientation="vertical"
                     android:divider="@drawable/divider_horizontal"
                     android:showDividers="middle"
-                    android:paddingTop="4dp"
-                    android:paddingBottom="4dp">
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp">
 
                     <!-- Show Bounds Toggle -->
                     <LinearLayout
@@ -422,24 +422,33 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:paddingStart="20dp"
+                        android:paddingStart="18dp"
                         android:paddingEnd="16dp"
-                        android:paddingTop="14dp"
-                        android:paddingBottom="14dp">
+                        android:paddingTop="16dp"
+                        android:paddingBottom="16dp">
 
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_bounds"
-                            app:tint="@color/accent_blue"
-                            android:contentDescription="Bounds overlay" />
+                        <!-- Icon with subtle background container -->
+                        <FrameLayout
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/icon_container_background">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_bounds"
+                                app:tint="@color/accent_blue"
+                                android:contentDescription="Bounds overlay" />
+
+                        </FrameLayout>
 
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="16dp"
+                            android:layout_marginStart="14dp"
                             android:layout_marginEnd="12dp">
 
                             <TextView
@@ -457,7 +466,7 @@
                                 android:text="Highlight interactive elements"
                                 android:textSize="13sp"
                                 android:textColor="@color/text_secondary"
-                                android:layout_marginTop="3dp" />
+                                android:layout_marginTop="4dp" />
 
                         </LinearLayout>
 
@@ -474,24 +483,33 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:paddingStart="20dp"
+                        android:paddingStart="18dp"
                         android:paddingEnd="16dp"
-                        android:paddingTop="14dp"
-                        android:paddingBottom="14dp">
+                        android:paddingTop="16dp"
+                        android:paddingBottom="16dp">
 
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_index"
-                            app:tint="@color/accent_purple"
-                            android:contentDescription="Index labels" />
+                        <!-- Icon with subtle background container -->
+                        <FrameLayout
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/icon_container_background">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_index"
+                                app:tint="@color/accent_purple"
+                                android:contentDescription="Index labels" />
+
+                        </FrameLayout>
 
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="16dp"
+                            android:layout_marginStart="14dp"
                             android:layout_marginEnd="12dp">
 
                             <TextView
@@ -509,7 +527,7 @@
                                 android:text="Display node index labels"
                                 android:textSize="13sp"
                                 android:textColor="@color/text_secondary"
-                                android:layout_marginTop="3dp" />
+                                android:layout_marginTop="4dp" />
 
                         </LinearLayout>
 
@@ -550,61 +568,124 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
-                    android:paddingTop="18dp"
-                    android:paddingBottom="18dp">
+                    android:divider="@drawable/divider_horizontal"
+                    android:showDividers="middle"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp">
 
+                    <!-- TCP Connection Row -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="14dp">
+                        android:paddingStart="18dp"
+                        android:paddingEnd="20dp"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="16dp">
 
-                        <TextView
-                            android:layout_width="48dp"
-                            android:layout_height="wrap_content"
-                            android:text="TCP"
-                            android:textSize="12sp"
-                            android:textColor="@color/text_tertiary"
-                            android:fontFamily="sans-serif-medium"
-                            android:letterSpacing="0.05" />
+                        <!-- Icon with subtle background container -->
+                        <FrameLayout
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/icon_container_background">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_network"
+                                app:tint="@color/accent_cyan"
+                                android:contentDescription="TCP connection" />
+
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="localhost:8080"
-                            android:textSize="14sp"
-                            android:textColor="@color/accent_cyan"
-                            android:fontFamily="monospace"
-                            android:letterSpacing="0.02" />
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="14dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="TCP Server"
+                                android:textSize="15sp"
+                                android:textColor="@color/text_primary"
+                                android:fontFamily="sans-serif-medium"
+                                android:letterSpacing="0.01" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="localhost:8080"
+                                android:textSize="13sp"
+                                android:textColor="@color/accent_cyan"
+                                android:fontFamily="monospace"
+                                android:layout_marginTop="4dp"
+                                android:letterSpacing="0.02" />
+
+                        </LinearLayout>
 
                     </LinearLayout>
 
+                    <!-- ADB Connection Row -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:gravity="center_vertical"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="20dp"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="16dp">
 
-                        <TextView
-                            android:layout_width="48dp"
-                            android:layout_height="wrap_content"
-                            android:text="ADB"
-                            android:textSize="12sp"
-                            android:textColor="@color/text_tertiary"
-                            android:fontFamily="sans-serif-medium"
-                            android:letterSpacing="0.05" />
+                        <!-- Icon with subtle background container -->
+                        <FrameLayout
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/icon_container_background">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_terminal"
+                                app:tint="@color/accent_green"
+                                android:contentDescription="ADB connection" />
+
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="content://com.agent.portal/"
-                            android:textSize="14sp"
-                            android:textColor="@color/accent_cyan"
-                            android:fontFamily="monospace"
-                            android:letterSpacing="0.02" />
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="14dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ADB Content Provider"
+                                android:textSize="15sp"
+                                android:textColor="@color/text_primary"
+                                android:fontFamily="sans-serif-medium"
+                                android:letterSpacing="0.01" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="content://com.agent.portal/"
+                                android:textSize="13sp"
+                                android:textColor="@color/accent_cyan"
+                                android:fontFamily="monospace"
+                                android:layout_marginTop="4dp"
+                                android:letterSpacing="0.02"
+                                android:ellipsize="end"
+                                android:maxLines="1" />
+
+                        </LinearLayout>
 
                     </LinearLayout>
 
