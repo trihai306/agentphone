@@ -45,7 +45,21 @@ class AnalyticsView(ft.Container):
                 ft.Container(height=28),
                 self._build_chart_section(),
                 ft.Container(height=28),
-                self._build_usage_breakdown(),
+                ft.Row(
+                    [
+                        ft.Container(
+                            content=self._build_usage_breakdown(),
+                            expand=2,
+                        ),
+                        ft.Container(width=20),
+                        ft.Container(
+                            content=self._build_cost_breakdown(),
+                            expand=1,
+                        ),
+                    ],
+                    vertical_alignment=ft.CrossAxisAlignment.START,
+                ),
+                ft.Container(height=40),
             ],
             spacing=0,
             expand=True,
@@ -888,6 +902,288 @@ class AnalyticsView(ft.Container):
             e.control.border = ft.border.all(1, COLORS["border_subtle"])
             e.control.shadow = None
             e.control.scale = 1.0
+        e.control.update()
+
+    def _build_cost_breakdown(self):
+        """Build polished cost breakdown section with enhanced visualization."""
+        cost_items = [
+            {
+                "label": "Input Tokens",
+                "value": "$1.25",
+                "tokens": "50K",
+                "color": COLORS["primary"],
+                "icon": ft.Icons.INPUT_ROUNDED,
+                "percentage": 50,
+            },
+            {
+                "label": "Output Tokens",
+                "value": "$0.85",
+                "tokens": "25K",
+                "color": COLORS["accent_purple"],
+                "icon": ft.Icons.OUTPUT_ROUNDED,
+                "percentage": 34,
+            },
+            {
+                "label": "Embeddings",
+                "value": "$0.40",
+                "tokens": "50K",
+                "color": COLORS["accent_cyan"],
+                "icon": ft.Icons.HUB_ROUNDED,
+                "percentage": 16,
+            },
+        ]
+
+        items = [self._build_cost_item(item) for item in cost_items]
+
+        return ft.Container(
+            content=ft.Column(
+                [
+                    # Section header
+                    ft.Row(
+                        [
+                            ft.Container(
+                                content=ft.Icon(
+                                    ft.Icons.ATTACH_MONEY_ROUNDED,
+                                    size=20,
+                                    color=COLORS["success"],
+                                ),
+                                width=40,
+                                height=40,
+                                border_radius=RADIUS["md"],
+                                bgcolor=f"{COLORS['success']}12",
+                                alignment=ft.alignment.center,
+                                border=ft.border.all(1, f"{COLORS['success']}20"),
+                            ),
+                            ft.Container(width=14),
+                            ft.Column(
+                                [
+                                    ft.Text(
+                                        "Cost Breakdown",
+                                        size=17,
+                                        weight=ft.FontWeight.W_700,
+                                        color=COLORS["text_primary"],
+                                    ),
+                                    ft.Text(
+                                        "Token costs by type",
+                                        size=12,
+                                        color=COLORS["text_secondary"],
+                                    ),
+                                ],
+                                spacing=2,
+                                expand=True,
+                            ),
+                        ],
+                    ),
+                    ft.Container(height=20),
+                    # Total cost highlight
+                    ft.Container(
+                        content=ft.Row(
+                            [
+                                ft.Column(
+                                    [
+                                        ft.Text(
+                                            "Total Cost",
+                                            size=12,
+                                            weight=ft.FontWeight.W_500,
+                                            color=COLORS["text_secondary"],
+                                        ),
+                                        ft.Container(height=4),
+                                        ft.Text(
+                                            f"${self.cost_estimate:.2f}",
+                                            size=32,
+                                            weight=ft.FontWeight.W_800,
+                                            color=COLORS["text_primary"],
+                                        ),
+                                    ],
+                                    spacing=0,
+                                    expand=True,
+                                ),
+                                ft.Container(
+                                    content=ft.Row(
+                                        [
+                                            ft.Icon(
+                                                ft.Icons.TRENDING_DOWN_ROUNDED,
+                                                size=14,
+                                                color=COLORS["success"],
+                                            ),
+                                            ft.Container(width=4),
+                                            ft.Text(
+                                                "-5%",
+                                                size=12,
+                                                weight=ft.FontWeight.W_600,
+                                                color=COLORS["success"],
+                                            ),
+                                        ],
+                                    ),
+                                    padding=ft.padding.symmetric(horizontal=10, vertical=6),
+                                    border_radius=RADIUS["md"],
+                                    bgcolor=f"{COLORS['success']}12",
+                                    border=ft.border.all(1, f"{COLORS['success']}20"),
+                                ),
+                            ],
+                            vertical_alignment=ft.CrossAxisAlignment.END,
+                        ),
+                        bgcolor=COLORS["bg_tertiary"],
+                        border_radius=RADIUS["lg"],
+                        padding=20,
+                        border=ft.border.all(1, COLORS["border_subtle"]),
+                    ),
+                    ft.Container(height=16),
+                    # Cost items
+                    ft.Column(items, spacing=12),
+                    ft.Container(height=16),
+                    # Budget indicator
+                    ft.Container(
+                        content=ft.Column(
+                            [
+                                ft.Row(
+                                    [
+                                        ft.Text(
+                                            "Monthly Budget",
+                                            size=12,
+                                            weight=ft.FontWeight.W_500,
+                                            color=COLORS["text_secondary"],
+                                        ),
+                                        ft.Container(expand=True),
+                                        ft.Text(
+                                            "$2.50 / $10.00",
+                                            size=12,
+                                            weight=ft.FontWeight.W_600,
+                                            color=COLORS["text_primary"],
+                                        ),
+                                    ],
+                                ),
+                                ft.Container(height=10),
+                                ft.Container(
+                                    content=ft.Stack(
+                                        [
+                                            # Track
+                                            ft.Container(
+                                                height=8,
+                                                border_radius=4,
+                                                bgcolor=COLORS["bg_tertiary"],
+                                            ),
+                                            # Progress
+                                            ft.Container(
+                                                width=100,  # 25% of typical width
+                                                height=8,
+                                                border_radius=4,
+                                                bgcolor=COLORS["success"],
+                                                shadow=ft.BoxShadow(
+                                                    spread_radius=0,
+                                                    blur_radius=8,
+                                                    color=f"{COLORS['success']}40",
+                                                    offset=ft.Offset(0, 2),
+                                                ),
+                                            ),
+                                        ],
+                                    ),
+                                ),
+                                ft.Container(height=8),
+                                ft.Text(
+                                    "25% of budget used",
+                                    size=11,
+                                    color=COLORS["success"],
+                                    weight=ft.FontWeight.W_500,
+                                ),
+                            ],
+                        ),
+                        bgcolor=COLORS["bg_tertiary"],
+                        border_radius=RADIUS["lg"],
+                        padding=16,
+                        border=ft.border.all(1, COLORS["border_subtle"]),
+                    ),
+                ],
+            ),
+            bgcolor=COLORS["bg_card"],
+            border_radius=RADIUS["xl"],
+            padding=28,
+            border=ft.border.all(1, COLORS["border"]),
+            shadow=get_shadow("xs"),
+        )
+
+    def _build_cost_item(self, item: dict):
+        """Build a polished cost breakdown item with hover effect."""
+        color = item["color"]
+
+        return ft.Container(
+            content=ft.Row(
+                [
+                    ft.Container(
+                        content=ft.Icon(
+                            item["icon"],
+                            size=16,
+                            color=color,
+                        ),
+                        width=36,
+                        height=36,
+                        border_radius=RADIUS["md"],
+                        bgcolor=f"{color}12",
+                        alignment=ft.alignment.center,
+                        border=ft.border.all(1, f"{color}20"),
+                    ),
+                    ft.Container(width=12),
+                    ft.Column(
+                        [
+                            ft.Text(
+                                item["label"],
+                                size=13,
+                                weight=ft.FontWeight.W_600,
+                                color=COLORS["text_primary"],
+                            ),
+                            ft.Text(
+                                f"{item['tokens']} tokens",
+                                size=11,
+                                color=COLORS["text_muted"],
+                            ),
+                        ],
+                        spacing=2,
+                        expand=True,
+                    ),
+                    ft.Column(
+                        [
+                            ft.Text(
+                                item["value"],
+                                size=15,
+                                weight=ft.FontWeight.W_700,
+                                color=COLORS["text_primary"],
+                            ),
+                            ft.Text(
+                                f"{item['percentage']}%",
+                                size=11,
+                                color=COLORS["text_muted"],
+                                text_align=ft.TextAlign.RIGHT,
+                            ),
+                        ],
+                        spacing=2,
+                        horizontal_alignment=ft.CrossAxisAlignment.END,
+                    ),
+                ],
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            bgcolor=COLORS["bg_tertiary"],
+            border_radius=RADIUS["md"],
+            padding=ft.padding.symmetric(horizontal=14, vertical=12),
+            border=ft.border.all(1, COLORS["border_subtle"]),
+            animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
+            on_hover=lambda e, c=color: self._on_cost_item_hover(e, c),
+        )
+
+    def _on_cost_item_hover(self, e, color):
+        """Handle cost item hover effect."""
+        if e.data == "true":
+            e.control.bgcolor = COLORS["bg_hover"]
+            e.control.border = ft.border.all(1, f"{color}30")
+            e.control.shadow = ft.BoxShadow(
+                spread_radius=0,
+                blur_radius=16,
+                color=f"{color}15",
+                offset=ft.Offset(0, 4),
+            )
+        else:
+            e.control.bgcolor = COLORS["bg_tertiary"]
+            e.control.border = ft.border.all(1, COLORS["border_subtle"])
+            e.control.shadow = None
         e.control.update()
 
     def _format_number(self, num):
