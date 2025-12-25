@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Danger button ripple color -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Ripple color for danger buttons - red glow -->
-    <item android:color="@color/glow_red" android:state_pressed="true"/>
-    <item android:color="@color/glow_red"/>
+    <item android:color="@color/accent_red_container_high" android:state_pressed="true"/>
+    <item android:color="@color/accent_red_container"/>
 </selector>

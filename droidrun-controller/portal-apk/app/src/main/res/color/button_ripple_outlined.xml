@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Outlined button ripple color -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Ripple color for outlined buttons - subtle white ripple -->
-    <item android:color="@color/card_ripple" android:state_pressed="true"/>
-    <item android:color="@color/card_ripple"/>
+    <item android:color="@color/border_default" android:state_pressed="true"/>
+    <item android:color="@color/border_subtle"/>
 </selector>
