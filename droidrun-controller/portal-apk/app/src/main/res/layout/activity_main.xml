@@ -39,9 +39,9 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
+                android:layout_marginBottom="24dp"
                 app:cardBackgroundColor="@color/surface_elevated"
-                app:cardCornerRadius="24dp"
+                app:cardCornerRadius="28dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="0dp">
 
@@ -49,31 +49,70 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="24dp"
+                    android:paddingTop="32dp"
+                    android:paddingBottom="28dp"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
                     android:gravity="center">
 
-                    <ImageView
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
-                        android:src="@mipmap/ic_launcher_round"
-                        android:layout_marginBottom="16dp"
-                        android:contentDescription="@string/app_name" />
+                    <!-- Logo Container with subtle glow effect -->
+                    <FrameLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="20dp">
 
+                        <!-- Glow background -->
+                        <View
+                            android:layout_width="100dp"
+                            android:layout_height="100dp"
+                            android:layout_gravity="center"
+                            android:background="@drawable/hero_glow_background"
+                            android:alpha="0.3" />
+
+                        <ImageView
+                            android:layout_width="88dp"
+                            android:layout_height="88dp"
+                            android:layout_gravity="center"
+                            android:src="@mipmap/ic_launcher_round"
+                            android:contentDescription="@string/app_name" />
+
+                    </FrameLayout>
+
+                    <!-- App Title -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:text="Agent Portal"
+                        android:textSize="22sp"
+                        android:textColor="@color/text_primary"
+                        android:fontFamily="sans-serif-medium"
+                        android:letterSpacing="0.01" />
+
+                    <!-- Subtitle -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
                         android:text="Android Automation Bridge"
                         android:textSize="14sp"
                         android:textColor="@color/text_secondary"
-                        android:fontFamily="sans-serif-medium" />
+                        android:fontFamily="sans-serif" />
 
+                    <!-- Version Badge -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="12dp"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp"
                         android:text="v1.0.0"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_tertiary" />
+                        android:textSize="11sp"
+                        android:textColor="@color/accent_blue"
+                        android:fontFamily="sans-serif-medium"
+                        android:background="@drawable/version_badge_background"
+                        android:letterSpacing="0.02" />
 
                 </LinearLayout>
 
