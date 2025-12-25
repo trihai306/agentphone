@@ -43,9 +43,9 @@ class Card(ft.Container):
                         alignment=ft.alignment.center,
                         shadow=ft.BoxShadow(
                             spread_radius=0,
-                            blur_radius=16,
-                            color=f"{icon_color or COLORS['primary']}25",
-                            offset=ft.Offset(0, 4),
+                            blur_radius=4,
+                            color=f"{icon_color or COLORS['primary']}10",
+                            offset=ft.Offset(0, 2),
                         ),
                         animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
                     )
@@ -114,11 +114,11 @@ class Card(ft.Container):
             self.border = ft.border.all(1, COLORS["border_light"])
             self.shadow = ft.BoxShadow(
                 spread_radius=0,
-                blur_radius=32,
-                color="#00000035",
-                offset=ft.Offset(0, 12),
+                blur_radius=10,
+                color="#00000015",
+                offset=ft.Offset(0, 4),
             )
-            self.scale = 1.005
+            self.scale = 1.002
         else:
             self.border = ft.border.all(1, COLORS["border"])
             self.shadow = get_shadow("sm") if self._elevated else None
@@ -142,7 +142,7 @@ class StatsCard(ft.Container):
     ):
         self._color = color or COLORS["primary"]
 
-        # Icon container with enhanced glow effect
+        # Icon container with subtle shadow
         icon_container = ft.Container(
             content=ft.Icon(icon, size=24, color=self._color),
             width=56,
@@ -153,9 +153,9 @@ class StatsCard(ft.Container):
             border=ft.border.all(1, f"{self._color}20"),
             shadow=ft.BoxShadow(
                 spread_radius=0,
-                blur_radius=20,
-                color=f"{self._color}30",
-                offset=ft.Offset(0, 6),
+                blur_radius=6,
+                color=f"{self._color}12",
+                offset=ft.Offset(0, 2),
             ),
             animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
         )
@@ -227,16 +227,16 @@ class StatsCard(ft.Container):
         )
 
     def _on_hover(self, e):
-        """Handle hover effect with color-coordinated glow."""
+        """Handle hover effect with subtle elevation."""
         if e.data == "true":
-            self.border = ft.border.all(1, f"{self._color}50")
+            self.border = ft.border.all(1, f"{self._color}40")
             self.shadow = ft.BoxShadow(
                 spread_radius=0,
-                blur_radius=28,
-                color=f"{self._color}25",
-                offset=ft.Offset(0, 10),
+                blur_radius=10,
+                color=f"{self._color}15",
+                offset=ft.Offset(0, 4),
             )
-            self.scale = 1.02
+            self.scale = 1.01
         else:
             self.border = ft.border.all(1, COLORS["border"])
             self.shadow = get_shadow("xs")
@@ -245,7 +245,7 @@ class StatsCard(ft.Container):
 
 
 class GlassCard(ft.Container):
-    """A glass-morphism style card with modern blur effects and refined interactions."""
+    """A glass-morphism style card with subtle blur effects and refined interactions."""
 
     def __init__(
         self,
@@ -263,9 +263,9 @@ class GlassCard(ft.Container):
             blur=blur_radius,
             shadow=ft.BoxShadow(
                 spread_radius=0,
-                blur_radius=12,
-                color="#00000010",
-                offset=ft.Offset(0, 4),
+                blur_radius=4,
+                color="#00000008",
+                offset=ft.Offset(0, 2),
             ),
             animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
             animate_scale=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
@@ -274,23 +274,23 @@ class GlassCard(ft.Container):
         )
 
     def _on_hover(self, e):
-        """Handle hover effect with enhanced glass depth."""
+        """Handle hover effect with subtle glass depth."""
         if e.data == "true":
             self.border = ft.border.all(1, f"{COLORS['border_light']}80")
             self.shadow = ft.BoxShadow(
                 spread_radius=0,
-                blur_radius=24,
-                color="#00000020",
-                offset=ft.Offset(0, 8),
+                blur_radius=8,
+                color="#0000000D",
+                offset=ft.Offset(0, 4),
             )
-            self.scale = 1.01
+            self.scale = 1.005
         else:
             self.border = ft.border.all(1, f"{COLORS['border_light']}50")
             self.shadow = ft.BoxShadow(
                 spread_radius=0,
-                blur_radius=12,
-                color="#00000010",
-                offset=ft.Offset(0, 4),
+                blur_radius=4,
+                color="#00000008",
+                offset=ft.Offset(0, 2),
             )
             self.scale = 1.0
         self.update()
@@ -327,17 +327,17 @@ class ListCard(ft.Container):
         )
 
     def _on_hover(self, e):
-        """Handle hover effect with smooth elevation and subtle highlighting."""
+        """Handle hover effect with subtle elevation."""
         if e.data == "true":
             self.bgcolor = COLORS["bg_hover"]
             self.border = ft.border.all(1, COLORS["border_light"])
             self.shadow = ft.BoxShadow(
                 spread_radius=0,
-                blur_radius=20,
-                color="#00000030",
-                offset=ft.Offset(0, 6),
+                blur_radius=8,
+                color="#00000012",
+                offset=ft.Offset(0, 3),
             )
-            self.scale = 1.008
+            self.scale = 1.003
         else:
             if self._selected:
                 self.bgcolor = COLORS["bg_hover"]
