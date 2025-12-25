@@ -41,14 +41,14 @@ COLORS_LIGHT: Dict[str, str] = {
     "primary_light": "#34D399",
     "primary_dark": "#059669",
     "primary_darker": "#047857",
-    "primary_glow": "#10B98125",
+    "primary_glow": "#10B98115",
     "primary_subtle": "#ECFDF5",     # Very subtle primary tint
 
     # Secondary brand color
     "secondary": "#6366F1",          # Indigo secondary
     "secondary_light": "#818CF8",
     "secondary_dark": "#4F46E5",
-    "secondary_glow": "#6366F120",
+    "secondary_glow": "#6366F112",
 
     # Accent colors - Refined palette
     "accent_cyan": "#06B6D4",
@@ -70,7 +70,7 @@ COLORS_LIGHT: Dict[str, str] = {
     "success": "#10B981",
     "success_light": "#34D399",
     "success_dark": "#059669",
-    "success_glow": "#10B98120",
+    "success_glow": "#10B98112",
     "success_subtle": "#ECFDF5",
     "success_gradient_start": "#10B981",
     "success_gradient_end": "#059669",
@@ -78,7 +78,7 @@ COLORS_LIGHT: Dict[str, str] = {
     "warning": "#F59E0B",
     "warning_light": "#FBBF24",
     "warning_dark": "#D97706",
-    "warning_glow": "#F59E0B20",
+    "warning_glow": "#F59E0B12",
     "warning_subtle": "#FFFBEB",
     "warning_gradient_start": "#F59E0B",
     "warning_gradient_end": "#D97706",
@@ -86,7 +86,7 @@ COLORS_LIGHT: Dict[str, str] = {
     "error": "#EF4444",
     "error_light": "#F87171",
     "error_dark": "#DC2626",
-    "error_glow": "#EF444420",
+    "error_glow": "#EF444412",
     "error_subtle": "#FEF2F2",
     "error_gradient_start": "#EF4444",
     "error_gradient_end": "#DC2626",
@@ -94,7 +94,7 @@ COLORS_LIGHT: Dict[str, str] = {
     "info": "#3B82F6",
     "info_light": "#60A5FA",
     "info_dark": "#2563EB",
-    "info_glow": "#3B82F620",
+    "info_glow": "#3B82F612",
     "info_subtle": "#EFF6FF",
     "info_gradient_start": "#3B82F6",
     "info_gradient_end": "#2563EB",
