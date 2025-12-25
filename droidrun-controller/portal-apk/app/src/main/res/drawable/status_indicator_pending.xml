@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Enhanced status indicator for "off" state with subtle glow effect -->
+<!-- Enhanced status indicator for "pending" state with subtle glow effect -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Outer glow ring -->
     <item>
         <shape android:shape="oval">
-            <solid android:color="@color/status_off_glow" />
+            <solid android:color="@color/status_pending_glow" />
             <size
                 android:width="14dp"
                 android:height="14dp" />
@@ -17,7 +17,7 @@
         android:right="2dp"
         android:bottom="2dp">
         <shape android:shape="oval">
-            <solid android:color="@color/status_off" />
+            <solid android:color="@color/status_pending" />
             <size
                 android:width="10dp"
                 android:height="10dp" />
