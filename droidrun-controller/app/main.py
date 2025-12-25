@@ -1,7 +1,7 @@
 """Main Flet application for Droidrun Controller - Professional Dashboard 2025."""
 
 import flet as ft
-from .theme import COLORS, get_theme, get_colors, set_theme_mode, get_theme_mode, SPACING, RADIUS
+from .theme import COLORS, get_theme, get_colors, set_theme_mode, get_theme_mode, SPACING, RADIUS, ANIMATION, get_shadow
 from .views import DevicesView, WorkflowsView, ExecutionsView, SettingsView, AgentRunnerView
 from .views.analytics import AnalyticsView
 from .views.phone_viewer import PhoneViewerView
@@ -264,26 +264,47 @@ class DroidrunApp:
                 border=ft.border.only(right=ft.BorderSide(1, colors["border"])),
             )
 
-        # Search bar
+        # Search bar - refined with subtle shadow and improved hover
         search_bar = ft.Container(
             content=ft.Row(
                 [
-                    ft.Icon(ft.Icons.SEARCH, size=18, color=colors["text_muted"]),
-                    ft.Container(width=10),
-                    ft.Text("Search", size=13, color=colors["text_muted"]),
+                    ft.Container(
+                        content=ft.Icon(ft.Icons.SEARCH, size=16, color=colors["text_muted"]),
+                        width=32,
+                        height=32,
+                        border_radius=RADIUS["sm"],
+                        bgcolor=colors["bg_tertiary"],
+                        alignment=ft.alignment.center,
+                    ),
+                    ft.Container(width=SPACING["sm"]),
+                    ft.Text(
+                        "Search...",
+                        size=13,
+                        color=colors["text_muted"],
+                        weight=ft.FontWeight.W_400,
+                    ),
                     ft.Container(expand=True),
                     ft.Container(
-                        content=ft.Text("⌘ K", size=11, color=colors["text_muted"]),
+                        content=ft.Text(
+                            "⌘K",
+                            size=10,
+                            color=colors["text_muted"],
+                            weight=ft.FontWeight.W_500,
+                        ),
                         padding=ft.padding.symmetric(horizontal=8, vertical=4),
-                        border_radius=4,
-                        bgcolor=colors["bg_tertiary"],
+                        border_radius=RADIUS["xs"],
+                        bgcolor=colors["bg_hover"],
+                        border=ft.border.all(1, colors["border_light"]),
                     ),
                 ],
             ),
-            padding=ft.padding.symmetric(horizontal=14, vertical=10),
+            padding=ft.padding.symmetric(horizontal=12, vertical=10),
             margin=ft.margin.symmetric(horizontal=16),
             border_radius=RADIUS["md"],
+            bgcolor=colors["bg_input"],
             border=ft.border.all(1, colors["border"]),
+            shadow=get_shadow("xs"),
+            animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
             on_click=lambda _: self.toast.info("Search coming soon..."),
             on_hover=self._on_search_hover,
         )
@@ -300,10 +321,10 @@ class DroidrunApp:
 
         main_nav = ft.Column(
             [self._build_nav_item(*item) for item in main_nav_items],
-            spacing=2,
+            spacing=SPACING["xxs"],
         )
 
-        # Actions section
+        # Actions section - refined with letter spacing and consistent spacing
         actions_section = ft.Container(
             content=ft.Column(
                 [
@@ -312,15 +333,16 @@ class DroidrunApp:
                         size=10,
                         weight=ft.FontWeight.W_600,
                         color=colors["text_muted"],
+                        letter_spacing=1,
                     ),
-                    ft.Container(height=10),
+                    ft.Container(height=SPACING["md"]),
                     self._build_action_item(
                         "New Recording",
                         ft.Icons.FIBER_MANUAL_RECORD,
                         colors["error"],
                         self._on_new_recording,
                     ),
-                    ft.Container(height=6),
+                    ft.Container(height=SPACING["sm"]),
                     self._build_action_item(
                         "Scan Devices",
                         ft.Icons.RADAR,
@@ -329,24 +351,40 @@ class DroidrunApp:
                     ),
                 ],
             ),
-            padding=ft.padding.only(left=20, right=20, top=20),
+            padding=ft.padding.only(left=22, right=20, top=SPACING["xl"]),
         )
 
-        # Status indicator
+        # Status indicator - enhanced with pulse animation hint
         status_section = ft.Container(
             content=ft.Row(
                 [
                     ft.Container(
-                        width=8,
-                        height=8,
-                        border_radius=4,
-                        bgcolor=colors["success"],
+                        content=ft.Container(
+                            width=6,
+                            height=6,
+                            border_radius=3,
+                            bgcolor=colors["success"],
+                        ),
+                        width=22,
+                        height=22,
+                        border_radius=11,
+                        bgcolor=colors["success_subtle"],
+                        alignment=ft.alignment.center,
                     ),
-                    ft.Container(width=10),
+                    ft.Container(width=SPACING["sm"]),
                     ft.Text(
                         "System Ready",
                         size=12,
                         color=colors["text_secondary"],
+                        weight=ft.FontWeight.W_500,
+                    ),
+                    ft.Container(expand=True),
+                    ft.Container(
+                        content=ft.Icon(
+                            ft.Icons.CHECK_CIRCLE,
+                            size=14,
+                            color=colors["success"],
+                        ),
                     ),
                 ],
             ),
@@ -354,71 +392,106 @@ class DroidrunApp:
             margin=ft.margin.symmetric(horizontal=16),
             border_radius=RADIUS["sm"],
             bgcolor=colors["bg_tertiary"],
+            border=ft.border.all(1, colors["border_light"]),
         )
 
-        # Settings at bottom
+        # Settings at bottom - refined with better divider and item styling
         settings_section = ft.Container(
             content=ft.Column(
                 [
-                    ft.Divider(color=colors["border"], height=1),
-                    ft.Container(height=12),
+                    # Gradient divider effect
+                    ft.Container(
+                        content=ft.Container(
+                            height=1,
+                            bgcolor=colors["border"],
+                        ),
+                        margin=ft.margin.symmetric(horizontal=16),
+                    ),
+                    ft.Container(height=SPACING["md"]),
                     self._build_nav_item(
                         "settings", "Settings",
                         ft.Icons.SETTINGS_OUTLINED, ft.Icons.SETTINGS
                     ),
-                    ft.Container(height=8),
-                    # Help & Support
+                    ft.Container(height=SPACING["sm"]),
+                    # Help & Support - polished secondary nav item
                     ft.Container(
                         content=ft.Row(
                             [
-                                ft.Icon(ft.Icons.HELP_OUTLINE, size=18, color=colors["text_muted"]),
-                                ft.Container(width=12),
-                                ft.Text("Help & Support", size=13, color=colors["text_secondary"]),
+                                ft.Container(
+                                    content=ft.Icon(ft.Icons.HELP_OUTLINE, size=18, color=colors["text_muted"]),
+                                    width=36,
+                                    height=36,
+                                    border_radius=RADIUS["sm"],
+                                    alignment=ft.alignment.center,
+                                ),
+                                ft.Container(width=SPACING["sm"]),
+                                ft.Text(
+                                    "Help & Support",
+                                    size=13,
+                                    weight=ft.FontWeight.W_500,
+                                    color=colors["text_secondary"],
+                                ),
                             ],
                         ),
-                        padding=ft.padding.symmetric(horizontal=14, vertical=10),
-                        border_radius=RADIUS["sm"],
+                        padding=ft.padding.only(left=10, right=14, top=8, bottom=8),
+                        border_radius=RADIUS["md"],
+                        border=ft.border.all(1, "transparent"),
+                        animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
                         on_click=lambda _: self.toast.info("Help coming soon..."),
                         on_hover=self._on_nav_hover_secondary,
                     ),
-                    ft.Container(height=8),
-                    # Collapse toggle
+                    ft.Container(height=SPACING["sm"]),
+                    # Collapse toggle - polished
                     ft.Container(
                         content=ft.Row(
                             [
-                                ft.Icon(ft.Icons.CHEVRON_LEFT, size=18, color=colors["text_muted"]),
-                                ft.Container(width=12),
-                                ft.Text("Collapse", size=13, color=colors["text_secondary"]),
+                                ft.Container(
+                                    content=ft.Icon(ft.Icons.CHEVRON_LEFT, size=18, color=colors["text_muted"]),
+                                    width=36,
+                                    height=36,
+                                    border_radius=RADIUS["sm"],
+                                    alignment=ft.alignment.center,
+                                ),
+                                ft.Container(width=SPACING["sm"]),
+                                ft.Text(
+                                    "Collapse",
+                                    size=13,
+                                    weight=ft.FontWeight.W_500,
+                                    color=colors["text_secondary"],
+                                ),
                             ],
                         ),
-                        padding=ft.padding.symmetric(horizontal=14, vertical=10),
-                        border_radius=RADIUS["sm"],
+                        padding=ft.padding.only(left=10, right=14, top=8, bottom=8),
+                        border_radius=RADIUS["md"],
+                        border=ft.border.all(1, "transparent"),
+                        animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
                         on_click=self._toggle_sidebar,
                         on_hover=self._on_nav_hover_secondary,
                     ),
                 ],
             ),
-            padding=ft.padding.only(left=16, right=16, bottom=20),
+            padding=ft.padding.only(left=12, right=12, bottom=20),
         )
 
         return ft.Container(
             content=ft.Column(
                 [
                     logo_section,
-                    ft.Container(height=8),
+                    ft.Container(height=SPACING["sm"]),
                     search_bar,
-                    ft.Container(height=20),
+                    ft.Container(height=SPACING["lg"]),
                     status_section,
-                    ft.Container(height=24),
-                    # Navigation label
+                    ft.Container(height=SPACING["xl"]),
+                    # Navigation label - refined
                     ft.Container(
                         content=ft.Text(
                             "NAVIGATION",
                             size=10,
                             weight=ft.FontWeight.W_600,
                             color=colors["text_muted"],
+                            letter_spacing=1,
                         ),
-                        padding=ft.padding.only(left=20, bottom=10),
+                        padding=ft.padding.only(left=22, bottom=SPACING["sm"]),
                     ),
                     ft.Container(
                         content=main_nav,
@@ -430,42 +503,62 @@ class DroidrunApp:
                 ],
                 spacing=0,
             ),
-            width=260,
+            width=264,
             bgcolor=colors["bg_secondary"],
             border=ft.border.only(right=ft.BorderSide(1, colors["border"])),
         )
 
     def _build_nav_item(self, key: str, label: str, icon_outline: str, icon_filled: str):
-        """Build a navigation item."""
+        """Build a navigation item with polished hover effects."""
         is_selected = self.current_view == key
         colors = COLORS
+
+        # Icon container with subtle background when selected
+        icon_container = ft.Container(
+            content=ft.Icon(
+                icon_filled if is_selected else icon_outline,
+                size=20,
+                color=colors["primary"] if is_selected else colors["text_secondary"],
+            ),
+            width=36,
+            height=36,
+            border_radius=RADIUS["sm"],
+            bgcolor=colors["primary_glow"] if is_selected else "transparent",
+            alignment=ft.alignment.center,
+        )
 
         return ft.Container(
             content=ft.Row(
                 [
-                    ft.Icon(
-                        icon_filled if is_selected else icon_outline,
-                        size=20,
-                        color=colors["primary"] if is_selected else colors["text_secondary"],
-                    ),
-                    ft.Container(width=12),
+                    icon_container,
+                    ft.Container(width=SPACING["sm"]),
                     ft.Text(
                         label,
                         size=14,
-                        weight=ft.FontWeight.W_600 if is_selected else ft.FontWeight.W_400,
+                        weight=ft.FontWeight.W_600 if is_selected else ft.FontWeight.W_500,
                         color=colors["text_primary"] if is_selected else colors["text_secondary"],
+                    ),
+                    ft.Container(expand=True),
+                    # Active indicator
+                    ft.Container(
+                        width=4 if is_selected else 0,
+                        height=24,
+                        border_radius=2,
+                        bgcolor=colors["primary"] if is_selected else "transparent",
                     ),
                 ],
             ),
-            padding=ft.padding.symmetric(horizontal=14, vertical=12),
+            padding=ft.padding.only(left=10, right=14, top=8, bottom=8),
             border_radius=RADIUS["md"],
-            bgcolor=colors["primary_glow"] if is_selected else "transparent",
+            bgcolor=colors["primary_subtle"] if is_selected else "transparent",
+            border=ft.border.all(1, colors["primary_glow"] if is_selected else "transparent"),
+            animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
             on_hover=lambda e, k=key: self._on_nav_hover(e, k) if not is_selected else None,
             on_click=lambda e, k=key: self._on_nav_click(k),
         )
 
     def _build_action_item(self, label: str, icon: str, color: str, on_click):
-        """Build a quick action button."""
+        """Build a quick action button with enhanced styling."""
         colors = COLORS
 
         return ft.Container(
@@ -473,65 +566,85 @@ class DroidrunApp:
                 [
                     ft.Container(
                         content=ft.Icon(icon, size=16, color=color),
-                        width=32,
-                        height=32,
+                        width=34,
+                        height=34,
                         border_radius=RADIUS["sm"],
-                        bgcolor=f"{color}18",
+                        bgcolor=f"{color}15",
+                        border=ft.border.all(1, f"{color}30"),
                         alignment=ft.alignment.center,
                     ),
-                    ft.Container(width=12),
+                    ft.Container(width=SPACING["md"]),
                     ft.Text(
                         label,
                         size=13,
                         weight=ft.FontWeight.W_500,
                         color=colors["text_primary"],
                     ),
+                    ft.Container(expand=True),
+                    ft.Icon(
+                        ft.Icons.ARROW_FORWARD_IOS,
+                        size=12,
+                        color=colors["text_muted"],
+                    ),
                 ],
             ),
-            padding=ft.padding.symmetric(horizontal=12, vertical=8),
+            padding=ft.padding.symmetric(horizontal=12, vertical=10),
             border_radius=RADIUS["md"],
+            bgcolor=colors["bg_card"],
             border=ft.border.all(1, colors["border"]),
+            shadow=get_shadow("xs"),
+            animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
             on_click=on_click,
             on_hover=self._on_action_hover,
         )
 
     def _on_search_hover(self, e):
-        """Handle search bar hover."""
+        """Handle search bar hover with enhanced effects."""
         colors = COLORS
         if e.data == "true":
             e.control.border = ft.border.all(1, colors["primary"])
+            e.control.bgcolor = colors["bg_card"]
+            e.control.shadow = get_shadow("sm")
         else:
             e.control.border = ft.border.all(1, colors["border"])
+            e.control.bgcolor = colors["bg_input"]
+            e.control.shadow = get_shadow("xs")
         e.control.update()
 
     def _on_nav_hover(self, e, key: str):
-        """Handle navigation item hover."""
+        """Handle navigation item hover with smooth transitions."""
         if self.current_view != key:
             colors = COLORS
             if e.data == "true":
                 e.control.bgcolor = colors["bg_hover"]
+                e.control.border = ft.border.all(1, colors["border_light"])
             else:
                 e.control.bgcolor = "transparent"
+                e.control.border = ft.border.all(1, "transparent")
             e.control.update()
 
     def _on_nav_hover_secondary(self, e):
-        """Handle secondary nav hover."""
+        """Handle secondary nav hover with refined feedback."""
         colors = COLORS
         if e.data == "true":
             e.control.bgcolor = colors["bg_hover"]
+            e.control.border = ft.border.all(1, colors["border_light"])
         else:
             e.control.bgcolor = "transparent"
+            e.control.border = ft.border.all(1, "transparent")
         e.control.update()
 
     def _on_action_hover(self, e):
-        """Handle action button hover."""
+        """Handle action button hover with elevation effect."""
         colors = COLORS
         if e.data == "true":
             e.control.bgcolor = colors["bg_hover"]
             e.control.border = ft.border.all(1, colors["border_hover"])
+            e.control.shadow = get_shadow("sm")
         else:
-            e.control.bgcolor = "transparent"
+            e.control.bgcolor = colors["bg_card"]
             e.control.border = ft.border.all(1, colors["border"])
+            e.control.shadow = get_shadow("xs")
         e.control.update()
 
     def _on_nav_click(self, key: str):
@@ -632,7 +745,7 @@ class DroidrunApp:
             print(f"Error loading view data: {e}")
 
     def _build_nav_item_collapsed(self, key: str, icon_outline: str, icon_filled: str):
-        """Build a collapsed navigation item (icon only)."""
+        """Build a collapsed navigation item (icon only) with enhanced styling."""
         is_selected = self.current_view == key
         colors = COLORS
 
@@ -642,17 +755,20 @@ class DroidrunApp:
                 size=22,
                 color=colors["primary"] if is_selected else colors["text_secondary"],
             ),
-            width=44,
-            height=44,
+            width=46,
+            height=46,
             border_radius=RADIUS["md"],
-            bgcolor=colors["primary_glow"] if is_selected else "transparent",
+            bgcolor=colors["primary_subtle"] if is_selected else "transparent",
+            border=ft.border.all(1, colors["primary_glow"] if is_selected else "transparent"),
             alignment=ft.alignment.center,
+            animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
             on_hover=lambda e, k=key: self._on_nav_hover(e, k) if not is_selected else None,
             on_click=lambda e, k=key: self._on_nav_click(k),
+            tooltip=key.replace("_", " ").title() if not is_selected else None,
         )
 
     def _build_mobile_nav(self):
-        """Build bottom navigation for mobile."""
+        """Build bottom navigation for mobile with polished styling."""
         colors = COLORS
         nav_items = [
             ("dashboard", "Home", ft.Icons.DASHBOARD_OUTLINED, ft.Icons.DASHBOARD),
@@ -669,19 +785,27 @@ class DroidrunApp:
                 ft.Container(
                     content=ft.Column(
                         [
-                            ft.Icon(
-                                icon_filled if is_selected else icon_outline,
-                                size=22,
-                                color=colors["primary"] if is_selected else colors["text_muted"],
+                            ft.Container(
+                                content=ft.Icon(
+                                    icon_filled if is_selected else icon_outline,
+                                    size=22,
+                                    color=colors["primary"] if is_selected else colors["text_muted"],
+                                ),
+                                width=40,
+                                height=32,
+                                border_radius=RADIUS["lg"],
+                                bgcolor=colors["primary_glow"] if is_selected else "transparent",
+                                alignment=ft.alignment.center,
                             ),
                             ft.Text(
                                 label,
                                 size=10,
+                                weight=ft.FontWeight.W_600 if is_selected else ft.FontWeight.W_400,
                                 color=colors["primary"] if is_selected else colors["text_muted"],
                             ),
                         ],
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                        spacing=2,
+                        spacing=SPACING["xxs"],
                     ),
                     expand=True,
                     padding=ft.padding.symmetric(vertical=8),
@@ -693,7 +817,8 @@ class DroidrunApp:
             content=ft.Row(items, spacing=0),
             bgcolor=colors["bg_secondary"],
             border=ft.border.only(top=ft.BorderSide(1, colors["border"])),
-            padding=ft.padding.symmetric(horizontal=8),
+            padding=ft.padding.symmetric(horizontal=8, vertical=4),
+            shadow=get_shadow("sm"),
         )
 
     def _toggle_sidebar(self, e=None):
