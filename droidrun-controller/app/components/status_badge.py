@@ -157,9 +157,9 @@ class StatusBadge(ft.Container):
                 border_radius=(dot_size + 8) // 2,
                 alignment=ft.alignment.center,
                 shadow=ft.BoxShadow(
-                    spread_radius=2,
-                    blur_radius=8,
-                    color=f"{self._color}50",
+                    spread_radius=1,
+                    blur_radius=6,
+                    color=f"{self._color}35",
                     offset=ft.Offset(0, 0),
                 ),
                 animate=ft.Animation(1000, ft.AnimationCurve.EASE_IN_OUT),
@@ -174,8 +174,8 @@ class StatusBadge(ft.Container):
                 alignment=ft.alignment.center,
                 shadow=ft.BoxShadow(
                     spread_radius=0,
-                    blur_radius=4,
-                    color=f"{self._color}30",
+                    blur_radius=3,
+                    color=f"{self._color}20",
                     offset=ft.Offset(0, 1),
                 ) if self._variant != "subtle" else None,
             )
@@ -256,9 +256,9 @@ class StatusDot(ft.Container):
                 border_radius=(size + 6) // 2,
                 alignment=ft.alignment.center,
                 shadow=ft.BoxShadow(
-                    spread_radius=1,
-                    blur_radius=6,
-                    color=f"{self._color}60",
+                    spread_radius=0,
+                    blur_radius=4,
+                    color=f"{self._color}40",
                     offset=ft.Offset(0, 0),
                 ),
             )

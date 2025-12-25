@@ -26,10 +26,10 @@ class LoadingSpinner(ft.Container):
     ):
         # Size configurations with refined proportions
         sizes = {
-            "small": {"width": 24, "stroke": 2, "glow_radius": 16},
-            "medium": {"width": 40, "stroke": 3, "glow_radius": 24},
-            "large": {"width": 56, "stroke": 4, "glow_radius": 32},
-            "xlarge": {"width": 72, "stroke": 5, "glow_radius": 40},
+            "small": {"width": 24, "stroke": 2, "glow_radius": 8},
+            "medium": {"width": 40, "stroke": 3, "glow_radius": 12},
+            "large": {"width": 56, "stroke": 4, "glow_radius": 16},
+            "xlarge": {"width": 72, "stroke": 5, "glow_radius": 20},
         }
         size_config = sizes.get(size, sizes["medium"])
 
@@ -53,7 +53,7 @@ class LoadingSpinner(ft.Container):
                 shadow=ft.BoxShadow(
                     spread_radius=0,
                     blur_radius=size_config["glow_radius"],
-                    color=f"{spinner_color}35",
+                    color=f"{spinner_color}20",
                     offset=ft.Offset(0, 0),
                 ),
             )
@@ -108,8 +108,8 @@ class LoadingOverlay(ft.Container):
                 border=ft.border.all(1, f"{spinner_color}12"),
                 shadow=ft.BoxShadow(
                     spread_radius=0,
-                    blur_radius=32,
-                    color=f"{spinner_color}30",
+                    blur_radius=16,
+                    color=f"{spinner_color}18",
                     offset=ft.Offset(0, 0),
                 ),
             )
@@ -118,7 +118,7 @@ class LoadingOverlay(ft.Container):
                 content=spinner_content,
                 shadow=ft.BoxShadow(
                     spread_radius=0,
-                    blur_radius=24,
+                    blur_radius=12,
                     color=COLORS["primary_glow"],
                     offset=ft.Offset(0, 0),
                 ),
@@ -163,9 +163,9 @@ class LoadingOverlay(ft.Container):
                 border=ft.border.all(1, COLORS["border"]),
                 shadow=ft.BoxShadow(
                     spread_radius=0,
-                    blur_radius=56,
-                    color="#00000045",
-                    offset=ft.Offset(0, 16),
+                    blur_radius=20,
+                    color="#00000020",
+                    offset=ft.Offset(0, 8),
                 ),
                 animate=ft.Animation(ANIMATION["slow"], ft.AnimationCurve.EASE_OUT),
                 animate_scale=ft.Animation(ANIMATION["slow"], ft.AnimationCurve.EASE_OUT),
@@ -338,9 +338,9 @@ class EmptyState(ft.Container):
                 "icon_color": COLORS["primary"],
                 "icon_shadow": ft.BoxShadow(
                     spread_radius=0,
-                    blur_radius=20,
-                    color=f"{COLORS['primary']}20",
-                    offset=ft.Offset(0, 6),
+                    blur_radius=8,
+                    color=f"{COLORS['primary']}12",
+                    offset=ft.Offset(0, 4),
                 ),
             },
             "success": {
@@ -349,9 +349,9 @@ class EmptyState(ft.Container):
                 "icon_color": COLORS["success"],
                 "icon_shadow": ft.BoxShadow(
                     spread_radius=0,
-                    blur_radius=20,
-                    color=f"{COLORS['success']}20",
-                    offset=ft.Offset(0, 6),
+                    blur_radius=8,
+                    color=f"{COLORS['success']}12",
+                    offset=ft.Offset(0, 4),
                 ),
             },
             "warning": {
@@ -360,9 +360,9 @@ class EmptyState(ft.Container):
                 "icon_color": COLORS["warning"],
                 "icon_shadow": ft.BoxShadow(
                     spread_radius=0,
-                    blur_radius=20,
-                    color=f"{COLORS['warning']}20",
-                    offset=ft.Offset(0, 6),
+                    blur_radius=8,
+                    color=f"{COLORS['warning']}12",
+                    offset=ft.Offset(0, 4),
                 ),
             },
             "error": {
@@ -371,9 +371,9 @@ class EmptyState(ft.Container):
                 "icon_color": COLORS["error"],
                 "icon_shadow": ft.BoxShadow(
                     spread_radius=0,
-                    blur_radius=20,
-                    color=f"{COLORS['error']}20",
-                    offset=ft.Offset(0, 6),
+                    blur_radius=8,
+                    color=f"{COLORS['error']}12",
+                    offset=ft.Offset(0, 4),
                 ),
             },
             "info": {
@@ -382,9 +382,9 @@ class EmptyState(ft.Container):
                 "icon_color": COLORS["info"],
                 "icon_shadow": ft.BoxShadow(
                     spread_radius=0,
-                    blur_radius=20,
-                    color=f"{COLORS['info']}20",
-                    offset=ft.Offset(0, 6),
+                    blur_radius=8,
+                    color=f"{COLORS['info']}12",
+                    offset=ft.Offset(0, 4),
                 ),
             },
         }
@@ -611,7 +611,7 @@ class ProgressOverlay(ft.Container):
                     bgcolor=f"{COLORS['primary']}08",
                     shadow=ft.BoxShadow(
                         spread_radius=0,
-                        blur_radius=24,
+                        blur_radius=12,
                         color=COLORS["primary_glow"],
                         offset=ft.Offset(0, 0),
                     ),
@@ -664,9 +664,9 @@ class ProgressOverlay(ft.Container):
                 border=ft.border.all(1, COLORS["border"]),
                 shadow=ft.BoxShadow(
                     spread_radius=0,
-                    blur_radius=56,
-                    color="#00000045",
-                    offset=ft.Offset(0, 16),
+                    blur_radius=20,
+                    color="#00000020",
+                    offset=ft.Offset(0, 8),
                 ),
                 animate=ft.Animation(ANIMATION["slow"], ft.AnimationCurve.EASE_OUT),
             ),
