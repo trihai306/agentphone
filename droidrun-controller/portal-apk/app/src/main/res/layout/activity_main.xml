@@ -427,15 +427,16 @@
                         android:paddingTop="16dp"
                         android:paddingBottom="16dp">
 
-                        <!-- Icon with subtle background container -->
+                        <!-- Icon with tinted background container -->
                         <FrameLayout
                             android:layout_width="44dp"
                             android:layout_height="44dp"
-                            android:background="@drawable/icon_container_background">
+                            android:background="@drawable/icon_container_background"
+                            android:backgroundTint="@color/accent_blue_container">
 
                             <ImageView
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_bounds"
                                 app:tint="@color/accent_blue"
@@ -448,7 +449,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="14dp"
+                            android:layout_marginStart="16dp"
                             android:layout_marginEnd="12dp">
 
                             <TextView
@@ -463,7 +464,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Highlight interactive elements"
+                                android:text="Highlight interactive elements on screen"
                                 android:textSize="13sp"
                                 android:textColor="@color/text_secondary"
                                 android:layout_marginTop="4dp" />
@@ -488,15 +489,16 @@
                         android:paddingTop="16dp"
                         android:paddingBottom="16dp">
 
-                        <!-- Icon with subtle background container -->
+                        <!-- Icon with tinted background container -->
                         <FrameLayout
                             android:layout_width="44dp"
                             android:layout_height="44dp"
-                            android:background="@drawable/icon_container_background">
+                            android:background="@drawable/icon_container_background"
+                            android:backgroundTint="@color/accent_purple_container">
 
                             <ImageView
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_index"
                                 app:tint="@color/accent_purple"
@@ -509,7 +511,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="14dp"
+                            android:layout_marginStart="16dp"
                             android:layout_marginEnd="12dp">
 
                             <TextView
@@ -524,7 +526,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Display node index labels"
+                                android:text="Display numbered labels on UI nodes"
                                 android:textSize="13sp"
                                 android:textColor="@color/text_secondary"
                                 android:layout_marginTop="4dp" />
@@ -584,11 +586,12 @@
                         android:paddingTop="16dp"
                         android:paddingBottom="16dp">
 
-                        <!-- Icon with subtle background container -->
+                        <!-- Icon with tinted background container -->
                         <FrameLayout
                             android:layout_width="44dp"
                             android:layout_height="44dp"
-                            android:background="@drawable/icon_container_background">
+                            android:background="@drawable/icon_container_background"
+                            android:backgroundTint="@color/accent_cyan_container">
 
                             <ImageView
                                 android:layout_width="22dp"
@@ -605,7 +608,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="14dp">
+                            android:layout_marginStart="16dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -624,7 +627,7 @@
                                 android:textColor="@color/accent_cyan"
                                 android:fontFamily="monospace"
                                 android:layout_marginTop="4dp"
-                                android:letterSpacing="0.02" />
+                                android:letterSpacing="0.03" />
 
                         </LinearLayout>
 
@@ -641,11 +644,12 @@
                         android:paddingTop="16dp"
                         android:paddingBottom="16dp">
 
-                        <!-- Icon with subtle background container -->
+                        <!-- Icon with tinted background container -->
                         <FrameLayout
                             android:layout_width="44dp"
                             android:layout_height="44dp"
-                            android:background="@drawable/icon_container_background">
+                            android:background="@drawable/icon_container_background"
+                            android:backgroundTint="@color/accent_green_container">
 
                             <ImageView
                                 android:layout_width="22dp"
@@ -662,7 +666,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="14dp">
+                            android:layout_marginStart="16dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -678,10 +682,10 @@
                                 android:layout_height="wrap_content"
                                 android:text="content://com.agent.portal/"
                                 android:textSize="13sp"
-                                android:textColor="@color/accent_cyan"
+                                android:textColor="@color/accent_green"
                                 android:fontFamily="monospace"
                                 android:layout_marginTop="4dp"
-                                android:letterSpacing="0.02"
+                                android:letterSpacing="0.03"
                                 android:ellipsize="end"
                                 android:maxLines="1" />
 
