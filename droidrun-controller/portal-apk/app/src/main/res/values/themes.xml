@@ -296,33 +296,340 @@
         <item name="android:letterSpacing">0.01</item>
     </style>
 
-    <!-- Button Styles -->
-    <style name="Widget.Portal.Button.Tonal" parent="Widget.Material3.Button.TonalButton">
-        <item name="android:textColor">@color/accent_blue</item>
-        <item name="backgroundTint">@color/accent_blue_container</item>
+    <!-- ==================== Button Styles ==================== -->
+    <!-- Enhanced button styles with proper states and micro-interactions -->
+
+    <!-- Base Button Style - Common properties for all buttons -->
+    <style name="Widget.Portal.Button.Base" parent="Widget.Material3.Button">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:letterSpacing">0.01</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <!-- Primary Button - Main CTA, filled style -->
+    <style name="Widget.Portal.Button.Primary" parent="Widget.Portal.Button.Base">
+        <item name="android:textColor">@color/background_dark</item>
+        <item name="backgroundTint">@color/button_primary_selector</item>
+        <item name="rippleColor">@color/button_ripple_primary</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingStart">24dp</item>
+        <item name="android:paddingEnd">24dp</item>
+        <item name="iconTint">@color/background_dark</item>
+        <item name="iconPadding">8dp</item>
+        <item name="elevation">0dp</item>
+    </style>
+
+    <!-- Primary Button Small - Compact version -->
+    <style name="Widget.Portal.Button.Primary.Small">
         <item name="android:minHeight">36dp</item>
-        <item name="cornerRadius">18dp</item>
         <item name="android:paddingStart">16dp</item>
         <item name="android:paddingEnd">16dp</item>
-        <item name="android:textAllCaps">false</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:textSize">13sp</item>
     </style>
 
+    <!-- Primary Button Large - Prominent version -->
+    <style name="Widget.Portal.Button.Primary.Large">
+        <item name="android:minHeight">56dp</item>
+        <item name="android:paddingStart">32dp</item>
+        <item name="android:paddingEnd">32dp</item>
+        <item name="cornerRadius">20dp</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <!-- Secondary Button - Less emphasis than primary -->
+    <style name="Widget.Portal.Button.Secondary" parent="Widget.Portal.Button.Base">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="backgroundTint">@color/button_secondary_selector</item>
+        <item name="rippleColor">@color/button_ripple_secondary</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingStart">24dp</item>
+        <item name="android:paddingEnd">24dp</item>
+        <item name="iconTint">@color/icon_secondary</item>
+        <item name="iconPadding">8dp</item>
+        <item name="elevation">0dp</item>
+    </style>
+
+    <!-- Tonal Button - Medium emphasis with container color -->
+    <style name="Widget.Portal.Button.Tonal" parent="Widget.Material3.Button.TonalButton">
+        <item name="android:textColor">@color/accent_blue</item>
+        <item name="backgroundTint">@color/button_tonal_selector</item>
+        <item name="rippleColor">@color/button_ripple_tonal</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:minHeight">40dp</item>
+        <item name="cornerRadius">20dp</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:letterSpacing">0.01</item>
+        <item name="iconTint">@color/accent_blue</item>
+        <item name="iconPadding">8dp</item>
+    </style>
+
+    <!-- Tonal Button Small -->
+    <style name="Widget.Portal.Button.Tonal.Small">
+        <item name="android:minHeight">32dp</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <!-- Tonal Button - Secondary color variant -->
+    <style name="Widget.Portal.Button.Tonal.Secondary" parent="Widget.Portal.Button.Tonal">
+        <item name="android:textColor">@color/accent_cyan</item>
+        <item name="backgroundTint">@color/accent_cyan_container</item>
+        <item name="iconTint">@color/accent_cyan</item>
+    </style>
+
+    <!-- Tonal Button - Success variant -->
+    <style name="Widget.Portal.Button.Tonal.Success" parent="Widget.Portal.Button.Tonal">
+        <item name="android:textColor">@color/accent_green</item>
+        <item name="backgroundTint">@color/accent_green_container</item>
+        <item name="iconTint">@color/accent_green</item>
+    </style>
+
+    <!-- Tonal Button - Warning variant -->
+    <style name="Widget.Portal.Button.Tonal.Warning" parent="Widget.Portal.Button.Tonal">
+        <item name="android:textColor">@color/accent_orange</item>
+        <item name="backgroundTint">@color/accent_orange_container</item>
+        <item name="iconTint">@color/accent_orange</item>
+    </style>
+
+    <!-- Outlined Button - Low emphasis with border -->
     <style name="Widget.Portal.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:textColor">@color/text_secondary</item>
-        <item name="strokeColor">@color/border_default</item>
+        <item name="strokeColor">@color/button_outlined_stroke_selector</item>
         <item name="strokeWidth">1dp</item>
+        <item name="rippleColor">@color/button_ripple_outlined</item>
         <item name="iconTint">@color/text_secondary</item>
+        <item name="iconPadding">8dp</item>
         <item name="cornerRadius">16dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
         <item name="android:textAllCaps">false</item>
+        <item name="android:letterSpacing">0.01</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
     </style>
 
-    <style name="Widget.Portal.Button.Primary" parent="Widget.Material3.Button">
-        <item name="android:textColor">@color/background_dark</item>
-        <item name="backgroundTint">@color/accent_blue</item>
-        <item name="cornerRadius">16dp</item>
+    <!-- Outlined Button Small -->
+    <style name="Widget.Portal.Button.Outlined.Small">
+        <item name="android:minHeight">36dp</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
+    <!-- Outlined Button - Primary accent variant -->
+    <style name="Widget.Portal.Button.Outlined.Primary" parent="Widget.Portal.Button.Outlined">
+        <item name="android:textColor">@color/accent_blue</item>
+        <item name="strokeColor">@color/accent_blue</item>
+        <item name="iconTint">@color/accent_blue</item>
+    </style>
+
+    <!-- Text Button - Lowest emphasis, no background -->
+    <style name="Widget.Portal.Button.Text" parent="Widget.Material3.Button.TextButton">
+        <item name="android:textColor">@color/accent_blue</item>
+        <item name="rippleColor">@color/button_ripple_text</item>
+        <item name="iconTint">@color/accent_blue</item>
+        <item name="iconPadding">8dp</item>
+        <item name="android:minHeight">40dp</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
         <item name="android:textAllCaps">false</item>
+        <item name="android:letterSpacing">0.01</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+
+    <!-- Text Button - Secondary variant -->
+    <style name="Widget.Portal.Button.Text.Secondary" parent="Widget.Portal.Button.Text">
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="iconTint">@color/text_secondary</item>
+    </style>
+
+    <!-- Danger Button - For destructive actions -->
+    <style name="Widget.Portal.Button.Danger" parent="Widget.Portal.Button.Base">
+        <item name="android:textColor">@color/background_dark</item>
+        <item name="backgroundTint">@color/button_danger_selector</item>
+        <item name="rippleColor">@color/button_ripple_danger</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingStart">24dp</item>
+        <item name="android:paddingEnd">24dp</item>
+        <item name="iconTint">@color/background_dark</item>
+        <item name="iconPadding">8dp</item>
+    </style>
+
+    <!-- Danger Button - Tonal variant (less aggressive) -->
+    <style name="Widget.Portal.Button.Danger.Tonal" parent="Widget.Portal.Button.Tonal">
+        <item name="android:textColor">@color/accent_red</item>
+        <item name="backgroundTint">@color/accent_red_container</item>
+        <item name="iconTint">@color/accent_red</item>
+    </style>
+
+    <!-- Danger Button - Outlined variant -->
+    <style name="Widget.Portal.Button.Danger.Outlined" parent="Widget.Portal.Button.Outlined">
+        <item name="android:textColor">@color/accent_red</item>
+        <item name="strokeColor">@color/accent_red</item>
+        <item name="iconTint">@color/accent_red</item>
+    </style>
+
+    <!-- ==================== Icon Button Styles ==================== -->
+
+    <!-- Icon Button - Standard size -->
+    <style name="Widget.Portal.IconButton" parent="Widget.Material3.Button.IconButton">
+        <item name="iconTint">@color/icon_secondary</item>
+        <item name="rippleColor">@color/button_ripple_icon</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="iconSize">24dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:padding">12dp</item>
+    </style>
+
+    <!-- Icon Button Small -->
+    <style name="Widget.Portal.IconButton.Small">
+        <item name="android:minWidth">36dp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="iconSize">20dp</item>
+        <item name="android:padding">8dp</item>
+    </style>
+
+    <!-- Icon Button Large -->
+    <style name="Widget.Portal.IconButton.Large">
+        <item name="android:minWidth">56dp</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="iconSize">28dp</item>
+        <item name="android:padding">14dp</item>
+    </style>
+
+    <!-- Icon Button - Primary accent -->
+    <style name="Widget.Portal.IconButton.Primary" parent="Widget.Portal.IconButton">
+        <item name="iconTint">@color/accent_blue</item>
+    </style>
+
+    <!-- Icon Button - Filled style -->
+    <style name="Widget.Portal.IconButton.Filled" parent="Widget.Material3.Button.IconButton.Filled">
+        <item name="iconTint">@color/background_dark</item>
+        <item name="backgroundTint">@color/button_primary_selector</item>
+        <item name="rippleColor">@color/button_ripple_primary</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="iconSize">24dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+    </style>
+
+    <!-- Icon Button - Filled Tonal style -->
+    <style name="Widget.Portal.IconButton.FilledTonal" parent="Widget.Material3.Button.IconButton.Filled.Tonal">
+        <item name="iconTint">@color/accent_blue</item>
+        <item name="backgroundTint">@color/button_tonal_selector</item>
+        <item name="rippleColor">@color/button_ripple_tonal</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="iconSize">24dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+    </style>
+
+    <!-- Icon Button - Outlined style -->
+    <style name="Widget.Portal.IconButton.Outlined" parent="Widget.Material3.Button.IconButton.Outlined">
+        <item name="iconTint">@color/icon_secondary</item>
+        <item name="strokeColor">@color/border_default</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="rippleColor">@color/button_ripple_outlined</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="iconSize">24dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+    </style>
+
+    <!-- ==================== FAB Styles ==================== -->
+
+    <!-- FAB - Standard size -->
+    <style name="Widget.Portal.FAB" parent="Widget.Material3.FloatingActionButton.Primary">
+        <item name="backgroundTint">@color/accent_blue</item>
+        <item name="tint">@color/background_dark</item>
+        <item name="rippleColor">@color/button_ripple_primary</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Portal.FAB</item>
+        <item name="elevation">4dp</item>
+        <item name="hoveredFocusedTranslationZ">2dp</item>
+        <item name="pressedTranslationZ">4dp</item>
+    </style>
+
+    <!-- FAB - Small size -->
+    <style name="Widget.Portal.FAB.Small" parent="Widget.Material3.FloatingActionButton.Small">
+        <item name="backgroundTint">@color/accent_blue</item>
+        <item name="tint">@color/background_dark</item>
+        <item name="rippleColor">@color/button_ripple_primary</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Portal.FAB.Small</item>
+    </style>
+
+    <!-- FAB - Large size -->
+    <style name="Widget.Portal.FAB.Large" parent="Widget.Material3.FloatingActionButton.Large">
+        <item name="backgroundTint">@color/accent_blue</item>
+        <item name="tint">@color/background_dark</item>
+        <item name="rippleColor">@color/button_ripple_primary</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Portal.FAB.Large</item>
+    </style>
+
+    <!-- FAB - Secondary color variant -->
+    <style name="Widget.Portal.FAB.Secondary" parent="Widget.Portal.FAB">
+        <item name="backgroundTint">@color/surface_container</item>
+        <item name="tint">@color/accent_blue</item>
+        <item name="rippleColor">@color/button_ripple_secondary</item>
+    </style>
+
+    <!-- FAB - Tertiary color variant -->
+    <style name="Widget.Portal.FAB.Tertiary" parent="Widget.Portal.FAB">
+        <item name="backgroundTint">@color/accent_purple</item>
+        <item name="tint">@color/background_dark</item>
+    </style>
+
+    <!-- Extended FAB -->
+    <style name="Widget.Portal.ExtendedFAB" parent="Widget.Material3.ExtendedFloatingActionButton.Primary">
+        <item name="backgroundTint">@color/accent_blue</item>
+        <item name="android:textColor">@color/background_dark</item>
+        <item name="iconTint">@color/background_dark</item>
+        <item name="rippleColor">@color/button_ripple_primary</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Portal.FAB</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:letterSpacing">0.01</item>
+    </style>
+
+    <!-- FAB Shape Appearances -->
+    <style name="ShapeAppearance.Portal.FAB" parent="ShapeAppearance.Material3.Corner.Full">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Portal.FAB.Small" parent="ShapeAppearance.Portal.FAB">
+        <item name="cornerSize">12dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Portal.FAB.Large" parent="ShapeAppearance.Portal.FAB">
+        <item name="cornerSize">28dp</item>
     </style>
 
 </resources>

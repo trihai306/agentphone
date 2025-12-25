@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Disabled state -->
+    <item android:color="@color/button_disabled_container" android:state_enabled="false"/>
+    <!-- Pressed state -->
+    <item android:color="@color/button_secondary_pressed" android:state_pressed="true"/>
+    <!-- Focused state -->
+    <item android:color="@color/surface_container_high" android:state_focused="true"/>
+    <!-- Hovered state -->
+    <item android:color="@color/surface_container" android:state_hovered="true"/>
+    <!-- Default state -->
+    <item android:color="@color/button_secondary"/>
+</selector>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Ripple color for secondary buttons - subtle white ripple -->
+    <item android:color="@color/card_ripple" android:state_pressed="true"/>
+    <item android:color="@color/card_ripple"/>
+</selector>
