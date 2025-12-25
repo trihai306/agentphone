@@ -132,7 +132,7 @@ class ActionButton(ft.Container):
         has_glow = variant in ["primary", "success", "danger", "warning"]
         initial_shadow = ft.BoxShadow(
             spread_radius=0,
-            blur_radius=16 if has_glow else 8,
+            blur_radius=6 if has_glow else 4,
             color=self.style_config["shadow_color"],
             offset=ft.Offset(0, 4),
         ) if has_glow or variant == "secondary" else None
@@ -187,7 +187,7 @@ class ActionButton(ft.Container):
             # Reset shadow
             e.control.shadow = ft.BoxShadow(
                 spread_radius=0,
-                blur_radius=16 if has_glow else 8,
+                blur_radius=6 if has_glow else 4,
                 color=self.style_config["shadow_color"],
                 offset=ft.Offset(0, 4),
             ) if has_glow or self.variant == "secondary" else None
