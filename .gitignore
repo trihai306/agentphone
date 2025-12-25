@@ -1,0 +1,6 @@
+# Auto Claude data directory
+.auto-claude/
+
+# Environment variables
+.env
+*.env
