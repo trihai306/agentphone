@@ -309,46 +309,109 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateStatus() {
+        updateStatusAnimated(animate = true)
+    }
+
+    /**
+     * Updates all status indicators, text, and buttons with optional animations.
+     *
+     * @param animate Whether to apply smooth animations to changes (default: true)
+     */
+    private fun updateStatusAnimated(animate: Boolean) {
         // Accessibility status
         val a11yEnabled = PortalAccessibilityService.isRunning()
-        binding.statusAccessibility.text = if (a11yEnabled) "Running" else "Disabled"
-        updateIndicatorState(binding.indicatorAccessibility, a11yEnabled, false)
-        binding.btnAccessibility.text = if (a11yEnabled) "Enabled" else "Enable"
+        val a11yStatusText = if (a11yEnabled) "Running" else "Disabled"
+        val a11yButtonText = if (a11yEnabled) "Enabled" else "Enable"
+        val a11yTextColor = if (a11yEnabled) R.color.status_on else R.color.status_off
+        val shouldAnimateA11y = animate && prevA11yEnabled != null && prevA11yEnabled != a11yEnabled
+
+        if (shouldAnimateA11y) {
+            animateStatusText(binding.statusAccessibility, a11yStatusText, a11yTextColor)
+            animateButtonText(binding.btnAccessibility, a11yButtonText)
+        } else {
+            binding.statusAccessibility.text = a11yStatusText
+            binding.statusAccessibility.setTextColor(ContextCompat.getColor(this, a11yTextColor))
+            binding.btnAccessibility.text = a11yButtonText
+        }
+        updateIndicatorState(binding.indicatorAccessibility, a11yEnabled, false, shouldAnimateA11y)
         prevA11yEnabled = a11yEnabled
 
         // Server status
         val serverRunning = HttpServerService.isRunning()
-        binding.statusServer.text = if (serverRunning) "Running on port 8080" else "Stopped"
-        updateIndicatorState(binding.indicatorServer, serverRunning, false)
-        binding.btnServer.text = if (serverRunning) "Stop" else "Start"
+        val serverStatusText = if (serverRunning) "Running on port 8080" else "Stopped"
+        val serverButtonText = if (serverRunning) "Stop" else "Start"
+        val serverTextColor = if (serverRunning) R.color.status_on else R.color.status_off
+        val shouldAnimateServer = animate && prevServerRunning != null && prevServerRunning != serverRunning
+
+        if (shouldAnimateServer) {
+            animateStatusText(binding.statusServer, serverStatusText, serverTextColor)
+            animateButtonText(binding.btnServer, serverButtonText)
+        } else {
+            binding.statusServer.text = serverStatusText
+            binding.statusServer.setTextColor(ContextCompat.getColor(this, serverTextColor))
+            binding.btnServer.text = serverButtonText
+        }
+        updateIndicatorState(binding.indicatorServer, serverRunning, false, shouldAnimateServer)
         prevServerRunning = serverRunning
 
         // Keyboard status
         val keyboardEnabled = isKeyboardEnabled()
         val keyboardSelected = isKeyboardSelected()
-        binding.statusKeyboard.text = when {
+        val keyboardStatusText = when {
             keyboardSelected -> "Active"
             keyboardEnabled -> "Enabled (not selected)"
             else -> "Disabled"
         }
-        // Keyboard uses warning state when enabled but not selected
-        updateIndicatorState(binding.indicatorKeyboard, keyboardSelected, keyboardEnabled && !keyboardSelected)
-        binding.btnKeyboard.text = when {
+        val keyboardButtonText = when {
             keyboardSelected -> "Active"
             keyboardEnabled -> "Select"
             else -> "Enable"
         }
-        prevKeyboardState = when {
+        val keyboardTextColor = when {
+            keyboardSelected -> R.color.status_on
+            keyboardEnabled -> R.color.status_warning
+            else -> R.color.status_off
+        }
+        val currentKeyboardState = when {
             keyboardSelected -> 2
             keyboardEnabled -> 1
             else -> 0
         }
+        val shouldAnimateKeyboard = animate && prevKeyboardState != null && prevKeyboardState != currentKeyboardState
+
+        if (shouldAnimateKeyboard) {
+            animateStatusText(binding.statusKeyboard, keyboardStatusText, keyboardTextColor)
+            animateButtonText(binding.btnKeyboard, keyboardButtonText)
+        } else {
+            binding.statusKeyboard.text = keyboardStatusText
+            binding.statusKeyboard.setTextColor(ContextCompat.getColor(this, keyboardTextColor))
+            binding.btnKeyboard.text = keyboardButtonText
+        }
+        // Keyboard uses warning state when enabled but not selected
+        updateIndicatorState(
+            binding.indicatorKeyboard,
+            keyboardSelected,
+            keyboardEnabled && !keyboardSelected,
+            shouldAnimateKeyboard
+        )
+        prevKeyboardState = currentKeyboardState
 
         // Overlay status
         val overlayEnabled = Settings.canDrawOverlays(this)
-        binding.statusOverlay.text = if (overlayEnabled) "Granted" else "Required"
-        updateIndicatorState(binding.indicatorOverlay, overlayEnabled, false)
-        binding.btnOverlay.text = if (overlayEnabled) "Granted" else "Grant"
+        val overlayStatusText = if (overlayEnabled) "Granted" else "Required"
+        val overlayButtonText = if (overlayEnabled) "Granted" else "Grant"
+        val overlayTextColor = if (overlayEnabled) R.color.status_on else R.color.status_off
+        val shouldAnimateOverlay = animate && prevOverlayEnabled != null && prevOverlayEnabled != overlayEnabled
+
+        if (shouldAnimateOverlay) {
+            animateStatusText(binding.statusOverlay, overlayStatusText, overlayTextColor)
+            animateButtonText(binding.btnOverlay, overlayButtonText)
+        } else {
+            binding.statusOverlay.text = overlayStatusText
+            binding.statusOverlay.setTextColor(ContextCompat.getColor(this, overlayTextColor))
+            binding.btnOverlay.text = overlayButtonText
+        }
+        updateIndicatorState(binding.indicatorOverlay, overlayEnabled, false, shouldAnimateOverlay)
         prevOverlayEnabled = overlayEnabled
 
         // Update switch states

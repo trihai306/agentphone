@@ -10,26 +10,26 @@
 10
 11    <!-- Permissions -->
 12    <uses-permission android:name="android.permission.INTERNET" />
-12-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:6:5-67
-12-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:6:22-64
+12-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:6:5-67
+12-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:6:22-64
 13    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-13-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:7:5-79
-13-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:7:22-76
+13-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:7:5-79
+13-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:7:22-76
 14    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-14-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:8:5-78
-14-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:8:22-75
+14-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:8:5-78
+14-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:8:22-75
 15    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-15-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:9:5-77
-15-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:9:22-74
+15-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:9:5-77
+15-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:9:22-74
 16    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-16-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:10:5-89
-16-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:10:22-86
+16-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:10:5-89
+16-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:10:22-86
 17    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-17-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:11:5-77
-17-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:11:22-74
+17-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:11:5-77
+17-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:11:22-74
 18    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-18-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:12:5-81
-18-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:12:22-78
+18-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:12:5-81
+18-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:12:22-78
 19
 20    <permission
 20-->[androidx.core:core:1.12.0] /Users/hainc/.gradle/caches/8.9/transforms/317eb13136502f4d573c549ee61c39bf/transformed/core-1.12.0/AndroidManifest.xml:22:5-24:47
@@ -43,151 +43,151 @@
 24-->[androidx.core:core:1.12.0] /Users/hainc/.gradle/caches/8.9/transforms/317eb13136502f4d573c549ee61c39bf/transformed/core-1.12.0/AndroidManifest.xml:26:22-94
 25
 26    <application
-26-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:14:5-96:19
+26-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:14:5-96:19
 27        android:allowBackup="true"
-27-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:15:9-35
+27-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:15:9-35
 28        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
 28-->[androidx.core:core:1.12.0] /Users/hainc/.gradle/caches/8.9/transforms/317eb13136502f4d573c549ee61c39bf/transformed/core-1.12.0/AndroidManifest.xml:28:18-86
 29        android:debuggable="true"
 30        android:extractNativeLibs="false"
 31        android:icon="@mipmap/ic_launcher"
-31-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:16:9-43
+31-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:16:9-43
 32        android:label="@string/app_name"
-32-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:17:9-41
+32-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:17:9-41
 33        android:roundIcon="@mipmap/ic_launcher_round"
-33-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:18:9-54
+33-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:18:9-54
 34        android:supportsRtl="true"
-34-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:19:9-35
+34-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:19:9-35
 35        android:theme="@style/Theme.AgentPortal" >
-35-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:20:9-49
+35-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:20:9-49
 36
 37        <!-- Main Activity -->
 38        <activity
-38-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:24:9-32:20
+38-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:24:9-32:20
 39            android:name="com.agent.portal.MainActivity"
-39-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:25:13-41
+39-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:25:13-41
 40            android:exported="true"
-40-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:26:13-36
+40-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:26:13-36
 41            android:launchMode="singleTop" >
-41-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:27:13-43
+41-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:27:13-43
 42            <intent-filter>
-42-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:28:13-31:29
+42-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:28:13-31:29
 43                <action android:name="android.intent.action.MAIN" />
-43-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:29:17-69
-43-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:29:25-66
+43-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:29:17-69
+43-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:29:25-66
 44
 45                <category android:name="android.intent.category.LAUNCHER" />
-45-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:30:17-77
-45-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:30:27-74
+45-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:30:17-77
+45-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:30:27-74
 46            </intent-filter>
 47        </activity>
 48
 49        <!-- Accessibility Service -->
 50        <service
-50-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:35:9-45:19
+50-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:35:9-45:19
 51            android:name="com.agent.portal.accessibility.PortalAccessibilityService"
-51-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:36:13-69
+51-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:36:13-69
 52            android:exported="true"
-52-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:37:13-36
+52-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:37:13-36
 53            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" >
-53-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:38:13-79
+53-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:38:13-79
 54            <intent-filter>
-54-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:39:13-41:29
+54-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:39:13-41:29
 55                <action android:name="android.accessibilityservice.AccessibilityService" />
-55-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:40:17-92
-55-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:40:25-89
+55-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:40:17-92
+55-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:40:25-89
 56            </intent-filter>
 57
 58            <meta-data
-58-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:42:13-44:72
+58-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:42:13-44:72
 59                android:name="android.accessibilityservice"
-59-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:43:17-60
+59-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:43:17-60
 60                android:resource="@xml/accessibility_service_config" />
-60-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:44:17-69
+60-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:44:17-69
 61        </service>
 62
 63        <!-- HTTP Server Service -->
 64        <service
-64-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:48:9-55:19
+64-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:48:9-55:19
 65            android:name="com.agent.portal.server.HttpServerService"
-65-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:49:13-53
+65-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:49:13-53
 66            android:exported="false"
-66-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:50:13-37
+66-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:50:13-37
 67            android:foregroundServiceType="specialUse" >
-67-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:51:13-55
+67-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:51:13-55
 68            <property
-68-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:52:13-54:46
+68-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:52:13-54:46
 69                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-69-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:53:17-76
+69-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:53:17-76
 70                android:value="automation" />
-70-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:54:17-43
+70-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:54:17-43
 71        </service>
 72
 73        <!-- Overlay Service -->
 74        <service
-74-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:58:9-65:19
+74-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:58:9-65:19
 75            android:name="com.agent.portal.overlay.OverlayService"
-75-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:59:13-51
+75-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:59:13-51
 76            android:exported="false"
-76-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:60:13-37
+76-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:60:13-37
 77            android:foregroundServiceType="specialUse" >
-77-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:61:13-55
+77-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:61:13-55
 78            <property
-78-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:52:13-54:46
+78-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:52:13-54:46
 79                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-79-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:53:17-76
+79-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:53:17-76
 80                android:value="overlay" />
-80-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:54:17-43
+80-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:54:17-43
 81        </service>
 82
 83        <!-- Content Provider for ADB communication -->
 84        <provider
-84-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:68:9-72:50
+84-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:68:9-72:50
 85            android:name="com.agent.portal.provider.PortalContentProvider"
-85-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:69:13-59
+85-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:69:13-59
 86            android:authorities="com.agent.portal"
-86-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:70:13-51
+86-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:70:13-51
 87            android:exported="true"
-87-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:71:13-36
+87-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:71:13-36
 88            android:grantUriPermissions="true" />
-88-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:72:13-47
+88-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:72:13-47
 89
 90        <!-- Custom Keyboard IME -->
 91        <service
-91-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:75:9-85:19
+91-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:75:9-85:19
 92            android:name="com.agent.portal.keyboard.PortalKeyboardIME"
-92-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:76:13-55
+92-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:76:13-55
 93            android:exported="true"
-93-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:77:13-36
+93-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:77:13-36
 94            android:permission="android.permission.BIND_INPUT_METHOD" >
-94-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:78:13-70
+94-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:78:13-70
 95            <intent-filter>
-95-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:79:13-81:29
+95-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:79:13-81:29
 96                <action android:name="android.view.InputMethod" />
-96-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:80:17-67
-96-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:80:25-64
+96-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:80:17-67
+96-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:80:25-64
 97            </intent-filter>
 98
 99            <meta-data
-99-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:82:13-84:59
+99-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:82:13-84:59
 100                android:name="android.view.im"
-100-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:83:17-47
+100-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:83:17-47
 101                android:resource="@xml/keyboard_method" />
-101-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:84:17-56
+101-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:84:17-56
 102        </service>
 103
 104        <!-- Boot Receiver -->
 105        <receiver
-105-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:88:9-94:20
+105-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:88:9-94:20
 106            android:name="com.agent.portal.BootReceiver"
-106-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:89:13-41
+106-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:89:13-41
 107            android:exported="true" >
-107-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:90:13-36
+107-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:90:13-36
 108            <intent-filter>
-108-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:91:13-93:29
+108-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:91:13-93:29
 109                <action android:name="android.intent.action.BOOT_COMPLETED" />
-109-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:92:17-79
-109-->/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:92:25-76
+109-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:92:17-79
+109-->/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/AndroidManifest.xml:92:25-76
 110            </intent-filter>
 111        </receiver>
 112
