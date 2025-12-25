@@ -3,6 +3,7 @@ package com.agent.portal
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -11,11 +12,14 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.view.MotionEvent
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.DecelerateInterpolator
 import android.view.animation.LinearInterpolator
 import android.view.animation.OvershootInterpolator
 import android.view.inputmethod.InputMethodManager
+import android.widget.CompoundButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -49,6 +53,7 @@ class MainActivity : AppCompatActivity() {
 
         setupStatusIndicators()
         setupUI()
+        setupMicroAnimations()
         updateStatus()
     }
 
@@ -124,13 +129,13 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Bounds toggle switch
-        binding.switchBounds.setOnCheckedChangeListener { _, isChecked ->
+        // Bounds toggle switch with bounce animation
+        animateSwitchToggle(binding.switchBounds) { isChecked ->
             handleBoundsToggle(isChecked)
         }
 
-        // Indexes toggle switch
-        binding.switchIndexes.setOnCheckedChangeListener { _, isChecked ->
+        // Indexes toggle switch with bounce animation
+        animateSwitchToggle(binding.switchIndexes) { isChecked ->
             handleIndexesToggle(isChecked)
         }
 
@@ -429,8 +434,14 @@ class MainActivity : AppCompatActivity() {
         private const val ANIMATION_DURATION = 250L
         /** Short animation duration for quick feedback */
         private const val ANIMATION_DURATION_SHORT = 150L
+        /** Very short animation for immediate touch feedback */
+        private const val ANIMATION_DURATION_MICRO = 100L
         /** Scale factor for indicator pulse animation */
         private const val PULSE_SCALE = 1.15f
+        /** Scale factor for button press animation (slightly shrinks) */
+        private const val BUTTON_PRESS_SCALE = 0.96f
+        /** Scale factor for switch toggle bounce animation */
+        private const val SWITCH_BOUNCE_SCALE = 1.05f
         /** Delay before showing actual status after refresh animation starts */
         private const val REFRESH_DELAY = 500L
         /** Duration for one full rotation of the refresh button */
@@ -594,6 +605,87 @@ class MainActivity : AppCompatActivity() {
                 }
                 .start()
         }
+    }
+
+    /**
+     * Applies a touch listener to a button for press/release micro-animations.
+     * Creates a subtle scale-down effect on press and scale-up on release
+     * for immediate tactile feedback.
+     *
+     * @param view The button view to apply touch animations to
+     */
+    @SuppressLint("ClickableViewAccessibility")
+    private fun applyButtonTouchAnimation(view: View) {
+        view.setOnTouchListener { v, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    // Scale down on press for tactile feedback
+                    v.animate()
+                        .scaleX(BUTTON_PRESS_SCALE)
+                        .scaleY(BUTTON_PRESS_SCALE)
+                        .setDuration(ANIMATION_DURATION_MICRO)
+                        .setInterpolator(DecelerateInterpolator())
+                        .start()
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    // Scale back up with overshoot for bouncy feel
+                    v.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(ANIMATION_DURATION_SHORT)
+                        .setInterpolator(OvershootInterpolator(2f))
+                        .start()
+                }
+            }
+            // Return false to allow the click listener to still work
+            false
+        }
+    }
+
+    /**
+     * Creates a custom OnCheckedChangeListener that adds bounce animation
+     * to switch toggles for enhanced visual feedback.
+     *
+     * @param view The switch view to animate
+     * @param originalAction The original action to perform on check change
+     */
+    private fun animateSwitchToggle(view: CompoundButton, originalAction: (Boolean) -> Unit) {
+        view.setOnCheckedChangeListener { buttonView, isChecked ->
+            // Apply bounce animation
+            buttonView.animate()
+                .scaleX(SWITCH_BOUNCE_SCALE)
+                .scaleY(SWITCH_BOUNCE_SCALE)
+                .setDuration(ANIMATION_DURATION_MICRO)
+                .setInterpolator(DecelerateInterpolator())
+                .withEndAction {
+                    buttonView.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(ANIMATION_DURATION_SHORT)
+                        .setInterpolator(OvershootInterpolator(2f))
+                        .start()
+                }
+                .start()
+
+            // Execute the original action
+            originalAction(isChecked)
+        }
+    }
+
+    /**
+     * Sets up micro-animations for all interactive buttons and switches.
+     * Applies touch feedback animations to buttons and bounce animations to switches.
+     */
+    private fun setupMicroAnimations() {
+        // Apply touch animations to all action buttons
+        applyButtonTouchAnimation(binding.btnAccessibility)
+        applyButtonTouchAnimation(binding.btnServer)
+        applyButtonTouchAnimation(binding.btnKeyboard)
+        applyButtonTouchAnimation(binding.btnOverlay)
+        applyButtonTouchAnimation(binding.btnRefresh)
+
+        // Note: Switch animations are set up in setupUI() via animateSwitchToggle()
+        // to preserve the original functionality while adding visual feedback
     }
 
     private fun openAccessibilitySettings() {
