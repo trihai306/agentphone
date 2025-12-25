@@ -123,20 +123,20 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Service Status"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:textColor="@color/text_tertiary"
                 android:fontFamily="sans-serif-medium"
                 android:textAllCaps="true"
-                android:letterSpacing="0.1"
-                android:layout_marginBottom="12dp"
-                android:layout_marginStart="4dp" />
+                android:letterSpacing="0.12"
+                android:layout_marginBottom="14dp"
+                android:layout_marginStart="6dp" />
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
+                android:layout_marginBottom="24dp"
                 app:cardBackgroundColor="@color/surface_elevated"
-                app:cardCornerRadius="20dp"
+                app:cardCornerRadius="24dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="0dp">
 
@@ -145,7 +145,9 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:divider="@drawable/divider_horizontal"
-                    android:showDividers="middle">
+                    android:showDividers="middle"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp">
 
                     <!-- Accessibility Status -->
                     <LinearLayout
@@ -153,12 +155,15 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:padding="16dp">
+                        android:paddingStart="20dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="14dp">
 
                         <View
                             android:id="@+id/indicatorAccessibility"
-                            android:layout_width="10dp"
-                            android:layout_height="10dp"
+                            android:layout_width="12dp"
+                            android:layout_height="12dp"
                             android:background="@drawable/status_indicator_off" />
 
                         <LinearLayout
@@ -166,7 +171,8 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="14dp">
+                            android:layout_marginStart="16dp"
+                            android:layout_marginEnd="12dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -174,7 +180,8 @@
                                 android:text="Accessibility Service"
                                 android:textSize="15sp"
                                 android:textColor="@color/text_primary"
-                                android:fontFamily="sans-serif-medium" />
+                                android:fontFamily="sans-serif-medium"
+                                android:letterSpacing="0.01" />
 
                             <TextView
                                 android:id="@+id/statusAccessibility"
@@ -183,7 +190,7 @@
                                 android:text="Disabled"
                                 android:textSize="13sp"
                                 android:textColor="@color/text_secondary"
-                                android:layout_marginTop="2dp" />
+                                android:layout_marginTop="3dp" />
 
                         </LinearLayout>
 
@@ -191,9 +198,12 @@
                             android:id="@+id/btnAccessibility"
                             style="@style/Widget.Portal.Button.Tonal"
                             android:layout_width="wrap_content"
-                            android:layout_height="36dp"
+                            android:layout_height="38dp"
                             android:text="Enable"
-                            android:textSize="12sp" />
+                            android:textSize="12sp"
+                            android:minWidth="80dp"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp" />
 
                     </LinearLayout>
 
@@ -203,12 +213,15 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:padding="16dp">
+                        android:paddingStart="20dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="14dp">
 
                         <View
                             android:id="@+id/indicatorServer"
-                            android:layout_width="10dp"
-                            android:layout_height="10dp"
+                            android:layout_width="12dp"
+                            android:layout_height="12dp"
                             android:background="@drawable/status_indicator_off" />
 
                         <LinearLayout
@@ -216,7 +229,8 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="14dp">
+                            android:layout_marginStart="16dp"
+                            android:layout_marginEnd="12dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -224,7 +238,8 @@
                                 android:text="HTTP Server"
                                 android:textSize="15sp"
                                 android:textColor="@color/text_primary"
-                                android:fontFamily="sans-serif-medium" />
+                                android:fontFamily="sans-serif-medium"
+                                android:letterSpacing="0.01" />
 
                             <TextView
                                 android:id="@+id/statusServer"
@@ -233,7 +248,7 @@
                                 android:text="Stopped"
                                 android:textSize="13sp"
                                 android:textColor="@color/text_secondary"
-                                android:layout_marginTop="2dp" />
+                                android:layout_marginTop="3dp" />
 
                         </LinearLayout>
 
@@ -241,9 +256,12 @@
                             android:id="@+id/btnServer"
                             style="@style/Widget.Portal.Button.Tonal"
                             android:layout_width="wrap_content"
-                            android:layout_height="36dp"
+                            android:layout_height="38dp"
                             android:text="Start"
-                            android:textSize="12sp" />
+                            android:textSize="12sp"
+                            android:minWidth="80dp"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp" />
 
                     </LinearLayout>
 
@@ -253,12 +271,15 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:padding="16dp">
+                        android:paddingStart="20dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="14dp">
 
                         <View
                             android:id="@+id/indicatorKeyboard"
-                            android:layout_width="10dp"
-                            android:layout_height="10dp"
+                            android:layout_width="12dp"
+                            android:layout_height="12dp"
                             android:background="@drawable/status_indicator_off" />
 
                         <LinearLayout
@@ -266,7 +287,8 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="14dp">
+                            android:layout_marginStart="16dp"
+                            android:layout_marginEnd="12dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -274,7 +296,8 @@
                                 android:text="Portal Keyboard"
                                 android:textSize="15sp"
                                 android:textColor="@color/text_primary"
-                                android:fontFamily="sans-serif-medium" />
+                                android:fontFamily="sans-serif-medium"
+                                android:letterSpacing="0.01" />
 
                             <TextView
                                 android:id="@+id/statusKeyboard"
@@ -283,7 +306,7 @@
                                 android:text="Disabled"
                                 android:textSize="13sp"
                                 android:textColor="@color/text_secondary"
-                                android:layout_marginTop="2dp" />
+                                android:layout_marginTop="3dp" />
 
                         </LinearLayout>
 
@@ -291,9 +314,12 @@
                             android:id="@+id/btnKeyboard"
                             style="@style/Widget.Portal.Button.Tonal"
                             android:layout_width="wrap_content"
-                            android:layout_height="36dp"
+                            android:layout_height="38dp"
                             android:text="Enable"
-                            android:textSize="12sp" />
+                            android:textSize="12sp"
+                            android:minWidth="80dp"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp" />
 
                     </LinearLayout>
 
@@ -303,12 +329,15 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:padding="16dp">
+                        android:paddingStart="20dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="14dp">
 
                         <View
                             android:id="@+id/indicatorOverlay"
-                            android:layout_width="10dp"
-                            android:layout_height="10dp"
+                            android:layout_width="12dp"
+                            android:layout_height="12dp"
                             android:background="@drawable/status_indicator_off" />
 
                         <LinearLayout
@@ -316,7 +345,8 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="14dp">
+                            android:layout_marginStart="16dp"
+                            android:layout_marginEnd="12dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -324,7 +354,8 @@
                                 android:text="Overlay Permission"
                                 android:textSize="15sp"
                                 android:textColor="@color/text_primary"
-                                android:fontFamily="sans-serif-medium" />
+                                android:fontFamily="sans-serif-medium"
+                                android:letterSpacing="0.01" />
 
                             <TextView
                                 android:id="@+id/statusOverlay"
@@ -333,7 +364,7 @@
                                 android:text="Disabled"
                                 android:textSize="13sp"
                                 android:textColor="@color/text_secondary"
-                                android:layout_marginTop="2dp" />
+                                android:layout_marginTop="3dp" />
 
                         </LinearLayout>
 
@@ -341,9 +372,12 @@
                             android:id="@+id/btnOverlay"
                             style="@style/Widget.Portal.Button.Tonal"
                             android:layout_width="wrap_content"
-                            android:layout_height="36dp"
+                            android:layout_height="38dp"
                             android:text="Enable"
-                            android:textSize="12sp" />
+                            android:textSize="12sp"
+                            android:minWidth="80dp"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp" />
 
                     </LinearLayout>
 
