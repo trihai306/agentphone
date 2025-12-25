@@ -1,0 +1,15 @@
+{
+  "discovered_files": {
+    "droidrun-controller/portal-apk/app/src/main/res/values/colors.xml": {
+      "description": "Enhanced color palette with comprehensive color system: accent colors with light/dark/container variants, gradient colors for modern effects, glow colors for status indicators, button/icon/card/shimmer colors for UI components, and scrim colors for overlays. All follow semantic naming convention (accent_[color], accent_[color]_light, accent_[color]_dark, accent_[color]_container, accent_[color]_container_high).",
+      "category": "colors",
+      "discovered_at": "2025-12-25T01:15:59.281433+00:00"
+    },
+    "droidrun-controller/portal-apk/app/src/main/res/values/themes.xml": {
+      "description": "Enhanced button style system with comprehensive variants: Widget.Portal.Button.* (Primary, Secondary, Tonal, Outlined, Text, Danger) with size variants (.Small, .Large), Widget.Portal.IconButton.* (Standard, Filled, FilledTonal, Outlined), Widget.Portal.FAB.* (Standard, Small, Large, Secondary, Tertiary), and Widget.Portal.ExtendedFAB. All buttons have proper state selectors for pressed/focused/hovered/disabled states and custom ripple colors.",
+      "category": "UI Styles",
+      "discovered_at": "2025-12-25T01:21:14.921248+00:00"
+    }
+  },
+  "last_updated": "2025-12-25T01:21:14.921256+00:00"
+}

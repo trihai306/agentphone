@@ -1,0 +1,508 @@
+{
+  "feature": "UI/UX Enhancement for Agent Portal Android App",
+  "workflow_type": "feature",
+  "workflow_rationale": "This is a feature-level enhancement focused on improving the existing UI/UX design. While no new functionality is being added, significant visual improvements and user experience refinements constitute a feature that enhances the product's professional quality and user satisfaction. Changes follow a logical implementation order: colors \u2192 theme \u2192 layout \u2192 animations \u2192 verification.",
+  "phases": [
+    {
+      "id": "phase-1-color-palette",
+      "name": "Color Palette Enhancement",
+      "type": "implementation",
+      "description": "Refine the existing color palette with richer accent colors and improved visual contrast while maintaining WCAG AA standards",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Enhance accent colors and add gradient color variants",
+          "service": "portal-apk",
+          "files_to_modify": [
+            "droidrun-controller/portal-apk/app/src/main/res/values/colors.xml"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "droidrun-controller/portal-apk/app/src/main/res/values/colors.xml"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd droidrun-controller/portal-apk && ./gradlew compileDebugSources",
+            "expected": "BUILD SUCCESSFUL"
+          },
+          "status": "completed",
+          "notes": "Enhanced colors.xml with: light/dark variants for all accent colors, container_high variants, gradient color pairs (blue, green, purple, cyan, sunset), glow colors for status indicators, status_pending color, additional surface container levels, border variants (subtle, focused), button state colors (pressed, disabled), icon colors (primary, secondary, accent, disabled), card colors (background, elevated, border, ripple), shimmer/loading colors, divider variants, and scrim/overlay colors. All colors follow semantic naming convention and maintain WCAG AA contrast ratios.",
+          "updated_at": "2025-12-25T01:15:51.262334+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-theme-refinement",
+      "name": "Theme and Component Styling",
+      "type": "implementation",
+      "description": "Enhance Material 3 theme configuration with improved component styles, typography hierarchy, and shape appearances",
+      "depends_on": [
+        "phase-1-color-palette"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Enhance typography system with better font weights and text hierarchy",
+          "service": "portal-apk",
+          "files_to_modify": [
+            "droidrun-controller/portal-apk/app/src/main/res/values/themes.xml"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "droidrun-controller/portal-apk/app/src/main/res/values/themes.xml"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd droidrun-controller/portal-apk && ./gradlew compileDebugSources",
+            "expected": "BUILD SUCCESSFUL"
+          },
+          "status": "completed",
+          "notes": "Enhanced typography system with complete Material Design 3 type scale: Display (Large/Medium/Small), Headline (Large/Medium/Small + legacy), Title (Large/Medium/Small + legacy), Body (Large/Medium/Small + legacy), Label (Large/Medium/Small + legacy). Added specialized styles: Caption, Overline, Button, Status, Code, Accent. Each style includes proper lineHeight, letterSpacing, fontFamily, and textColor for clear visual hierarchy. Maintained backwards compatibility with legacy text appearances.",
+          "updated_at": "2025-12-25T01:17:48.558989+00:00"
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Polish button styles with enhanced states and micro-interactions",
+          "service": "portal-apk",
+          "files_to_modify": [
+            "droidrun-controller/portal-apk/app/src/main/res/values/themes.xml"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "droidrun-controller/portal-apk/app/src/main/res/values/themes.xml"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd droidrun-controller/portal-apk && ./gradlew compileDebugSources",
+            "expected": "BUILD SUCCESSFUL"
+          },
+          "status": "completed",
+          "notes": "Created comprehensive color selector files for enhanced button states and micro-interactions. Added: button_primary_selector.xml, button_secondary_selector.xml, button_tonal_selector.xml, button_outlined_stroke_selector.xml, button_danger_selector.xml for background state handling. Created ripple color selectors (button_ripple_*.xml) for all button types. Added text color selectors (button_text_*.xml) with disabled/pressed/focused/hovered states. These selectors work with the existing enhanced button styles in themes.xml to provide visual feedback during user interactions.",
+          "updated_at": "2025-12-25T01:23:00.906619+00:00"
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Refine shape appearances for cards and components",
+          "service": "portal-apk",
+          "files_to_modify": [
+            "droidrun-controller/portal-apk/app/src/main/res/values/themes.xml"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "droidrun-controller/portal-apk/app/src/main/res/values/themes.xml"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd droidrun-controller/portal-apk && ./gradlew compileDebugSources",
+            "expected": "BUILD SUCCESSFUL"
+          },
+          "status": "pending",
+          "notes": "Update ShapeAppearance.Portal.* styles. Ensure corner radius values create modern, polished look (8dp small, 16dp medium, 24dp large)."
+        }
+      ]
+    },
+    {
+      "id": "phase-3-layout-enhancement",
+      "name": "Layout and Spacing Improvements",
+      "type": "implementation",
+      "description": "Improve visual hierarchy, spacing, and component proportions in the main activity layout for better visual balance",
+      "depends_on": [
+        "phase-2-theme-refinement"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Enhance hero section design with improved spacing and visual appeal",
+          "service": "portal-apk",
+          "files_to_modify": [
+            "droidrun-controller/portal-apk/app/src/main/res/layout/activity_main.xml"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "droidrun-controller/portal-apk/app/src/main/res/layout/activity_main.xml"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd droidrun-controller/portal-apk && ./gradlew assembleDebug",
+            "expected": "BUILD SUCCESSFUL"
+          },
+          "status": "pending",
+          "notes": "Improve app icon presentation, subtitle text, and version display. Maintain MaterialCardView pattern with proper padding and margins."
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Refine status cards layout with better spacing and visual hierarchy",
+          "service": "portal-apk",
+          "files_to_modify": [
+            "droidrun-controller/portal-apk/app/src/main/res/layout/activity_main.xml"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "droidrun-controller/portal-apk/app/src/main/res/layout/activity_main.xml"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd droidrun-controller/portal-apk && ./gradlew assembleDebug",
+            "expected": "BUILD SUCCESSFUL"
+          },
+          "status": "pending",
+          "notes": "Improve spacing between status items, enhance indicator positioning, refine button placement. Keep divider pattern between items."
+        },
+        {
+          "id": "subtask-3-3",
+          "description": "Polish debug tools and connection info sections",
+          "service": "portal-apk",
+          "files_to_modify": [
+            "droidrun-controller/portal-apk/app/src/main/res/layout/activity_main.xml"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "droidrun-controller/portal-apk/app/src/main/res/layout/activity_main.xml"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd droidrun-controller/portal-apk && ./gradlew assembleDebug",
+            "expected": "BUILD SUCCESSFUL"
+          },
+          "status": "pending",
+          "notes": "Improve switch placement, icon alignment, connection info presentation. Ensure consistent card styling across all sections."
+        }
+      ]
+    },
+    {
+      "id": "phase-4-iconography",
+      "name": "Icon and Indicator Enhancement",
+      "type": "implementation",
+      "description": "Enhance status indicators with animated state transitions and improve icon design for consistency",
+      "depends_on": [
+        "phase-2-theme-refinement"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create animated status indicators with smooth transitions",
+          "service": "portal-apk",
+          "files_to_modify": [
+            "droidrun-controller/portal-apk/app/src/main/res/drawable/status_indicator_on.xml",
+            "droidrun-controller/portal-apk/app/src/main/res/drawable/status_indicator_off.xml",
+            "droidrun-controller/portal-apk/app/src/main/res/drawable/status_indicator_warning.xml"
+          ],
+          "files_to_create": [
+            "droidrun-controller/portal-apk/app/src/main/res/drawable/status_indicator_animated.xml"
+          ],
+          "patterns_from": [
+            "droidrun-controller/portal-apk/app/src/main/res/drawable/status_indicator_on.xml"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd droidrun-controller/portal-apk && ./gradlew assembleDebug",
+            "expected": "BUILD SUCCESSFUL"
+          },
+          "status": "pending",
+          "notes": "Add subtle glow or pulse effect to indicators. Create animated state list drawable for smooth transitions. Keep 10dp oval shape pattern."
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Enhance existing icons for consistency and visual clarity",
+          "service": "portal-apk",
+          "files_to_modify": [
+            "droidrun-controller/portal-apk/app/src/main/res/drawable/ic_bounds.xml",
+            "droidrun-controller/portal-apk/app/src/main/res/drawable/ic_index.xml",
+            "droidrun-controller/portal-apk/app/src/main/res/drawable/ic_refresh.xml"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "droidrun-controller/portal-apk/app/src/main/res/drawable/ic_refresh.xml"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd droidrun-controller/portal-apk && ./gradlew assembleDebug",
+            "expected": "BUILD SUCCESSFUL"
+          },
+          "status": "pending",
+          "notes": "Ensure all icons are 24dp, consistent stroke width, vector drawables. Maintain white fill color for tintability via app:tint attribute."
+        }
+      ]
+    },
+    {
+      "id": "phase-5-animations",
+      "name": "Animations and Micro-interactions",
+      "type": "implementation",
+      "description": "Add smooth animations for status updates, button interactions, and view transitions to create premium user experience",
+      "depends_on": [
+        "phase-3-layout-enhancement",
+        "phase-4-iconography"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Implement smooth animations for status indicator transitions",
+          "service": "portal-apk",
+          "files_to_modify": [
+            "droidrun-controller/portal-apk/app/src/main/java/com/agent/portal/MainActivity.kt"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "droidrun-controller/portal-apk/app/src/main/java/com/agent/portal/MainActivity.kt"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd droidrun-controller/portal-apk && ./gradlew assembleDebug",
+            "expected": "BUILD SUCCESSFUL"
+          },
+          "status": "pending",
+          "notes": "Use Android View Property Animator for status indicator background changes. Keep animations 200-300ms. Test on API 26+ for smooth performance."
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Add loading states and animations for status refresh",
+          "service": "portal-apk",
+          "files_to_modify": [
+            "droidrun-controller/portal-apk/app/src/main/java/com/agent/portal/MainActivity.kt"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "droidrun-controller/portal-apk/app/src/main/java/com/agent/portal/MainActivity.kt"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd droidrun-controller/portal-apk && ./gradlew assembleDebug",
+            "expected": "BUILD SUCCESSFUL"
+          },
+          "status": "pending",
+          "notes": "Add subtle loading indicator when refresh button is tapped. Animate button state changes. Maintain existing view binding pattern."
+        },
+        {
+          "id": "subtask-5-3",
+          "description": "Enhance button and switch interactions with micro-animations",
+          "service": "portal-apk",
+          "files_to_modify": [
+            "droidrun-controller/portal-apk/app/src/main/java/com/agent/portal/MainActivity.kt"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "droidrun-controller/portal-apk/app/src/main/java/com/agent/portal/MainActivity.kt"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd droidrun-controller/portal-apk && ./gradlew assembleDebug",
+            "expected": "BUILD SUCCESSFUL"
+          },
+          "status": "pending",
+          "notes": "Add scale animations for button presses, smooth switch toggles. Material components provide ripple effects by default - enhance with custom animations."
+        }
+      ]
+    },
+    {
+      "id": "phase-6-integration",
+      "name": "Integration Testing and Polish",
+      "type": "integration",
+      "description": "Build, install, and verify all UI enhancements work correctly on actual device with smooth animations and professional appearance",
+      "depends_on": [
+        "phase-5-animations"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-6-1",
+          "description": "Build APK and verify on physical device",
+          "service": "portal-apk",
+          "all_services": false,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "instructions": "1. Build: cd droidrun-controller/portal-apk && ./gradlew assembleDebug\n2. Install: adb install -r app/build/outputs/apk/debug/app-debug.apk\n3. Launch: adb shell am start -n com.agent.portal/.MainActivity\n4. Verify: Colors vibrant, animations smooth (60fps), cards polished, typography clear\n5. Test: Multiple screen sizes (320dp to 600dp+ width)\n6. Check: All functionality still works (buttons, switches, status updates)"
+          },
+          "status": "pending",
+          "notes": "Test on API 26+ devices. Verify no frame drops during animations. Ensure dark theme consistency. Confirm all existing functionality preserved."
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 6,
+    "total_subtasks": 13,
+    "services_involved": [
+      "portal-apk"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 2,
+      "parallel_groups": [
+        {
+          "phases": [
+            "phase-3-layout-enhancement",
+            "phase-4-iconography"
+          ],
+          "reason": "Both depend on phase-2-theme-refinement and modify different file sets (layout XML vs drawable XML). Can run in parallel."
+        }
+      ],
+      "recommended_workers": 2,
+      "speedup_estimate": "1.3x faster than sequential (phases 3 and 4 can run concurrently)"
+    },
+    "startup_command": "source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 003 --parallel 2"
+  },
+  "verification_strategy": {
+    "risk_level": "low",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "unit"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "APK builds successfully with ./gradlew assembleDebug",
+      "All existing functionality preserved (services, toggles, buttons)",
+      "Visual improvements clearly noticeable and professional",
+      "Animations run smoothly without frame drops on API 26+ devices",
+      "UI renders correctly on multiple screen sizes (320dp to 600dp+ width)",
+      "Theme applies consistently across all components",
+      "Colors maintain WCAG AA contrast ratios"
+    ],
+    "verification_steps": [
+      {
+        "name": "Build Verification",
+        "command": "cd droidrun-controller/portal-apk && ./gradlew assembleDebug",
+        "expected_outcome": "BUILD SUCCESSFUL",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Resource Validation",
+        "command": "cd droidrun-controller/portal-apk && ./gradlew lintDebug",
+        "expected_outcome": "No errors in colors, themes, layouts, drawables",
+        "type": "test",
+        "required": true,
+        "blocking": false
+      }
+    ],
+    "reasoning": "Low risk UI-only changes. Visual regression testing via manual review on device. No functional logic modifications, no security concerns."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": true,
+      "commands": [
+        "cd droidrun-controller/portal-apk && ./gradlew test"
+      ],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": []
+    },
+    "browser_verification": {
+      "required": false,
+      "pages": []
+    },
+    "device_verification": {
+      "required": true,
+      "devices": [
+        {
+          "api_level": 26,
+          "description": "Android 8.0 - Minimum SDK",
+          "checks": [
+            "App launches",
+            "UI renders without overflow",
+            "Animations work"
+          ]
+        },
+        {
+          "api_level": 30,
+          "description": "Android 11 - Mid-range device",
+          "checks": [
+            "Colors vibrant",
+            "Animations smooth at 60fps",
+            "Cards polished"
+          ]
+        },
+        {
+          "api_level": 34,
+          "description": "Android 14 - Target SDK",
+          "checks": [
+            "Full Material 3 support",
+            "No compatibility issues",
+            "Premium appearance"
+          ]
+        }
+      ],
+      "screen_sizes": [
+        {
+          "width": "320dp",
+          "description": "Small phone",
+          "check": "Text doesn't overflow, buttons fit"
+        },
+        {
+          "width": "360dp",
+          "description": "Medium phone",
+          "check": "Optimal layout, good spacing"
+        },
+        {
+          "width": "600dp+",
+          "description": "Tablet/large phone",
+          "check": "Layout scales appropriately"
+        }
+      ]
+    },
+    "visual_design_verification": {
+      "required": true,
+      "checks": [
+        {
+          "component": "Cards",
+          "property": "Corner radius",
+          "expected": "20-24dp rounded corners"
+        },
+        {
+          "component": "Buttons",
+          "property": "States",
+          "expected": "Clear normal, pressed, disabled distinction"
+        },
+        {
+          "component": "Status Indicators",
+          "property": "Animation",
+          "expected": "Smooth 200-300ms color transitions"
+        },
+        {
+          "component": "Typography",
+          "property": "Hierarchy",
+          "expected": "Clear size/weight for headline, body, label"
+        },
+        {
+          "component": "Colors",
+          "property": "Contrast",
+          "expected": "WCAG AA minimum (4.5:1 for text)"
+        },
+        {
+          "component": "Icons",
+          "property": "Consistency",
+          "expected": "24dp, consistent stroke width"
+        },
+        {
+          "component": "Spacing",
+          "property": "Balance",
+          "expected": "Harmonious margins and padding"
+        }
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "status": "in_progress",
+  "planStatus": "in_progress",
+  "updated_at": "2025-12-25T01:12:59.902Z",
+  "recoveryNote": "Task recovered from stuck state at 2025-12-25T01:12:59.902Z",
+  "last_updated": "2025-12-25T01:23:00.906630+00:00"
+}
