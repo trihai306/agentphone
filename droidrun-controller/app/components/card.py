@@ -4,7 +4,7 @@ Polished with refined shadows, improved hover animations, and better visual hier
 """
 
 import flet as ft
-from ..theme import COLORS, get_shadow, ANIMATION, RADIUS
+from ..theme import get_colors, get_shadow, ANIMATION, RADIUS
 
 
 class Card(ft.Container):
@@ -22,6 +22,7 @@ class Card(ft.Container):
         **kwargs
     ):
         self._elevated = elevated
+        colors = get_colors()
         card_content = []
 
         # Header with title, icon and actions
@@ -34,17 +35,17 @@ class Card(ft.Container):
                         content=ft.Icon(
                             icon,
                             size=22,
-                            color=icon_color or COLORS["primary"],
+                            color=icon_color or colors["primary"],
                         ),
                         width=44,
                         height=44,
                         border_radius=RADIUS["lg"],
-                        bgcolor=f"{icon_color or COLORS['primary']}15",
+                        bgcolor=f"{icon_color or colors['primary']}15",
                         alignment=ft.alignment.center,
                         shadow=ft.BoxShadow(
                             spread_radius=0,
                             blur_radius=4,
-                            color=f"{icon_color or COLORS['primary']}10",
+                            color=f"{icon_color or colors['primary']}10",
                             offset=ft.Offset(0, 2),
                         ),
                         animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
@@ -59,7 +60,7 @@ class Card(ft.Container):
                         title,
                         size=18,
                         weight=ft.FontWeight.W_700,
-                        color=COLORS["text_primary"],
+                        color=colors["text_primary"],
                     )
                 )
             if subtitle:
@@ -68,7 +69,7 @@ class Card(ft.Container):
                         subtitle,
                         size=13,
                         weight=ft.FontWeight.W_400,
-                        color=COLORS["text_secondary"],
+                        color=colors["text_secondary"],
                     )
                 )
 
@@ -97,10 +98,10 @@ class Card(ft.Container):
 
         super().__init__(
             content=ft.Column(card_content, spacing=0),
-            bgcolor=COLORS["bg_card"],
+            bgcolor=colors["bg_card"],
             border_radius=RADIUS["xl"],
             padding=28,
-            border=ft.border.all(1, COLORS["border"]),
+            border=ft.border.all(1, colors["border"]),
             shadow=base_shadow,
             animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
             animate_scale=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
@@ -110,8 +111,9 @@ class Card(ft.Container):
 
     def _on_hover(self, e):
         """Handle hover effect with smooth elevation transition."""
+        colors = get_colors()
         if e.data == "true":
-            self.border = ft.border.all(1, COLORS["border_light"])
+            self.border = ft.border.all(1, colors["border_light"])
             self.shadow = ft.BoxShadow(
                 spread_radius=0,
                 blur_radius=10,
@@ -120,7 +122,7 @@ class Card(ft.Container):
             )
             self.scale = 1.002
         else:
-            self.border = ft.border.all(1, COLORS["border"])
+            self.border = ft.border.all(1, colors["border"])
             self.shadow = get_shadow("sm") if self._elevated else None
             self.scale = 1.0
         self.update()
