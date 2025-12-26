@@ -3,8 +3,15 @@
 Polished with form styling, proper validation states, and enhanced visual design.
 """
 
+import re
 import flet as ft
 from ..theme import COLORS, RADIUS, get_shadow, ANIMATION
+
+
+# Email validation pattern
+EMAIL_PATTERN = re.compile(
+    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+)
 
 
 # Animation curve for smooth transitions
@@ -131,6 +138,7 @@ class LoginView(ft.Container):
             text_size=14,
             keyboard_type=ft.KeyboardType.EMAIL,
             on_change=self._on_email_change,
+            on_blur=self._on_email_blur,
             on_submit=self._on_submit,
         )
 
@@ -157,6 +165,7 @@ class LoginView(ft.Container):
             content_padding=ft.padding.symmetric(horizontal=16, vertical=16),
             text_size=14,
             on_change=self._on_password_change,
+            on_blur=self._on_password_blur,
             on_submit=self._on_submit,
         )
 
@@ -303,6 +312,53 @@ class LoginView(ft.Container):
             alignment=ft.MainAxisAlignment.CENTER,
         )
 
+    # Validation helpers
+    def _validate_email(self, email: str) -> str | None:
+        """Validate email and return error message if invalid."""
+        if not email:
+            return "Email is required"
+        if not EMAIL_PATTERN.match(email):
+            return "Please enter a valid email address"
+        return None
+
+    def _validate_password(self, password: str) -> str | None:
+        """Validate password and return error message if invalid."""
+        if not password:
+            return "Password is required"
+        return None
+
+    def _show_email_error(self, message: str):
+        """Show email error with styling."""
+        self.email_error.value = message
+        self.email_error.visible = True
+        self.email_field.border_color = COLORS["error"]
+        self.email_error.update()
+        self.email_field.update()
+
+    def _clear_email_error(self):
+        """Clear email error and reset styling."""
+        if self.email_error and self.email_error.visible:
+            self.email_error.visible = False
+            self.email_error.update()
+            self.email_field.border_color = COLORS["border"]
+            self.email_field.update()
+
+    def _show_password_error(self, message: str):
+        """Show password error with styling."""
+        self.password_error.value = message
+        self.password_error.visible = True
+        self.password_field.border_color = COLORS["error"]
+        self.password_error.update()
+        self.password_field.update()
+
+    def _clear_password_error(self):
+        """Clear password error and reset styling."""
+        if self.password_error and self.password_error.visible:
+            self.password_error.visible = False
+            self.password_error.update()
+            self.password_field.border_color = COLORS["border"]
+            self.password_field.update()
+
     # Event handlers
     def _on_submit_button_hover(self, e):
         """Handle submit button hover effect."""
@@ -326,19 +382,25 @@ class LoginView(ft.Container):
 
     def _on_email_change(self, e):
         """Handle email field change - clear error."""
-        if self.email_error and self.email_error.visible:
-            self.email_error.visible = False
-            self.email_error.update()
-            self.email_field.border_color = COLORS["border"]
-            self.email_field.update()
+        self._clear_email_error()
+
+    def _on_email_blur(self, e):
+        """Handle email field blur - validate."""
+        email = self.email_field.value or ""
+        error = self._validate_email(email)
+        if error:
+            self._show_email_error(error)
 
     def _on_password_change(self, e):
         """Handle password field change - clear error."""
-        if self.password_error and self.password_error.visible:
-            self.password_error.visible = False
-            self.password_error.update()
-            self.password_field.border_color = COLORS["border"]
-            self.password_field.update()
+        self._clear_password_error()
+
+    def _on_password_blur(self, e):
+        """Handle password field blur - validate."""
+        password = self.password_field.value or ""
+        error = self._validate_password(password)
+        if error:
+            self._show_password_error(error)
 
     async def _on_submit(self, e):
         """Handle form submission."""
@@ -351,27 +413,19 @@ class LoginView(ft.Container):
 
         is_valid = True
 
-        # Validate email
-        if not email:
-            self.email_error.value = "Email is required"
-            self.email_error.visible = True
-            self.email_field.border_color = COLORS["error"]
-            is_valid = False
-        elif "@" not in email or "." not in email:
-            self.email_error.value = "Please enter a valid email address"
-            self.email_error.visible = True
-            self.email_field.border_color = COLORS["error"]
+        # Validate email using helper
+        email_error = self._validate_email(email)
+        if email_error:
+            self._show_email_error(email_error)
             is_valid = False
 
-        # Validate password
-        if not password:
-            self.password_error.value = "Password is required"
-            self.password_error.visible = True
-            self.password_field.border_color = COLORS["error"]
+        # Validate password using helper
+        password_error = self._validate_password(password)
+        if password_error:
+            self._show_password_error(password_error)
             is_valid = False
 
         if not is_valid:
-            self.update()
             return
 
         # Show loading state
