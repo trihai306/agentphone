@@ -258,12 +258,13 @@ class GlassCard(ft.Container):
         **kwargs
     ):
         self._blur_radius = blur_radius
+        colors = get_colors()
         super().__init__(
             content=content,
-            bgcolor=COLORS["bg_glass"],
+            bgcolor=colors["bg_glass"],
             border_radius=RADIUS["xl"],
             padding=24,
-            border=ft.border.all(1, f"{COLORS['border_light']}50"),
+            border=ft.border.all(1, f"{colors['border_light']}50"),
             blur=blur_radius,
             shadow=ft.BoxShadow(
                 spread_radius=0,
@@ -279,8 +280,9 @@ class GlassCard(ft.Container):
 
     def _on_hover(self, e):
         """Handle hover effect with subtle glass depth."""
+        colors = get_colors()
         if e.data == "true":
-            self.border = ft.border.all(1, f"{COLORS['border_light']}80")
+            self.border = ft.border.all(1, f"{colors['border_light']}80")
             self.shadow = ft.BoxShadow(
                 spread_radius=0,
                 blur_radius=8,
@@ -289,7 +291,7 @@ class GlassCard(ft.Container):
             )
             self.scale = 1.005
         else:
-            self.border = ft.border.all(1, f"{COLORS['border_light']}50")
+            self.border = ft.border.all(1, f"{colors['border_light']}50")
             self.shadow = ft.BoxShadow(
                 spread_radius=0,
                 blur_radius=4,
