@@ -313,10 +313,11 @@ class ListCard(ft.Container):
         **kwargs
     ):
         self._selected = selected
+        colors = get_colors()
 
         # Determine initial styling based on selection state
-        initial_bgcolor = COLORS["bg_hover"] if selected else COLORS["bg_tertiary"]
-        initial_border = ft.border.all(1, COLORS["primary"]) if selected else ft.border.all(1, COLORS["border_subtle"])
+        initial_bgcolor = colors["bg_hover"] if selected else colors["bg_tertiary"]
+        initial_border = ft.border.all(1, colors["primary"]) if selected else ft.border.all(1, colors["border_subtle"])
 
         super().__init__(
             content=content,
@@ -334,9 +335,10 @@ class ListCard(ft.Container):
 
     def _on_hover(self, e):
         """Handle hover effect with subtle elevation."""
+        colors = get_colors()
         if e.data == "true":
-            self.bgcolor = COLORS["bg_hover"]
-            self.border = ft.border.all(1, COLORS["border_light"])
+            self.bgcolor = colors["bg_hover"]
+            self.border = ft.border.all(1, colors["border_light"])
             self.shadow = ft.BoxShadow(
                 spread_radius=0,
                 blur_radius=8,
@@ -346,12 +348,12 @@ class ListCard(ft.Container):
             self.scale = 1.003
         else:
             if self._selected:
-                self.bgcolor = COLORS["bg_hover"]
-                self.border = ft.border.all(1, COLORS["primary"])
+                self.bgcolor = colors["bg_hover"]
+                self.border = ft.border.all(1, colors["primary"])
                 self.shadow = get_shadow("xs")
             else:
-                self.bgcolor = COLORS["bg_tertiary"]
-                self.border = ft.border.all(1, COLORS["border_subtle"])
+                self.bgcolor = colors["bg_tertiary"]
+                self.border = ft.border.all(1, colors["border_subtle"])
                 self.shadow = None
             self.scale = 1.0
         self.update()
@@ -359,12 +361,13 @@ class ListCard(ft.Container):
     def set_selected(self, selected: bool):
         """Update the selection state of the list card."""
         self._selected = selected
+        colors = get_colors()
         if selected:
-            self.bgcolor = COLORS["bg_hover"]
-            self.border = ft.border.all(1, COLORS["primary"])
+            self.bgcolor = colors["bg_hover"]
+            self.border = ft.border.all(1, colors["primary"])
             self.shadow = get_shadow("xs")
         else:
-            self.bgcolor = COLORS["bg_tertiary"]
-            self.border = ft.border.all(1, COLORS["border_subtle"])
+            self.bgcolor = colors["bg_tertiary"]
+            self.border = ft.border.all(1, colors["border_subtle"])
             self.shadow = None
         self.update()
