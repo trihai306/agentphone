@@ -132,7 +132,7 @@ class ActionButton(ft.Container):
         has_glow = variant in ["primary", "success", "danger", "warning"]
         initial_shadow = ft.BoxShadow(
             spread_radius=0,
-            blur_radius=16 if has_glow else 8,
+            blur_radius=6 if has_glow else 4,
             color=self.style_config["shadow_color"],
             offset=ft.Offset(0, 4),
         ) if has_glow or variant == "secondary" else None
@@ -168,10 +168,10 @@ class ActionButton(ft.Container):
             e.control.bgcolor = self.style_config["hover_bg"]
             e.control.scale = 1.02
 
-            # Enhanced shadow on hover with increased glow
+            # Enhanced shadow on hover with moderate glow
             e.control.shadow = ft.BoxShadow(
                 spread_radius=1,
-                blur_radius=28 if has_glow else 16,
+                blur_radius=10 if has_glow else 8,
                 color=self.style_config["shadow_hover_color"],
                 offset=ft.Offset(0, 8),
             )
@@ -187,7 +187,7 @@ class ActionButton(ft.Container):
             # Reset shadow
             e.control.shadow = ft.BoxShadow(
                 spread_radius=0,
-                blur_radius=16 if has_glow else 8,
+                blur_radius=6 if has_glow else 4,
                 color=self.style_config["shadow_color"],
                 offset=ft.Offset(0, 4),
             ) if has_glow or self.variant == "secondary" else None

@@ -2,7 +2,7 @@
 
 import flet as ft
 from typing import Optional, Callable
-from ..theme import COLORS, RADIUS
+from ..theme import COLORS, RADIUS, get_shadow
 
 
 class DeviceCard(ft.Container):
@@ -44,12 +44,8 @@ class DeviceCard(ft.Container):
             ),
             on_click=self._handle_click,
             on_hover=self._on_hover,
-            shadow=ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=8,
-                color="#00000010",
-                offset=ft.Offset(0, 2),
-            ) if selected else None,
+            # Use subtle elevation for all cards, slightly more for selected
+            shadow=get_shadow("sm") if selected else get_shadow("xs"),
         )
 
     def _build_content(self):
@@ -244,23 +240,15 @@ class DeviceCard(ft.Container):
                 2 if self.selected else 1,
                 COLORS["primary"]
             )
-            self.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=12,
-                color=f"{COLORS['primary']}20",
-                offset=ft.Offset(0, 4),
-            )
+            # Subtle elevation on hover using theme shadows
+            self.shadow = get_shadow("sm")
         else:
             self.border = ft.border.all(
                 2 if self.selected else 1,
                 COLORS["primary"] if self.selected else COLORS["border"]
             )
-            self.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=8,
-                color="#00000010",
-                offset=ft.Offset(0, 2),
-            ) if self.selected else None
+            # Restore appropriate shadow based on selection state
+            self.shadow = get_shadow("sm") if self.selected else get_shadow("xs")
         self.update()
 
 

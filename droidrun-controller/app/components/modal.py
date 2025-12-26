@@ -111,8 +111,8 @@ class Modal(ft.AlertDialog):
             bgcolor=COLORS["bg_card"],
             shape=ft.RoundedRectangleBorder(radius=RADIUS["xl"]),
             surface_tint_color="transparent",
-            shadow_color="#00000040",
-            elevation=32,
+            shadow_color="#00000020",
+            elevation=16,
             barrier_color=COLORS["backdrop"],
             **kwargs
         )
@@ -191,9 +191,9 @@ class ConfirmDialog(ft.AlertDialog):
                     alignment=ft.alignment.center,
                     shadow=ft.BoxShadow(
                         spread_radius=0,
-                        blur_radius=16,
-                        color=f"{variant_config['color']}15",
-                        offset=ft.Offset(0, 4),
+                        blur_radius=8,
+                        color=f"{variant_config['color']}10",
+                        offset=ft.Offset(0, 2),
                     ),
                 ),
                 ft.Container(width=16),
@@ -256,9 +256,9 @@ class ConfirmDialog(ft.AlertDialog):
             border=ft.border.all(1, f"{variant_config['hover']}80"),
             shadow=ft.BoxShadow(
                 spread_radius=0,
-                blur_radius=20,
+                blur_radius=8,
                 color=variant_config["glow"],
-                offset=ft.Offset(0, 6),
+                offset=ft.Offset(0, 4),
             ),
             on_click=on_confirm,
             ink=True,
@@ -282,8 +282,8 @@ class ConfirmDialog(ft.AlertDialog):
             bgcolor=COLORS["bg_card"],
             shape=ft.RoundedRectangleBorder(radius=RADIUS["xl"]),
             surface_tint_color="transparent",
-            shadow_color="#00000040",
-            elevation=32,
+            shadow_color="#00000020",
+            elevation=16,
             barrier_color=COLORS["backdrop"],
             **kwargs
         )
@@ -353,9 +353,9 @@ class InfoDialog(ft.AlertDialog):
                     alignment=ft.alignment.center,
                     shadow=ft.BoxShadow(
                         spread_radius=0,
-                        blur_radius=16,
-                        color=f"{variant_config['color']}15",
-                        offset=ft.Offset(0, 4),
+                        blur_radius=8,
+                        color=f"{variant_config['color']}10",
+                        offset=ft.Offset(0, 2),
                     ),
                 ),
                 ft.Container(width=16),
@@ -395,9 +395,9 @@ class InfoDialog(ft.AlertDialog):
             border=ft.border.all(1, f"{variant_config['dark']}80"),
             shadow=ft.BoxShadow(
                 spread_radius=0,
-                blur_radius=20,
+                blur_radius=8,
                 color=variant_config["glow"],
-                offset=ft.Offset(0, 6),
+                offset=ft.Offset(0, 4),
             ),
             on_click=on_close,
             ink=True,
@@ -417,8 +417,8 @@ class InfoDialog(ft.AlertDialog):
             bgcolor=COLORS["bg_card"],
             shape=ft.RoundedRectangleBorder(radius=RADIUS["xl"]),
             surface_tint_color="transparent",
-            shadow_color="#00000040",
-            elevation=32,
+            shadow_color="#00000020",
+            elevation=16,
             barrier_color=COLORS["backdrop"],
             **kwargs
         )
