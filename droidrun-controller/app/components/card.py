@@ -142,7 +142,8 @@ class StatsCard(ft.Container):
         trend_value: str = None,
         **kwargs
     ):
-        self._color = color or COLORS["primary"]
+        colors = get_colors()
+        self._color = color or colors["primary"]
 
         # Icon container with subtle shadow
         icon_container = ft.Container(
@@ -168,20 +169,20 @@ class StatsCard(ft.Container):
                 str(value),
                 size=36,
                 weight=ft.FontWeight.W_800,
-                color=COLORS["text_primary"],
+                color=colors["text_primary"],
             ),
             ft.Container(height=2),
             ft.Text(
                 title,
                 size=14,
                 weight=ft.FontWeight.W_500,
-                color=COLORS["text_secondary"],
+                color=colors["text_secondary"],
             ),
         ]
 
         # Trend indicator with polished styling
         if trend and trend_value:
-            trend_color = COLORS["success"] if trend == "up" else COLORS["error"]
+            trend_color = colors["success"] if trend == "up" else colors["error"]
             trend_icon = ft.Icons.TRENDING_UP if trend == "up" else ft.Icons.TRENDING_DOWN
             text_content.append(ft.Container(height=12))
             text_content.append(
@@ -216,10 +217,10 @@ class StatsCard(ft.Container):
                 ],
                 spacing=0,
             ),
-            bgcolor=COLORS["bg_card"],
+            bgcolor=colors["bg_card"],
             border_radius=RADIUS["xl"],
             padding=28,
-            border=ft.border.all(1, COLORS["border"]),
+            border=ft.border.all(1, colors["border"]),
             shadow=get_shadow("xs"),
             expand=True,
             animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
@@ -230,6 +231,7 @@ class StatsCard(ft.Container):
 
     def _on_hover(self, e):
         """Handle hover effect with subtle elevation."""
+        colors = get_colors()
         if e.data == "true":
             self.border = ft.border.all(1, f"{self._color}40")
             self.shadow = ft.BoxShadow(
@@ -240,7 +242,7 @@ class StatsCard(ft.Container):
             )
             self.scale = 1.01
         else:
-            self.border = ft.border.all(1, COLORS["border"])
+            self.border = ft.border.all(1, colors["border"])
             self.shadow = get_shadow("xs")
             self.scale = 1.0
         self.update()
