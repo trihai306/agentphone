@@ -970,15 +970,10 @@ class PhoneViewerView(ft.Container):
             except Exception:
                 self.devices = await backend.get_devices()
 
-            # Add mock data for demo if no devices
-            if not self.devices:
-                self.devices = [
-                    {"adb_serial": f"emulator-{5554 + i*2}", "name": f"Device {i+1}",
-                     "model": "Galaxy S7", "status": "connected", "android_version": "10"}
-                    for i in range(12)
-                ]
-
-            self.toast.success(f"Found {len(self.devices)} devices")
+            if self.devices:
+                self.toast.success(f"Found {len(self.devices)} device(s)")
+            else:
+                self.toast.info("No devices found")
         except Exception as ex:
             self.toast.error(f"Failed to load devices: {ex}")
             self.devices = []
