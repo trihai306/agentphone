@@ -136,6 +136,16 @@ COLORS_LIGHT: Dict[str, str] = {
     "highlight": "#FEF3C7",
     "backdrop": "#00000050",
 
+    # List view specific
+    "list_item_hover": "#F1F5F9",         # Hover state for list items
+    "list_item_selected": "#ECFDF5",      # Selected state for list items
+    "list_item_border": "#E2E8F0",        # Separator between list items
+
+    # Filter/Search specific
+    "filter_bg": "#F5F7FA",               # Background for filter dropdowns
+    "search_border_focus": "#10B981",     # Focus border for search input
+    "search_bg": "#FFFFFF",               # Search input background
+
     # Skeleton/Loading
     "skeleton_base": "#E2E8F0",
     "skeleton_shimmer": "#F8FAFC",
@@ -269,6 +279,16 @@ COLORS_DARK: Dict[str, str] = {
     "selection": "#22C55E20",
     "highlight": "#FBBF2420",
     "backdrop": "#00000080",
+
+    # List view specific
+    "list_item_hover": "#262B38",         # Hover state for list items
+    "list_item_selected": "#22C55E15",    # Selected state for list items
+    "list_item_border": "#2D3344",        # Separator between list items
+
+    # Filter/Search specific
+    "filter_bg": "#1E222C",               # Background for filter dropdowns
+    "search_border_focus": "#22C55E",     # Focus border for search input
+    "search_bg": "#171B24",               # Search input background
 
     # Skeleton/Loading
     "skeleton_base": "#2D3344",
@@ -421,6 +441,11 @@ SPACING = {
     "xl": 24,
     "xxl": 32,
     "xxxl": 48,
+    # List view specific spacing
+    "list_item_padding_x": 16,      # Horizontal padding for list items
+    "list_item_padding_y": 12,      # Vertical padding for list items
+    "list_item_gap": 12,            # Gap between list item content sections
+    "list_row_height": 64,          # Standard list row height
 }
 
 RADIUS = {
