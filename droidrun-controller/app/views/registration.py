@@ -28,8 +28,12 @@ class RegistrationView(ft.Container):
         self.email_error = None
         self.password_error = None
         self.confirm_password_error = None
-        self.password_strength_bar = None
-        self.password_strength_text = None
+        # Password strength indicator components
+        self.strength_segment_1 = None
+        self.strength_segment_2 = None
+        self.strength_segment_3 = None
+        self.strength_label = None
+        self.strength_container = None
         self.is_loading = False
 
         super().__init__(
@@ -328,29 +332,50 @@ class RegistrationView(ft.Container):
         )
 
     def _build_password_strength_indicator(self):
-        """Build the password strength indicator."""
-        return ft.Container(
+        """Build the password strength indicator with segmented bars."""
+        # Create three segment bars for weak/medium/strong
+        self.strength_segment_1 = ft.Container(
+            height=4,
+            expand=True,
+            bgcolor=COLORS["border"],
+            border_radius=2,
+            animate=ft.Animation(ANIMATION["fast"], EASE_OUT),
+        )
+        self.strength_segment_2 = ft.Container(
+            height=4,
+            expand=True,
+            bgcolor=COLORS["border"],
+            border_radius=2,
+            animate=ft.Animation(ANIMATION["fast"], EASE_OUT),
+        )
+        self.strength_segment_3 = ft.Container(
+            height=4,
+            expand=True,
+            bgcolor=COLORS["border"],
+            border_radius=2,
+            animate=ft.Animation(ANIMATION["fast"], EASE_OUT),
+        )
+
+        self.strength_label = ft.Text(
+            "",
+            size=11,
+            weight=ft.FontWeight.W_600,
+            color=COLORS["text_muted"],
+        )
+
+        self.strength_container = ft.Container(
             content=ft.Column(
                 [
                     ft.Row(
                         [
-                            ft.Container(
-                                height=4,
-                                expand=True,
-                                bgcolor=COLORS["border"],
-                                border_radius=2,
-                                content=ft.Container(
-                                    height=4,
-                                    width=0,
-                                    bgcolor=COLORS["text_muted"],
-                                    border_radius=2,
-                                    animate=ft.Animation(ANIMATION["fast"], EASE_OUT),
-                                    data="strength_fill",
-                                ),
-                            ),
+                            self.strength_segment_1,
+                            ft.Container(width=4),
+                            self.strength_segment_2,
+                            ft.Container(width=4),
+                            self.strength_segment_3,
                         ],
                     ),
-                    ft.Container(height=4),
+                    ft.Container(height=6),
                     ft.Row(
                         [
                             ft.Text(
@@ -358,21 +383,16 @@ class RegistrationView(ft.Container):
                                 size=11,
                                 color=COLORS["text_muted"],
                             ),
-                            ft.Text(
-                                "",
-                                size=11,
-                                weight=ft.FontWeight.W_600,
-                                color=COLORS["text_muted"],
-                                data="strength_label",
-                            ),
+                            self.strength_label,
                         ],
                     ),
                 ],
                 spacing=0,
             ),
             visible=False,
-            data="strength_container",
         )
+
+        return self.strength_container
 
     def _build_terms_section(self):
         """Build the terms and conditions checkbox section."""
@@ -601,58 +621,48 @@ class RegistrationView(ft.Container):
         self._update_password_strength(password)
 
     def _update_password_strength(self, password: str):
-        """Update the password strength indicator."""
-        # Find strength container in the form
-        strength_container = self._find_control_by_data(self.content, "strength_container")
-        if not strength_container:
+        """Update the password strength indicator with segmented bars."""
+        if not hasattr(self, 'strength_container') or not self.strength_container:
             return
 
         if not password:
-            strength_container.visible = False
-            strength_container.update()
+            self.strength_container.visible = False
+            self.strength_container.update()
             return
 
-        strength_container.visible = True
+        self.strength_container.visible = True
         score, label, color = self._calculate_password_strength(password)
 
-        # Find and update the strength fill bar
-        strength_fill = self._find_control_by_data(strength_container, "strength_fill")
-        if strength_fill:
-            # Calculate width percentage
-            parent = strength_fill.parent
-            if parent:
-                strength_fill.bgcolor = color
-                # Use percentage width
-                strength_fill.width = None
-                strength_fill.expand = score if score > 0 else None
+        # Update segments based on strength level
+        # Weak: 1 segment, Medium: 2 segments, Strong: 3 segments
+        if label == "Weak":
+            self.strength_segment_1.bgcolor = color
+            self.strength_segment_2.bgcolor = COLORS["border"]
+            self.strength_segment_3.bgcolor = COLORS["border"]
+        elif label == "Medium":
+            self.strength_segment_1.bgcolor = color
+            self.strength_segment_2.bgcolor = color
+            self.strength_segment_3.bgcolor = COLORS["border"]
+        elif label == "Strong":
+            self.strength_segment_1.bgcolor = color
+            self.strength_segment_2.bgcolor = color
+            self.strength_segment_3.bgcolor = color
+        else:
+            # Reset all segments
+            self.strength_segment_1.bgcolor = COLORS["border"]
+            self.strength_segment_2.bgcolor = COLORS["border"]
+            self.strength_segment_3.bgcolor = COLORS["border"]
 
-        # Find and update the strength label
-        strength_label = self._find_control_by_data(strength_container, "strength_label")
-        if strength_label:
-            strength_label.value = label
-            strength_label.color = color
+        # Update label
+        self.strength_label.value = label
+        self.strength_label.color = color
 
-        strength_container.update()
-
-    def _find_control_by_data(self, parent, data_value):
-        """Recursively find a control by its data attribute."""
-        if hasattr(parent, 'data') and parent.data == data_value:
-            return parent
-
-        # Check in content
-        if hasattr(parent, 'content') and parent.content:
-            result = self._find_control_by_data(parent.content, data_value)
-            if result:
-                return result
-
-        # Check in controls
-        if hasattr(parent, 'controls'):
-            for control in parent.controls:
-                result = self._find_control_by_data(control, data_value)
-                if result:
-                    return result
-
-        return None
+        # Update all components
+        self.strength_segment_1.update()
+        self.strength_segment_2.update()
+        self.strength_segment_3.update()
+        self.strength_label.update()
+        self.strength_container.update()
 
     def _on_confirm_password_change(self, e):
         """Handle confirm password field change - clear error."""
