@@ -1412,8 +1412,161 @@ class WorkflowsView(ft.Container):
         self.toast.info("Import workflow from file...")
 
     async def _on_run(self, workflow: dict):
-        """Handle run workflow action."""
-        self.toast.info(f"Running workflow: {workflow.get('name')}")
+        """Handle run workflow action - show device selection and replay."""
+        # Fetch available devices
+        try:
+            self.available_devices = await self.backend.discover_devices()
+        except Exception as ex:
+            self.toast.error(f"Failed to discover devices: {ex}")
+            self.available_devices = []
+
+        if not self.available_devices:
+            self.toast.warning("No devices connected. Please connect a device first.")
+            return
+
+        # If only one device, select it automatically
+        if len(self.available_devices) == 1:
+            await self._replay_on_device(workflow, self.available_devices[0])
+        else:
+            # Show device selection dialog for replay
+            self._show_replay_device_dialog(workflow)
+
+    def _show_replay_device_dialog(self, workflow: dict):
+        """Show dialog for selecting a device to replay workflow on."""
+        dialog_content = ft.Column(
+            [
+                ft.Text(
+                    f"Select a device to replay '{workflow.get('name', 'workflow')}':",
+                    size=14,
+                    weight=ft.FontWeight.W_500,
+                    color=COLORS["text_primary"],
+                ),
+                ft.Container(height=16),
+                *[self._build_replay_device_option(workflow, device) for device in self.available_devices],
+            ],
+            spacing=8,
+        )
+
+        self._replay_dialog = ft.AlertDialog(
+            title=ft.Text(
+                "Select Device for Replay",
+                size=18,
+                weight=ft.FontWeight.W_700,
+                color=COLORS["text_primary"],
+            ),
+            content=dialog_content,
+            actions=[
+                ft.TextButton(
+                    "Cancel",
+                    on_click=self._close_replay_dialog,
+                ),
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+
+        self.page.overlay.append(self._replay_dialog)
+        self._replay_dialog.open = True
+        self.page.update()
+
+    def _build_replay_device_option(self, workflow: dict, device: Dict[str, Any]):
+        """Build a device selection option for replay."""
+        return ft.Container(
+            content=ft.Row(
+                [
+                    ft.Container(
+                        content=ft.Icon(
+                            ft.Icons.SMARTPHONE_ROUNDED,
+                            size=20,
+                            color=COLORS["success"],
+                        ),
+                        width=40,
+                        height=40,
+                        border_radius=RADIUS["md"],
+                        bgcolor=f"{COLORS['success']}12",
+                        alignment=ft.alignment.center,
+                        border=ft.border.all(1, f"{COLORS['success']}20"),
+                    ),
+                    ft.Container(width=12),
+                    ft.Column(
+                        [
+                            ft.Text(
+                                device.get("name", device.get("id", "Unknown")),
+                                size=14,
+                                weight=ft.FontWeight.W_600,
+                                color=COLORS["text_primary"],
+                            ),
+                            ft.Text(
+                                f"{device.get('manufacturer', '')} {device.get('model', '')}".strip() or device.get("id", ""),
+                                size=12,
+                                color=COLORS["text_secondary"],
+                            ),
+                        ],
+                        spacing=2,
+                        expand=True,
+                    ),
+                    ft.Icon(
+                        ft.Icons.PLAY_ARROW_ROUNDED,
+                        size=20,
+                        color=COLORS["success"],
+                    ),
+                ],
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            bgcolor=COLORS["bg_tertiary"],
+            border_radius=RADIUS["lg"],
+            padding=ft.padding.symmetric(horizontal=16, vertical=12),
+            border=ft.border.all(1, COLORS["border_subtle"]),
+            animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
+            on_click=lambda e, w=workflow, d=device: self._select_device_and_replay(w, d),
+            on_hover=self._on_card_hover,
+        )
+
+    async def _select_device_and_replay(self, workflow: dict, device: Dict[str, Any]):
+        """Select a device and start replay."""
+        self._close_replay_dialog(None)
+        await self._replay_on_device(workflow, device)
+
+    def _close_replay_dialog(self, e):
+        """Close the replay device selection dialog."""
+        if hasattr(self, "_replay_dialog") and self._replay_dialog:
+            self._replay_dialog.open = False
+            if self._replay_dialog in self.page.overlay:
+                self.page.overlay.remove(self._replay_dialog)
+            self.page.update()
+
+    async def _replay_on_device(self, workflow: dict, device: Dict[str, Any]):
+        """Execute workflow replay on the selected device."""
+        device_id = device.get("id", "")
+        device_name = device.get("name", device_id)
+        workflow_name = workflow.get("name", "Unknown")
+
+        self.toast.info(f"Starting replay of '{workflow_name}' on {device_name}...")
+
+        try:
+            # Call backend to replay the workflow
+            result = await self.backend.replay_workflow(
+                workflow=workflow,
+                device_serial=device_id,
+                stop_on_error=True,
+            )
+
+            if result.get("success"):
+                steps_completed = result.get("completed_steps", 0)
+                total_steps = result.get("total_steps", 0)
+                self.toast.success(
+                    f"Workflow '{workflow_name}' completed successfully! "
+                    f"({steps_completed}/{total_steps} steps)"
+                )
+            else:
+                error = result.get("error", "Unknown error")
+                steps_completed = result.get("completed_steps", 0)
+                total_steps = result.get("total_steps", 0)
+                self.toast.error(
+                    f"Workflow replay failed at step {steps_completed}/{total_steps}: {error}"
+                )
+
+        except Exception as ex:
+            self.toast.error(f"Replay failed: {ex}")
 
     async def _on_edit(self, workflow: dict):
         """Handle edit workflow action."""

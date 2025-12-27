@@ -1,1 +1,1 @@
-"""Integration tests for recording flow."""
+"""Integration tests for the droidrun-controller application."""
