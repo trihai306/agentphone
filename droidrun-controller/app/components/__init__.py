@@ -9,6 +9,7 @@ from .empty_state import EmptyState
 from .toast import ToastManager
 from .recorder_controls import RecorderControls, RecorderStatusBadge
 from .action_feed import ActionFeed, ActionItem, CompactActionFeed
+from .workflow_editor import WorkflowEditor, StepEditor
 
 __all__ = [
     "Card",
@@ -32,4 +33,6 @@ __all__ = [
     "ActionFeed",
     "ActionItem",
     "CompactActionFeed",
+    "WorkflowEditor",
+    "StepEditor",
 ]
