@@ -4,7 +4,7 @@ Polished with refined shadows, improved hover animations, and better visual hier
 """
 
 import flet as ft
-from ..theme import COLORS, get_shadow, ANIMATION, RADIUS
+from ..theme import get_colors, get_shadow, ANIMATION, RADIUS
 
 
 class Card(ft.Container):
@@ -22,6 +22,7 @@ class Card(ft.Container):
         **kwargs
     ):
         self._elevated = elevated
+        colors = get_colors()
         card_content = []
 
         # Header with title, icon and actions
@@ -34,17 +35,17 @@ class Card(ft.Container):
                         content=ft.Icon(
                             icon,
                             size=22,
-                            color=icon_color or COLORS["primary"],
+                            color=icon_color or colors["primary"],
                         ),
                         width=44,
                         height=44,
                         border_radius=RADIUS["lg"],
-                        bgcolor=f"{icon_color or COLORS['primary']}15",
+                        bgcolor=f"{icon_color or colors['primary']}15",
                         alignment=ft.alignment.center,
                         shadow=ft.BoxShadow(
                             spread_radius=0,
                             blur_radius=4,
-                            color=f"{icon_color or COLORS['primary']}10",
+                            color=f"{icon_color or colors['primary']}10",
                             offset=ft.Offset(0, 2),
                         ),
                         animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
@@ -59,7 +60,7 @@ class Card(ft.Container):
                         title,
                         size=18,
                         weight=ft.FontWeight.W_700,
-                        color=COLORS["text_primary"],
+                        color=colors["text_primary"],
                     )
                 )
             if subtitle:
@@ -68,7 +69,7 @@ class Card(ft.Container):
                         subtitle,
                         size=13,
                         weight=ft.FontWeight.W_400,
-                        color=COLORS["text_secondary"],
+                        color=colors["text_secondary"],
                     )
                 )
 
@@ -97,10 +98,10 @@ class Card(ft.Container):
 
         super().__init__(
             content=ft.Column(card_content, spacing=0),
-            bgcolor=COLORS["bg_card"],
+            bgcolor=colors["bg_card"],
             border_radius=RADIUS["xl"],
             padding=28,
-            border=ft.border.all(1, COLORS["border"]),
+            border=ft.border.all(1, colors["border"]),
             shadow=base_shadow,
             animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
             animate_scale=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
@@ -110,8 +111,9 @@ class Card(ft.Container):
 
     def _on_hover(self, e):
         """Handle hover effect with smooth elevation transition."""
+        colors = get_colors()
         if e.data == "true":
-            self.border = ft.border.all(1, COLORS["border_light"])
+            self.border = ft.border.all(1, colors["border_light"])
             self.shadow = ft.BoxShadow(
                 spread_radius=0,
                 blur_radius=10,
@@ -120,7 +122,7 @@ class Card(ft.Container):
             )
             self.scale = 1.002
         else:
-            self.border = ft.border.all(1, COLORS["border"])
+            self.border = ft.border.all(1, colors["border"])
             self.shadow = get_shadow("sm") if self._elevated else None
             self.scale = 1.0
         self.update()
@@ -140,7 +142,8 @@ class StatsCard(ft.Container):
         trend_value: str = None,
         **kwargs
     ):
-        self._color = color or COLORS["primary"]
+        colors = get_colors()
+        self._color = color or colors["primary"]
 
         # Icon container with subtle shadow
         icon_container = ft.Container(
@@ -166,20 +169,20 @@ class StatsCard(ft.Container):
                 str(value),
                 size=36,
                 weight=ft.FontWeight.W_800,
-                color=COLORS["text_primary"],
+                color=colors["text_primary"],
             ),
             ft.Container(height=2),
             ft.Text(
                 title,
                 size=14,
                 weight=ft.FontWeight.W_500,
-                color=COLORS["text_secondary"],
+                color=colors["text_secondary"],
             ),
         ]
 
         # Trend indicator with polished styling
         if trend and trend_value:
-            trend_color = COLORS["success"] if trend == "up" else COLORS["error"]
+            trend_color = colors["success"] if trend == "up" else colors["error"]
             trend_icon = ft.Icons.TRENDING_UP if trend == "up" else ft.Icons.TRENDING_DOWN
             text_content.append(ft.Container(height=12))
             text_content.append(
@@ -214,10 +217,10 @@ class StatsCard(ft.Container):
                 ],
                 spacing=0,
             ),
-            bgcolor=COLORS["bg_card"],
+            bgcolor=colors["bg_card"],
             border_radius=RADIUS["xl"],
             padding=28,
-            border=ft.border.all(1, COLORS["border"]),
+            border=ft.border.all(1, colors["border"]),
             shadow=get_shadow("xs"),
             expand=True,
             animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
@@ -228,6 +231,7 @@ class StatsCard(ft.Container):
 
     def _on_hover(self, e):
         """Handle hover effect with subtle elevation."""
+        colors = get_colors()
         if e.data == "true":
             self.border = ft.border.all(1, f"{self._color}40")
             self.shadow = ft.BoxShadow(
@@ -238,7 +242,7 @@ class StatsCard(ft.Container):
             )
             self.scale = 1.01
         else:
-            self.border = ft.border.all(1, COLORS["border"])
+            self.border = ft.border.all(1, colors["border"])
             self.shadow = get_shadow("xs")
             self.scale = 1.0
         self.update()
@@ -254,12 +258,13 @@ class GlassCard(ft.Container):
         **kwargs
     ):
         self._blur_radius = blur_radius
+        colors = get_colors()
         super().__init__(
             content=content,
-            bgcolor=COLORS["bg_glass"],
+            bgcolor=colors["bg_glass"],
             border_radius=RADIUS["xl"],
             padding=24,
-            border=ft.border.all(1, f"{COLORS['border_light']}50"),
+            border=ft.border.all(1, f"{colors['border_light']}50"),
             blur=blur_radius,
             shadow=ft.BoxShadow(
                 spread_radius=0,
@@ -275,8 +280,9 @@ class GlassCard(ft.Container):
 
     def _on_hover(self, e):
         """Handle hover effect with subtle glass depth."""
+        colors = get_colors()
         if e.data == "true":
-            self.border = ft.border.all(1, f"{COLORS['border_light']}80")
+            self.border = ft.border.all(1, f"{colors['border_light']}80")
             self.shadow = ft.BoxShadow(
                 spread_radius=0,
                 blur_radius=8,
@@ -285,7 +291,7 @@ class GlassCard(ft.Container):
             )
             self.scale = 1.005
         else:
-            self.border = ft.border.all(1, f"{COLORS['border_light']}50")
+            self.border = ft.border.all(1, f"{colors['border_light']}50")
             self.shadow = ft.BoxShadow(
                 spread_radius=0,
                 blur_radius=4,
@@ -307,10 +313,11 @@ class ListCard(ft.Container):
         **kwargs
     ):
         self._selected = selected
+        colors = get_colors()
 
         # Determine initial styling based on selection state
-        initial_bgcolor = COLORS["bg_hover"] if selected else COLORS["bg_tertiary"]
-        initial_border = ft.border.all(1, COLORS["primary"]) if selected else ft.border.all(1, COLORS["border_subtle"])
+        initial_bgcolor = colors["bg_hover"] if selected else colors["bg_tertiary"]
+        initial_border = ft.border.all(1, colors["primary"]) if selected else ft.border.all(1, colors["border_subtle"])
 
         super().__init__(
             content=content,
@@ -328,9 +335,10 @@ class ListCard(ft.Container):
 
     def _on_hover(self, e):
         """Handle hover effect with subtle elevation."""
+        colors = get_colors()
         if e.data == "true":
-            self.bgcolor = COLORS["bg_hover"]
-            self.border = ft.border.all(1, COLORS["border_light"])
+            self.bgcolor = colors["bg_hover"]
+            self.border = ft.border.all(1, colors["border_light"])
             self.shadow = ft.BoxShadow(
                 spread_radius=0,
                 blur_radius=8,
@@ -340,12 +348,12 @@ class ListCard(ft.Container):
             self.scale = 1.003
         else:
             if self._selected:
-                self.bgcolor = COLORS["bg_hover"]
-                self.border = ft.border.all(1, COLORS["primary"])
+                self.bgcolor = colors["bg_hover"]
+                self.border = ft.border.all(1, colors["primary"])
                 self.shadow = get_shadow("xs")
             else:
-                self.bgcolor = COLORS["bg_tertiary"]
-                self.border = ft.border.all(1, COLORS["border_subtle"])
+                self.bgcolor = colors["bg_tertiary"]
+                self.border = ft.border.all(1, colors["border_subtle"])
                 self.shadow = None
             self.scale = 1.0
         self.update()
@@ -353,12 +361,13 @@ class ListCard(ft.Container):
     def set_selected(self, selected: bool):
         """Update the selection state of the list card."""
         self._selected = selected
+        colors = get_colors()
         if selected:
-            self.bgcolor = COLORS["bg_hover"]
-            self.border = ft.border.all(1, COLORS["primary"])
+            self.bgcolor = colors["bg_hover"]
+            self.border = ft.border.all(1, colors["primary"])
             self.shadow = get_shadow("xs")
         else:
-            self.bgcolor = COLORS["bg_tertiary"]
-            self.border = ft.border.all(1, COLORS["border_subtle"])
+            self.bgcolor = colors["bg_tertiary"]
+            self.border = ft.border.all(1, colors["border_subtle"])
             self.shadow = None
         self.update()

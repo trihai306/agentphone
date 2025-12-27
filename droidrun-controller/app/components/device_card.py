@@ -2,7 +2,7 @@
 
 import flet as ft
 from typing import Optional, Callable
-from ..theme import COLORS, RADIUS, get_shadow
+from ..theme import get_colors, RADIUS, get_shadow
 
 
 class DeviceCard(ft.Container):
@@ -32,15 +32,16 @@ class DeviceCard(ft.Container):
         self.on_select = on_select
         self.selected = selected
 
+        colors = get_colors()
         super().__init__(
             content=self._build_content(),
             width=160,
             height=280,
             border_radius=RADIUS["lg"],
-            bgcolor=COLORS["bg_card"],
+            bgcolor=colors["bg_card"],
             border=ft.border.all(
                 2 if selected else 1,
-                COLORS["primary"] if selected else COLORS["border"]
+                colors["primary"] if selected else colors["border"]
             ),
             on_click=self._handle_click,
             on_hover=self._on_hover,
@@ -50,8 +51,9 @@ class DeviceCard(ft.Container):
 
     def _build_content(self):
         """Build the card content."""
+        colors = get_colors()
         # Status color
-        status_color = COLORS["success"] if self.status == "connected" else COLORS["text_muted"]
+        status_color = colors["success"] if self.status == "connected" else colors["text_muted"]
 
         # Header with Cloud badge and ID
         header = ft.Container(
@@ -71,7 +73,7 @@ class DeviceCard(ft.Container):
                                 ft.Text(
                                     "Cloud",
                                     size=9,
-                                    color=COLORS["primary"],
+                                    color=colors["primary"],
                                     weight=ft.FontWeight.W_600,
                                 ),
                             ],
@@ -79,7 +81,7 @@ class DeviceCard(ft.Container):
                         ),
                         padding=ft.padding.symmetric(horizontal=6, vertical=2),
                         border_radius=4,
-                        bgcolor=COLORS["primary_glow"],
+                        bgcolor=colors["primary_glow"],
                     ),
                     ft.Container(expand=True),
                     # Device ID
@@ -87,7 +89,7 @@ class DeviceCard(ft.Container):
                         self.device_id[:3] if len(self.device_id) >= 3 else self.device_id,
                         size=14,
                         weight=ft.FontWeight.W_700,
-                        color=COLORS["primary"],
+                        color=colors["primary"],
                     ),
                 ],
             ),
@@ -102,7 +104,7 @@ class DeviceCard(ft.Container):
                         self.device_model[:12] + "..." if len(self.device_model) > 12 else self.device_model,
                         size=11,
                         weight=ft.FontWeight.W_600,
-                        color=COLORS["primary"],
+                        color=colors["primary"],
                     ),
                 ],
                 spacing=0,
@@ -120,7 +122,7 @@ class DeviceCard(ft.Container):
                     fit=ft.ImageFit.CONTAIN,
                 ),
                 height=140,
-                bgcolor=COLORS["bg_tertiary"],
+                bgcolor=colors["bg_tertiary"],
                 border_radius=RADIUS["sm"],
                 margin=ft.margin.symmetric(horizontal=8),
             )
@@ -132,12 +134,12 @@ class DeviceCard(ft.Container):
                         ft.Icon(
                             ft.Icons.PHONE_ANDROID,
                             size=40,
-                            color=COLORS["text_muted"],
+                            color=colors["text_muted"],
                         ),
                         ft.Text(
                             f"Android {self.android_version}",
                             size=10,
-                            color=COLORS["text_muted"],
+                            color=colors["text_muted"],
                         ),
                     ],
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -145,7 +147,7 @@ class DeviceCard(ft.Container):
                     spacing=8,
                 ),
                 height=140,
-                bgcolor=COLORS["bg_tertiary"],
+                bgcolor=colors["bg_tertiary"],
                 border_radius=RADIUS["sm"],
                 margin=ft.margin.symmetric(horizontal=8),
                 alignment=ft.alignment.center,
@@ -156,7 +158,7 @@ class DeviceCard(ft.Container):
             content=ft.Text(
                 self.task_status or "Ready",
                 size=10,
-                color=COLORS["text_secondary"],
+                color=colors["text_secondary"],
                 text_align=ft.TextAlign.CENTER,
             ),
             padding=ft.padding.symmetric(horizontal=8, vertical=4),
@@ -170,28 +172,28 @@ class DeviceCard(ft.Container):
                     ft.IconButton(
                         icon=ft.Icons.PLAY_ARROW,
                         icon_size=16,
-                        icon_color=COLORS["success"],
+                        icon_color=colors["success"],
                         tooltip="Run",
                         padding=4,
                     ),
                     ft.IconButton(
                         icon=ft.Icons.STOP,
                         icon_size=16,
-                        icon_color=COLORS["error"],
+                        icon_color=colors["error"],
                         tooltip="Stop",
                         padding=4,
                     ),
                     ft.IconButton(
                         icon=ft.Icons.REFRESH,
                         icon_size=16,
-                        icon_color=COLORS["accent_blue"],
+                        icon_color=colors["accent_blue"],
                         tooltip="Refresh",
                         padding=4,
                     ),
                     ft.IconButton(
                         icon=ft.Icons.MORE_VERT,
                         icon_size=16,
-                        icon_color=COLORS["text_muted"],
+                        icon_color=colors["text_muted"],
                         tooltip="More",
                         padding=4,
                     ),
@@ -235,17 +237,18 @@ class DeviceCard(ft.Container):
 
     def _on_hover(self, e):
         """Handle hover effect."""
+        colors = get_colors()
         if e.data == "true":
             self.border = ft.border.all(
                 2 if self.selected else 1,
-                COLORS["primary"]
+                colors["primary"]
             )
             # Subtle elevation on hover using theme shadows
             self.shadow = get_shadow("sm")
         else:
             self.border = ft.border.all(
                 2 if self.selected else 1,
-                COLORS["primary"] if self.selected else COLORS["border"]
+                colors["primary"] if self.selected else colors["border"]
             )
             # Restore appropriate shadow based on selection state
             self.shadow = get_shadow("sm") if self.selected else get_shadow("xs")
@@ -271,15 +274,17 @@ class DeviceGridToolbar(ft.Container):
         self.on_copy = on_copy
         self.on_refresh = on_refresh
 
+        colors = get_colors()
         super().__init__(
             content=self._build_content(),
             padding=ft.padding.symmetric(horizontal=16, vertical=12),
-            bgcolor=COLORS["bg_card"],
-            border=ft.border.only(bottom=ft.BorderSide(1, COLORS["border"])),
+            bgcolor=colors["bg_card"],
+            border=ft.border.only(bottom=ft.BorderSide(1, colors["border"])),
         )
 
     def _build_content(self):
         """Build toolbar content."""
+        colors = get_colors()
         return ft.Row(
             [
                 # Left side - Action buttons
@@ -288,32 +293,32 @@ class DeviceGridToolbar(ft.Container):
                         self._build_action_button(
                             "Automate",
                             ft.Icons.PLAY_CIRCLE_OUTLINE,
-                            COLORS["primary"],
+                            colors["primary"],
                             self.on_automate,
                             primary=True,
                         ),
                         self._build_action_button(
                             "Proxy Data",
                             ft.Icons.VPN_KEY_OUTLINED,
-                            COLORS["text_secondary"],
+                            colors["text_secondary"],
                             self.on_proxy,
                         ),
                         self._build_action_button(
                             "Change Device",
                             ft.Icons.SWAP_HORIZ,
-                            COLORS["text_secondary"],
+                            colors["text_secondary"],
                             self.on_change_device,
                         ),
                         self._build_action_button(
                             "Functions",
                             ft.Icons.TUNE,
-                            COLORS["text_secondary"],
+                            colors["text_secondary"],
                             self.on_functions,
                         ),
                         self._build_action_button(
                             "Copy",
                             ft.Icons.CONTENT_COPY,
-                            COLORS["text_secondary"],
+                            colors["text_secondary"],
                             self.on_copy,
                         ),
                     ],
@@ -323,7 +328,7 @@ class DeviceGridToolbar(ft.Container):
                 # Right side - Refresh
                 ft.IconButton(
                     icon=ft.Icons.REFRESH,
-                    icon_color=COLORS["text_muted"],
+                    icon_color=colors["text_muted"],
                     tooltip="Refresh devices",
                     on_click=lambda e: self.on_refresh() if self.on_refresh else None,
                 ),
@@ -339,45 +344,48 @@ class DeviceGridToolbar(ft.Container):
         primary: bool = False,
     ):
         """Build an action button."""
+        colors = get_colors()
         return ft.Container(
             content=ft.Row(
                 [
-                    ft.Icon(icon, size=16, color=COLORS["text_inverse"] if primary else color),
+                    ft.Icon(icon, size=16, color=colors["text_inverse"] if primary else color),
                     ft.Container(width=6),
                     ft.Text(
                         label,
                         size=12,
                         weight=ft.FontWeight.W_500,
-                        color=COLORS["text_inverse"] if primary else color,
+                        color=colors["text_inverse"] if primary else color,
                     ),
                     ft.Icon(
                         ft.Icons.KEYBOARD_ARROW_DOWN,
                         size=14,
-                        color=COLORS["text_inverse"] if primary else color,
+                        color=colors["text_inverse"] if primary else color,
                     ),
                 ],
                 spacing=0,
             ),
             padding=ft.padding.symmetric(horizontal=12, vertical=8),
             border_radius=RADIUS["md"],
-            bgcolor=COLORS["primary"] if primary else "transparent",
-            border=None if primary else ft.border.all(1, COLORS["border"]),
+            bgcolor=colors["primary"] if primary else "transparent",
+            border=None if primary else ft.border.all(1, colors["border"]),
             on_click=lambda e: on_click() if on_click else None,
             on_hover=self._on_button_hover if not primary else self._on_primary_hover,
         )
 
     def _on_button_hover(self, e):
         """Handle button hover."""
+        colors = get_colors()
         if e.data == "true":
-            e.control.bgcolor = COLORS["bg_hover"]
+            e.control.bgcolor = colors["bg_hover"]
         else:
             e.control.bgcolor = "transparent"
         e.control.update()
 
     def _on_primary_hover(self, e):
         """Handle primary button hover."""
+        colors = get_colors()
         if e.data == "true":
-            e.control.bgcolor = COLORS["primary_dark"]
+            e.control.bgcolor = colors["primary_dark"]
         else:
-            e.control.bgcolor = COLORS["primary"]
+            e.control.bgcolor = colors["primary"]
         e.control.update()
