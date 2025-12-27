@@ -4,7 +4,7 @@ Polished with improved workflow cards, better list styling, and enhanced empty s
 """
 
 import flet as ft
-from ..theme import COLORS, RADIUS, get_shadow, ANIMATION
+from ..theme import COLORS, RADIUS, ANIMATION
 from ..components.card import Card
 from ..backend import backend
 
@@ -68,12 +68,6 @@ class WorkflowsView(ft.Container):
                                         border_radius=RADIUS["lg"],
                                         alignment=ft.alignment.center,
                                         border=ft.border.all(1, f"{COLORS['accent_purple']}20"),
-                                        shadow=ft.BoxShadow(
-                                            spread_radius=0,
-                                            blur_radius=16,
-                                            color=f"{COLORS['accent_purple']}25",
-                                            offset=ft.Offset(0, 4),
-                                        ),
                                     ),
                                     ft.Container(width=12),
                                     ft.Container(
@@ -131,12 +125,6 @@ class WorkflowsView(ft.Container):
                                 bgcolor=COLORS["error"],
                                 padding=ft.padding.only(left=8, right=18, top=10, bottom=10),
                                 border_radius=RADIUS["lg"],
-                                shadow=ft.BoxShadow(
-                                    spread_radius=0,
-                                    blur_radius=16,
-                                    color=f"{COLORS['error']}35",
-                                    offset=ft.Offset(0, 4),
-                                ),
                                 animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
                                 animate_scale=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
                                 on_click=self._on_record,
@@ -170,12 +158,6 @@ class WorkflowsView(ft.Container):
                                 bgcolor=COLORS["primary"],
                                 padding=ft.padding.only(left=8, right=18, top=10, bottom=10),
                                 border_radius=RADIUS["lg"],
-                                shadow=ft.BoxShadow(
-                                    spread_radius=0,
-                                    blur_radius=20,
-                                    color=f"{COLORS['primary']}40",
-                                    offset=ft.Offset(0, 6),
-                                ),
                                 animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
                                 animate_scale=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
                                 on_click=self._on_new_workflow,
@@ -281,12 +263,6 @@ class WorkflowsView(ft.Container):
                                 bgcolor=f"{color}12",
                                 alignment=ft.alignment.center,
                                 border=ft.border.all(1, f"{color}20"),
-                                shadow=ft.BoxShadow(
-                                    spread_radius=0,
-                                    blur_radius=16,
-                                    color=f"{color}25",
-                                    offset=ft.Offset(0, 4),
-                                ),
                             ),
                         ],
                         vertical_alignment=ft.CrossAxisAlignment.START,
@@ -325,7 +301,6 @@ class WorkflowsView(ft.Container):
             border_radius=RADIUS["xl"],
             padding=24,
             border=ft.border.all(1, COLORS["border"]),
-            shadow=get_shadow("xs"),
             expand=True,
             animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
             animate_scale=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
@@ -337,16 +312,9 @@ class WorkflowsView(ft.Container):
         """Handle stat card hover effect."""
         if e.data == "true":
             e.control.border = ft.border.all(1, f"{color}40")
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=28,
-                color=f"{color}20",
-                offset=ft.Offset(0, 10),
-            )
             e.control.scale = 1.02
         else:
             e.control.border = ft.border.all(1, COLORS["border"])
-            e.control.shadow = get_shadow("xs")
             e.control.scale = 1.0
         e.control.update()
 
@@ -422,7 +390,6 @@ class WorkflowsView(ft.Container):
             border_radius=RADIUS["xl"],
             padding=28,
             border=ft.border.all(1, COLORS["border"]),
-            shadow=get_shadow("xs"),
         )
 
     def _build_workflow_card(self, workflow: dict):
@@ -639,12 +606,6 @@ class WorkflowsView(ft.Container):
         if e.data == "true":
             e.control.bgcolor = f"{color}15"
             e.control.border = ft.border.all(1, f"{color}30")
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=8,
-                color=f"{color}20",
-                offset=ft.Offset(0, 2),
-            )
         else:
             if color == COLORS["success"]:
                 e.control.bgcolor = f"{color}10"
@@ -655,7 +616,6 @@ class WorkflowsView(ft.Container):
             else:
                 e.control.bgcolor = COLORS["bg_tertiary"]
                 e.control.border = ft.border.all(1, COLORS["border_subtle"])
-            e.control.shadow = None
         e.control.update()
 
     def _build_empty_state(self):
@@ -750,12 +710,6 @@ class WorkflowsView(ft.Container):
                                             bgcolor=COLORS["error"],
                                             border_radius=RADIUS["md"],
                                             padding=ft.padding.symmetric(horizontal=20, vertical=12),
-                                            shadow=ft.BoxShadow(
-                                                spread_radius=0,
-                                                blur_radius=16,
-                                                color=f"{COLORS['error']}35",
-                                                offset=ft.Offset(0, 4),
-                                            ),
                                             animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
                                             on_click=self._on_record,
                                             on_hover=self._on_danger_hover,
@@ -778,12 +732,6 @@ class WorkflowsView(ft.Container):
                                             bgcolor=COLORS["primary"],
                                             border_radius=RADIUS["md"],
                                             padding=ft.padding.symmetric(horizontal=20, vertical=12),
-                                            shadow=ft.BoxShadow(
-                                                spread_radius=0,
-                                                blur_radius=16,
-                                                color=f"{COLORS['primary']}35",
-                                                offset=ft.Offset(0, 4),
-                                            ),
                                             animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
                                             on_click=self._on_new_workflow,
                                             on_hover=self._on_primary_hover,
@@ -803,7 +751,6 @@ class WorkflowsView(ft.Container):
             border_radius=RADIUS["xl"],
             padding=28,
             border=ft.border.all(1, COLORS["border"]),
-            shadow=get_shadow("xs"),
         )
 
     def _build_loading(self):
@@ -882,46 +829,21 @@ class WorkflowsView(ft.Container):
             border_radius=RADIUS["xl"],
             padding=28,
             border=ft.border.all(1, COLORS["border"]),
-            shadow=get_shadow("xs"),
         )
 
     def _on_primary_hover(self, e):
         """Handle primary button hover effect."""
         if e.data == "true":
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=28,
-                color=f"{COLORS['primary']}55",
-                offset=ft.Offset(0, 10),
-            )
             e.control.scale = 1.02
         else:
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=20,
-                color=f"{COLORS['primary']}40",
-                offset=ft.Offset(0, 6),
-            )
             e.control.scale = 1.0
         e.control.update()
 
     def _on_danger_hover(self, e):
         """Handle danger button hover effect."""
         if e.data == "true":
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=24,
-                color=f"{COLORS['error']}50",
-                offset=ft.Offset(0, 8),
-            )
             e.control.scale = 1.02
         else:
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=16,
-                color=f"{COLORS['error']}35",
-                offset=ft.Offset(0, 4),
-            )
             e.control.scale = 1.0
         e.control.update()
 
@@ -940,17 +862,10 @@ class WorkflowsView(ft.Container):
         if e.data == "true":
             e.control.bgcolor = COLORS["bg_hover"]
             e.control.border = ft.border.all(1, COLORS["border_light"])
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=20,
-                color="#00000020",
-                offset=ft.Offset(0, 6),
-            )
             e.control.scale = 1.01
         else:
             e.control.bgcolor = COLORS["bg_tertiary"]
             e.control.border = ft.border.all(1, COLORS["border_subtle"])
-            e.control.shadow = None
             e.control.scale = 1.0
         e.control.update()
 
