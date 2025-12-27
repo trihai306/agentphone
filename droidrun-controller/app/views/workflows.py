@@ -4,7 +4,7 @@ Polished with improved workflow cards, better list styling, and enhanced empty s
 """
 
 import flet as ft
-from ..theme import COLORS, RADIUS, get_shadow, ANIMATION
+from ..theme import COLORS, RADIUS, ANIMATION
 from ..components.card import Card
 from ..backend import backend
 
