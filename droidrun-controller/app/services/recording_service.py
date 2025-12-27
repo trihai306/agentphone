@@ -3,6 +3,7 @@
 import asyncio
 import aiohttp
 import uuid
+import re
 from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Optional, Any, Callable
@@ -387,6 +388,303 @@ class RecordingService:
         """Clean up all sessions and resources."""
         for session_id in list(self._sessions.keys()):
             self.cleanup_session(session_id)
+
+
+class SelectorType(Enum):
+    """Selector types in priority order for element matching."""
+    RESOURCE_ID = "resource_id"
+    CONTENT_DESC = "content_desc"
+    TEXT = "text"
+    CLASS_WITH_TEXT = "class_with_text"
+    CLASS_WITH_INDEX = "class_with_index"
+    XPATH = "xpath"
+    BOUNDS = "bounds"
+
+
+@dataclass
+class Selector:
+    """Represents a single selector strategy for element matching."""
+    type: SelectorType
+    value: str
+    confidence: float = 1.0  # 0.0 to 1.0, higher is more reliable
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert selector to dictionary."""
+        return {
+            "type": self.type.value,
+            "value": self.value,
+            "confidence": self.confidence,
+        }
+
+
+def _is_dynamic_id(resource_id: str) -> bool:
+    """Check if a resource ID appears to be dynamically generated.
+
+    Dynamic IDs often contain session tokens, random strings, or numeric
+    suffixes that change between sessions.
+    """
+    if not resource_id:
+        return True
+
+    # Check for common patterns of dynamic IDs
+    dynamic_patterns = [
+        r'[0-9a-f]{8,}',  # Hex strings (like UUIDs)
+        r'_\d{5,}$',  # Numeric suffixes (5+ digits)
+        r'session_',
+        r'temp_',
+        r'dynamic_',
+        r'random_',
+        r'generated_',
+    ]
+
+    for pattern in dynamic_patterns:
+        if re.search(pattern, resource_id, re.IGNORECASE):
+            return True
+
+    return False
+
+
+def _calculate_resource_id_confidence(resource_id: str) -> float:
+    """Calculate confidence score for a resource ID selector."""
+    if not resource_id:
+        return 0.0
+
+    # Start with high confidence
+    confidence = 0.95
+
+    # Lower confidence for dynamic-looking IDs
+    if _is_dynamic_id(resource_id):
+        confidence = 0.4
+
+    # Higher confidence for well-named IDs
+    good_patterns = ['btn_', 'button_', 'txt_', 'text_', 'input_', 'edit_',
+                     'img_', 'image_', 'lbl_', 'label_', 'container_', 'layout_']
+    for pattern in good_patterns:
+        if pattern in resource_id.lower():
+            confidence = min(confidence + 0.05, 1.0)
+            break
+
+    return confidence
+
+
+def _generate_xpath(element_data: Dict[str, Any]) -> Optional[str]:
+    """Generate an XPath selector for an element.
+
+    Creates a simple XPath based on class name and available attributes.
+    """
+    class_name = element_data.get("className", "")
+    if not class_name:
+        return None
+
+    # Simplify the class name (remove android.widget. prefix if present)
+    simple_class = class_name.split(".")[-1] if "." in class_name else class_name
+
+    xpath_parts = [f"//{simple_class}"]
+
+    # Add predicates for better matching
+    predicates = []
+
+    text = element_data.get("text", "")
+    if text and len(text) <= 50:  # Only use text if not too long
+        # Escape quotes in text
+        escaped_text = text.replace("'", "\\'")
+        predicates.append(f"@text='{escaped_text}'")
+
+    content_desc = element_data.get("contentDescription", "")
+    if content_desc and not text:
+        escaped_desc = content_desc.replace("'", "\\'")
+        predicates.append(f"@content-desc='{escaped_desc}'")
+
+    if predicates:
+        xpath_parts.append(f"[{' and '.join(predicates)}]")
+        return "".join(xpath_parts)
+
+    # If no predicates, XPath alone is not reliable enough
+    return None
+
+
+def _generate_bounds_selector(element_data: Dict[str, Any]) -> Optional[str]:
+    """Generate a bounds-based selector as last resort fallback."""
+    bounds = element_data.get("bounds")
+    if not bounds:
+        return None
+
+    left = bounds.get("left", 0)
+    top = bounds.get("top", 0)
+    right = bounds.get("right", 0)
+    bottom = bounds.get("bottom", 0)
+
+    if left == 0 and top == 0 and right == 0 and bottom == 0:
+        return None
+
+    return f"bounds=[{left},{top},{right},{bottom}]"
+
+
+def generate_selectors(element_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Generate a prioritized list of selectors for an element.
+
+    Creates multiple selector strategies in priority order:
+    1. resource-id (most reliable if not dynamic)
+    2. content-desc (accessibility description)
+    3. text (element text content)
+    4. class+text (combined for better matching)
+    5. XPath (tree-based navigation)
+    6. bounds (coordinates - least reliable)
+
+    Args:
+        element_data: Dictionary containing element properties:
+            - resourceId: Android resource ID (e.g., "com.app:id/btn_login")
+            - contentDescription: Accessibility content description
+            - text: Visible text content
+            - className: Android class name (e.g., "android.widget.Button")
+            - bounds: Dictionary with left, top, right, bottom coordinates
+            - packageName: Package name of the app
+
+    Returns:
+        List of selector dictionaries with type, value, and confidence.
+        Empty list if no valid selectors can be generated.
+    """
+    selectors: List[Selector] = []
+
+    # 1. Resource ID selector (highest priority)
+    resource_id = element_data.get("resourceId", "")
+    if resource_id:
+        confidence = _calculate_resource_id_confidence(resource_id)
+        selectors.append(Selector(
+            type=SelectorType.RESOURCE_ID,
+            value=resource_id,
+            confidence=confidence,
+        ))
+
+    # 2. Content description selector
+    content_desc = element_data.get("contentDescription", "")
+    if content_desc and content_desc.strip():
+        selectors.append(Selector(
+            type=SelectorType.CONTENT_DESC,
+            value=content_desc.strip(),
+            confidence=0.85,
+        ))
+
+    # 3. Text selector
+    text = element_data.get("text", "")
+    if text and text.strip():
+        # Lower confidence for very short or very long text
+        text_len = len(text.strip())
+        if text_len < 2:
+            text_confidence = 0.5
+        elif text_len > 100:
+            text_confidence = 0.6
+        else:
+            text_confidence = 0.8
+        selectors.append(Selector(
+            type=SelectorType.TEXT,
+            value=text.strip(),
+            confidence=text_confidence,
+        ))
+
+    # 4. Class + Text combined selector
+    class_name = element_data.get("className", "")
+    if class_name and text and text.strip():
+        simple_class = class_name.split(".")[-1] if "." in class_name else class_name
+        combined_value = f"{simple_class}:text='{text.strip()}'"
+        selectors.append(Selector(
+            type=SelectorType.CLASS_WITH_TEXT,
+            value=combined_value,
+            confidence=0.75,
+        ))
+
+    # 5. XPath selector
+    xpath = _generate_xpath(element_data)
+    if xpath:
+        selectors.append(Selector(
+            type=SelectorType.XPATH,
+            value=xpath,
+            confidence=0.65,
+        ))
+
+    # 6. Bounds selector (last resort)
+    bounds_selector = _generate_bounds_selector(element_data)
+    if bounds_selector:
+        selectors.append(Selector(
+            type=SelectorType.BOUNDS,
+            value=bounds_selector,
+            confidence=0.3,  # Low confidence - positions change easily
+        ))
+
+    # Sort by confidence (highest first) and then by type priority
+    type_priority = {
+        SelectorType.RESOURCE_ID: 0,
+        SelectorType.CONTENT_DESC: 1,
+        SelectorType.TEXT: 2,
+        SelectorType.CLASS_WITH_TEXT: 3,
+        SelectorType.XPATH: 4,
+        SelectorType.BOUNDS: 5,
+    }
+    selectors.sort(key=lambda s: (-(s.confidence), type_priority.get(s.type, 99)))
+
+    return [s.to_dict() for s in selectors]
+
+
+def get_element_display_name(element_data: Dict[str, Any]) -> str:
+    """Get a human-readable display name for an element.
+
+    Used for intelligent step naming in generated workflows.
+    Priority: text > content-desc > resource-id > class name
+
+    Args:
+        element_data: Dictionary containing element properties.
+
+    Returns:
+        Human-readable name for the element.
+    """
+    # Try text first (most descriptive)
+    text = element_data.get("text", "")
+    if text and text.strip():
+        display_text = text.strip()
+        # Truncate long text
+        if len(display_text) > 30:
+            display_text = display_text[:27] + "..."
+        return f"'{display_text}'"
+
+    # Try content description
+    content_desc = element_data.get("contentDescription", "")
+    if content_desc and content_desc.strip():
+        return f"'{content_desc.strip()[:30]}'"
+
+    # Try resource ID (extract meaningful part)
+    resource_id = element_data.get("resourceId", "")
+    if resource_id:
+        # Extract the ID part after the last /
+        if "/" in resource_id:
+            resource_id = resource_id.split("/")[-1]
+        # Convert snake_case to readable format
+        readable = resource_id.replace("_", " ").replace("-", " ")
+        return readable.title()
+
+    # Fall back to class name
+    class_name = element_data.get("className", "")
+    if class_name:
+        simple_class = class_name.split(".")[-1] if "." in class_name else class_name
+        # Common Android UI element types
+        class_display = {
+            "Button": "button",
+            "TextView": "text",
+            "EditText": "text field",
+            "ImageView": "image",
+            "ImageButton": "image button",
+            "CheckBox": "checkbox",
+            "RadioButton": "radio button",
+            "Switch": "switch",
+            "SeekBar": "slider",
+            "ProgressBar": "progress bar",
+            "Spinner": "dropdown",
+            "RecyclerView": "list",
+            "ListView": "list",
+            "ScrollView": "scroll area",
+        }
+        return class_display.get(simple_class, simple_class.lower())
+
+    return "element"
 
 
 # Global recording service instance
