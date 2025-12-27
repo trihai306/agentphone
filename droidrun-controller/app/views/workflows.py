@@ -11,6 +11,7 @@ from ..theme import COLORS, RADIUS, get_shadow, ANIMATION
 from ..components.card import Card
 from ..components.recorder_controls import RecorderControls
 from ..components.action_feed import ActionFeed
+from ..components.workflow_editor import WorkflowEditor
 from ..backend import backend
 from ..services.recording_service import get_recording_service, ActionEvent
 
@@ -34,6 +35,11 @@ class WorkflowsView(ft.Container):
         self._action_feed: Optional[ActionFeed] = None
         self._elapsed_timer_task: Optional[asyncio.Task] = None
         self._elapsed_seconds = 0
+
+        # Workflow editor state
+        self._editor_overlay: Optional[ft.Container] = None
+        self._workflow_editor: Optional[WorkflowEditor] = None
+        self._editing_workflow: Optional[dict] = None
 
         super().__init__(
             content=self._build_content(),
@@ -1393,8 +1399,105 @@ class WorkflowsView(ft.Container):
         self.toast.info(f"Running workflow: {workflow.get('name')}")
 
     async def _on_edit(self, workflow: dict):
-        """Handle edit workflow action."""
-        self.toast.info(f"Editing: {workflow.get('name')}")
+        """Handle edit workflow action - show the workflow editor dialog."""
+        import copy
+        # Store a copy of the workflow for editing
+        self._editing_workflow = copy.deepcopy(workflow)
+        self._show_editor_overlay()
+
+    def _show_editor_overlay(self):
+        """Show the workflow editor overlay dialog."""
+        if not self._editing_workflow:
+            return
+
+        # Create the workflow editor component
+        self._workflow_editor = WorkflowEditor(
+            workflow=self._editing_workflow,
+            on_save=self._on_editor_save,
+            on_cancel=self._on_editor_cancel,
+            on_change=self._on_editor_change,
+        )
+
+        # Build the overlay
+        self._editor_overlay = ft.Container(
+            content=ft.Stack(
+                [
+                    # Semi-transparent backdrop
+                    ft.Container(
+                        bgcolor="#00000080",
+                        expand=True,
+                        on_click=lambda e: None,  # Prevent clicks from passing through
+                    ),
+                    # Editor panel
+                    ft.Container(
+                        content=self._workflow_editor,
+                        width=900,
+                        height=650,
+                        bgcolor=COLORS["bg_card"],
+                        border_radius=RADIUS["xl"],
+                        border=ft.border.all(1, COLORS["border"]),
+                        shadow=ft.BoxShadow(
+                            spread_radius=0,
+                            blur_radius=40,
+                            color="#00000050",
+                            offset=ft.Offset(0, 20),
+                        ),
+                    ),
+                ],
+                alignment=ft.alignment.center,
+            ),
+            expand=True,
+        )
+
+        # Add overlay to page
+        self.page.overlay.append(self._editor_overlay)
+        self.page.update()
+
+    def _hide_editor_overlay(self):
+        """Hide and cleanup the editor overlay."""
+        if self._editor_overlay and self._editor_overlay in self.page.overlay:
+            self.page.overlay.remove(self._editor_overlay)
+            self.page.update()
+        self._editor_overlay = None
+        self._workflow_editor = None
+        self._editing_workflow = None
+
+    def _on_editor_save(self, workflow: dict):
+        """Handle save from workflow editor."""
+        # Run the async save operation
+        self.page.run_task(self._save_edited_workflow, workflow)
+
+    async def _save_edited_workflow(self, workflow: dict):
+        """Save the edited workflow to backend."""
+        try:
+            # Update the workflow in backend
+            saved_workflow = await self.backend.update_workflow(
+                workflow.get("id"),
+                workflow
+            )
+            self.toast.success(f"Workflow saved: {workflow.get('name')}")
+
+            # Refresh the workflows list
+            await self.load_workflows()
+
+        except Exception as ex:
+            self.toast.error(f"Failed to save workflow: {ex}")
+        finally:
+            # Hide the editor overlay
+            self._hide_editor_overlay()
+
+    def _on_editor_cancel(self):
+        """Handle cancel from workflow editor."""
+        # Check for unsaved changes
+        if self._workflow_editor and self._workflow_editor.has_unsaved_changes():
+            # Could show a confirmation dialog here, for now just close
+            self.toast.info("Changes discarded")
+        self._hide_editor_overlay()
+
+    def _on_editor_change(self, workflow: dict):
+        """Handle changes in the workflow editor."""
+        # Optional: Could track changes or show unsaved indicator
+        pass
 
     async def _on_duplicate(self, workflow: dict):
         """Handle duplicate workflow action."""
