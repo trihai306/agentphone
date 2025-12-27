@@ -11,6 +11,9 @@ __pycache__/
 *$py.class
 *.so
 .Python
+.venv/
+*.pyc
+
 
 # Git worktrees
 .worktrees/
