@@ -6,13 +6,13 @@ Integrated with recording controls and action feed for workflow recording.
 
 import asyncio
 import flet as ft
-from typing import Optional
+from typing import Optional, List
 from ..theme import COLORS, RADIUS, get_shadow, ANIMATION
 from ..components.card import Card
 from ..components.recorder_controls import RecorderControls
 from ..components.action_feed import ActionFeed
 from ..components.workflow_editor import WorkflowEditor
-from ..backend import backend
+from ..backend import backend, ReplayStatus, StepResult
 from ..services.recording_service import get_recording_service, ActionEvent
 
 
@@ -40,6 +40,16 @@ class WorkflowsView(ft.Container):
         self._editor_overlay: Optional[ft.Container] = None
         self._workflow_editor: Optional[WorkflowEditor] = None
         self._editing_workflow: Optional[dict] = None
+
+        # Replay state
+        self._replay_overlay: Optional[ft.Container] = None
+        self._replay_workflow: Optional[dict] = None
+        self._replay_device_serial: Optional[str] = None
+        self._replay_step_results: List[StepResult] = []
+        self._replay_is_running: bool = False
+        self._replay_progress_column: Optional[ft.Column] = None
+        self._replay_status_text: Optional[ft.Text] = None
+        self._replay_progress_ring: Optional[ft.ProgressRing] = None
 
         super().__init__(
             content=self._build_content(),
@@ -1395,8 +1405,521 @@ class WorkflowsView(ft.Container):
         self.toast.info("Import workflow from file...")
 
     async def _on_run(self, workflow: dict):
-        """Handle run workflow action."""
-        self.toast.info(f"Running workflow: {workflow.get('name')}")
+        """Handle run workflow action - show device selection then execute replay."""
+        # Get available devices from app_state
+        devices = getattr(self.app_state, 'devices', [])
+        if not devices:
+            self.toast.warning("No devices connected. Please connect a device first.")
+            return
+
+        # Store workflow for replay
+        self._replay_workflow = workflow
+
+        # If only one device, use it directly
+        if len(devices) == 1:
+            device = devices[0]
+            device_serial = device.get('serial', device.get('id', ''))
+            device_name = device.get('name', device.get('model', 'Device'))
+            await self._start_replay_for_device(device_serial, device_name)
+        else:
+            # Show device selection dialog
+            await self._show_replay_device_selection_dialog(devices, workflow)
+
+    async def _show_replay_device_selection_dialog(self, devices: list, workflow: dict):
+        """Show a dialog to select which device to run the workflow on."""
+        device_options = []
+        for device in devices:
+            device_serial = device.get('serial', device.get('id', ''))
+            device_name = device.get('name', device.get('model', 'Device'))
+            device_options.append({
+                'serial': device_serial,
+                'name': device_name,
+            })
+
+        selected_device = {'serial': None, 'name': None}
+
+        async def on_device_select(e):
+            idx = int(e.control.data)
+            selected_device['serial'] = device_options[idx]['serial']
+            selected_device['name'] = device_options[idx]['name']
+            dialog.open = False
+            self.page.update()
+            # Start replay on selected device
+            await self._start_replay_for_device(
+                selected_device['serial'],
+                selected_device['name']
+            )
+
+        device_buttons = []
+        for i, opt in enumerate(device_options):
+            device_buttons.append(
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Icon(ft.Icons.SMARTPHONE, size=20, color=COLORS["accent_purple"]),
+                            ft.Container(width=12),
+                            ft.Column(
+                                [
+                                    ft.Text(
+                                        opt['name'],
+                                        size=14,
+                                        weight=ft.FontWeight.W_600,
+                                        color=COLORS["text_primary"],
+                                    ),
+                                    ft.Text(
+                                        opt['serial'],
+                                        size=11,
+                                        color=COLORS["text_muted"],
+                                    ),
+                                ],
+                                spacing=2,
+                            ),
+                        ],
+                    ),
+                    padding=ft.padding.symmetric(horizontal=16, vertical=12),
+                    border_radius=RADIUS["md"],
+                    bgcolor=COLORS["bg_tertiary"],
+                    border=ft.border.all(1, COLORS["border_subtle"]),
+                    on_click=on_device_select,
+                    data=str(i),
+                    animate=ft.Animation(150, ft.AnimationCurve.EASE_OUT),
+                )
+            )
+
+        dialog = ft.AlertDialog(
+            modal=True,
+            title=ft.Row(
+                [
+                    ft.Container(
+                        content=ft.Icon(
+                            ft.Icons.PLAY_CIRCLE_ROUNDED,
+                            size=20,
+                            color=COLORS["success"],
+                        ),
+                        width=36,
+                        height=36,
+                        border_radius=RADIUS["md"],
+                        bgcolor=f"{COLORS['success']}15",
+                        alignment=ft.alignment.center,
+                    ),
+                    ft.Container(width=12),
+                    ft.Text(f"Run '{workflow.get('name', 'Workflow')}'", weight=ft.FontWeight.W_600),
+                ],
+            ),
+            content=ft.Container(
+                content=ft.Column(
+                    [
+                        ft.Text(
+                            "Select a device to run this workflow on:",
+                            size=13,
+                            color=COLORS["text_secondary"],
+                        ),
+                        ft.Container(height=12),
+                        ft.Column(device_buttons, spacing=8),
+                    ],
+                    spacing=0,
+                ),
+                width=350,
+                padding=ft.padding.only(top=8),
+            ),
+            actions=[
+                ft.TextButton("Cancel", on_click=lambda e: self._close_dialog(dialog)),
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+
+        self.page.overlay.append(dialog)
+        dialog.open = True
+        self.page.update()
+
+    async def _start_replay_for_device(self, device_serial: str, device_name: str):
+        """Start workflow replay on the specified device."""
+        if not self._replay_workflow:
+            self.toast.error("No workflow selected for replay")
+            return
+
+        self._replay_device_serial = device_serial
+        self._replay_step_results = []
+        self._replay_is_running = True
+
+        # Show replay overlay
+        self._show_replay_overlay(device_name)
+
+        # Run replay in background
+        try:
+            results = await self.backend.replay_workflow(
+                workflow_id=self._replay_workflow.get("id"),
+                device_serial=device_serial,
+                step_callback=self._on_replay_step_result,
+                stop_on_error=False,  # Continue on errors to show full progress
+            )
+
+            # Update final status
+            self._replay_is_running = False
+            self._update_replay_final_status(results)
+
+        except ValueError as e:
+            self._replay_is_running = False
+            self._update_replay_error(str(e))
+        except Exception as e:
+            self._replay_is_running = False
+            self._update_replay_error(f"Unexpected error: {e}")
+
+    def _show_replay_overlay(self, device_name: str):
+        """Show the replay progress overlay."""
+        workflow_name = self._replay_workflow.get("name", "Workflow")
+        steps = self._replay_workflow.get("steps", [])
+        total_steps = len(steps)
+
+        # Create progress column for step results
+        self._replay_progress_column = ft.Column(
+            [],
+            spacing=8,
+            scroll=ft.ScrollMode.AUTO,
+            auto_scroll=True,
+            expand=True,
+        )
+
+        # Create status text
+        self._replay_status_text = ft.Text(
+            f"Preparing to run {total_steps} steps...",
+            size=14,
+            weight=ft.FontWeight.W_500,
+            color=COLORS["text_secondary"],
+        )
+
+        # Create progress ring
+        self._replay_progress_ring = ft.ProgressRing(
+            width=24,
+            height=24,
+            stroke_width=3,
+            color=COLORS["success"],
+        )
+
+        # Build overlay
+        self._replay_overlay = ft.Container(
+            content=ft.Stack(
+                [
+                    # Semi-transparent backdrop
+                    ft.Container(
+                        bgcolor="#00000080",
+                        expand=True,
+                        on_click=lambda e: None,
+                    ),
+                    # Replay panel
+                    ft.Container(
+                        content=ft.Column(
+                            [
+                                # Header
+                                ft.Container(
+                                    content=ft.Row(
+                                        [
+                                            ft.Row(
+                                                [
+                                                    ft.Container(
+                                                        content=ft.Icon(
+                                                            ft.Icons.PLAY_CIRCLE_ROUNDED,
+                                                            size=18,
+                                                            color=COLORS["success"],
+                                                        ),
+                                                        width=36,
+                                                        height=36,
+                                                        border_radius=RADIUS["md"],
+                                                        bgcolor=f"{COLORS['success']}15",
+                                                        alignment=ft.alignment.center,
+                                                    ),
+                                                    ft.Container(width=12),
+                                                    ft.Column(
+                                                        [
+                                                            ft.Text(
+                                                                "Running Workflow",
+                                                                size=18,
+                                                                weight=ft.FontWeight.W_700,
+                                                                color=COLORS["text_primary"],
+                                                            ),
+                                                            ft.Text(
+                                                                f"{workflow_name} • {device_name}",
+                                                                size=12,
+                                                                color=COLORS["text_secondary"],
+                                                            ),
+                                                        ],
+                                                        spacing=2,
+                                                    ),
+                                                ],
+                                            ),
+                                            ft.IconButton(
+                                                icon=ft.Icons.CLOSE,
+                                                icon_color=COLORS["text_secondary"],
+                                                icon_size=20,
+                                                on_click=self._on_close_replay_overlay,
+                                                tooltip="Close",
+                                            ),
+                                        ],
+                                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                                    ),
+                                    padding=ft.padding.symmetric(horizontal=24, vertical=16),
+                                    border=ft.border.only(bottom=ft.BorderSide(1, COLORS["border"])),
+                                ),
+                                # Progress header
+                                ft.Container(
+                                    content=ft.Row(
+                                        [
+                                            self._replay_progress_ring,
+                                            ft.Container(width=12),
+                                            self._replay_status_text,
+                                        ],
+                                    ),
+                                    padding=ft.padding.symmetric(horizontal=24, vertical=16),
+                                    bgcolor=f"{COLORS['success']}08",
+                                ),
+                                # Steps list
+                                ft.Container(
+                                    content=self._replay_progress_column,
+                                    padding=24,
+                                    expand=True,
+                                ),
+                                # Footer
+                                ft.Container(
+                                    content=ft.Row(
+                                        [
+                                            ft.Container(expand=True),
+                                            ft.Container(
+                                                content=ft.Row(
+                                                    [
+                                                        ft.Icon(
+                                                            ft.Icons.STOP_CIRCLE_ROUNDED,
+                                                            size=16,
+                                                            color=COLORS["text_inverse"],
+                                                        ),
+                                                        ft.Container(width=8),
+                                                        ft.Text(
+                                                            "Stop",
+                                                            size=13,
+                                                            weight=ft.FontWeight.W_600,
+                                                            color=COLORS["text_inverse"],
+                                                        ),
+                                                    ],
+                                                ),
+                                                bgcolor=COLORS["error"],
+                                                padding=ft.padding.symmetric(horizontal=20, vertical=10),
+                                                border_radius=RADIUS["md"],
+                                                on_click=self._on_stop_replay,
+                                                visible=True,
+                                            ),
+                                            ft.Container(width=12),
+                                            ft.Container(
+                                                content=ft.Text(
+                                                    "Close",
+                                                    size=13,
+                                                    weight=ft.FontWeight.W_600,
+                                                    color=COLORS["text_secondary"],
+                                                ),
+                                                bgcolor=COLORS["bg_tertiary"],
+                                                padding=ft.padding.symmetric(horizontal=20, vertical=10),
+                                                border_radius=RADIUS["md"],
+                                                border=ft.border.all(1, COLORS["border_subtle"]),
+                                                on_click=self._on_close_replay_overlay,
+                                            ),
+                                        ],
+                                    ),
+                                    padding=ft.padding.symmetric(horizontal=24, vertical=16),
+                                    border=ft.border.only(top=ft.BorderSide(1, COLORS["border"])),
+                                ),
+                            ],
+                            spacing=0,
+                            expand=True,
+                        ),
+                        width=600,
+                        height=500,
+                        bgcolor=COLORS["bg_card"],
+                        border_radius=RADIUS["xl"],
+                        border=ft.border.all(1, COLORS["border"]),
+                        shadow=ft.BoxShadow(
+                            spread_radius=0,
+                            blur_radius=40,
+                            color="#00000050",
+                            offset=ft.Offset(0, 20),
+                        ),
+                    ),
+                ],
+                alignment=ft.alignment.center,
+            ),
+            expand=True,
+        )
+
+        self.page.overlay.append(self._replay_overlay)
+        self.page.update()
+
+    def _on_replay_step_result(self, result: StepResult):
+        """Handle step result callback during replay."""
+        self._replay_step_results.append(result)
+
+        # Determine status icon and color
+        if result.status == ReplayStatus.SUCCESS:
+            icon = ft.Icons.CHECK_CIRCLE_ROUNDED
+            icon_color = COLORS["success"]
+            status_text = "Success"
+            bg_color = f"{COLORS['success']}10"
+        elif result.status == ReplayStatus.FAILED:
+            icon = ft.Icons.ERROR_ROUNDED
+            icon_color = COLORS["error"]
+            status_text = "Failed"
+            bg_color = f"{COLORS['error']}10"
+        elif result.status == ReplayStatus.RUNNING:
+            icon = ft.Icons.PLAY_CIRCLE_ROUNDED
+            icon_color = COLORS["primary"]
+            status_text = "Running"
+            bg_color = f"{COLORS['primary']}10"
+        elif result.status == ReplayStatus.SKIPPED:
+            icon = ft.Icons.SKIP_NEXT_ROUNDED
+            icon_color = COLORS["warning"]
+            status_text = "Skipped"
+            bg_color = f"{COLORS['warning']}10"
+        else:
+            icon = ft.Icons.PENDING_ROUNDED
+            icon_color = COLORS["text_muted"]
+            status_text = "Pending"
+            bg_color = COLORS["bg_tertiary"]
+
+        # Create step result row
+        step_row = ft.Container(
+            content=ft.Row(
+                [
+                    ft.Container(
+                        content=ft.Icon(icon, size=18, color=icon_color),
+                        width=32,
+                        height=32,
+                        border_radius=RADIUS["sm"],
+                        bgcolor=bg_color,
+                        alignment=ft.alignment.center,
+                    ),
+                    ft.Container(width=12),
+                    ft.Column(
+                        [
+                            ft.Text(
+                                result.step_name,
+                                size=13,
+                                weight=ft.FontWeight.W_600,
+                                color=COLORS["text_primary"],
+                            ),
+                            ft.Row(
+                                [
+                                    ft.Text(
+                                        status_text,
+                                        size=11,
+                                        weight=ft.FontWeight.W_500,
+                                        color=icon_color,
+                                    ),
+                                    ft.Text(
+                                        f" • {result.duration_ms}ms",
+                                        size=11,
+                                        color=COLORS["text_muted"],
+                                    ),
+                                    ft.Text(
+                                        f" • {result.message[:50]}..." if len(result.message) > 50 else f" • {result.message}",
+                                        size=11,
+                                        color=COLORS["text_muted"],
+                                    ) if result.message else ft.Container(),
+                                ],
+                                spacing=0,
+                            ),
+                        ],
+                        spacing=2,
+                        expand=True,
+                    ),
+                ],
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            padding=ft.padding.symmetric(horizontal=16, vertical=12),
+            border_radius=RADIUS["md"],
+            bgcolor=bg_color,
+            border=ft.border.all(1, f"{icon_color}20"),
+        )
+
+        # Add to progress column
+        if self._replay_progress_column:
+            self._replay_progress_column.controls.append(step_row)
+
+        # Update status text
+        total_steps = len(self._replay_workflow.get("steps", [])) if self._replay_workflow else 0
+        completed = len(self._replay_step_results)
+        if self._replay_status_text:
+            self._replay_status_text.value = f"Step {completed}/{total_steps} completed"
+
+        # Update UI
+        if self.page:
+            self.page.update()
+
+    def _update_replay_final_status(self, results: List[StepResult]):
+        """Update the overlay with final replay status."""
+        success_count = len([r for r in results if r.status == ReplayStatus.SUCCESS])
+        failed_count = len([r for r in results if r.status == ReplayStatus.FAILED])
+        total_count = len(results)
+
+        if self._replay_status_text:
+            if failed_count == 0:
+                self._replay_status_text.value = f"✓ Completed successfully ({total_count} steps)"
+                self._replay_status_text.color = COLORS["success"]
+            else:
+                self._replay_status_text.value = f"⚠ Completed with {failed_count} error(s) ({success_count}/{total_count} succeeded)"
+                self._replay_status_text.color = COLORS["warning"]
+
+        # Hide progress ring
+        if self._replay_progress_ring:
+            self._replay_progress_ring.visible = False
+
+        if self.page:
+            self.page.update()
+
+        # Show toast
+        if failed_count == 0:
+            self.toast.success(f"Workflow completed: {total_count} steps executed")
+        else:
+            self.toast.warning(f"Workflow completed with {failed_count} errors")
+
+    def _update_replay_error(self, error_message: str):
+        """Update the overlay with an error message."""
+        if self._replay_status_text:
+            self._replay_status_text.value = f"✕ Error: {error_message}"
+            self._replay_status_text.color = COLORS["error"]
+
+        if self._replay_progress_ring:
+            self._replay_progress_ring.visible = False
+
+        if self.page:
+            self.page.update()
+
+        self.toast.error(f"Replay failed: {error_message}")
+
+    def _on_stop_replay(self, e):
+        """Handle stop replay button click."""
+        self._replay_is_running = False
+        if self._replay_status_text:
+            self._replay_status_text.value = "Stopped by user"
+            self._replay_status_text.color = COLORS["warning"]
+        if self._replay_progress_ring:
+            self._replay_progress_ring.visible = False
+        if self.page:
+            self.page.update()
+        self.toast.info("Workflow replay stopped")
+
+    def _on_close_replay_overlay(self, e):
+        """Handle close replay overlay button click."""
+        self._hide_replay_overlay()
+
+    def _hide_replay_overlay(self):
+        """Hide and cleanup the replay overlay."""
+        if self._replay_overlay and self._replay_overlay in self.page.overlay:
+            self.page.overlay.remove(self._replay_overlay)
+            self.page.update()
+        self._replay_overlay = None
+        self._replay_workflow = None
+        self._replay_device_serial = None
+        self._replay_step_results = []
+        self._replay_is_running = False
+        self._replay_progress_column = None
+        self._replay_status_text = None
+        self._replay_progress_ring = None
 
     async def _on_edit(self, workflow: dict):
         """Handle edit workflow action - show the workflow editor dialog."""
