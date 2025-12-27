@@ -194,9 +194,34 @@ class DevicesView(ft.Column):
         e.control.update()
 
     def _build_stats_row(self):
-        """Build the enhanced stats cards row."""
+        """Build the enhanced stats cards row with device aggregated data."""
         total = len(self.devices)
         online = len([d for d in self.devices if d.get("status") == "connected"])
+
+        # Calculate aggregated device stats
+        total_battery = 0
+        total_storage_used = 0
+        total_storage_total = 0
+        devices_with_battery = 0
+        devices_with_storage = 0
+
+        for device in self.devices:
+            # Battery aggregation
+            battery = device.get("battery_level")
+            if battery is not None:
+                total_battery += battery
+                devices_with_battery += 1
+
+            # Storage aggregation
+            storage_used = device.get("storage_used")
+            storage_total = device.get("storage_total")
+            if storage_used is not None and storage_total is not None:
+                total_storage_used += storage_used
+                total_storage_total += storage_total
+                devices_with_storage += 1
+
+        avg_battery = round(total_battery / devices_with_battery) if devices_with_battery > 0 else 0
+        storage_percent = round((total_storage_used / total_storage_total) * 100) if total_storage_total > 0 else 0
 
         stats = [
             {
@@ -216,20 +241,20 @@ class DevicesView(ft.Column):
                 "trend": "up" if online > 0 else None,
             },
             {
-                "title": "Agent Runs",
-                "value": "12",
-                "subtitle": "Total executions today",
-                "icon": ft.Icons.SMART_TOY_OUTLINED,
-                "color": COLORS["accent_purple"],
-                "trend": "up",
+                "title": "Avg Battery",
+                "value": f"{avg_battery}%",
+                "subtitle": f"Across {devices_with_battery} device(s)",
+                "icon": ft.Icons.BATTERY_CHARGING_FULL_ROUNDED,
+                "color": COLORS["success"] if avg_battery > 50 else COLORS["warning"] if avg_battery > 20 else COLORS["error"],
+                "trend": "up" if avg_battery > 50 else "down" if avg_battery < 30 else None,
             },
             {
-                "title": "Success Rate",
-                "value": "85%",
-                "subtitle": "Last 24 hours",
-                "icon": ft.Icons.TRENDING_UP_ROUNDED,
-                "color": COLORS["success"],
-                "trend": "up",
+                "title": "Storage Used",
+                "value": f"{storage_percent}%",
+                "subtitle": f"Across {devices_with_storage} device(s)",
+                "icon": ft.Icons.STORAGE_ROUNDED,
+                "color": COLORS["error"] if storage_percent > 80 else COLORS["warning"] if storage_percent > 60 else COLORS["accent_purple"],
+                "trend": "up" if storage_percent > 80 else None,
             },
         ]
 
