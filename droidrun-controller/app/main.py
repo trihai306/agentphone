@@ -333,7 +333,6 @@ class DroidrunApp:
                         size=10,
                         weight=ft.FontWeight.W_600,
                         color=colors["text_muted"],
-                        letter_spacing=1,
                     ),
                     ft.Container(height=SPACING["md"]),
                     self._build_action_item(
@@ -489,7 +488,6 @@ class DroidrunApp:
                             size=10,
                             weight=ft.FontWeight.W_600,
                             color=colors["text_muted"],
-                            letter_spacing=1,
                         ),
                         padding=ft.padding.only(left=22, bottom=SPACING["sm"]),
                     ),
