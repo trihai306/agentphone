@@ -19,6 +19,7 @@ import com.agent.portal.R
 import com.agent.portal.accessibility.PortalAccessibilityService
 import com.agent.portal.keyboard.PortalKeyboardIME
 import com.agent.portal.overlay.OverlayService
+import com.agent.portal.recording.RecordingManager
 import com.google.gson.Gson
 import fi.iki.elonen.NanoHTTPD
 import java.io.ByteArrayOutputStream
@@ -152,6 +153,13 @@ class HttpServerService : Service() {
                     // App management endpoints
                     uri == "/app/start" && method == Method.POST -> handleStartApp(session)
                     uri == "/app/packages" && method == Method.GET -> handleGetPackages(session)
+                    // Recording endpoints
+                    uri == "/recording/start" && method == Method.POST -> handleStartRecording(session)
+                    uri == "/recording/stop" && method == Method.POST -> handleStopRecording(session)
+                    uri == "/recording/pause" && method == Method.POST -> handlePauseRecording(session)
+                    uri == "/recording/resume" && method == Method.POST -> handleResumeRecording(session)
+                    uri == "/recording/events" && method == Method.GET -> handleGetRecordingEvents(session)
+                    uri == "/recording/status" && method == Method.GET -> handleGetRecordingStatus()
                     else -> newFixedLengthResponse(
                         Response.Status.NOT_FOUND,
                         MIME_PLAINTEXT,
@@ -743,6 +751,175 @@ class HttpServerService : Service() {
                 gson.toJson(mapOf(
                     "status" to "success",
                     "packages" to packages
+                ))
+            )
+        }
+
+        // ====================================================================
+        // RECORDING HANDLERS - Workflow recording control
+        // ====================================================================
+
+        private fun handleStartRecording(session: IHTTPSession): Response {
+            val success = RecordingManager.startRecording()
+
+            return if (success) {
+                val status = RecordingManager.getStatus()
+                newFixedLengthResponse(
+                    Response.Status.OK,
+                    "application/json",
+                    gson.toJson(mapOf(
+                        "status" to "success",
+                        "message" to "Recording started",
+                        "data" to status.toMap()
+                    ))
+                )
+            } else {
+                newFixedLengthResponse(
+                    Response.Status.CONFLICT,
+                    "application/json",
+                    gson.toJson(mapOf(
+                        "status" to "error",
+                        "error" to "Recording already in progress"
+                    ))
+                )
+            }
+        }
+
+        private fun handleStopRecording(session: IHTTPSession): Response {
+            val success = RecordingManager.stopRecording()
+
+            return if (success) {
+                val events = RecordingManager.getEvents()
+                val status = RecordingManager.getStatus()
+                newFixedLengthResponse(
+                    Response.Status.OK,
+                    "application/json",
+                    gson.toJson(mapOf(
+                        "status" to "success",
+                        "message" to "Recording stopped",
+                        "data" to mapOf(
+                            "event_count" to events.size,
+                            "events" to events.map { it.toMap() },
+                            "recording_status" to status.toMap()
+                        )
+                    ))
+                )
+            } else {
+                newFixedLengthResponse(
+                    Response.Status.CONFLICT,
+                    "application/json",
+                    gson.toJson(mapOf(
+                        "status" to "error",
+                        "error" to "No recording in progress"
+                    ))
+                )
+            }
+        }
+
+        private fun handlePauseRecording(session: IHTTPSession): Response {
+            val success = RecordingManager.pauseRecording()
+
+            return if (success) {
+                val status = RecordingManager.getStatus()
+                newFixedLengthResponse(
+                    Response.Status.OK,
+                    "application/json",
+                    gson.toJson(mapOf(
+                        "status" to "success",
+                        "message" to "Recording paused",
+                        "data" to status.toMap()
+                    ))
+                )
+            } else {
+                val state = RecordingManager.getState()
+                val error = when (state) {
+                    RecordingManager.RecordingState.IDLE -> "No recording in progress"
+                    RecordingManager.RecordingState.PAUSED -> "Recording already paused"
+                    else -> "Cannot pause recording"
+                }
+                newFixedLengthResponse(
+                    Response.Status.CONFLICT,
+                    "application/json",
+                    gson.toJson(mapOf(
+                        "status" to "error",
+                        "error" to error
+                    ))
+                )
+            }
+        }
+
+        private fun handleResumeRecording(session: IHTTPSession): Response {
+            val success = RecordingManager.resumeRecording()
+
+            return if (success) {
+                val status = RecordingManager.getStatus()
+                newFixedLengthResponse(
+                    Response.Status.OK,
+                    "application/json",
+                    gson.toJson(mapOf(
+                        "status" to "success",
+                        "message" to "Recording resumed",
+                        "data" to status.toMap()
+                    ))
+                )
+            } else {
+                val state = RecordingManager.getState()
+                val error = when (state) {
+                    RecordingManager.RecordingState.IDLE -> "No recording in progress"
+                    RecordingManager.RecordingState.RECORDING -> "Recording is not paused"
+                    else -> "Cannot resume recording"
+                }
+                newFixedLengthResponse(
+                    Response.Status.CONFLICT,
+                    "application/json",
+                    gson.toJson(mapOf(
+                        "status" to "error",
+                        "error" to error
+                    ))
+                )
+            }
+        }
+
+        private fun handleGetRecordingEvents(session: IHTTPSession): Response {
+            val params = session.parameters
+
+            // Optional pagination parameters
+            val offset = params["offset"]?.firstOrNull()?.toIntOrNull() ?: 0
+            val limit = params["limit"]?.firstOrNull()?.toIntOrNull()
+
+            val allEvents = RecordingManager.getEvents()
+
+            // Apply pagination if specified
+            val events = if (limit != null) {
+                allEvents.drop(offset).take(limit)
+            } else {
+                allEvents.drop(offset)
+            }
+
+            return newFixedLengthResponse(
+                Response.Status.OK,
+                "application/json",
+                gson.toJson(mapOf(
+                    "status" to "success",
+                    "data" to mapOf(
+                        "total_count" to allEvents.size,
+                        "offset" to offset,
+                        "count" to events.size,
+                        "events" to events.map { it.toMap() }
+                    )
+                ))
+            )
+        }
+
+        private fun handleGetRecordingStatus(): Response {
+            val status = RecordingManager.getStatus()
+
+            return newFixedLengthResponse(
+                Response.Status.OK,
+                "application/json",
+                gson.toJson(mapOf(
+                    "status" to "success",
+                    "data" to status.toMap()
                 ))
             )
         }

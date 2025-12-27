@@ -2,5 +2,35 @@
 
 from .ai_service import AIService
 from .screen_service import ScreenService, screen_service
+from .selector_generator import SelectorGenerator, get_selector_generator, selector_generator
+from .step_namer import StepNamer, get_step_namer, step_namer
+from .replay_engine import (
+    ReplayEngine,
+    ReplayProgress,
+    ReplayStatus,
+    StepExecutionResult,
+    StepResult,
+    get_replay_engine,
+    create_replay_engine,
+    replay_engine,
+)
 
-__all__ = ["AIService", "ScreenService", "screen_service"]
+__all__ = [
+    "AIService",
+    "ScreenService",
+    "screen_service",
+    "SelectorGenerator",
+    "get_selector_generator",
+    "selector_generator",
+    "StepNamer",
+    "get_step_namer",
+    "step_namer",
+    "ReplayEngine",
+    "ReplayProgress",
+    "ReplayStatus",
+    "StepExecutionResult",
+    "StepResult",
+    "get_replay_engine",
+    "create_replay_engine",
+    "replay_engine",
+]
