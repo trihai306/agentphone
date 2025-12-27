@@ -2,7 +2,7 @@
 
 import flet as ft
 from typing import Optional, Callable
-from ..theme import get_colors, RADIUS, get_shadow
+from ..theme import get_colors, RADIUS, get_shadow, SPACING, ANIMATION
 
 
 class DeviceCard(ft.Container):
@@ -20,6 +20,17 @@ class DeviceCard(ft.Container):
         on_click: Optional[Callable] = None,
         on_select: Optional[Callable] = None,
         selected: bool = False,
+        # Extended device info
+        battery_level: Optional[int] = None,
+        storage_used: Optional[float] = None,
+        storage_total: Optional[float] = None,
+        ram_usage: Optional[int] = None,
+        # Quick action callbacks
+        on_view_details: Optional[Callable] = None,
+        on_screenshot: Optional[Callable] = None,
+        on_restart: Optional[Callable] = None,
+        on_clear_data: Optional[Callable] = None,
+        on_disconnect: Optional[Callable] = None,
     ):
         self.device_id = device_id
         self.device_name = device_name
@@ -31,6 +42,17 @@ class DeviceCard(ft.Container):
         self.on_card_click = on_click
         self.on_select = on_select
         self.selected = selected
+        # Extended info
+        self.battery_level = battery_level
+        self.storage_used = storage_used
+        self.storage_total = storage_total
+        self.ram_usage = ram_usage
+        # Quick action callbacks
+        self.on_view_details = on_view_details
+        self.on_screenshot = on_screenshot
+        self.on_restart = on_restart
+        self.on_clear_data = on_clear_data
+        self.on_disconnect = on_disconnect
 
         colors = get_colors()
         super().__init__(
@@ -165,6 +187,9 @@ class DeviceCard(ft.Container):
             alignment=ft.alignment.center,
         )
 
+        # Extended device info row (battery, storage, RAM)
+        extended_info = self._build_extended_info(colors)
+
         # Bottom action bar
         action_bar = ft.Container(
             content=ft.Row(
@@ -190,13 +215,8 @@ class DeviceCard(ft.Container):
                         tooltip="Refresh",
                         padding=4,
                     ),
-                    ft.IconButton(
-                        icon=ft.Icons.MORE_VERT,
-                        icon_size=16,
-                        icon_color=colors["text_muted"],
-                        tooltip="More",
-                        padding=4,
-                    ),
+                    # Quick actions context menu
+                    self._build_quick_actions_menu(colors),
                 ],
                 alignment=ft.MainAxisAlignment.SPACE_AROUND,
             ),
@@ -221,6 +241,7 @@ class DeviceCard(ft.Container):
                         device_info,
                         ft.Container(height=4),
                         preview,
+                        extended_info,
                         task_widget,
                         action_bar,
                     ],
@@ -253,6 +274,102 @@ class DeviceCard(ft.Container):
             # Restore appropriate shadow based on selection state
             self.shadow = get_shadow("sm") if self.selected else get_shadow("xs")
         self.update()
+
+    def _build_extended_info(self, colors):
+        """Build extended device info row (battery, storage, RAM).
+
+        Args:
+            colors: Theme colors dictionary
+
+        Returns:
+            Container with compact info row showing battery, storage, RAM
+        """
+        info_items = []
+
+        # Battery level with icon
+        if self.battery_level is not None:
+            battery_icon = ft.Icons.BATTERY_FULL if self.battery_level >= 80 else (
+                ft.Icons.BATTERY_5_BAR if self.battery_level >= 50 else (
+                    ft.Icons.BATTERY_3_BAR if self.battery_level >= 20 else ft.Icons.BATTERY_1_BAR
+                )
+            )
+            battery_color = colors["success"] if self.battery_level >= 50 else (
+                colors["warning"] if self.battery_level >= 20 else colors["error"]
+            )
+            info_items.append(
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Icon(battery_icon, size=12, color=battery_color),
+                            ft.Text(
+                                f"{self.battery_level}%",
+                                size=9,
+                                color=colors["text_muted"],
+                            ),
+                        ],
+                        spacing=2,
+                    ),
+                    tooltip=f"Battery: {self.battery_level}%",
+                )
+            )
+
+        # Storage info
+        if self.storage_used is not None and self.storage_total is not None:
+            storage_pct = int((self.storage_used / self.storage_total) * 100) if self.storage_total > 0 else 0
+            storage_color = colors["success"] if storage_pct < 70 else (
+                colors["warning"] if storage_pct < 90 else colors["error"]
+            )
+            info_items.append(
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Icon(ft.Icons.STORAGE, size=12, color=storage_color),
+                            ft.Text(
+                                f"{storage_pct}%",
+                                size=9,
+                                color=colors["text_muted"],
+                            ),
+                        ],
+                        spacing=2,
+                    ),
+                    tooltip=f"Storage: {self.storage_used:.1f}GB / {self.storage_total:.1f}GB ({storage_pct}%)",
+                )
+            )
+
+        # RAM usage
+        if self.ram_usage is not None:
+            ram_color = colors["success"] if self.ram_usage < 70 else (
+                colors["warning"] if self.ram_usage < 90 else colors["error"]
+            )
+            info_items.append(
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Icon(ft.Icons.MEMORY, size=12, color=ram_color),
+                            ft.Text(
+                                f"{self.ram_usage}%",
+                                size=9,
+                                color=colors["text_muted"],
+                            ),
+                        ],
+                        spacing=2,
+                    ),
+                    tooltip=f"RAM Usage: {self.ram_usage}%",
+                )
+            )
+
+        # Return empty container if no extended info available
+        if not info_items:
+            return ft.Container(height=0)
+
+        return ft.Container(
+            content=ft.Row(
+                info_items,
+                alignment=ft.MainAxisAlignment.SPACE_AROUND,
+                spacing=4,
+            ),
+            padding=ft.padding.symmetric(horizontal=8, vertical=2),
+        )
 
 
 class DeviceGridToolbar(ft.Container):
