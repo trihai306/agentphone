@@ -178,7 +178,7 @@ class LoginView(ft.Container):
 
     def _build_form(self):
         """Build the login form with email and password fields."""
-        # Email field
+        # Email field - autofocus for keyboard navigation
         self.email_field = ft.TextField(
             hint_text="Email address",
             prefix_icon=ft.Icons.EMAIL_ROUNDED,
@@ -192,6 +192,7 @@ class LoginView(ft.Container):
             content_padding=ft.padding.symmetric(horizontal=16, vertical=16),
             text_size=14,
             keyboard_type=ft.KeyboardType.EMAIL,
+            autofocus=True,  # Focus first field for keyboard navigation
             on_change=self._on_email_change,
             on_blur=self._on_email_blur,
             on_submit=self._on_submit,

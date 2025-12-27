@@ -186,7 +186,7 @@ class RegistrationView(ft.Container):
 
     def _build_form(self):
         """Build the registration form with all fields."""
-        # Full name field
+        # Full name field - autofocus for keyboard navigation
         self.name_field = ft.TextField(
             hint_text="Full name",
             prefix_icon=ft.Icons.PERSON_ROUNDED,
@@ -199,6 +199,7 @@ class RegistrationView(ft.Container):
             border_radius=RADIUS["md"],
             content_padding=ft.padding.symmetric(horizontal=16, vertical=16),
             text_size=14,
+            autofocus=True,  # Focus first field for keyboard navigation
             on_change=self._on_name_change,
             on_submit=self._on_submit,
         )
