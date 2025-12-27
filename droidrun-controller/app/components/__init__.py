@@ -7,6 +7,7 @@ from .data_table import DataTable
 from .modal import Modal, ConfirmDialog, InfoDialog
 from .empty_state import EmptyState
 from .toast import ToastManager
+from .recorder_controls import RecorderControls, RecorderStatusBadge
 
 __all__ = [
     "Card",
@@ -25,4 +26,6 @@ __all__ = [
     "InfoDialog",
     "EmptyState",
     "ToastManager",
+    "RecorderControls",
+    "RecorderStatusBadge",
 ]
