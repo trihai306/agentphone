@@ -687,6 +687,264 @@ def get_element_display_name(element_data: Dict[str, Any]) -> str:
     return "element"
 
 
+@dataclass
+class WorkflowStep:
+    """Represents a single step in a workflow."""
+    id: str
+    name: str
+    action_type: str
+    selectors: List[Dict[str, Any]]
+    timestamp: int
+    delay_ms: int = 0  # Delay before executing this step
+    input_text: Optional[str] = None  # For text input actions
+    end_x: Optional[int] = None  # For swipe actions
+    end_y: Optional[int] = None  # For swipe actions
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert step to dictionary."""
+        result = {
+            "id": self.id,
+            "name": self.name,
+            "action_type": self.action_type,
+            "selectors": self.selectors,
+            "timestamp": self.timestamp,
+            "delay_ms": self.delay_ms,
+        }
+        if self.input_text is not None:
+            result["input_text"] = self.input_text
+        if self.end_x is not None:
+            result["end_x"] = self.end_x
+        if self.end_y is not None:
+            result["end_y"] = self.end_y
+        return result
+
+
+def _generate_step_name(action_type: str, element_data: Dict[str, Any]) -> str:
+    """Generate an intelligent step name for an action.
+
+    Uses element text > content-desc > resource-id > generic fallback.
+
+    Args:
+        action_type: The type of action (tap, swipe, input, etc.)
+        element_data: Dictionary with element properties
+
+    Returns:
+        Human-readable step name
+    """
+    action_verbs = {
+        "tap": "Tap",
+        "long_press": "Long press",
+        "swipe": "Swipe",
+        "scroll": "Scroll",
+        "input": "Enter text in",
+    }
+
+    verb = action_verbs.get(action_type, action_type.capitalize())
+    element_name = get_element_display_name(element_data)
+
+    # Special handling for different action types
+    if action_type == "swipe":
+        return f"Swipe on {element_name}"
+    elif action_type == "scroll":
+        return f"Scroll {element_name}"
+    elif action_type == "input":
+        input_text = element_data.get("inputText", "")
+        if input_text:
+            # Truncate long input text
+            display_text = input_text if len(input_text) <= 20 else input_text[:17] + "..."
+            return f"Enter '{display_text}' in {element_name}"
+        return f"Enter text in {element_name}"
+    else:
+        return f"{verb} {element_name}"
+
+
+def _calculate_delay(prev_timestamp: int, current_timestamp: int) -> int:
+    """Calculate delay between actions in milliseconds.
+
+    Normalizes delays to reasonable values for replay.
+    """
+    if prev_timestamp <= 0 or current_timestamp <= 0:
+        return 0
+
+    delay = current_timestamp - prev_timestamp
+
+    # Clamp delay to reasonable bounds
+    min_delay = 100  # Minimum 100ms between actions
+    max_delay = 5000  # Maximum 5 seconds between actions
+
+    if delay < min_delay:
+        return 0  # Actions that are too close together, no delay
+    elif delay > max_delay:
+        return max_delay  # Cap very long delays
+    else:
+        return delay
+
+
+def generate_workflow(
+    actions: List[Dict[str, Any]],
+    name: Optional[str] = None,
+    description: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Generate a structured workflow from a list of recorded actions.
+
+    Converts raw action data into a workflow with intelligent step naming,
+    prioritized selectors, and normalized timing.
+
+    Args:
+        actions: List of action dictionaries with properties:
+            - type: Action type (tap, swipe, long_press, input, scroll)
+            - timestamp: Unix timestamp in milliseconds
+            - x, y: Coordinates of the action
+            - resourceId: Android resource ID
+            - contentDescription: Accessibility description
+            - text: Element text content
+            - className: Android class name
+            - bounds: Element bounds dictionary
+            - inputText: Text input for input actions
+            - endX, endY: End coordinates for swipe actions
+        name: Optional workflow name (auto-generated if not provided)
+        description: Optional workflow description
+
+    Returns:
+        Workflow dictionary with:
+            - id: Unique workflow ID
+            - name: Workflow name
+            - description: Workflow description
+            - created_at: ISO timestamp
+            - steps: List of workflow step dictionaries
+            - metadata: Additional workflow metadata
+    """
+    if not actions:
+        return {
+            "id": str(uuid.uuid4()),
+            "name": name or "Empty Workflow",
+            "description": description or "No actions recorded",
+            "created_at": datetime.now().isoformat(),
+            "steps": [],
+            "metadata": {
+                "action_count": 0,
+                "duration_ms": 0,
+            },
+        }
+
+    steps: List[WorkflowStep] = []
+    prev_timestamp = 0
+
+    for i, action in enumerate(actions):
+        # Extract element data for selector generation
+        element_data = {
+            "resourceId": action.get("resourceId", ""),
+            "contentDescription": action.get("contentDescription", ""),
+            "text": action.get("text", ""),
+            "className": action.get("className", ""),
+            "bounds": action.get("bounds"),
+            "packageName": action.get("packageName", ""),
+            "inputText": action.get("inputText", ""),
+        }
+
+        action_type = action.get("type", "tap")
+        timestamp = action.get("timestamp", 0)
+
+        # Generate intelligent step name
+        step_name = _generate_step_name(action_type, element_data)
+
+        # Generate prioritized selectors
+        selectors = generate_selectors(element_data)
+
+        # Calculate delay from previous action
+        delay = _calculate_delay(prev_timestamp, timestamp)
+
+        # Create workflow step
+        step = WorkflowStep(
+            id=f"step_{i + 1}",
+            name=step_name,
+            action_type=action_type,
+            selectors=selectors,
+            timestamp=timestamp,
+            delay_ms=delay,
+            input_text=action.get("inputText"),
+            end_x=action.get("endX"),
+            end_y=action.get("endY"),
+        )
+
+        steps.append(step)
+        prev_timestamp = timestamp
+
+    # Calculate workflow duration
+    first_timestamp = actions[0].get("timestamp", 0)
+    last_timestamp = actions[-1].get("timestamp", 0)
+    duration_ms = last_timestamp - first_timestamp if first_timestamp > 0 and last_timestamp > 0 else 0
+
+    # Generate workflow name if not provided
+    if not name:
+        # Try to derive name from first and last action
+        if len(steps) == 1:
+            name = steps[0].name
+        else:
+            first_step_name = steps[0].name
+            # Extract the action target from step name
+            name = f"Recorded Workflow ({len(steps)} steps)"
+
+    workflow = {
+        "id": str(uuid.uuid4()),
+        "name": name,
+        "description": description or f"Recorded workflow with {len(steps)} steps",
+        "created_at": datetime.now().isoformat(),
+        "steps": [step.to_dict() for step in steps],
+        "metadata": {
+            "action_count": len(steps),
+            "duration_ms": duration_ms,
+            "recorded": True,
+        },
+    }
+
+    return workflow
+
+
+def generate_workflow_from_session(session: RecordingSession) -> Dict[str, Any]:
+    """Generate a workflow from a recording session.
+
+    Args:
+        session: The recording session with captured actions
+
+    Returns:
+        Workflow dictionary
+    """
+    # Convert ActionEvent objects to dictionaries
+    actions = []
+    for action in session.actions:
+        action_dict = {
+            "type": action.type,
+            "timestamp": action.timestamp,
+            "x": action.x,
+            "y": action.y,
+            "resourceId": action.resource_id,
+            "contentDescription": action.content_desc,
+            "text": action.text,
+            "className": action.class_name,
+            "packageName": action.package_name,
+            "bounds": action.bounds,
+            "inputText": action.input_text,
+            "endX": action.end_x,
+            "endY": action.end_y,
+        }
+        actions.append(action_dict)
+
+    # Calculate session duration for workflow name
+    duration_str = ""
+    if session.started_at and session.stopped_at:
+        duration = session.stopped_at - session.started_at
+        duration_str = f" ({duration.seconds}s)"
+
+    name = f"Recording {session.started_at.strftime('%Y-%m-%d %H:%M')}{duration_str}"
+
+    return generate_workflow(
+        actions=actions,
+        name=name,
+        description=f"Recorded on device {session.device_serial}",
+    )
+
+
 # Global recording service instance
 recording_service: Optional[RecordingService] = None
 
