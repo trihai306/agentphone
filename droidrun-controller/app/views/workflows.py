@@ -1,12 +1,17 @@
 """Professional Workflows view for Droidrun Controller - 2025 Edition.
 
 Polished with improved workflow cards, better list styling, and enhanced empty state.
+Includes integrated recording panel for capturing device actions.
 """
 
 import flet as ft
+from datetime import datetime
+from typing import Optional, Dict, Any
+
 from ..theme import COLORS, RADIUS, get_shadow, ANIMATION
 from ..components.card import Card
 from ..backend import backend
+from ..models.workflow import Workflow
 
 
 class WorkflowsView(ft.Container):
@@ -19,6 +24,12 @@ class WorkflowsView(ft.Container):
         self.backend = backend
         self.loading = False
 
+        # Recording state
+        self.recording_active = False
+        self.recording_panel_visible = False
+        self.selected_device: Optional[Dict[str, Any]] = None
+        self.available_devices = []
+
         super().__init__(
             content=self._build_content(),
             expand=True,
@@ -27,14 +38,26 @@ class WorkflowsView(ft.Container):
 
     def _build_content(self):
         """Build the view content."""
+        content_items = [
+            self._build_header(),
+            ft.Container(height=28),
+        ]
+
+        # Show recording panel when active
+        if self.recording_panel_visible:
+            content_items.extend([
+                self._build_recording_panel(),
+                ft.Container(height=28),
+            ])
+
+        content_items.extend([
+            self._build_stats(),
+            ft.Container(height=28),
+            self._build_workflows_section(),
+        ])
+
         return ft.Column(
-            [
-                self._build_header(),
-                ft.Container(height=28),
-                self._build_stats(),
-                ft.Container(height=28),
-                self._build_workflows_section(),
-            ],
+            content_items,
             spacing=0,
             expand=True,
             scroll=ft.ScrollMode.AUTO,
@@ -349,6 +372,213 @@ class WorkflowsView(ft.Container):
             e.control.shadow = get_shadow("xs")
             e.control.scale = 1.0
         e.control.update()
+
+    def _build_recording_panel(self):
+        """Build the embedded recording panel with controls and status."""
+        device_name = self.selected_device.get("name", "Unknown") if self.selected_device else "No device"
+        device_model = ""
+        if self.selected_device:
+            device_model = f"{self.selected_device.get('manufacturer', '')} {self.selected_device.get('model', '')}".strip()
+
+        # Recording status indicator with pulse animation
+        status_indicator = ft.Container(
+            content=ft.Row(
+                [
+                    ft.Container(
+                        width=10,
+                        height=10,
+                        border_radius=5,
+                        bgcolor=COLORS["error"] if self.recording_active else COLORS["text_muted"],
+                    ),
+                    ft.Container(width=8),
+                    ft.Text(
+                        "Recording" if self.recording_active else "Ready to Record",
+                        size=12,
+                        weight=ft.FontWeight.W_600,
+                        color=COLORS["error"] if self.recording_active else COLORS["text_secondary"],
+                    ),
+                ],
+            ),
+            padding=ft.padding.symmetric(horizontal=14, vertical=8),
+            border_radius=RADIUS["full"],
+            bgcolor=f"{COLORS['error']}15" if self.recording_active else COLORS["bg_tertiary"],
+            border=ft.border.all(1, f"{COLORS['error']}30" if self.recording_active else COLORS["border_subtle"]),
+        )
+
+        # Control buttons
+        stop_btn = ft.Container(
+            content=ft.Row(
+                [
+                    ft.Container(
+                        content=ft.Icon(
+                            ft.Icons.STOP_ROUNDED,
+                            size=16,
+                            color=COLORS["text_inverse"],
+                        ),
+                        width=32,
+                        height=32,
+                        bgcolor=f"{COLORS['primary_dark']}40",
+                        border_radius=RADIUS["sm"],
+                        alignment=ft.alignment.center,
+                    ),
+                    ft.Container(width=8),
+                    ft.Text(
+                        "Stop & Save",
+                        size=13,
+                        weight=ft.FontWeight.W_600,
+                        color=COLORS["text_inverse"],
+                    ),
+                ],
+            ),
+            bgcolor=COLORS["primary"],
+            padding=ft.padding.only(left=8, right=16, top=10, bottom=10),
+            border_radius=RADIUS["lg"],
+            shadow=ft.BoxShadow(
+                spread_radius=0,
+                blur_radius=16,
+                color=f"{COLORS['primary']}40",
+                offset=ft.Offset(0, 4),
+            ),
+            animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
+            animate_scale=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
+            on_click=self._stop_recording,
+            on_hover=self._on_primary_hover,
+        )
+
+        cancel_btn = ft.Container(
+            content=ft.Row(
+                [
+                    ft.Icon(
+                        ft.Icons.CLOSE_ROUNDED,
+                        size=16,
+                        color=COLORS["text_secondary"],
+                    ),
+                    ft.Container(width=6),
+                    ft.Text(
+                        "Cancel",
+                        size=13,
+                        weight=ft.FontWeight.W_500,
+                        color=COLORS["text_secondary"],
+                    ),
+                ],
+            ),
+            padding=ft.padding.symmetric(horizontal=14, vertical=10),
+            border_radius=RADIUS["lg"],
+            bgcolor=COLORS["bg_tertiary"],
+            border=ft.border.all(1, COLORS["border_subtle"]),
+            animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
+            on_click=self._cancel_recording,
+            on_hover=self._on_button_hover,
+        )
+
+        return ft.Container(
+            content=ft.Column(
+                [
+                    # Header row
+                    ft.Row(
+                        [
+                            ft.Container(
+                                content=ft.Icon(
+                                    ft.Icons.FIBER_MANUAL_RECORD,
+                                    size=20,
+                                    color=COLORS["error"],
+                                ),
+                                width=44,
+                                height=44,
+                                border_radius=RADIUS["lg"],
+                                bgcolor=f"{COLORS['error']}12",
+                                alignment=ft.alignment.center,
+                                border=ft.border.all(1, f"{COLORS['error']}20"),
+                                shadow=ft.BoxShadow(
+                                    spread_radius=0,
+                                    blur_radius=16,
+                                    color=f"{COLORS['error']}25",
+                                    offset=ft.Offset(0, 4),
+                                ),
+                            ),
+                            ft.Container(width=14),
+                            ft.Column(
+                                [
+                                    ft.Text(
+                                        "Recording Session",
+                                        size=17,
+                                        weight=ft.FontWeight.W_700,
+                                        color=COLORS["text_primary"],
+                                    ),
+                                    ft.Row(
+                                        [
+                                            ft.Icon(
+                                                ft.Icons.SMARTPHONE_ROUNDED,
+                                                size=12,
+                                                color=COLORS["success"],
+                                            ),
+                                            ft.Container(width=4),
+                                            ft.Text(
+                                                f"{device_name}",
+                                                size=12,
+                                                color=COLORS["text_secondary"],
+                                            ),
+                                            ft.Text(
+                                                f" • {device_model}" if device_model else "",
+                                                size=12,
+                                                color=COLORS["text_muted"],
+                                            ),
+                                        ],
+                                    ),
+                                ],
+                                spacing=4,
+                                expand=True,
+                            ),
+                            status_indicator,
+                        ],
+                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    ),
+                    ft.Container(height=20),
+                    # Info section
+                    ft.Container(
+                        content=ft.Row(
+                            [
+                                ft.Icon(
+                                    ft.Icons.INFO_OUTLINE_ROUNDED,
+                                    size=16,
+                                    color=COLORS["accent_cyan"],
+                                ),
+                                ft.Container(width=10),
+                                ft.Text(
+                                    "Perform actions on your device. Taps, swipes, and text input will be recorded.",
+                                    size=13,
+                                    color=COLORS["text_secondary"],
+                                    expand=True,
+                                ),
+                            ],
+                        ),
+                        bgcolor=f"{COLORS['accent_cyan']}08",
+                        border_radius=RADIUS["md"],
+                        padding=ft.padding.symmetric(horizontal=16, vertical=12),
+                        border=ft.border.all(1, f"{COLORS['accent_cyan']}20"),
+                    ),
+                    ft.Container(height=20),
+                    # Control buttons
+                    ft.Row(
+                        [
+                            stop_btn,
+                            ft.Container(width=12),
+                            cancel_btn,
+                        ],
+                    ),
+                ],
+            ),
+            bgcolor=COLORS["bg_card"],
+            border_radius=RADIUS["xl"],
+            padding=24,
+            border=ft.border.all(2, f"{COLORS['error']}30" if self.recording_active else COLORS["border"]),
+            shadow=ft.BoxShadow(
+                spread_radius=0,
+                blur_radius=24,
+                color=f"{COLORS['error']}15" if self.recording_active else "#00000010",
+                offset=ft.Offset(0, 8),
+            ),
+        )
 
     def _build_workflows_section(self):
         """Build the workflows list section."""
@@ -955,8 +1185,223 @@ class WorkflowsView(ft.Container):
         e.control.update()
 
     async def _on_record(self, e):
-        """Handle record button click."""
-        self.toast.info("Select a device to start recording...")
+        """Handle record button click - show device selection and start recording."""
+        # Fetch available devices
+        try:
+            self.available_devices = await self.backend.discover_devices()
+        except Exception as ex:
+            self.toast.error(f"Failed to discover devices: {ex}")
+            self.available_devices = []
+
+        if not self.available_devices:
+            self.toast.warning("No devices connected. Please connect a device first.")
+            return
+
+        # If only one device, select it automatically
+        if len(self.available_devices) == 1:
+            self.selected_device = self.available_devices[0]
+            await self._start_recording()
+        else:
+            # Show device selection dialog
+            self._show_device_selection_dialog()
+
+    async def _start_recording(self):
+        """Start recording on the selected device."""
+        if not self.selected_device:
+            self.toast.warning("Please select a device first")
+            return
+
+        device_id = self.selected_device.get("id", "")
+
+        try:
+            # Call backend to start recording on Android device
+            success = await self.backend.start_recording(device_id)
+            if success:
+                self.recording_active = True
+                self.recording_panel_visible = True
+                self.toast.success(f"Recording started on {self.selected_device.get('name', device_id)}")
+                self.content = self._build_content()
+                self.update()
+            else:
+                self.toast.error("Failed to start recording on device")
+        except Exception as ex:
+            self.toast.error(f"Recording failed: {ex}")
+
+    async def _stop_recording(self, e=None):
+        """Stop recording and save workflow."""
+        if not self.recording_active:
+            return
+
+        device_id = self.selected_device.get("id", "") if self.selected_device else ""
+
+        try:
+            # Fetch recorded events from device
+            events = await self.backend.get_recorded_events(device_id)
+
+            # Stop recording on device
+            await self.backend.stop_recording(device_id)
+
+            self.recording_active = False
+
+            if events:
+                # Save workflow
+                workflow_name = f"Recording {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+                workflow = await self.backend.create_workflow(
+                    name=workflow_name,
+                    description="Auto-recorded workflow from device actions",
+                    steps=events,
+                )
+                self.toast.success(f"Saved workflow '{workflow_name}' with {len(events)} steps")
+                await self.load_workflows()
+            else:
+                self.toast.warning("No events were recorded")
+
+            self.recording_panel_visible = False
+            self.content = self._build_content()
+            self.update()
+        except Exception as ex:
+            self.toast.error(f"Failed to save recording: {ex}")
+            self.recording_active = False
+            self.recording_panel_visible = False
+            self.content = self._build_content()
+            self.update()
+
+    async def _pause_recording(self, e=None):
+        """Pause recording."""
+        device_id = self.selected_device.get("id", "") if self.selected_device else ""
+        try:
+            await self.backend.pause_recording(device_id)
+            self.toast.info("Recording paused")
+        except Exception as ex:
+            self.toast.error(f"Failed to pause recording: {ex}")
+
+    async def _resume_recording(self, e=None):
+        """Resume recording."""
+        device_id = self.selected_device.get("id", "") if self.selected_device else ""
+        try:
+            await self.backend.resume_recording(device_id)
+            self.toast.info("Recording resumed")
+        except Exception as ex:
+            self.toast.error(f"Failed to resume recording: {ex}")
+
+    async def _cancel_recording(self, e=None):
+        """Cancel recording without saving."""
+        device_id = self.selected_device.get("id", "") if self.selected_device else ""
+        try:
+            await self.backend.stop_recording(device_id)
+        except Exception:
+            pass  # Ignore errors when canceling
+
+        self.recording_active = False
+        self.recording_panel_visible = False
+        self.selected_device = None
+        self.toast.info("Recording cancelled")
+        self.content = self._build_content()
+        self.update()
+
+    def _show_device_selection_dialog(self):
+        """Show dialog for selecting a device to record from."""
+        dialog_content = ft.Column(
+            [
+                ft.Text(
+                    "Select a device to record from:",
+                    size=14,
+                    weight=ft.FontWeight.W_500,
+                    color=COLORS["text_primary"],
+                ),
+                ft.Container(height=16),
+                *[self._build_device_option(device) for device in self.available_devices],
+            ],
+            spacing=8,
+        )
+
+        self._device_dialog = ft.AlertDialog(
+            title=ft.Text(
+                "Select Device",
+                size=18,
+                weight=ft.FontWeight.W_700,
+                color=COLORS["text_primary"],
+            ),
+            content=dialog_content,
+            actions=[
+                ft.TextButton(
+                    "Cancel",
+                    on_click=self._close_device_dialog,
+                ),
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+
+        self.page.overlay.append(self._device_dialog)
+        self._device_dialog.open = True
+        self.page.update()
+
+    def _build_device_option(self, device: Dict[str, Any]):
+        """Build a device selection option."""
+        return ft.Container(
+            content=ft.Row(
+                [
+                    ft.Container(
+                        content=ft.Icon(
+                            ft.Icons.SMARTPHONE_ROUNDED,
+                            size=20,
+                            color=COLORS["success"],
+                        ),
+                        width=40,
+                        height=40,
+                        border_radius=RADIUS["md"],
+                        bgcolor=f"{COLORS['success']}12",
+                        alignment=ft.alignment.center,
+                        border=ft.border.all(1, f"{COLORS['success']}20"),
+                    ),
+                    ft.Container(width=12),
+                    ft.Column(
+                        [
+                            ft.Text(
+                                device.get("name", device.get("id", "Unknown")),
+                                size=14,
+                                weight=ft.FontWeight.W_600,
+                                color=COLORS["text_primary"],
+                            ),
+                            ft.Text(
+                                f"{device.get('manufacturer', '')} {device.get('model', '')}".strip() or device.get("id", ""),
+                                size=12,
+                                color=COLORS["text_secondary"],
+                            ),
+                        ],
+                        spacing=2,
+                        expand=True,
+                    ),
+                    ft.Icon(
+                        ft.Icons.ARROW_FORWARD_IOS_ROUNDED,
+                        size=16,
+                        color=COLORS["text_muted"],
+                    ),
+                ],
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            bgcolor=COLORS["bg_tertiary"],
+            border_radius=RADIUS["lg"],
+            padding=ft.padding.symmetric(horizontal=16, vertical=12),
+            border=ft.border.all(1, COLORS["border_subtle"]),
+            animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
+            on_click=lambda e, d=device: self._select_device_and_record(d),
+            on_hover=self._on_card_hover,
+        )
+
+    async def _select_device_and_record(self, device: Dict[str, Any]):
+        """Select a device and start recording."""
+        self.selected_device = device
+        self._close_device_dialog(None)
+        await self._start_recording()
+
+    def _close_device_dialog(self, e):
+        """Close the device selection dialog."""
+        if hasattr(self, "_device_dialog") and self._device_dialog:
+            self._device_dialog.open = False
+            if self._device_dialog in self.page.overlay:
+                self.page.overlay.remove(self._device_dialog)
+            self.page.update()
 
     async def _on_new_workflow(self, e):
         """Handle new workflow button click."""
