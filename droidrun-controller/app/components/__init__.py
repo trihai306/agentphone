@@ -8,6 +8,7 @@ from .modal import Modal, ConfirmDialog, InfoDialog
 from .empty_state import EmptyState
 from .toast import ToastManager
 from .recorder_controls import RecorderControls, RecorderStatusBadge
+from .action_feed import ActionFeed, ActionItem, CompactActionFeed
 
 __all__ = [
     "Card",
@@ -28,4 +29,7 @@ __all__ = [
     "ToastManager",
     "RecorderControls",
     "RecorderStatusBadge",
+    "ActionFeed",
+    "ActionItem",
+    "CompactActionFeed",
 ]
