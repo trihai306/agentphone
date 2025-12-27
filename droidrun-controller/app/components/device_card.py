@@ -275,6 +275,79 @@ class DeviceCard(ft.Container):
             self.shadow = get_shadow("sm") if self.selected else get_shadow("xs")
         self.update()
 
+    def _build_quick_actions_menu(self, colors):
+        """Build the quick actions popup menu.
+
+        Args:
+            colors: Theme colors dictionary
+
+        Returns:
+            PopupMenuButton with device action options
+        """
+        menu_items = [
+            ft.PopupMenuItem(
+                content=ft.Row(
+                    [
+                        ft.Icon(ft.Icons.INFO_OUTLINE, size=16, color=colors["text_secondary"]),
+                        ft.Text("View Details", size=12, color=colors["text_primary"]),
+                    ],
+                    spacing=8,
+                ),
+                on_click=lambda e: self.on_view_details(self.device_id) if self.on_view_details else None,
+            ),
+            ft.PopupMenuItem(),  # Divider
+            ft.PopupMenuItem(
+                content=ft.Row(
+                    [
+                        ft.Icon(ft.Icons.SCREENSHOT_MONITOR, size=16, color=colors["accent_blue"]),
+                        ft.Text("Take Screenshot", size=12, color=colors["text_primary"]),
+                    ],
+                    spacing=8,
+                ),
+                on_click=lambda e: self.on_screenshot(self.device_id) if self.on_screenshot else None,
+            ),
+            ft.PopupMenuItem(
+                content=ft.Row(
+                    [
+                        ft.Icon(ft.Icons.RESTART_ALT, size=16, color=colors["warning"]),
+                        ft.Text("Restart Device", size=12, color=colors["text_primary"]),
+                    ],
+                    spacing=8,
+                ),
+                on_click=lambda e: self.on_restart(self.device_id) if self.on_restart else None,
+            ),
+            ft.PopupMenuItem(
+                content=ft.Row(
+                    [
+                        ft.Icon(ft.Icons.DELETE_SWEEP, size=16, color=colors["warning"]),
+                        ft.Text("Clear App Data", size=12, color=colors["text_primary"]),
+                    ],
+                    spacing=8,
+                ),
+                on_click=lambda e: self.on_clear_data(self.device_id) if self.on_clear_data else None,
+            ),
+            ft.PopupMenuItem(),  # Divider
+            ft.PopupMenuItem(
+                content=ft.Row(
+                    [
+                        ft.Icon(ft.Icons.POWER_SETTINGS_NEW, size=16, color=colors["error"]),
+                        ft.Text("Disconnect", size=12, color=colors["error"]),
+                    ],
+                    spacing=8,
+                ),
+                on_click=lambda e: self.on_disconnect(self.device_id) if self.on_disconnect else None,
+            ),
+        ]
+
+        return ft.PopupMenuButton(
+            icon=ft.Icons.MORE_VERT,
+            icon_size=16,
+            icon_color=colors["text_muted"],
+            tooltip="More actions",
+            items=menu_items,
+            menu_position=ft.PopupMenuPosition.UNDER,
+        )
+
     def _build_extended_info(self, colors):
         """Build extended device info row (battery, storage, RAM).
 
