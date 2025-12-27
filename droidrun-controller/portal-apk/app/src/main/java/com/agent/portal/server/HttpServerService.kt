@@ -152,6 +152,11 @@ class HttpServerService : Service() {
                     // App management endpoints
                     uri == "/app/start" && method == Method.POST -> handleStartApp(session)
                     uri == "/app/packages" && method == Method.GET -> handleGetPackages(session)
+                    // Recording endpoints
+                    uri == "/recording/start" && method == Method.POST -> handleStartRecording(session)
+                    uri == "/recording/stop" && method == Method.POST -> handleStopRecording(session)
+                    uri == "/recording/actions" && method == Method.GET -> handleGetRecordingActions(session)
+                    uri == "/recording/status" && method == Method.GET -> handleGetRecordingStatus()
                     else -> newFixedLengthResponse(
                         Response.Status.NOT_FOUND,
                         MIME_PLAINTEXT,
@@ -743,6 +748,148 @@ class HttpServerService : Service() {
                 gson.toJson(mapOf(
                     "status" to "success",
                     "packages" to packages
+                ))
+            )
+        }
+
+        // ====================================================================
+        // RECORDING HANDLERS - Action recording for workflow generation
+        // ====================================================================
+
+        /**
+         * Start a new recording session.
+         * POST /recording/start
+         * Returns: session_id for tracking the recording
+         */
+        private fun handleStartRecording(session: IHTTPSession): Response {
+            val a11yService = PortalAccessibilityService.instance
+                ?: return serviceUnavailableResponse()
+
+            // Check if already recording
+            if (a11yService.isRecordingActive()) {
+                return newFixedLengthResponse(
+                    Response.Status.CONFLICT,
+                    "application/json",
+                    gson.toJson(mapOf(
+                        "status" to "error",
+                        "error" to "Recording already in progress"
+                    ))
+                )
+            }
+
+            // Generate a session ID for this recording
+            val sessionId = java.util.UUID.randomUUID().toString()
+
+            // Start recording
+            a11yService.startRecording()
+
+            Log.i(TAG, "Recording started with session ID: $sessionId")
+
+            return newFixedLengthResponse(
+                Response.Status.OK,
+                "application/json",
+                gson.toJson(mapOf(
+                    "status" to "success",
+                    "session_id" to sessionId,
+                    "message" to "Recording started",
+                    "timestamp" to System.currentTimeMillis()
+                ))
+            )
+        }
+
+        /**
+         * Stop the current recording session.
+         * POST /recording/stop
+         * Returns: List of all recorded actions
+         */
+        private fun handleStopRecording(session: IHTTPSession): Response {
+            val a11yService = PortalAccessibilityService.instance
+                ?: return serviceUnavailableResponse()
+
+            // Check if recording is active
+            if (!a11yService.isRecordingActive()) {
+                return newFixedLengthResponse(
+                    Response.Status.CONFLICT,
+                    "application/json",
+                    gson.toJson(mapOf(
+                        "status" to "error",
+                        "error" to "No recording in progress"
+                    ))
+                )
+            }
+
+            // Get all recorded actions before stopping
+            val actions = a11yService.getRecordedActions()
+
+            // Stop recording
+            a11yService.stopRecording()
+
+            Log.i(TAG, "Recording stopped with ${actions.size} actions captured")
+
+            return newFixedLengthResponse(
+                Response.Status.OK,
+                "application/json",
+                gson.toJson(mapOf(
+                    "status" to "success",
+                    "message" to "Recording stopped",
+                    "action_count" to actions.size,
+                    "actions" to actions.map { it.toMap() },
+                    "timestamp" to System.currentTimeMillis()
+                ))
+            )
+        }
+
+        /**
+         * Get recorded actions during an active session.
+         * GET /recording/actions?since=<timestamp>
+         * Returns: List of actions captured since the given timestamp (for polling)
+         */
+        private fun handleGetRecordingActions(session: IHTTPSession): Response {
+            val a11yService = PortalAccessibilityService.instance
+                ?: return serviceUnavailableResponse()
+
+            val params = session.parameters
+            val sinceTimestamp = params["since"]?.firstOrNull()?.toLongOrNull() ?: 0L
+
+            val actions = if (sinceTimestamp > 0) {
+                a11yService.getRecordedActionsSince(sinceTimestamp)
+            } else {
+                a11yService.getRecordedActions()
+            }
+
+            return newFixedLengthResponse(
+                Response.Status.OK,
+                "application/json",
+                gson.toJson(mapOf(
+                    "status" to "success",
+                    "is_recording" to a11yService.isRecordingActive(),
+                    "action_count" to actions.size,
+                    "actions" to actions.map { it.toMap() },
+                    "timestamp" to System.currentTimeMillis()
+                ))
+            )
+        }
+
+        /**
+         * Get the current recording status.
+         * GET /recording/status
+         * Returns: Recording state and action count
+         */
+        private fun handleGetRecordingStatus(): Response {
+            val a11yService = PortalAccessibilityService.instance
+                ?: return serviceUnavailableResponse()
+
+            val isRecording = a11yService.isRecordingActive()
+            val actionCount = if (isRecording) a11yService.getRecordedActions().size else 0
+
+            return newFixedLengthResponse(
+                Response.Status.OK,
+                "application/json",
+                gson.toJson(mapOf(
+                    "status" to "success",
+                    "is_recording" to isRecording,
+                    "action_count" to actionCount,
+                    "timestamp" to System.currentTimeMillis()
                 ))
             )
         }
