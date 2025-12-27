@@ -301,7 +301,6 @@ class WorkflowsView(ft.Container):
             border_radius=RADIUS["xl"],
             padding=24,
             border=ft.border.all(1, COLORS["border"]),
-            shadow=get_shadow("xs"),
             expand=True,
             animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
             animate_scale=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
@@ -313,16 +312,9 @@ class WorkflowsView(ft.Container):
         """Handle stat card hover effect."""
         if e.data == "true":
             e.control.border = ft.border.all(1, f"{color}40")
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=8,
-                color=f"{color}15",
-                offset=ft.Offset(0, 2),
-            )
             e.control.scale = 1.02
         else:
             e.control.border = ft.border.all(1, COLORS["border"])
-            e.control.shadow = get_shadow("xs")
             e.control.scale = 1.0
         e.control.update()
 
@@ -398,7 +390,6 @@ class WorkflowsView(ft.Container):
             border_radius=RADIUS["xl"],
             padding=28,
             border=ft.border.all(1, COLORS["border"]),
-            shadow=get_shadow("xs"),
         )
 
     def _build_workflow_card(self, workflow: dict):
@@ -615,12 +606,6 @@ class WorkflowsView(ft.Container):
         if e.data == "true":
             e.control.bgcolor = f"{color}15"
             e.control.border = ft.border.all(1, f"{color}30")
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=8,
-                color=f"{color}20",
-                offset=ft.Offset(0, 2),
-            )
         else:
             if color == COLORS["success"]:
                 e.control.bgcolor = f"{color}10"
@@ -631,7 +616,6 @@ class WorkflowsView(ft.Container):
             else:
                 e.control.bgcolor = COLORS["bg_tertiary"]
                 e.control.border = ft.border.all(1, COLORS["border_subtle"])
-            e.control.shadow = None
         e.control.update()
 
     def _build_empty_state(self):
@@ -767,7 +751,6 @@ class WorkflowsView(ft.Container):
             border_radius=RADIUS["xl"],
             padding=28,
             border=ft.border.all(1, COLORS["border"]),
-            shadow=get_shadow("xs"),
         )
 
     def _build_loading(self):
@@ -846,36 +829,21 @@ class WorkflowsView(ft.Container):
             border_radius=RADIUS["xl"],
             padding=28,
             border=ft.border.all(1, COLORS["border"]),
-            shadow=get_shadow("xs"),
         )
 
     def _on_primary_hover(self, e):
         """Handle primary button hover effect."""
         if e.data == "true":
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=8,
-                color=f"{COLORS['primary']}20",
-                offset=ft.Offset(0, 2),
-            )
             e.control.scale = 1.02
         else:
-            e.control.shadow = None
             e.control.scale = 1.0
         e.control.update()
 
     def _on_danger_hover(self, e):
         """Handle danger button hover effect."""
         if e.data == "true":
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=8,
-                color=f"{COLORS['error']}20",
-                offset=ft.Offset(0, 2),
-            )
             e.control.scale = 1.02
         else:
-            e.control.shadow = None
             e.control.scale = 1.0
         e.control.update()
 
@@ -894,17 +862,10 @@ class WorkflowsView(ft.Container):
         if e.data == "true":
             e.control.bgcolor = COLORS["bg_hover"]
             e.control.border = ft.border.all(1, COLORS["border_light"])
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=8,
-                color="#00000015",
-                offset=ft.Offset(0, 2),
-            )
             e.control.scale = 1.01
         else:
             e.control.bgcolor = COLORS["bg_tertiary"]
             e.control.border = ft.border.all(1, COLORS["border_subtle"])
-            e.control.shadow = None
             e.control.scale = 1.0
         e.control.update()
 
