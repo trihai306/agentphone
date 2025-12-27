@@ -8,6 +8,7 @@ from ..components.device_card import DeviceCard, DeviceGridToolbar
 from ..components.empty_state import EmptyState
 from ..components.search_filter import SearchFilter, SearchFilterCompact
 from ..components.view_toggle import ViewToggle, ViewToggleCompact
+from ..components.device_detail_modal import DeviceDetailModal, show_device_detail_modal
 from ..backend import backend
 from ..services.screen_service import screen_service
 
@@ -1472,9 +1473,52 @@ class PhoneViewerView(ft.Container):
             )
         e.control.update()
 
-    def _on_device_click(self, device_id: str):
-        """Handle device card click."""
-        self.toast.info(f"Opening device {device_id}...")
+    def _on_device_click(self, serial: str):
+        """Handle device card/row click - open device detail modal."""
+        # Find the device by serial
+        device = None
+        for d in self.devices:
+            if d.get("adb_serial") == serial:
+                device = d
+                break
+
+        if not device:
+            self.toast.error(f"Device not found: {serial}")
+            return
+
+        # Define modal action callbacks
+        def on_close():
+            if self.page:
+                self.page.close(self._current_modal)
+                self._current_modal = None
+
+        def on_screenshot(e):
+            self.toast.info(f"Taking screenshot of {device.get('model', 'device')}...")
+            on_close()
+
+        def on_restart(e):
+            self.toast.info(f"Restarting {device.get('model', 'device')}...")
+            on_close()
+
+        def on_disconnect(e):
+            self.toast.info(f"Disconnecting {device.get('model', 'device')}...")
+            on_close()
+
+        def on_run_agent(e):
+            self.toast.info(f"Running agent on {device.get('model', 'device')}...")
+            on_close()
+
+        # Show the device detail modal
+        if self.page:
+            self._current_modal = show_device_detail_modal(
+                page=self.page,
+                device=device,
+                on_close=on_close,
+                on_screenshot=on_screenshot,
+                on_restart=on_restart,
+                on_disconnect=on_disconnect,
+                on_run_agent=on_run_agent,
+            )
 
     def _on_device_select(self, device_id: str, selected: bool):
         """Handle device selection."""
