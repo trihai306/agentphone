@@ -15,6 +15,8 @@ import android.view.Display
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
+import com.agent.portal.recording.EventCapture
+import com.agent.portal.recording.RecordingManager
 import com.agent.portal.server.HttpServerService
 import com.agent.portal.utils.A11yNode
 import com.agent.portal.utils.PhoneState
@@ -163,19 +165,14 @@ class PortalAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
 
-        // Only process events when recording is active
-        if (!isRecording) return
+        // Only process events when RecordingManager is actively recording
+        if (!RecordingManager.isActivelyRecording()) return
 
-        when (event.eventType) {
-            AccessibilityEvent.TYPE_VIEW_CLICKED -> {
-                handleViewClickedEvent(event)
-            }
-            AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED -> {
-                handleTextChangedEvent(event)
-            }
-            AccessibilityEvent.TYPE_GESTURE_DETECTION_START -> {
-                handleGestureDetectionEvent(event)
-            }
+        // Use EventCapture to process the event and add to RecordingManager
+        val recordedEvent = EventCapture.captureEvent(event)
+        if (recordedEvent != null) {
+            RecordingManager.addEvent(recordedEvent)
+            Log.d(TAG, "Captured event: ${recordedEvent.eventType} - ${recordedEvent.resourceId.ifEmpty { recordedEvent.text.take(20) }}")
         }
     }
 
