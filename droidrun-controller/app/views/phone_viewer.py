@@ -3,9 +3,10 @@
 import flet as ft
 import asyncio
 from typing import List, Dict, Set
-from ..theme import COLORS, RADIUS, SPACING, SHADOWS, get_shadow, ANIMATION
+from ..theme import COLORS, RADIUS, SPACING, SHADOWS, get_shadow, ANIMATION, get_colors
 from ..components.device_card import DeviceCard, DeviceGridToolbar
 from ..components.empty_state import EmptyState
+from ..components.search_filter import SearchFilter, SearchFilterCompact
 from ..backend import backend
 from ..services.screen_service import screen_service
 
@@ -21,6 +22,12 @@ class PhoneViewerView(ft.Container):
         self.loading = False
         self.scrcpy_available = False
         self.scrcpy_version = None
+
+        # Filter state
+        self._search_query = ""
+        self._status_filter = "all"
+        self._version_filter = "all"
+        self._sort_by = "name"
 
         super().__init__(
             content=self._build_content(),
@@ -58,17 +65,117 @@ class PhoneViewerView(ft.Container):
         else:
             return 10
 
+    def _get_unique_android_versions(self) -> List[str]:
+        """Get unique Android versions from all devices."""
+        versions = set()
+        for device in self.devices:
+            version = device.get("android_version", "")
+            if version and version != "?":
+                versions.add(version)
+        return sorted(versions, key=lambda v: self._parse_version(v), reverse=True)
+
+    def _parse_version(self, version_str: str) -> tuple:
+        """Parse version string for sorting."""
+        try:
+            parts = version_str.split(".")
+            return tuple(int(p) for p in parts if p.isdigit())
+        except (ValueError, AttributeError):
+            return (0,)
+
+    def _get_filtered_devices(self) -> List[Dict]:
+        """Get filtered and sorted list of devices based on current filter state."""
+        filtered = self.devices.copy()
+
+        # Apply search filter
+        if self._search_query:
+            query = self._search_query.lower()
+            filtered = [
+                d for d in filtered
+                if query in d.get("model", "").lower()
+                or query in d.get("adb_serial", "").lower()
+                or query in d.get("device_name", "").lower()
+                or query in d.get("brand", "").lower()
+            ]
+
+        # Apply status filter
+        if self._status_filter == "online":
+            filtered = [d for d in filtered if d.get("status") == "connected"]
+        elif self._status_filter == "offline":
+            filtered = [d for d in filtered if d.get("status") != "connected"]
+
+        # Apply version filter
+        if self._version_filter != "all":
+            filtered = [d for d in filtered if d.get("android_version") == self._version_filter]
+
+        # Apply sorting
+        if self._sort_by == "name":
+            filtered.sort(key=lambda d: d.get("model", "").lower())
+        elif self._sort_by == "status":
+            # Online devices first, then offline
+            filtered.sort(key=lambda d: (0 if d.get("status") == "connected" else 1, d.get("model", "").lower()))
+        elif self._sort_by == "model":
+            filtered.sort(key=lambda d: d.get("model", "").lower())
+        elif self._sort_by == "version":
+            # Sort by version number (descending), then by name
+            filtered.sort(key=lambda d: (self._parse_version(d.get("android_version", "0")), d.get("model", "").lower()), reverse=True)
+
+        return filtered
+
+    def _on_search_change(self, query: str):
+        """Handle search input change."""
+        self._search_query = query
+        self.content = self._build_content()
+        self.update()
+
+    def _on_status_filter_change(self, status: str):
+        """Handle status filter change."""
+        self._status_filter = status
+        self.content = self._build_content()
+        self.update()
+
+    def _on_version_filter_change(self, version: str):
+        """Handle version filter change."""
+        self._version_filter = version
+        self.content = self._build_content()
+        self.update()
+
+    def _on_sort_change(self, sort_by: str):
+        """Handle sort selection change."""
+        self._sort_by = sort_by
+        self.content = self._build_content()
+        self.update()
+
     def _build_content(self):
         """Build the view content."""
         return ft.Column(
             [
                 self._build_header(),
                 ft.Container(height=SPACING["lg"]),
+                self._build_search_filter(),
                 self._build_toolbar(),
                 self._build_device_grid(),
             ],
             spacing=0,
             expand=True,
+        )
+
+    def _build_search_filter(self):
+        """Build the search and filter toolbar."""
+        is_mobile = self._is_mobile()
+        android_versions = self._get_unique_android_versions()
+
+        if is_mobile:
+            return SearchFilterCompact(
+                on_search=self._on_search_change,
+            )
+
+        return SearchFilter(
+            on_search=self._on_search_change,
+            on_status_filter=self._on_status_filter_change,
+            on_version_filter=self._on_version_filter_change,
+            on_sort=self._on_sort_change,
+            android_versions=android_versions,
+            is_mobile=is_mobile,
         )
 
     def _build_header(self):
@@ -449,16 +556,25 @@ class PhoneViewerView(ft.Container):
         if not self.devices:
             return self._build_empty_state()
 
+        # Get filtered devices
+        filtered_devices = self._get_filtered_devices()
+
+        # Show no results message if filters match nothing
+        if not filtered_devices:
+            return self._build_no_results_state()
+
         # Build device cards with enhanced phone frames
         cards = []
-        for idx, device in enumerate(self.devices):
+        for idx, device in enumerate(filtered_devices):
             serial = device.get("adb_serial", str(idx))
+            # Use original device index for device_id to maintain consistency
+            original_idx = self.devices.index(device) if device in self.devices else idx
             cards.append(
                 self._build_phone_frame(
-                    device_id=str(400 + idx),
+                    device_id=str(400 + original_idx),
                     device=device,
                     serial=serial,
-                    idx=idx,
+                    idx=original_idx,
                 )
             )
 
@@ -482,6 +598,90 @@ class PhoneViewerView(ft.Container):
             expand=True,
             bgcolor=COLORS["bg_primary"],
         )
+
+    def _build_no_results_state(self):
+        """Build a 'no results' state when filters match no devices."""
+        return ft.Container(
+            content=ft.Column(
+                [
+                    # Icon container with subtle background
+                    ft.Container(
+                        content=ft.Icon(
+                            ft.Icons.SEARCH_OFF_ROUNDED,
+                            size=48,
+                            color=COLORS["text_muted"],
+                        ),
+                        width=90,
+                        height=90,
+                        border_radius=RADIUS["xl"],
+                        bgcolor=COLORS["bg_tertiary"],
+                        alignment=ft.alignment.center,
+                        border=ft.border.all(1, COLORS["border"]),
+                    ),
+                    ft.Container(height=SPACING["xl"]),
+                    ft.Text(
+                        "No Matching Devices",
+                        size=18,
+                        weight=ft.FontWeight.W_600,
+                        color=COLORS["text_primary"],
+                    ),
+                    ft.Container(height=SPACING["sm"]),
+                    ft.Text(
+                        "Try adjusting your search or filters",
+                        size=14,
+                        color=COLORS["text_secondary"],
+                    ),
+                    ft.Container(height=SPACING["xl"]),
+                    # Clear filters button
+                    ft.Container(
+                        content=ft.Row(
+                            [
+                                ft.Icon(
+                                    ft.Icons.FILTER_ALT_OFF_ROUNDED,
+                                    size=16,
+                                    color=COLORS["primary"],
+                                ),
+                                ft.Container(width=6),
+                                ft.Text(
+                                    "Clear Filters",
+                                    size=13,
+                                    weight=ft.FontWeight.W_500,
+                                    color=COLORS["primary"],
+                                ),
+                            ],
+                            alignment=ft.MainAxisAlignment.CENTER,
+                        ),
+                        padding=ft.padding.symmetric(horizontal=20, vertical=10),
+                        border_radius=RADIUS["md"],
+                        border=ft.border.all(1, COLORS["primary"]),
+                        on_click=self._on_clear_filters,
+                        on_hover=self._on_clear_filters_hover,
+                        animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
+                    ),
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            padding=SPACING["xxxl"],
+            alignment=ft.alignment.center,
+            expand=True,
+        )
+
+    def _on_clear_filters(self, e):
+        """Handle clear filters button click."""
+        self._search_query = ""
+        self._status_filter = "all"
+        self._version_filter = "all"
+        self._sort_by = "name"
+        self.content = self._build_content()
+        self.update()
+
+    def _on_clear_filters_hover(self, e):
+        """Handle clear filters button hover."""
+        if e.data == "true":
+            e.control.bgcolor = COLORS["primary_glow"]
+        else:
+            e.control.bgcolor = "transparent"
+        e.control.update()
 
     def _build_phone_frame(self, device_id: str, device: dict, serial: str, idx: int):
         """Build an enhanced phone frame with realistic styling."""
