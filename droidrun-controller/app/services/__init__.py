@@ -9,6 +9,9 @@ from .recording_service import (
     generate_workflow_from_session,
     generate_selectors,
     get_element_display_name,
+    ActionEvent,
+    RecordingSession,
+    SessionState,
 )
 
 __all__ = [
@@ -21,4 +24,7 @@ __all__ = [
     "generate_workflow_from_session",
     "generate_selectors",
     "get_element_display_name",
+    "ActionEvent",
+    "RecordingSession",
+    "SessionState",
 ]

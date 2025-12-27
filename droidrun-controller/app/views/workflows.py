@@ -1,12 +1,18 @@
 """Professional Workflows view for Droidrun Controller - 2025 Edition.
 
 Polished with improved workflow cards, better list styling, and enhanced empty state.
+Integrated with recording controls and action feed for workflow recording.
 """
 
+import asyncio
 import flet as ft
+from typing import Optional
 from ..theme import COLORS, RADIUS, get_shadow, ANIMATION
 from ..components.card import Card
+from ..components.recorder_controls import RecorderControls
+from ..components.action_feed import ActionFeed
 from ..backend import backend
+from ..services.recording_service import get_recording_service, ActionEvent
 
 
 class WorkflowsView(ft.Container):
@@ -18,6 +24,16 @@ class WorkflowsView(ft.Container):
         self.workflows = []
         self.backend = backend
         self.loading = False
+
+        # Recording state
+        self._recording_service = get_recording_service()
+        self._recording_session_id: Optional[str] = None
+        self._recording_device_serial: Optional[str] = None
+        self._recording_overlay: Optional[ft.Container] = None
+        self._recorder_controls: Optional[RecorderControls] = None
+        self._action_feed: Optional[ActionFeed] = None
+        self._elapsed_timer_task: Optional[asyncio.Task] = None
+        self._elapsed_seconds = 0
 
         super().__init__(
             content=self._build_content(),
@@ -955,8 +971,414 @@ class WorkflowsView(ft.Container):
         e.control.update()
 
     async def _on_record(self, e):
-        """Handle record button click."""
-        self.toast.info("Select a device to start recording...")
+        """Handle record button click - show device selection then recording overlay."""
+        # Get available devices from app_state
+        devices = getattr(self.app_state, 'devices', [])
+        if not devices:
+            self.toast.warning("No devices connected. Please connect a device first.")
+            return
+
+        # If only one device, use it directly
+        if len(devices) == 1:
+            device = devices[0]
+            device_serial = device.get('serial', device.get('id', ''))
+            device_name = device.get('name', device.get('model', 'Device'))
+            await self._start_recording_for_device(device_serial, device_name)
+        else:
+            # Show device selection dialog
+            await self._show_device_selection_dialog(devices)
+
+    async def _show_device_selection_dialog(self, devices):
+        """Show a dialog to select which device to record on."""
+        device_options = []
+        for device in devices:
+            device_serial = device.get('serial', device.get('id', ''))
+            device_name = device.get('name', device.get('model', 'Device'))
+            device_options.append({
+                'serial': device_serial,
+                'name': device_name,
+            })
+
+        # Create selection dialog
+        selected_device = {'serial': None, 'name': None}
+
+        def on_device_select(e):
+            idx = int(e.control.data)
+            selected_device['serial'] = device_options[idx]['serial']
+            selected_device['name'] = device_options[idx]['name']
+            dialog.open = False
+            self.page.update()
+
+        async def on_confirm(e):
+            if selected_device['serial']:
+                dialog.open = False
+                self.page.update()
+                await self._start_recording_for_device(
+                    selected_device['serial'],
+                    selected_device['name']
+                )
+
+        device_buttons = []
+        for i, opt in enumerate(device_options):
+            device_buttons.append(
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Icon(ft.Icons.SMARTPHONE, size=20, color=COLORS["accent_purple"]),
+                            ft.Container(width=12),
+                            ft.Column(
+                                [
+                                    ft.Text(
+                                        opt['name'],
+                                        size=14,
+                                        weight=ft.FontWeight.W_600,
+                                        color=COLORS["text_primary"],
+                                    ),
+                                    ft.Text(
+                                        opt['serial'],
+                                        size=11,
+                                        color=COLORS["text_muted"],
+                                    ),
+                                ],
+                                spacing=2,
+                            ),
+                        ],
+                    ),
+                    padding=ft.padding.symmetric(horizontal=16, vertical=12),
+                    border_radius=RADIUS["md"],
+                    bgcolor=COLORS["bg_tertiary"],
+                    border=ft.border.all(1, COLORS["border_subtle"]),
+                    on_click=on_device_select,
+                    data=str(i),
+                    animate=ft.Animation(150, ft.AnimationCurve.EASE_OUT),
+                )
+            )
+
+        dialog = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("Select Device to Record", weight=ft.FontWeight.W_600),
+            content=ft.Container(
+                content=ft.Column(
+                    device_buttons,
+                    spacing=8,
+                ),
+                width=350,
+                padding=ft.padding.only(top=8),
+            ),
+            actions=[
+                ft.TextButton("Cancel", on_click=lambda e: self._close_dialog(dialog)),
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+
+        self.page.overlay.append(dialog)
+        dialog.open = True
+        self.page.update()
+
+    def _close_dialog(self, dialog):
+        """Close a dialog."""
+        dialog.open = False
+        self.page.update()
+
+    async def _start_recording_for_device(self, device_serial: str, device_name: str):
+        """Start recording on the specified device."""
+        self._recording_device_serial = device_serial
+
+        # Create recorder controls
+        self._recorder_controls = RecorderControls(
+            device_name=device_name,
+            on_start=self._on_start_recording,
+            on_stop=self._on_stop_recording,
+            on_pause=self._on_pause_recording,
+            on_resume=self._on_resume_recording,
+            on_cancel=self._on_cancel_recording,
+        )
+
+        # Create action feed
+        self._action_feed = ActionFeed(
+            on_action_click=self._on_action_item_click,
+        )
+
+        # Build and show recording overlay
+        self._show_recording_overlay()
+
+    def _show_recording_overlay(self):
+        """Show the recording overlay with controls and action feed."""
+        # Build the overlay
+        self._recording_overlay = ft.Container(
+            content=ft.Stack(
+                [
+                    # Semi-transparent backdrop
+                    ft.Container(
+                        bgcolor="#00000080",
+                        expand=True,
+                        on_click=lambda e: None,  # Prevent clicks from passing through
+                    ),
+                    # Recording panel
+                    ft.Container(
+                        content=ft.Column(
+                            [
+                                # Header
+                                ft.Container(
+                                    content=ft.Row(
+                                        [
+                                            ft.Row(
+                                                [
+                                                    ft.Container(
+                                                        content=ft.Icon(
+                                                            ft.Icons.FIBER_MANUAL_RECORD,
+                                                            size=18,
+                                                            color=COLORS["error"],
+                                                        ),
+                                                        width=36,
+                                                        height=36,
+                                                        border_radius=RADIUS["md"],
+                                                        bgcolor=f"{COLORS['error']}15",
+                                                        alignment=ft.alignment.center,
+                                                    ),
+                                                    ft.Container(width=12),
+                                                    ft.Text(
+                                                        "Recording Session",
+                                                        size=18,
+                                                        weight=ft.FontWeight.W_700,
+                                                        color=COLORS["text_primary"],
+                                                    ),
+                                                ],
+                                            ),
+                                            ft.IconButton(
+                                                icon=ft.Icons.CLOSE,
+                                                icon_color=COLORS["text_secondary"],
+                                                icon_size=20,
+                                                on_click=self._on_close_overlay,
+                                                tooltip="Close",
+                                            ),
+                                        ],
+                                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                                    ),
+                                    padding=ft.padding.symmetric(horizontal=24, vertical=16),
+                                    border=ft.border.only(bottom=ft.BorderSide(1, COLORS["border"])),
+                                ),
+                                # Main content - controls and feed side by side
+                                ft.Container(
+                                    content=ft.Row(
+                                        [
+                                            # Left side - Recorder Controls
+                                            ft.Container(
+                                                content=self._recorder_controls,
+                                                width=380,
+                                            ),
+                                            ft.Container(width=24),
+                                            # Right side - Action Feed
+                                            ft.Container(
+                                                content=self._action_feed,
+                                                expand=True,
+                                            ),
+                                        ],
+                                        expand=True,
+                                    ),
+                                    padding=24,
+                                    expand=True,
+                                ),
+                            ],
+                            spacing=0,
+                            expand=True,
+                        ),
+                        width=900,
+                        height=550,
+                        bgcolor=COLORS["bg_card"],
+                        border_radius=RADIUS["xl"],
+                        border=ft.border.all(1, COLORS["border"]),
+                        shadow=ft.BoxShadow(
+                            spread_radius=0,
+                            blur_radius=40,
+                            color="#00000050",
+                            offset=ft.Offset(0, 20),
+                        ),
+                        alignment=ft.alignment.center,
+                    ),
+                ],
+                alignment=ft.alignment.center,
+            ),
+            expand=True,
+        )
+
+        # Add overlay to page
+        self.page.overlay.append(self._recording_overlay)
+        self.page.update()
+
+    def _hide_recording_overlay(self):
+        """Hide and cleanup the recording overlay."""
+        if self._recording_overlay and self._recording_overlay in self.page.overlay:
+            self.page.overlay.remove(self._recording_overlay)
+            self.page.update()
+        self._recording_overlay = None
+        self._recorder_controls = None
+        self._action_feed = None
+
+    async def _on_start_recording(self, e):
+        """Handle start recording button click."""
+        if not self._recording_device_serial:
+            self.toast.error("No device selected")
+            return
+
+        # Start recording session via service
+        session_id = await self._recording_service.start_recording(
+            self._recording_device_serial
+        )
+
+        if session_id:
+            self._recording_session_id = session_id
+            self._elapsed_seconds = 0
+
+            # Update UI
+            if self._recorder_controls:
+                self._recorder_controls.start_recording()
+
+            # Register callback for new actions
+            self._recording_service.add_action_callback(
+                session_id,
+                self._on_action_received
+            )
+
+            # Start elapsed time timer
+            self._start_elapsed_timer()
+
+            self.toast.success("Recording started")
+        else:
+            self.toast.error("Failed to start recording. Check device connection.")
+
+    async def _on_stop_recording(self, e):
+        """Handle stop recording button click."""
+        if not self._recording_session_id:
+            return
+
+        # Stop elapsed timer
+        self._stop_elapsed_timer()
+
+        # Stop recording and get actions
+        actions = await self._recording_service.stop_recording(
+            self._recording_session_id
+        )
+
+        # Update UI
+        if self._recorder_controls:
+            self._recorder_controls.stop_recording()
+
+        if actions:
+            # Generate workflow from recorded actions
+            from ..services.recording_service import generate_workflow_from_session
+
+            session = self._recording_service.get_session(self._recording_session_id)
+            if session:
+                workflow = generate_workflow_from_session(session)
+
+                # Save workflow to backend
+                try:
+                    saved_workflow = await self.backend.save_workflow(workflow)
+                    self.toast.success(
+                        f"Workflow saved: {len(actions)} actions recorded"
+                    )
+
+                    # Refresh workflows list
+                    await self.load_workflows()
+
+                except Exception as ex:
+                    self.toast.error(f"Failed to save workflow: {ex}")
+        else:
+            self.toast.info("No actions recorded")
+
+        # Cleanup
+        self._recording_service.cleanup_session(self._recording_session_id)
+        self._recording_session_id = None
+
+        # Hide overlay
+        self._hide_recording_overlay()
+
+    async def _on_pause_recording(self, e):
+        """Handle pause recording button click."""
+        # Update UI only (APK doesn't have pause support, we just stop polling)
+        if self._recorder_controls:
+            self._recorder_controls.pause_recording()
+        self._stop_elapsed_timer()
+        self.toast.info("Recording paused")
+
+    async def _on_resume_recording(self, e):
+        """Handle resume recording button click."""
+        # Update UI only
+        if self._recorder_controls:
+            self._recorder_controls.resume_recording()
+        self._start_elapsed_timer()
+        self.toast.info("Recording resumed")
+
+    async def _on_cancel_recording(self, e):
+        """Handle cancel recording button click."""
+        # Stop elapsed timer
+        self._stop_elapsed_timer()
+
+        # Stop recording without saving
+        if self._recording_session_id:
+            await self._recording_service.stop_recording(self._recording_session_id)
+            self._recording_service.cleanup_session(self._recording_session_id)
+            self._recording_session_id = None
+
+        # Update UI
+        if self._recorder_controls:
+            self._recorder_controls.stop_recording()
+
+        self.toast.info("Recording cancelled")
+
+        # Hide overlay
+        self._hide_recording_overlay()
+
+    def _on_close_overlay(self, e):
+        """Handle close overlay button click."""
+        if self._recording_session_id:
+            # Recording in progress, confirm cancel
+            self.page.run_task(self._on_cancel_recording, e)
+        else:
+            self._hide_recording_overlay()
+
+    def _on_action_received(self, action: ActionEvent):
+        """Callback when a new action is received from the recording service."""
+        if self._action_feed:
+            # Convert ActionEvent to dict for ActionFeed
+            action_dict = {
+                "type": action.type,
+                "timestamp": action.timestamp,
+                "x": action.x,
+                "y": action.y,
+                "resource_id": action.resource_id,
+                "content_desc": action.content_desc,
+                "text": action.text,
+                "class_name": action.class_name,
+                "input_text": action.input_text,
+            }
+            self._action_feed.add_action(action_dict)
+
+        if self._recorder_controls:
+            self._recorder_controls.increment_action_count()
+
+    def _on_action_item_click(self, index: int):
+        """Handle action item click in the feed."""
+        # Could show action details or allow editing
+        pass
+
+    def _start_elapsed_timer(self):
+        """Start the elapsed time timer."""
+        async def timer_loop():
+            while True:
+                await asyncio.sleep(1)
+                self._elapsed_seconds += 1
+                if self._recorder_controls:
+                    self._recorder_controls.update_elapsed_time(self._elapsed_seconds)
+
+        self._elapsed_timer_task = asyncio.create_task(timer_loop())
+
+    def _stop_elapsed_timer(self):
+        """Stop the elapsed time timer."""
+        if self._elapsed_timer_task and not self._elapsed_timer_task.done():
+            self._elapsed_timer_task.cancel()
+        self._elapsed_timer_task = None
 
     async def _on_new_workflow(self, e):
         """Handle new workflow button click."""
