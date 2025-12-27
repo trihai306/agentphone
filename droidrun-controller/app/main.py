@@ -2,7 +2,7 @@
 
 import flet as ft
 from .theme import COLORS, get_theme, get_colors, set_theme_mode, get_theme_mode, SPACING, RADIUS, ANIMATION, get_shadow
-from .views import DevicesView, WorkflowsView, ExecutionsView, SettingsView, AgentRunnerView
+from .views import DevicesView, WorkflowsView, ExecutionsView, SettingsView, AgentRunnerView, RecordingPanelView
 from .views.analytics import AnalyticsView
 from .views.phone_viewer import PhoneViewerView
 from .components.toast import ToastManager
@@ -73,6 +73,7 @@ class DroidrunApp:
             "dashboard": DevicesView(self.app_state, self.toast),
             "phone_viewer": PhoneViewerView(self.app_state, self.toast),
             "agent_runner": AgentRunnerView(self.app_state, self.toast),
+            "recording": RecordingPanelView(self.app_state, self.toast),
             "workflows": WorkflowsView(self.app_state, self.toast),
             "executions": ExecutionsView(self.app_state, self.toast),
             "analytics": AnalyticsView(self.app_state, self.toast),
@@ -217,6 +218,7 @@ class DroidrunApp:
                 ("dashboard", ft.Icons.DASHBOARD_OUTLINED, ft.Icons.DASHBOARD),
                 ("phone_viewer", ft.Icons.SMARTPHONE_OUTLINED, ft.Icons.SMARTPHONE),
                 ("agent_runner", ft.Icons.SMART_TOY_OUTLINED, ft.Icons.SMART_TOY),
+                ("recording", ft.Icons.FIBER_MANUAL_RECORD_OUTLINED, ft.Icons.FIBER_MANUAL_RECORD),
                 ("workflows", ft.Icons.ACCOUNT_TREE_OUTLINED, ft.Icons.ACCOUNT_TREE),
                 ("executions", ft.Icons.HISTORY_OUTLINED, ft.Icons.HISTORY),
                 ("analytics", ft.Icons.ANALYTICS_OUTLINED, ft.Icons.ANALYTICS),
@@ -314,6 +316,7 @@ class DroidrunApp:
             ("dashboard", "Dashboard", ft.Icons.DASHBOARD_OUTLINED, ft.Icons.DASHBOARD),
             ("phone_viewer", "Phone Viewer", ft.Icons.SMARTPHONE_OUTLINED, ft.Icons.SMARTPHONE),
             ("agent_runner", "Agent Runner", ft.Icons.SMART_TOY_OUTLINED, ft.Icons.SMART_TOY),
+            ("recording", "Recording", ft.Icons.FIBER_MANUAL_RECORD_OUTLINED, ft.Icons.FIBER_MANUAL_RECORD),
             ("workflows", "Workflows", ft.Icons.ACCOUNT_TREE_OUTLINED, ft.Icons.ACCOUNT_TREE),
             ("executions", "History", ft.Icons.HISTORY_OUTLINED, ft.Icons.HISTORY),
             ("analytics", "Analytics", ft.Icons.ANALYTICS_OUTLINED, ft.Icons.ANALYTICS),
