@@ -5,6 +5,7 @@ from .status_badge import StatusBadge, StatusDot
 from .action_button import ActionButton, IconButton, FloatingActionButton, ToggleButton
 from .data_table import DataTable
 from .modal import Modal, ConfirmDialog, InfoDialog
+from .device_detail_modal import DeviceDetailModal, show_device_detail_modal
 from .empty_state import EmptyState
 from .toast import ToastManager
 from .search_filter import SearchFilter, SearchFilterCompact
@@ -25,6 +26,8 @@ __all__ = [
     "Modal",
     "ConfirmDialog",
     "InfoDialog",
+    "DeviceDetailModal",
+    "show_device_detail_modal",
     "EmptyState",
     "ToastManager",
     "SearchFilter",
