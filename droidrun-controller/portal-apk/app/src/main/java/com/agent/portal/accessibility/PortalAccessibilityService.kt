@@ -17,6 +17,7 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
 import com.agent.portal.server.HttpServerService
 import com.agent.portal.utils.A11yNode
+import com.agent.portal.utils.ActionEvent
 import com.agent.portal.utils.PhoneState
 import kotlinx.coroutines.*
 import java.util.concurrent.CountDownLatch
@@ -30,6 +31,7 @@ class PortalAccessibilityService : AccessibilityService() {
 
     companion object {
         private const val TAG = "PortalA11yService"
+        private const val DEBOUNCE_INTERVAL_MS = 200L  // Debounce interval to avoid duplicate events
 
         @Volatile
         var instance: PortalAccessibilityService? = null
@@ -40,6 +42,13 @@ class PortalAccessibilityService : AccessibilityService() {
 
     private var nodeIndex = 0
     private val screenshotExecutor = Executors.newSingleThreadExecutor()
+
+    // Recording state
+    @Volatile
+    private var isRecording = false
+    private val recordedActions = mutableListOf<ActionEvent>()
+    private var lastActionTime = 0L
+    private var lastActionElementId = ""
 
     override fun onCreate() {
         super.onCreate()
@@ -69,8 +78,77 @@ class PortalAccessibilityService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        // We don't need to handle individual events
-        // UI tree is fetched on-demand via getA11yTree()
+        if (event == null || !isRecording) return
+
+        val eventType = event.eventType
+        val actionType = when (eventType) {
+            AccessibilityEvent.TYPE_VIEW_CLICKED -> "tap"
+            AccessibilityEvent.TYPE_VIEW_LONG_CLICKED -> "long_press"
+            AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED -> "text_input"
+            AccessibilityEvent.TYPE_VIEW_SCROLLED -> "scroll"
+            else -> return  // Ignore other event types
+        }
+
+        val node = event.source ?: return
+
+        try {
+            val bounds = Rect()
+            node.getBoundsInScreen(bounds)
+
+            // Skip nodes with invalid bounds
+            if (bounds.width() <= 0 || bounds.height() <= 0) {
+                node.recycle()
+                return
+            }
+
+            // Create unique element identifier for debouncing
+            val elementId = "${node.viewIdResourceName ?: ""}:${bounds.left},${bounds.top}"
+            val currentTime = System.currentTimeMillis()
+
+            // Debounce: skip if same element was acted on within debounce interval
+            if (elementId == lastActionElementId &&
+                (currentTime - lastActionTime) < DEBOUNCE_INTERVAL_MS) {
+                node.recycle()
+                return
+            }
+
+            // Get input text for text change events
+            val inputText = if (eventType == AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED) {
+                event.text?.joinToString("") ?: node.text?.toString() ?: ""
+            } else {
+                ""
+            }
+
+            val actionEvent = ActionEvent(
+                type = actionType,
+                timestamp = currentTime,
+                x = bounds.centerX(),
+                y = bounds.centerY(),
+                bounds = "${bounds.left},${bounds.top},${bounds.right},${bounds.bottom}",
+                text = node.text?.toString() ?: "",
+                contentDescription = node.contentDescription?.toString() ?: "",
+                resourceId = node.viewIdResourceName ?: "",
+                className = node.className?.toString() ?: "",
+                packageName = event.packageName?.toString() ?: "",
+                inputText = inputText
+            )
+
+            synchronized(recordedActions) {
+                recordedActions.add(actionEvent)
+            }
+
+            Log.i(TAG, "Captured $actionType action: resourceId=${actionEvent.resourceId}, " +
+                    "text='${actionEvent.text}', bounds=${actionEvent.bounds}")
+
+            // Update debounce tracking
+            lastActionTime = currentTime
+            lastActionElementId = elementId
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error capturing action event", e)
+        } finally {
+            node.recycle()
+        }
     }
 
     override fun onInterrupt() {
@@ -82,6 +160,67 @@ class PortalAccessibilityService : AccessibilityService() {
         instance = null
         screenshotExecutor.shutdown()
         Log.i(TAG, "Accessibility Service destroyed")
+    }
+
+    // ========================================================================
+    // ACTION RECORDING - Capture user interactions for workflow generation
+    // ========================================================================
+
+    /**
+     * Start recording user actions
+     */
+    fun startRecording() {
+        synchronized(recordedActions) {
+            recordedActions.clear()
+        }
+        lastActionTime = 0L
+        lastActionElementId = ""
+        isRecording = true
+        Log.i(TAG, "Action recording started")
+    }
+
+    /**
+     * Stop recording user actions
+     */
+    fun stopRecording() {
+        isRecording = false
+        Log.i(TAG, "Action recording stopped, captured ${recordedActions.size} actions")
+    }
+
+    /**
+     * Check if recording is active
+     */
+    fun isRecordingActive(): Boolean = isRecording
+
+    /**
+     * Get all recorded actions
+     * @return List of recorded action events
+     */
+    fun getRecordedActions(): List<ActionEvent> {
+        synchronized(recordedActions) {
+            return recordedActions.toList()
+        }
+    }
+
+    /**
+     * Get recorded actions since a specific timestamp
+     * @param sinceTimestamp Only return actions after this timestamp
+     * @return List of recorded action events after the timestamp
+     */
+    fun getRecordedActionsSince(sinceTimestamp: Long): List<ActionEvent> {
+        synchronized(recordedActions) {
+            return recordedActions.filter { it.timestamp > sinceTimestamp }
+        }
+    }
+
+    /**
+     * Clear all recorded actions
+     */
+    fun clearRecordedActions() {
+        synchronized(recordedActions) {
+            recordedActions.clear()
+        }
+        Log.i(TAG, "Recorded actions cleared")
     }
 
     /**

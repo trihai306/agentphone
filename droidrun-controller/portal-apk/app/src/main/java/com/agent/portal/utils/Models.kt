@@ -83,3 +83,57 @@ data class StateResponse(
     @SerializedName("phone_state")
     val phoneState: Map<String, Any>
 )
+
+/**
+ * Recorded action event from accessibility service
+ */
+data class ActionEvent(
+    @SerializedName("type")
+    val type: String,                    // "tap", "long_press", "text_input", "scroll"
+
+    @SerializedName("timestamp")
+    val timestamp: Long,                 // System time when action occurred
+
+    @SerializedName("x")
+    val x: Int,                          // Center X coordinate of the element
+
+    @SerializedName("y")
+    val y: Int,                          // Center Y coordinate of the element
+
+    @SerializedName("bounds")
+    val bounds: String,                  // Element bounds "left,top,right,bottom"
+
+    @SerializedName("text")
+    val text: String = "",               // Element text content
+
+    @SerializedName("contentDescription")
+    val contentDescription: String = "", // Element content description
+
+    @SerializedName("resourceId")
+    val resourceId: String = "",         // Element resource-id for selector
+
+    @SerializedName("className")
+    val className: String = "",          // Element class name
+
+    @SerializedName("packageName")
+    val packageName: String = "",        // Package name of the app
+
+    @SerializedName("inputText")
+    val inputText: String = ""           // Text entered (for text_input type)
+) {
+    fun toMap(): Map<String, Any> {
+        return mapOf(
+            "type" to type,
+            "timestamp" to timestamp,
+            "x" to x,
+            "y" to y,
+            "bounds" to bounds,
+            "text" to text,
+            "contentDescription" to contentDescription,
+            "resourceId" to resourceId,
+            "className" to className,
+            "packageName" to packageName,
+            "inputText" to inputText
+        )
+    }
+}
