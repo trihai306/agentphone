@@ -446,7 +446,7 @@ class DeviceCard(ft.Container):
 
 
 class DeviceGridToolbar(ft.Container):
-    """Toolbar for device grid with action buttons."""
+    """Toolbar for device grid with action buttons and bulk operations."""
 
     def __init__(
         self,
@@ -456,6 +456,12 @@ class DeviceGridToolbar(ft.Container):
         on_functions: Optional[Callable] = None,
         on_copy: Optional[Callable] = None,
         on_refresh: Optional[Callable] = None,
+        # Bulk action callbacks
+        on_screenshot_all: Optional[Callable] = None,
+        on_restart_selected: Optional[Callable] = None,
+        on_clear_data: Optional[Callable] = None,
+        on_disconnect_all: Optional[Callable] = None,
+        selected_count: int = 0,
     ):
         self.on_automate = on_automate
         self.on_proxy = on_proxy
@@ -463,6 +469,12 @@ class DeviceGridToolbar(ft.Container):
         self.on_functions = on_functions
         self.on_copy = on_copy
         self.on_refresh = on_refresh
+        # Bulk action callbacks
+        self.on_screenshot_all = on_screenshot_all
+        self.on_restart_selected = on_restart_selected
+        self.on_clear_data = on_clear_data
+        self.on_disconnect_all = on_disconnect_all
+        self._selected_count = selected_count
 
         colors = get_colors()
         super().__init__(
@@ -475,45 +487,53 @@ class DeviceGridToolbar(ft.Container):
     def _build_content(self):
         """Build toolbar content."""
         colors = get_colors()
+
+        # Left side - Action buttons (always visible)
+        left_actions = ft.Row(
+            [
+                self._build_action_button(
+                    "Automate",
+                    ft.Icons.PLAY_CIRCLE_OUTLINE,
+                    colors["primary"],
+                    self.on_automate,
+                    primary=True,
+                ),
+                self._build_action_button(
+                    "Proxy Data",
+                    ft.Icons.VPN_KEY_OUTLINED,
+                    colors["text_secondary"],
+                    self.on_proxy,
+                ),
+                self._build_action_button(
+                    "Change Device",
+                    ft.Icons.SWAP_HORIZ,
+                    colors["text_secondary"],
+                    self.on_change_device,
+                ),
+                self._build_action_button(
+                    "Functions",
+                    ft.Icons.TUNE,
+                    colors["text_secondary"],
+                    self.on_functions,
+                ),
+                self._build_action_button(
+                    "Copy",
+                    ft.Icons.CONTENT_COPY,
+                    colors["text_secondary"],
+                    self.on_copy,
+                ),
+            ],
+            spacing=8,
+        )
+
+        # Bulk actions (shown when devices are selected)
+        bulk_actions = self._build_bulk_actions(colors) if self._selected_count > 0 else ft.Container()
+
         return ft.Row(
             [
-                # Left side - Action buttons
-                ft.Row(
-                    [
-                        self._build_action_button(
-                            "Automate",
-                            ft.Icons.PLAY_CIRCLE_OUTLINE,
-                            colors["primary"],
-                            self.on_automate,
-                            primary=True,
-                        ),
-                        self._build_action_button(
-                            "Proxy Data",
-                            ft.Icons.VPN_KEY_OUTLINED,
-                            colors["text_secondary"],
-                            self.on_proxy,
-                        ),
-                        self._build_action_button(
-                            "Change Device",
-                            ft.Icons.SWAP_HORIZ,
-                            colors["text_secondary"],
-                            self.on_change_device,
-                        ),
-                        self._build_action_button(
-                            "Functions",
-                            ft.Icons.TUNE,
-                            colors["text_secondary"],
-                            self.on_functions,
-                        ),
-                        self._build_action_button(
-                            "Copy",
-                            ft.Icons.CONTENT_COPY,
-                            colors["text_secondary"],
-                            self.on_copy,
-                        ),
-                    ],
-                    spacing=8,
-                ),
+                left_actions,
+                ft.Container(width=16),  # Spacer
+                bulk_actions,
                 ft.Container(expand=True),
                 # Right side - Refresh
                 ft.IconButton(
@@ -579,3 +599,134 @@ class DeviceGridToolbar(ft.Container):
         else:
             e.control.bgcolor = colors["primary"]
         e.control.update()
+
+    def _build_bulk_actions(self, colors):
+        """Build bulk action buttons shown when devices are selected.
+
+        Args:
+            colors: Theme colors dictionary
+
+        Returns:
+            Container with bulk action buttons and selection indicator
+        """
+        return ft.Container(
+            content=ft.Row(
+                [
+                    # Selection indicator
+                    ft.Container(
+                        content=ft.Row(
+                            [
+                                ft.Icon(ft.Icons.CHECK_CIRCLE, size=14, color=colors["primary"]),
+                                ft.Text(
+                                    f"{self._selected_count} selected",
+                                    size=12,
+                                    weight=ft.FontWeight.W_500,
+                                    color=colors["primary"],
+                                ),
+                            ],
+                            spacing=4,
+                        ),
+                        padding=ft.padding.symmetric(horizontal=8, vertical=4),
+                        border_radius=RADIUS["sm"],
+                        bgcolor=colors["primary_glow"],
+                    ),
+                    ft.Container(width=8),
+                    # Bulk action buttons
+                    self._build_bulk_button(
+                        "Screenshot All",
+                        ft.Icons.SCREENSHOT_MONITOR,
+                        colors["accent_blue"],
+                        lambda e: self.on_screenshot_all() if self.on_screenshot_all else None,
+                    ),
+                    self._build_bulk_button(
+                        "Restart",
+                        ft.Icons.RESTART_ALT,
+                        colors["warning"],
+                        lambda e: self.on_restart_selected() if self.on_restart_selected else None,
+                    ),
+                    self._build_bulk_button(
+                        "Clear Data",
+                        ft.Icons.DELETE_SWEEP,
+                        colors["warning"],
+                        lambda e: self.on_clear_data() if self.on_clear_data else None,
+                    ),
+                    self._build_bulk_button(
+                        "Disconnect",
+                        ft.Icons.POWER_SETTINGS_NEW,
+                        colors["error"],
+                        lambda e: self.on_disconnect_all() if self.on_disconnect_all else None,
+                    ),
+                ],
+                spacing=6,
+            ),
+            padding=ft.padding.symmetric(horizontal=8, vertical=4),
+            border_radius=RADIUS["md"],
+            bgcolor=colors["bg_secondary"],
+            border=ft.border.all(1, colors["border"]),
+            animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
+        )
+
+    def _build_bulk_button(
+        self,
+        label: str,
+        icon: str,
+        color: str,
+        on_click: Optional[Callable],
+    ):
+        """Build a compact bulk action button.
+
+        Args:
+            label: Button text
+            icon: Icon to display
+            color: Icon/text color
+            on_click: Click callback
+
+        Returns:
+            Container styled as a compact action button
+        """
+        colors = get_colors()
+        return ft.Container(
+            content=ft.Row(
+                [
+                    ft.Icon(icon, size=14, color=color),
+                    ft.Text(
+                        label,
+                        size=11,
+                        weight=ft.FontWeight.W_500,
+                        color=color,
+                    ),
+                ],
+                spacing=4,
+            ),
+            padding=ft.padding.symmetric(horizontal=8, vertical=4),
+            border_radius=RADIUS["sm"],
+            on_click=on_click,
+            on_hover=self._on_bulk_button_hover,
+        )
+
+    def _on_bulk_button_hover(self, e):
+        """Handle bulk button hover."""
+        colors = get_colors()
+        if e.data == "true":
+            e.control.bgcolor = colors["bg_hover"]
+        else:
+            e.control.bgcolor = "transparent"
+        e.control.update()
+
+    def update_selected_count(self, count: int):
+        """Update the selected device count and rebuild toolbar.
+
+        Args:
+            count: Number of selected devices
+        """
+        self._selected_count = count
+        self.content = self._build_content()
+        self.update()
+
+    def get_selected_count(self) -> int:
+        """Get current selected device count.
+
+        Returns:
+            Number of selected devices
+        """
+        return self._selected_count
