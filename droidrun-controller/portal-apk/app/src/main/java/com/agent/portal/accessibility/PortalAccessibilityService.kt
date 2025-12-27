@@ -68,9 +68,267 @@ class PortalAccessibilityService : AccessibilityService() {
         startService(Intent(this, HttpServerService::class.java))
     }
 
+    // ========================================================================
+    // EVENT RECORDING - Capture user interactions for workflow generation
+    // ========================================================================
+
+    /**
+     * Recording state - when true, events are captured and sent to listeners
+     */
+    @Volatile
+    var isRecording: Boolean = false
+        private set
+
+    /**
+     * List of captured events during recording session
+     */
+    private val capturedEvents = mutableListOf<CapturedEvent>()
+    private val eventLock = Any()
+
+    /**
+     * Listeners for captured events
+     */
+    private val eventListeners = mutableListOf<(CapturedEvent) -> Unit>()
+
+    /**
+     * Data class representing a captured user interaction event
+     */
+    data class CapturedEvent(
+        val eventType: String,
+        val timestamp: Long,
+        val packageName: String,
+        val className: String,
+        val text: String,
+        val contentDescription: String,
+        val resourceId: String,
+        val bounds: String,
+        val isClickable: Boolean,
+        val isEditable: Boolean,
+        val isScrollable: Boolean,
+        val inputText: String = "",
+        val additionalData: Map<String, Any> = emptyMap()
+    )
+
+    /**
+     * Start recording user interactions
+     */
+    fun startRecording() {
+        synchronized(eventLock) {
+            capturedEvents.clear()
+            isRecording = true
+        }
+        Log.i(TAG, "Recording started")
+    }
+
+    /**
+     * Stop recording and return captured events
+     */
+    fun stopRecording(): List<CapturedEvent> {
+        val events: List<CapturedEvent>
+        synchronized(eventLock) {
+            isRecording = false
+            events = capturedEvents.toList()
+        }
+        Log.i(TAG, "Recording stopped. Captured ${events.size} events")
+        return events
+    }
+
+    /**
+     * Get currently captured events (without stopping recording)
+     */
+    fun getCapturedEvents(): List<CapturedEvent> {
+        synchronized(eventLock) {
+            return capturedEvents.toList()
+        }
+    }
+
+    /**
+     * Add listener for real-time event notifications
+     */
+    fun addEventListener(listener: (CapturedEvent) -> Unit) {
+        synchronized(eventLock) {
+            eventListeners.add(listener)
+        }
+    }
+
+    /**
+     * Remove event listener
+     */
+    fun removeEventListener(listener: (CapturedEvent) -> Unit) {
+        synchronized(eventLock) {
+            eventListeners.remove(listener)
+        }
+    }
+
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        // We don't need to handle individual events
-        // UI tree is fetched on-demand via getA11yTree()
+        if (event == null) return
+
+        // Only process events when recording is active
+        if (!isRecording) return
+
+        when (event.eventType) {
+            AccessibilityEvent.TYPE_VIEW_CLICKED -> {
+                handleViewClickedEvent(event)
+            }
+            AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED -> {
+                handleTextChangedEvent(event)
+            }
+            AccessibilityEvent.TYPE_GESTURE_DETECTION_START -> {
+                handleGestureDetectionEvent(event)
+            }
+        }
+    }
+
+    /**
+     * Handle TYPE_VIEW_CLICKED events - user taps on UI elements
+     */
+    private fun handleViewClickedEvent(event: AccessibilityEvent) {
+        val node = event.source
+        try {
+            val capturedEvent = if (node != null) {
+                val rect = Rect()
+                node.getBoundsInScreen(rect)
+
+                CapturedEvent(
+                    eventType = "tap",
+                    timestamp = System.currentTimeMillis(),
+                    packageName = event.packageName?.toString() ?: "",
+                    className = node.className?.toString() ?: "",
+                    text = node.text?.toString() ?: event.text?.joinToString(" ") ?: "",
+                    contentDescription = node.contentDescription?.toString() ?: "",
+                    resourceId = node.viewIdResourceName ?: "",
+                    bounds = "${rect.left},${rect.top},${rect.right},${rect.bottom}",
+                    isClickable = node.isClickable,
+                    isEditable = node.isEditable,
+                    isScrollable = node.isScrollable
+                )
+            } else {
+                // Fallback when source node is null
+                CapturedEvent(
+                    eventType = "tap",
+                    timestamp = System.currentTimeMillis(),
+                    packageName = event.packageName?.toString() ?: "",
+                    className = event.className?.toString() ?: "",
+                    text = event.text?.joinToString(" ") ?: "",
+                    contentDescription = event.contentDescription?.toString() ?: "",
+                    resourceId = "",
+                    bounds = "",
+                    isClickable = true,
+                    isEditable = false,
+                    isScrollable = false
+                )
+            }
+
+            addCapturedEvent(capturedEvent)
+            Log.d(TAG, "Captured tap event: ${capturedEvent.resourceId.ifEmpty { capturedEvent.text.take(20) }}")
+
+        } finally {
+            node?.recycle()
+        }
+    }
+
+    /**
+     * Handle TYPE_VIEW_TEXT_CHANGED events - user text input
+     */
+    private fun handleTextChangedEvent(event: AccessibilityEvent) {
+        val node = event.source
+        try {
+            val inputText = event.text?.joinToString("") ?: ""
+
+            // Skip empty text changes
+            if (inputText.isEmpty()) return
+
+            val capturedEvent = if (node != null) {
+                val rect = Rect()
+                node.getBoundsInScreen(rect)
+
+                CapturedEvent(
+                    eventType = "input_text",
+                    timestamp = System.currentTimeMillis(),
+                    packageName = event.packageName?.toString() ?: "",
+                    className = node.className?.toString() ?: "",
+                    text = node.text?.toString() ?: "",
+                    contentDescription = node.contentDescription?.toString() ?: "",
+                    resourceId = node.viewIdResourceName ?: "",
+                    bounds = "${rect.left},${rect.top},${rect.right},${rect.bottom}",
+                    isClickable = node.isClickable,
+                    isEditable = node.isEditable,
+                    isScrollable = node.isScrollable,
+                    inputText = inputText,
+                    additionalData = mapOf(
+                        "fromIndex" to (event.fromIndex),
+                        "addedCount" to (event.addedCount),
+                        "removedCount" to (event.removedCount)
+                    )
+                )
+            } else {
+                CapturedEvent(
+                    eventType = "input_text",
+                    timestamp = System.currentTimeMillis(),
+                    packageName = event.packageName?.toString() ?: "",
+                    className = event.className?.toString() ?: "",
+                    text = "",
+                    contentDescription = event.contentDescription?.toString() ?: "",
+                    resourceId = "",
+                    bounds = "",
+                    isClickable = false,
+                    isEditable = true,
+                    isScrollable = false,
+                    inputText = inputText
+                )
+            }
+
+            addCapturedEvent(capturedEvent)
+            Log.d(TAG, "Captured text input event: ${inputText.take(20)}...")
+
+        } finally {
+            node?.recycle()
+        }
+    }
+
+    /**
+     * Handle TYPE_GESTURE_DETECTION_START events - gesture interactions
+     */
+    private fun handleGestureDetectionEvent(event: AccessibilityEvent) {
+        val capturedEvent = CapturedEvent(
+            eventType = "gesture_start",
+            timestamp = System.currentTimeMillis(),
+            packageName = event.packageName?.toString() ?: "",
+            className = event.className?.toString() ?: "",
+            text = event.text?.joinToString(" ") ?: "",
+            contentDescription = event.contentDescription?.toString() ?: "",
+            resourceId = "",
+            bounds = "",
+            isClickable = false,
+            isEditable = false,
+            isScrollable = false,
+            additionalData = mapOf(
+                "gestureId" to event.gestureId
+            )
+        )
+
+        addCapturedEvent(capturedEvent)
+        Log.d(TAG, "Captured gesture detection start event")
+    }
+
+    /**
+     * Add event to the captured list and notify listeners
+     */
+    private fun addCapturedEvent(event: CapturedEvent) {
+        val listeners: List<(CapturedEvent) -> Unit>
+        synchronized(eventLock) {
+            capturedEvents.add(event)
+            listeners = eventListeners.toList()
+        }
+
+        // Notify listeners outside of the synchronized block to prevent deadlocks
+        listeners.forEach { listener ->
+            try {
+                listener(event)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error notifying event listener", e)
+            }
+        }
     }
 
     override fun onInterrupt() {
