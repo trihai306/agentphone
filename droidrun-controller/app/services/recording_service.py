@@ -955,3 +955,41 @@ def get_recording_service() -> RecordingService:
     if recording_service is None:
         recording_service = RecordingService()
     return recording_service
+
+
+async def save_recording_as_workflow(
+    session: RecordingSession,
+    name: Optional[str] = None,
+    description: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Generate a workflow from a recording session and save it to the backend.
+
+    This is a convenience function that combines workflow generation with
+    persistence to the backend service.
+
+    Args:
+        session: The completed recording session with captured actions
+        name: Optional custom workflow name (auto-generated if not provided)
+        description: Optional custom description
+
+    Returns:
+        Saved workflow dictionary with ID and all steps
+
+    Raises:
+        ValueError: If session has no actions or name is empty after generation
+    """
+    from app.backend import backend
+
+    # Generate workflow from session
+    workflow = generate_workflow_from_session(session)
+
+    # Override name and description if provided
+    if name:
+        workflow["name"] = name
+    if description:
+        workflow["description"] = description
+
+    # Save to backend
+    saved_workflow = await backend.save_workflow(workflow)
+
+    return saved_workflow
