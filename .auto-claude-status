@@ -1,15 +1,15 @@
 {
   "active": true,
-  "spec": "004-simplify-desktop-app-ui",
+  "spec": "008-design-app-login-registration-page",
   "state": "building",
   "subtasks": {
-    "completed": 2,
-    "total": 9,
+    "completed": 7,
+    "total": 12,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Theme System Simplification",
+    "current": "Navigation Integration",
     "id": null,
     "total": 3
   },
@@ -19,7 +19,7 @@
   },
   "session": {
     "number": 3,
-    "started_at": "2025-12-25T13:29:52.272496"
+    "started_at": "2025-12-27T09:58:17.590433"
   },
-  "last_update": "2025-12-25T13:33:51.543245"
+  "last_update": "2025-12-27T10:04:23.060214"
 }
