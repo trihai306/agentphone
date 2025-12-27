@@ -32,6 +32,16 @@ class PhoneViewerView(ft.Container):
         self._sort_by = "name"
         self._view_mode = "grid"  # "grid" or "list"
 
+        # Bulk operation progress state
+        self._bulk_operation_active = False
+        self._bulk_operation_name = ""
+        self._bulk_operation_progress = 0.0
+        self._bulk_operation_total = 0
+        self._bulk_operation_completed = 0
+
+        # Modal reference
+        self._current_modal = None
+
         super().__init__(
             content=self._build_content(),
             expand=True,
@@ -159,7 +169,7 @@ class PhoneViewerView(ft.Container):
         # Choose device display based on view mode
         device_display = self._build_device_list() if self._view_mode == "list" else self._build_device_grid()
 
-        return ft.Column(
+        main_content = ft.Column(
             [
                 self._build_header(),
                 ft.Container(height=SPACING["lg"]),
@@ -170,6 +180,18 @@ class PhoneViewerView(ft.Container):
             spacing=0,
             expand=True,
         )
+
+        # Use Stack to overlay progress indicator when bulk operation is active
+        if self._bulk_operation_active:
+            return ft.Stack(
+                [
+                    main_content,
+                    self._build_progress_overlay(),
+                ],
+                expand=True,
+            )
+
+        return main_content
 
     def _build_search_filter(self):
         """Build the search and filter toolbar with view toggle."""
@@ -505,6 +527,9 @@ class PhoneViewerView(ft.Container):
                 border=ft.border.only(bottom=ft.BorderSide(1, COLORS["border"])),
             )
 
+        # Build bulk actions section (shown when devices are selected)
+        bulk_actions = self._build_bulk_actions_section() if self.selected_devices else ft.Container()
+
         return ft.Container(
             content=ft.Row(
                 [
@@ -551,6 +576,8 @@ class PhoneViewerView(ft.Container):
                         ],
                         spacing=SPACING["sm"],
                     ),
+                    ft.Container(width=SPACING["md"]),
+                    bulk_actions,
                     ft.Container(expand=True),
                     # Right side - Refresh with enhanced styling
                     self._build_refresh_button(),
@@ -629,6 +656,103 @@ class PhoneViewerView(ft.Container):
             on_hover=self._on_button_hover,
             tooltip="Refresh devices",
             animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
+        )
+
+    def _build_bulk_actions_section(self):
+        """Build the bulk actions section shown when devices are selected.
+
+        Returns:
+            Container with selection indicator and bulk action buttons
+        """
+        colors = get_colors()
+        count = len(self.selected_devices)
+
+        return ft.Container(
+            content=ft.Row(
+                [
+                    # Selection indicator
+                    ft.Container(
+                        content=ft.Row(
+                            [
+                                ft.Icon(ft.Icons.CHECK_CIRCLE, size=14, color=colors["primary"]),
+                                ft.Text(
+                                    f"{count} selected",
+                                    size=12,
+                                    weight=ft.FontWeight.W_500,
+                                    color=colors["primary"],
+                                ),
+                            ],
+                            spacing=4,
+                        ),
+                        padding=ft.padding.symmetric(horizontal=8, vertical=4),
+                        border_radius=RADIUS["sm"],
+                        bgcolor=colors["primary_glow"],
+                    ),
+                    ft.Container(width=8),
+                    # Bulk action buttons
+                    self._build_bulk_action_button(
+                        "Screenshot All",
+                        ft.Icons.SCREENSHOT_MONITOR,
+                        colors["accent_blue"],
+                        lambda e: self._on_bulk_screenshot_all(),
+                    ),
+                    self._build_bulk_action_button(
+                        "Restart",
+                        ft.Icons.RESTART_ALT,
+                        colors["warning"],
+                        lambda e: self._on_bulk_restart_selected(),
+                    ),
+                    self._build_bulk_action_button(
+                        "Clear Data",
+                        ft.Icons.DELETE_SWEEP,
+                        colors["warning"],
+                        lambda e: self._on_bulk_clear_data(),
+                    ),
+                    self._build_bulk_action_button(
+                        "Disconnect",
+                        ft.Icons.POWER_SETTINGS_NEW,
+                        colors["error"],
+                        lambda e: self._on_bulk_disconnect_all(),
+                    ),
+                ],
+                spacing=6,
+            ),
+            padding=ft.padding.symmetric(horizontal=8, vertical=4),
+            border_radius=RADIUS["md"],
+            bgcolor=colors["bg_secondary"],
+            border=ft.border.all(1, colors["border"]),
+            animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
+        )
+
+    def _build_bulk_action_button(self, label: str, icon: str, color: str, on_click):
+        """Build a compact bulk action button.
+
+        Args:
+            label: Button text
+            icon: Icon to display
+            color: Icon/text color
+            on_click: Click callback
+
+        Returns:
+            Container styled as a compact action button
+        """
+        return ft.Container(
+            content=ft.Row(
+                [
+                    ft.Icon(icon, size=14, color=color),
+                    ft.Text(
+                        label,
+                        size=11,
+                        weight=ft.FontWeight.W_500,
+                        color=color,
+                    ),
+                ],
+                spacing=4,
+            ),
+            padding=ft.padding.symmetric(horizontal=8, vertical=4),
+            border_radius=RADIUS["sm"],
+            on_click=on_click,
+            on_hover=self._on_button_hover,
         )
 
     def _build_device_grid(self):
@@ -1605,3 +1729,174 @@ class PhoneViewerView(ft.Container):
         """Refresh the view."""
         self.content = self._build_content()
         self.update()
+
+    # ===== Bulk Operation Progress Methods =====
+
+    def _build_progress_overlay(self):
+        """Build the progress overlay for bulk operations.
+
+        Returns:
+            Container with semi-transparent overlay and progress indicator
+        """
+        colors = get_colors()
+
+        # Progress text
+        progress_text = f"{self._bulk_operation_completed}/{self._bulk_operation_total}"
+
+        return ft.Container(
+            content=ft.Column(
+                [
+                    ft.Container(
+                        content=ft.Column(
+                            [
+                                ft.Text(
+                                    self._bulk_operation_name,
+                                    size=16,
+                                    weight=ft.FontWeight.W_600,
+                                    color=colors["text_primary"],
+                                ),
+                                ft.Container(height=SPACING["md"]),
+                                ft.ProgressBar(
+                                    value=self._bulk_operation_progress,
+                                    width=300,
+                                    height=8,
+                                    border_radius=4,
+                                    bgcolor=colors["bg_tertiary"],
+                                    color=colors["primary"],
+                                ),
+                                ft.Container(height=SPACING["sm"]),
+                                ft.Text(
+                                    progress_text,
+                                    size=12,
+                                    color=colors["text_secondary"],
+                                ),
+                            ],
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        ),
+                        padding=ft.padding.all(SPACING["xl"]),
+                        border_radius=RADIUS["lg"],
+                        bgcolor=colors["bg_card"],
+                        shadow=get_shadow("lg"),
+                    ),
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                expand=True,
+            ),
+            expand=True,
+            bgcolor=f"{colors['bg_primary']}CC",  # Semi-transparent
+            animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
+        )
+
+    async def _run_bulk_operation(self, operation_name: str, device_ids: List[str], operation_func):
+        """Run a bulk operation on multiple devices with progress tracking.
+
+        Args:
+            operation_name: Display name for the operation (e.g., "Taking Screenshots")
+            device_ids: List of device IDs to operate on
+            operation_func: Async function to call for each device, takes device_id as argument
+        """
+        if not device_ids:
+            self.toast.warning("No devices selected")
+            return
+
+        # Start progress tracking
+        self._bulk_operation_active = True
+        self._bulk_operation_name = operation_name
+        self._bulk_operation_total = len(device_ids)
+        self._bulk_operation_completed = 0
+        self._bulk_operation_progress = 0.0
+
+        self.content = self._build_content()
+        self.update()
+
+        success_count = 0
+        error_count = 0
+
+        for device_id in device_ids:
+            try:
+                await operation_func(device_id)
+                success_count += 1
+            except Exception as ex:
+                error_count += 1
+                # Log error but continue with other devices
+
+            # Update progress
+            self._bulk_operation_completed += 1
+            self._bulk_operation_progress = self._bulk_operation_completed / self._bulk_operation_total
+            self.content = self._build_content()
+            self.update()
+
+            # Small delay for visual feedback
+            await asyncio.sleep(0.1)
+
+        # Complete
+        self._bulk_operation_active = False
+        self.content = self._build_content()
+        self.update()
+
+        # Show completion toast
+        if error_count == 0:
+            self.toast.success(f"{operation_name} completed for {success_count} device(s)")
+        else:
+            self.toast.warning(f"{operation_name}: {success_count} succeeded, {error_count} failed")
+
+    def _on_bulk_screenshot_all(self):
+        """Handle bulk screenshot action."""
+        device_ids = list(self.selected_devices) if self.selected_devices else [d.get("adb_serial") for d in self.devices]
+
+        async def take_screenshot(device_id):
+            # Placeholder for actual screenshot logic
+            await asyncio.sleep(0.5)  # Simulate operation
+
+        if self.page:
+            self.page.run_task(
+                lambda: self._run_bulk_operation("Taking Screenshots", device_ids, take_screenshot)
+            )
+
+    def _on_bulk_restart_selected(self):
+        """Handle bulk restart action for selected devices."""
+        if not self.selected_devices:
+            self.toast.warning("No devices selected")
+            return
+
+        device_ids = list(self.selected_devices)
+
+        async def restart_device(device_id):
+            # Placeholder for actual restart logic
+            await asyncio.sleep(0.5)  # Simulate operation
+
+        if self.page:
+            self.page.run_task(
+                lambda: self._run_bulk_operation("Restarting Devices", device_ids, restart_device)
+            )
+
+    def _on_bulk_clear_data(self):
+        """Handle bulk clear app data action."""
+        if not self.selected_devices:
+            self.toast.warning("No devices selected")
+            return
+
+        device_ids = list(self.selected_devices)
+
+        async def clear_data(device_id):
+            # Placeholder for actual clear data logic
+            await asyncio.sleep(0.3)  # Simulate operation
+
+        if self.page:
+            self.page.run_task(
+                lambda: self._run_bulk_operation("Clearing App Data", device_ids, clear_data)
+            )
+
+    def _on_bulk_disconnect_all(self):
+        """Handle bulk disconnect action."""
+        device_ids = list(self.selected_devices) if self.selected_devices else [d.get("adb_serial") for d in self.devices]
+
+        async def disconnect_device(device_id):
+            # Placeholder for actual disconnect logic
+            await asyncio.sleep(0.2)  # Simulate operation
+
+        if self.page:
+            self.page.run_task(
+                lambda: self._run_bulk_operation("Disconnecting Devices", device_ids, disconnect_device)
+            )
