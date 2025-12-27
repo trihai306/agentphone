@@ -8,6 +8,7 @@ from .modal import Modal, ConfirmDialog, InfoDialog
 from .empty_state import EmptyState
 from .toast import ToastManager
 from .search_filter import SearchFilter, SearchFilterCompact
+from .view_toggle import ViewToggle, ViewToggleCompact
 
 __all__ = [
     "Card",
@@ -28,4 +29,6 @@ __all__ = [
     "ToastManager",
     "SearchFilter",
     "SearchFilterCompact",
+    "ViewToggle",
+    "ViewToggleCompact",
 ]
