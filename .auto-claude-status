@@ -1,15 +1,15 @@
 {
   "active": true,
-  "spec": "004-simplify-desktop-app-ui",
+  "spec": "011-smart-action-recording-record-generate-workflows",
   "state": "building",
   "subtasks": {
-    "completed": 2,
-    "total": 9,
+    "completed": 1,
+    "total": 17,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Theme System Simplification",
+    "current": "Android Action Capture",
     "id": null,
     "total": 3
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 3,
-    "started_at": "2025-12-25T13:29:52.272496"
+    "number": 2,
+    "started_at": "2025-12-27T11:16:39.016873"
   },
-  "last_update": "2025-12-25T13:33:51.543245"
+  "last_update": "2025-12-27T11:20:23.579322"
 }
