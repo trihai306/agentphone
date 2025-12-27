@@ -21,6 +21,12 @@ EASE_OUT = ft.AnimationCurve.EASE_OUT
 class LoginView(ft.Container):
     """Professional view for user login with polished UI."""
 
+    # Responsive breakpoints
+    CARD_MAX_WIDTH = 420
+    CARD_MIN_WIDTH = 320
+    COMPACT_BREAKPOINT = 500
+    WIDE_BREAKPOINT = 800
+
     def __init__(self, app_state, toast, on_navigate=None, **kwargs):
         self.app_state = app_state
         self.toast = toast
@@ -30,6 +36,9 @@ class LoginView(ft.Container):
         self.email_error = None
         self.password_error = None
         self.is_loading = False
+        # Responsive state
+        self._current_width = None
+        self._is_compact = False
 
         super().__init__(
             content=self._build_content(),
@@ -38,58 +47,104 @@ class LoginView(ft.Container):
         )
 
     def _build_content(self):
-        """Build the view content."""
-        return ft.Column(
-            [
-                ft.Container(expand=True),
-                self._build_login_card(),
-                ft.Container(expand=True),
-            ],
-            spacing=0,
+        """Build the view content with responsive layout."""
+        return ft.Container(
+            content=ft.Column(
+                [
+                    ft.Container(expand=True),
+                    self._build_login_card(),
+                    ft.Container(expand=True),
+                ],
+                spacing=0,
+                expand=True,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
             expand=True,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            padding=ft.padding.symmetric(horizontal=16, vertical=24),
+            on_resize=self._on_resize,
         )
 
     def _build_login_card(self):
-        """Build the centered login card with form."""
+        """Build the centered login card with form - responsive design."""
+        # Calculate responsive card width
+        card_width = self._get_responsive_card_width()
+        card_padding = self._get_responsive_padding()
+
         return ft.Container(
             content=ft.Column(
                 [
                     self._build_header(),
-                    ft.Container(height=32),
+                    ft.Container(height=32 if not self._is_compact else 24),
                     self._build_form(),
-                    ft.Container(height=24),
+                    ft.Container(height=24 if not self._is_compact else 16),
                     self._build_submit_button(),
-                    ft.Container(height=20),
+                    ft.Container(height=20 if not self._is_compact else 14),
                     self._build_divider(),
-                    ft.Container(height=20),
+                    ft.Container(height=20 if not self._is_compact else 14),
                     self._build_register_link(),
                 ],
                 spacing=0,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             ),
-            width=420,
+            width=card_width,
             bgcolor=COLORS["bg_card"],
             border_radius=RADIUS["xl"],
-            padding=40,
+            padding=card_padding,
             border=ft.border.all(1, COLORS["border"]),
             shadow=get_shadow("lg"),
             animate=ft.Animation(ANIMATION["normal"], EASE_OUT),
         )
 
+    def _get_responsive_card_width(self) -> int:
+        """Calculate responsive card width based on container width."""
+        if self._current_width is None:
+            return self.CARD_MAX_WIDTH
+
+        if self._current_width < self.COMPACT_BREAKPOINT:
+            # On small screens, use almost full width with padding
+            return min(self._current_width - 32, self.CARD_MAX_WIDTH)
+        elif self._current_width < self.WIDE_BREAKPOINT:
+            # Medium screens - use max width but don't go smaller than min
+            return max(self.CARD_MIN_WIDTH, min(self._current_width - 64, self.CARD_MAX_WIDTH))
+        else:
+            # Large screens - use max width
+            return self.CARD_MAX_WIDTH
+
+    def _get_responsive_padding(self) -> int:
+        """Get responsive padding based on screen size."""
+        if self._is_compact:
+            return 24
+        return 40
+
+    def _on_resize(self, e: ft.ContainerResizeEvent):
+        """Handle container resize for responsive layout."""
+        if e.width != self._current_width:
+            self._current_width = e.width
+            was_compact = self._is_compact
+            self._is_compact = e.width < self.COMPACT_BREAKPOINT
+
+            # Only rebuild if compact state changed or first resize
+            if was_compact != self._is_compact or self._current_width is None:
+                self.refresh()
+
     def _build_header(self):
-        """Build the polished header section with logo and title."""
+        """Build the polished header section with logo and title - responsive."""
+        logo_size = 40 if self._is_compact else 48
+        logo_container_size = 72 if self._is_compact else 88
+        title_size = 24 if self._is_compact else 28
+        subtitle_size = 13 if self._is_compact else 14
+
         return ft.Column(
             [
                 # Logo container with glow effect
                 ft.Container(
                     content=ft.Icon(
                         ft.Icons.ANDROID_ROUNDED,
-                        size=48,
+                        size=logo_size,
                         color=COLORS["primary"],
                     ),
-                    width=88,
-                    height=88,
+                    width=logo_container_size,
+                    height=logo_container_size,
                     border_radius=RADIUS["xl"],
                     bgcolor=f"{COLORS['primary']}12",
                     alignment=ft.alignment.center,
@@ -101,17 +156,17 @@ class LoginView(ft.Container):
                         offset=ft.Offset(0, 8),
                     ),
                 ),
-                ft.Container(height=24),
+                ft.Container(height=20 if self._is_compact else 24),
                 ft.Text(
                     "Welcome Back",
-                    size=28,
+                    size=title_size,
                     weight=ft.FontWeight.W_700,
                     color=COLORS["text_primary"],
                 ),
-                ft.Container(height=8),
+                ft.Container(height=6 if self._is_compact else 8),
                 ft.Text(
                     "Sign in to continue to Droidrun Controller",
-                    size=14,
+                    size=subtitle_size,
                     weight=ft.FontWeight.W_400,
                     color=COLORS["text_secondary"],
                     text_align=ft.TextAlign.CENTER,
@@ -229,7 +284,8 @@ class LoginView(ft.Container):
         )
 
     def _build_submit_button(self):
-        """Build the polished submit button."""
+        """Build the polished submit button - responsive."""
+        # Use None for width to allow button to stretch to full container width
         return ft.Container(
             content=ft.Row(
                 [
@@ -248,7 +304,6 @@ class LoginView(ft.Container):
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
-            width=340,
             height=48,
             bgcolor=COLORS["primary"],
             border_radius=RADIUS["md"],
@@ -263,6 +318,7 @@ class LoginView(ft.Container):
             animate_scale=ft.Animation(ANIMATION["normal"], EASE_OUT),
             on_click=self._on_submit,
             on_hover=self._on_submit_button_hover,
+            expand=True,
         )
 
     def _build_divider(self):
