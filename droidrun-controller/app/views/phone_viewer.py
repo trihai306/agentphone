@@ -1431,39 +1431,212 @@ class PhoneViewerView(ft.Container):
         )
 
     def _build_empty_state(self):
-        """Build an enhanced empty state with polished styling."""
+        """Build an enhanced empty state with setup guide and troubleshooting tips."""
+        colors = get_colors()
+        is_mobile = self._is_mobile()
+
+        # Setup guide steps
+        setup_steps = [
+            {
+                "number": "1",
+                "title": "Enable USB Debugging",
+                "description": "Go to Settings > Developer Options > Enable USB Debugging",
+                "icon": ft.Icons.BUG_REPORT_ROUNDED,
+            },
+            {
+                "number": "2",
+                "title": "Connect Device",
+                "description": "Connect via USB cable or WiFi ADB (adb tcpip 5555)",
+                "icon": ft.Icons.USB_ROUNDED,
+            },
+            {
+                "number": "3",
+                "title": "Trust Computer",
+                "description": "Accept the 'Allow USB debugging' prompt on your device",
+                "icon": ft.Icons.VERIFIED_USER_ROUNDED,
+            },
+        ]
+
+        # Troubleshooting tips
+        troubleshooting_tips = [
+            {"icon": ft.Icons.CABLE, "text": "Try a different USB cable or port"},
+            {"icon": ft.Icons.REFRESH, "text": "Run 'adb kill-server && adb start-server'"},
+            {"icon": ft.Icons.WIFI, "text": "For WiFi: adb connect <device-ip>:5555"},
+        ]
+
+        # Build setup step cards
+        def build_step_card(step):
+            return ft.Container(
+                content=ft.Row(
+                    [
+                        # Step number badge
+                        ft.Container(
+                            content=ft.Text(
+                                step["number"],
+                                size=14,
+                                weight=ft.FontWeight.W_700,
+                                color=colors["primary"],
+                            ),
+                            width=32,
+                            height=32,
+                            border_radius=16,
+                            bgcolor=colors["primary_glow"],
+                            alignment=ft.alignment.center,
+                        ),
+                        ft.Container(width=SPACING["md"]),
+                        # Step content
+                        ft.Column(
+                            [
+                                ft.Row(
+                                    [
+                                        ft.Icon(step["icon"], size=16, color=colors["text_primary"]),
+                                        ft.Container(width=6),
+                                        ft.Text(
+                                            step["title"],
+                                            size=14,
+                                            weight=ft.FontWeight.W_600,
+                                            color=colors["text_primary"],
+                                        ),
+                                    ],
+                                    spacing=0,
+                                ),
+                                ft.Text(
+                                    step["description"],
+                                    size=12,
+                                    color=colors["text_secondary"],
+                                ),
+                            ],
+                            spacing=2,
+                            expand=True,
+                        ),
+                    ],
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                ),
+                padding=ft.padding.symmetric(horizontal=SPACING["md"], vertical=SPACING["sm"]),
+                border_radius=RADIUS["md"],
+                bgcolor=colors["bg_secondary"],
+                border=ft.border.all(1, colors["border"]),
+                animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
+            )
+
+        # Build troubleshooting tip items
+        def build_tip_item(tip):
+            return ft.Row(
+                [
+                    ft.Icon(tip["icon"], size=14, color=colors["text_muted"]),
+                    ft.Container(width=8),
+                    ft.Text(
+                        tip["text"],
+                        size=12,
+                        color=colors["text_muted"],
+                    ),
+                ],
+                spacing=0,
+            )
+
+        # Main content
         return ft.Container(
             content=ft.Column(
                 [
-                    # Icon container with subtle background
+                    # Header with icon
                     ft.Container(
                         content=ft.Icon(
                             ft.Icons.PHONE_ANDROID_ROUNDED,
-                            size=56,
-                            color=COLORS["text_muted"],
+                            size=48,
+                            color=colors["text_muted"],
                         ),
-                        width=100,
-                        height=100,
-                        border_radius=RADIUS["xl"],
-                        bgcolor=COLORS["bg_tertiary"],
+                        width=88,
+                        height=88,
+                        border_radius=44,
+                        bgcolor=colors["bg_tertiary"],
                         alignment=ft.alignment.center,
-                        border=ft.border.all(1, COLORS["border"]),
+                        border=ft.border.all(1, colors["border"]),
+                        shadow=ft.BoxShadow(
+                            spread_radius=0,
+                            blur_radius=20,
+                            color=f"{colors['text_muted']}12",
+                            offset=ft.Offset(0, 6),
+                        ),
                     ),
-                    ft.Container(height=SPACING["xl"]),
+                    ft.Container(height=SPACING["lg"]),
                     ft.Text(
                         "No Devices Connected",
-                        size=20,
-                        weight=ft.FontWeight.W_600,
-                        color=COLORS["text_primary"],
+                        size=22,
+                        weight=ft.FontWeight.W_700,
+                        color=colors["text_primary"],
                     ),
-                    ft.Container(height=SPACING["sm"]),
+                    ft.Container(height=SPACING["xs"]),
                     ft.Text(
-                        "Connect Android devices via USB or WiFi ADB",
+                        "Follow the steps below to connect your Android device",
                         size=14,
-                        color=COLORS["text_secondary"],
+                        color=colors["text_secondary"],
                     ),
-                    ft.Container(height=SPACING["xxl"]),
-                    # Enhanced scan button
+                    ft.Container(height=SPACING["xl"]),
+                    # Setup guide section
+                    ft.Container(
+                        content=ft.Column(
+                            [
+                                ft.Row(
+                                    [
+                                        ft.Icon(ft.Icons.CHECKLIST_ROUNDED, size=16, color=colors["primary"]),
+                                        ft.Container(width=6),
+                                        ft.Text(
+                                            "Setup Guide",
+                                            size=13,
+                                            weight=ft.FontWeight.W_600,
+                                            color=colors["text_primary"],
+                                        ),
+                                    ],
+                                    spacing=0,
+                                ),
+                                ft.Container(height=SPACING["sm"]),
+                                ft.Column(
+                                    [build_step_card(step) for step in setup_steps],
+                                    spacing=SPACING["sm"],
+                                ),
+                            ],
+                            spacing=0,
+                        ),
+                        width=400 if not is_mobile else None,
+                        padding=ft.padding.all(SPACING["md"]),
+                        border_radius=RADIUS["lg"],
+                        bgcolor=colors["bg_card"],
+                        border=ft.border.all(1, colors["border"]),
+                    ),
+                    ft.Container(height=SPACING["lg"]),
+                    # Troubleshooting section
+                    ft.Container(
+                        content=ft.Column(
+                            [
+                                ft.Row(
+                                    [
+                                        ft.Icon(ft.Icons.LIGHTBULB_OUTLINE, size=14, color=colors["warning"]),
+                                        ft.Container(width=6),
+                                        ft.Text(
+                                            "Troubleshooting Tips",
+                                            size=12,
+                                            weight=ft.FontWeight.W_600,
+                                            color=colors["text_secondary"],
+                                        ),
+                                    ],
+                                    spacing=0,
+                                ),
+                                ft.Container(height=SPACING["xs"]),
+                                ft.Column(
+                                    [build_tip_item(tip) for tip in troubleshooting_tips],
+                                    spacing=4,
+                                ),
+                            ],
+                            spacing=0,
+                        ),
+                        width=400 if not is_mobile else None,
+                        padding=ft.padding.all(SPACING["md"]),
+                        border_radius=RADIUS["md"],
+                        bgcolor=f"{colors['warning']}08",
+                        border=ft.border.all(1, f"{colors['warning']}20"),
+                    ),
+                    ft.Container(height=SPACING["xl"]),
+                    # Scan button
                     ft.Container(
                         content=ft.Row(
                             [
@@ -1482,18 +1655,24 @@ class PhoneViewerView(ft.Container):
                             ],
                             alignment=ft.MainAxisAlignment.CENTER,
                         ),
-                        padding=ft.padding.symmetric(horizontal=24, vertical=14),
+                        padding=ft.padding.symmetric(horizontal=32, vertical=14),
                         border_radius=RADIUS["md"],
                         bgcolor=COLORS["primary"],
                         on_click=self._on_refresh,
                         on_hover=self._on_primary_hover,
-                        shadow=get_shadow("sm"),
+                        shadow=ft.BoxShadow(
+                            spread_radius=0,
+                            blur_radius=16,
+                            color=COLORS.get("primary_glow", f"{COLORS['primary']}25"),
+                            offset=ft.Offset(0, 4),
+                        ),
                         animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
                     ),
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                scroll=ft.ScrollMode.AUTO,
             ),
-            padding=SPACING["xxxl"],
+            padding=SPACING["xl"] if is_mobile else SPACING["xxl"],
             alignment=ft.alignment.center,
             expand=True,
         )
