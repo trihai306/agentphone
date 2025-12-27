@@ -236,12 +236,6 @@ class AnalyticsView(ft.Container):
             border_radius=RADIUS["md"],
             bgcolor=COLORS["accent_orange"] if is_active else COLORS["bg_tertiary"],
             border=ft.border.all(1, f"{COLORS['accent_orange']}30" if is_active else COLORS["border_subtle"]),
-            shadow=ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=12,
-                color=f"{COLORS['accent_orange']}30",
-                offset=ft.Offset(0, 4),
-            ) if is_active else None,
             animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
             on_click=lambda e, k=key: self._on_period_click(k),
             on_hover=lambda e, active=is_active: self._on_period_hover(e, active),
