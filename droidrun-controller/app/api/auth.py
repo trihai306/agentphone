@@ -2,6 +2,7 @@
 
 This module provides REST API endpoints for user authentication:
 - POST /api/auth/register - Create new user account with email/password
+- POST /api/auth/login - Authenticate user and return JWT token
 
 The API follows best practices:
 - Password hashing with bcrypt
@@ -33,7 +34,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.database.connection import get_session_context, init_db
 from app.database.schema import UserDB
-from app.utils.auth import hash_password
+from app.utils.auth import create_access_token, hash_password, verify_password
 
 
 # Configuration
@@ -230,6 +231,111 @@ async def register_handler(request: web.Request) -> web.Response:
         )
 
 
+async def login_handler(request: web.Request) -> web.Response:
+    """Handle user login.
+
+    POST /api/auth/login
+
+    Request body:
+        {
+            "email": "user@example.com",
+            "password": "SecurePass123"
+        }
+
+    Response (success - 200):
+        {
+            "success": true,
+            "message": "Login successful",
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "user_id": 1,
+            "email": "user@example.com"
+        }
+
+    Response (error - 401):
+        {
+            "success": false,
+            "message": "Invalid credentials"
+        }
+
+    Args:
+        request: The aiohttp request object.
+
+    Returns:
+        JSON response with login result.
+    """
+    try:
+        # Parse JSON body
+        try:
+            data = await request.json()
+        except json.JSONDecodeError:
+            return web.json_response(
+                {"success": False, "message": "Invalid JSON in request body"},
+                status=400,
+            )
+
+        # Extract email
+        email = data.get("email", "").strip().lower()
+        if not email:
+            return web.json_response(
+                {"success": False, "message": "Email is required"},
+                status=400,
+            )
+
+        # Extract password
+        password = data.get("password", "")
+        if not password:
+            return web.json_response(
+                {"success": False, "message": "Password is required"},
+                status=400,
+            )
+
+        # Find user in database
+        async with get_session_context() as session:
+            result = await session.execute(
+                select(UserDB).where(UserDB.email == email)
+            )
+            user = result.scalar_one_or_none()
+
+            if user is None:
+                # User not found - return generic error to prevent enumeration
+                return web.json_response(
+                    {"success": False, "message": "Invalid credentials"},
+                    status=401,
+                )
+
+            # Verify password
+            if not verify_password(password, user.password_hash):
+                return web.json_response(
+                    {"success": False, "message": "Invalid credentials"},
+                    status=401,
+                )
+
+            # Generate JWT token
+            token = create_access_token(
+                user_id=user.id,
+                email=user.email,
+            )
+
+            return web.json_response(
+                {
+                    "success": True,
+                    "message": "Login successful",
+                    "token": token,
+                    "user_id": user.id,
+                    "email": user.email,
+                },
+                status=200,
+            )
+
+    except Exception as e:
+        # Log error server-side but don't expose details to client
+        # In production, use proper logging
+        return web.json_response(
+            {"success": False, "message": "An error occurred during login"},
+            status=500,
+        )
+
+
 def create_api_app() -> web.Application:
     """Create the aiohttp application with auth routes.
 
@@ -243,6 +349,7 @@ def create_api_app() -> web.Application:
 
     # Setup routes
     app.router.add_post("/api/auth/register", register_handler)
+    app.router.add_post("/api/auth/login", login_handler)
 
     # Startup/shutdown hooks
     app.on_startup.append(_on_startup)
