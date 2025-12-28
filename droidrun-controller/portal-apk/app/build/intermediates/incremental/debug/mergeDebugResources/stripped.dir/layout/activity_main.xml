@@ -39,9 +39,9 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
+                android:layout_marginBottom="24dp"
                 app:cardBackgroundColor="@color/surface_elevated"
-                app:cardCornerRadius="24dp"
+                app:cardCornerRadius="28dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="0dp">
 
@@ -49,31 +49,70 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="24dp"
+                    android:paddingTop="32dp"
+                    android:paddingBottom="28dp"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
                     android:gravity="center">
 
-                    <ImageView
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
-                        android:src="@mipmap/ic_launcher_round"
-                        android:layout_marginBottom="16dp"
-                        android:contentDescription="@string/app_name" />
+                    <!-- Logo Container with subtle glow effect -->
+                    <FrameLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="20dp">
 
+                        <!-- Glow background -->
+                        <View
+                            android:layout_width="100dp"
+                            android:layout_height="100dp"
+                            android:layout_gravity="center"
+                            android:background="@drawable/hero_glow_background"
+                            android:alpha="0.3" />
+
+                        <ImageView
+                            android:layout_width="88dp"
+                            android:layout_height="88dp"
+                            android:layout_gravity="center"
+                            android:src="@mipmap/ic_launcher_round"
+                            android:contentDescription="@string/app_name" />
+
+                    </FrameLayout>
+
+                    <!-- App Title -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:text="Agent Portal"
+                        android:textSize="22sp"
+                        android:textColor="@color/text_primary"
+                        android:fontFamily="sans-serif-medium"
+                        android:letterSpacing="0.01" />
+
+                    <!-- Subtitle -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
                         android:text="Android Automation Bridge"
                         android:textSize="14sp"
                         android:textColor="@color/text_secondary"
-                        android:fontFamily="sans-serif-medium" />
+                        android:fontFamily="sans-serif" />
 
+                    <!-- Version Badge -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="12dp"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp"
                         android:text="v1.0.0"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_tertiary" />
+                        android:textSize="11sp"
+                        android:textColor="@color/accent_blue"
+                        android:fontFamily="sans-serif-medium"
+                        android:background="@drawable/version_badge_background"
+                        android:letterSpacing="0.02" />
 
                 </LinearLayout>
 
@@ -84,20 +123,20 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Service Status"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:textColor="@color/text_tertiary"
                 android:fontFamily="sans-serif-medium"
                 android:textAllCaps="true"
-                android:letterSpacing="0.1"
-                android:layout_marginBottom="12dp"
-                android:layout_marginStart="4dp" />
+                android:letterSpacing="0.12"
+                android:layout_marginBottom="14dp"
+                android:layout_marginStart="6dp" />
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
+                android:layout_marginBottom="24dp"
                 app:cardBackgroundColor="@color/surface_elevated"
-                app:cardCornerRadius="20dp"
+                app:cardCornerRadius="24dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="0dp">
 
@@ -106,7 +145,9 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:divider="@drawable/divider_horizontal"
-                    android:showDividers="middle">
+                    android:showDividers="middle"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp">
 
                     <!-- Accessibility Status -->
                     <LinearLayout
@@ -114,12 +155,15 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:padding="16dp">
+                        android:paddingStart="20dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="14dp">
 
                         <View
                             android:id="@+id/indicatorAccessibility"
-                            android:layout_width="10dp"
-                            android:layout_height="10dp"
+                            android:layout_width="12dp"
+                            android:layout_height="12dp"
                             android:background="@drawable/status_indicator_off" />
 
                         <LinearLayout
@@ -127,7 +171,8 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="14dp">
+                            android:layout_marginStart="16dp"
+                            android:layout_marginEnd="12dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -135,7 +180,8 @@
                                 android:text="Accessibility Service"
                                 android:textSize="15sp"
                                 android:textColor="@color/text_primary"
-                                android:fontFamily="sans-serif-medium" />
+                                android:fontFamily="sans-serif-medium"
+                                android:letterSpacing="0.01" />
 
                             <TextView
                                 android:id="@+id/statusAccessibility"
@@ -144,7 +190,7 @@
                                 android:text="Disabled"
                                 android:textSize="13sp"
                                 android:textColor="@color/text_secondary"
-                                android:layout_marginTop="2dp" />
+                                android:layout_marginTop="3dp" />
 
                         </LinearLayout>
 
@@ -152,9 +198,12 @@
                             android:id="@+id/btnAccessibility"
                             style="@style/Widget.Portal.Button.Tonal"
                             android:layout_width="wrap_content"
-                            android:layout_height="36dp"
+                            android:layout_height="38dp"
                             android:text="Enable"
-                            android:textSize="12sp" />
+                            android:textSize="12sp"
+                            android:minWidth="80dp"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp" />
 
                     </LinearLayout>
 
@@ -164,12 +213,15 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:padding="16dp">
+                        android:paddingStart="20dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="14dp">
 
                         <View
                             android:id="@+id/indicatorServer"
-                            android:layout_width="10dp"
-                            android:layout_height="10dp"
+                            android:layout_width="12dp"
+                            android:layout_height="12dp"
                             android:background="@drawable/status_indicator_off" />
 
                         <LinearLayout
@@ -177,7 +229,8 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="14dp">
+                            android:layout_marginStart="16dp"
+                            android:layout_marginEnd="12dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -185,7 +238,8 @@
                                 android:text="HTTP Server"
                                 android:textSize="15sp"
                                 android:textColor="@color/text_primary"
-                                android:fontFamily="sans-serif-medium" />
+                                android:fontFamily="sans-serif-medium"
+                                android:letterSpacing="0.01" />
 
                             <TextView
                                 android:id="@+id/statusServer"
@@ -194,7 +248,7 @@
                                 android:text="Stopped"
                                 android:textSize="13sp"
                                 android:textColor="@color/text_secondary"
-                                android:layout_marginTop="2dp" />
+                                android:layout_marginTop="3dp" />
 
                         </LinearLayout>
 
@@ -202,9 +256,12 @@
                             android:id="@+id/btnServer"
                             style="@style/Widget.Portal.Button.Tonal"
                             android:layout_width="wrap_content"
-                            android:layout_height="36dp"
+                            android:layout_height="38dp"
                             android:text="Start"
-                            android:textSize="12sp" />
+                            android:textSize="12sp"
+                            android:minWidth="80dp"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp" />
 
                     </LinearLayout>
 
@@ -214,12 +271,15 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:padding="16dp">
+                        android:paddingStart="20dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="14dp">
 
                         <View
                             android:id="@+id/indicatorKeyboard"
-                            android:layout_width="10dp"
-                            android:layout_height="10dp"
+                            android:layout_width="12dp"
+                            android:layout_height="12dp"
                             android:background="@drawable/status_indicator_off" />
 
                         <LinearLayout
@@ -227,7 +287,8 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="14dp">
+                            android:layout_marginStart="16dp"
+                            android:layout_marginEnd="12dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -235,7 +296,8 @@
                                 android:text="Portal Keyboard"
                                 android:textSize="15sp"
                                 android:textColor="@color/text_primary"
-                                android:fontFamily="sans-serif-medium" />
+                                android:fontFamily="sans-serif-medium"
+                                android:letterSpacing="0.01" />
 
                             <TextView
                                 android:id="@+id/statusKeyboard"
@@ -244,7 +306,7 @@
                                 android:text="Disabled"
                                 android:textSize="13sp"
                                 android:textColor="@color/text_secondary"
-                                android:layout_marginTop="2dp" />
+                                android:layout_marginTop="3dp" />
 
                         </LinearLayout>
 
@@ -252,9 +314,12 @@
                             android:id="@+id/btnKeyboard"
                             style="@style/Widget.Portal.Button.Tonal"
                             android:layout_width="wrap_content"
-                            android:layout_height="36dp"
+                            android:layout_height="38dp"
                             android:text="Enable"
-                            android:textSize="12sp" />
+                            android:textSize="12sp"
+                            android:minWidth="80dp"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp" />
 
                     </LinearLayout>
 
@@ -264,12 +329,15 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:padding="16dp">
+                        android:paddingStart="20dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="14dp">
 
                         <View
                             android:id="@+id/indicatorOverlay"
-                            android:layout_width="10dp"
-                            android:layout_height="10dp"
+                            android:layout_width="12dp"
+                            android:layout_height="12dp"
                             android:background="@drawable/status_indicator_off" />
 
                         <LinearLayout
@@ -277,7 +345,8 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="14dp">
+                            android:layout_marginStart="16dp"
+                            android:layout_marginEnd="12dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -285,7 +354,8 @@
                                 android:text="Overlay Permission"
                                 android:textSize="15sp"
                                 android:textColor="@color/text_primary"
-                                android:fontFamily="sans-serif-medium" />
+                                android:fontFamily="sans-serif-medium"
+                                android:letterSpacing="0.01" />
 
                             <TextView
                                 android:id="@+id/statusOverlay"
@@ -294,7 +364,7 @@
                                 android:text="Disabled"
                                 android:textSize="13sp"
                                 android:textColor="@color/text_secondary"
-                                android:layout_marginTop="2dp" />
+                                android:layout_marginTop="3dp" />
 
                         </LinearLayout>
 
@@ -302,9 +372,12 @@
                             android:id="@+id/btnOverlay"
                             style="@style/Widget.Portal.Button.Tonal"
                             android:layout_width="wrap_content"
-                            android:layout_height="36dp"
+                            android:layout_height="38dp"
                             android:text="Enable"
-                            android:textSize="12sp" />
+                            android:textSize="12sp"
+                            android:minWidth="80dp"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp" />
 
                     </LinearLayout>
 
@@ -317,20 +390,20 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Debug Tools"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:textColor="@color/text_tertiary"
                 android:fontFamily="sans-serif-medium"
                 android:textAllCaps="true"
-                android:letterSpacing="0.1"
-                android:layout_marginBottom="12dp"
-                android:layout_marginStart="4dp" />
+                android:letterSpacing="0.12"
+                android:layout_marginBottom="14dp"
+                android:layout_marginStart="6dp" />
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
+                android:layout_marginBottom="24dp"
                 app:cardBackgroundColor="@color/surface_elevated"
-                app:cardCornerRadius="20dp"
+                app:cardCornerRadius="24dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="0dp">
 
@@ -339,7 +412,9 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:divider="@drawable/divider_horizontal"
-                    android:showDividers="middle">
+                    android:showDividers="middle"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp">
 
                     <!-- Show Bounds Toggle -->
                     <LinearLayout
@@ -347,21 +422,35 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:padding="16dp">
+                        android:paddingStart="18dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="16dp">
 
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_bounds"
-                            app:tint="@color/accent_blue"
-                            android:contentDescription="Bounds overlay" />
+                        <!-- Icon with tinted background container -->
+                        <FrameLayout
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/icon_container_background"
+                            android:backgroundTint="@color/accent_blue_container">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_bounds"
+                                app:tint="@color/accent_blue"
+                                android:contentDescription="Bounds overlay" />
+
+                        </FrameLayout>
 
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="14dp">
+                            android:layout_marginStart="16dp"
+                            android:layout_marginEnd="12dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -369,15 +458,16 @@
                                 android:text="Show Element Bounds"
                                 android:textSize="15sp"
                                 android:textColor="@color/text_primary"
-                                android:fontFamily="sans-serif-medium" />
+                                android:fontFamily="sans-serif-medium"
+                                android:letterSpacing="0.01" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Highlight interactive elements"
+                                android:text="Highlight interactive elements on screen"
                                 android:textSize="13sp"
                                 android:textColor="@color/text_secondary"
-                                android:layout_marginTop="2dp" />
+                                android:layout_marginTop="4dp" />
 
                         </LinearLayout>
 
@@ -394,21 +484,35 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:padding="16dp">
+                        android:paddingStart="18dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="16dp">
 
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_index"
-                            app:tint="@color/accent_purple"
-                            android:contentDescription="Index labels" />
+                        <!-- Icon with tinted background container -->
+                        <FrameLayout
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/icon_container_background"
+                            android:backgroundTint="@color/accent_purple_container">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_index"
+                                app:tint="@color/accent_purple"
+                                android:contentDescription="Index labels" />
+
+                        </FrameLayout>
 
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
-                            android:layout_marginStart="14dp">
+                            android:layout_marginStart="16dp"
+                            android:layout_marginEnd="12dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -416,15 +520,16 @@
                                 android:text="Show Element Indexes"
                                 android:textSize="15sp"
                                 android:textColor="@color/text_primary"
-                                android:fontFamily="sans-serif-medium" />
+                                android:fontFamily="sans-serif-medium"
+                                android:letterSpacing="0.01" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Display node index labels"
+                                android:text="Display numbered labels on UI nodes"
                                 android:textSize="13sp"
                                 android:textColor="@color/text_secondary"
-                                android:layout_marginTop="2dp" />
+                                android:layout_marginTop="4dp" />
 
                         </LinearLayout>
 
@@ -444,20 +549,20 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Connection Info"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:textColor="@color/text_tertiary"
                 android:fontFamily="sans-serif-medium"
                 android:textAllCaps="true"
-                android:letterSpacing="0.1"
-                android:layout_marginBottom="12dp"
-                android:layout_marginStart="4dp" />
+                android:letterSpacing="0.12"
+                android:layout_marginBottom="14dp"
+                android:layout_marginStart="6dp" />
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
+                android:layout_marginBottom="24dp"
                 app:cardBackgroundColor="@color/surface_elevated"
-                app:cardCornerRadius="20dp"
+                app:cardCornerRadius="24dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="0dp">
 
@@ -465,54 +570,126 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="20dp">
+                    android:divider="@drawable/divider_horizontal"
+                    android:showDividers="middle"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp">
 
+                    <!-- TCP Connection Row -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:layout_marginBottom="12dp">
+                        android:gravity="center_vertical"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="20dp"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="16dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="TCP"
-                            android:textSize="13sp"
-                            android:textColor="@color/text_tertiary"
-                            android:fontFamily="sans-serif-medium"
-                            android:layout_marginEnd="12dp" />
+                        <!-- Icon with tinted background container -->
+                        <FrameLayout
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/icon_container_background"
+                            android:backgroundTint="@color/accent_cyan_container">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_network"
+                                app:tint="@color/accent_cyan"
+                                android:contentDescription="TCP connection" />
+
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="localhost:8080"
-                            android:textSize="14sp"
-                            android:textColor="@color/accent_cyan"
-                            android:fontFamily="monospace" />
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="16dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="TCP Server"
+                                android:textSize="15sp"
+                                android:textColor="@color/text_primary"
+                                android:fontFamily="sans-serif-medium"
+                                android:letterSpacing="0.01" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="localhost:8080"
+                                android:textSize="13sp"
+                                android:textColor="@color/accent_cyan"
+                                android:fontFamily="monospace"
+                                android:layout_marginTop="4dp"
+                                android:letterSpacing="0.03" />
+
+                        </LinearLayout>
 
                     </LinearLayout>
 
+                    <!-- ADB Connection Row -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="20dp"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="16dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="ADB"
-                            android:textSize="13sp"
-                            android:textColor="@color/text_tertiary"
-                            android:fontFamily="sans-serif-medium"
-                            android:layout_marginEnd="12dp" />
+                        <!-- Icon with tinted background container -->
+                        <FrameLayout
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/icon_container_background"
+                            android:backgroundTint="@color/accent_green_container">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_terminal"
+                                app:tint="@color/accent_green"
+                                android:contentDescription="ADB connection" />
+
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="content://com.agent.portal/"
-                            android:textSize="14sp"
-                            android:textColor="@color/accent_cyan"
-                            android:fontFamily="monospace" />
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="16dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ADB Content Provider"
+                                android:textSize="15sp"
+                                android:textColor="@color/text_primary"
+                                android:fontFamily="sans-serif-medium"
+                                android:letterSpacing="0.01" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="content://com.agent.portal/"
+                                android:textSize="13sp"
+                                android:textColor="@color/accent_green"
+                                android:fontFamily="monospace"
+                                android:layout_marginTop="4dp"
+                                android:letterSpacing="0.03"
+                                android:ellipsize="end"
+                                android:maxLines="1" />
+
+                        </LinearLayout>
 
                     </LinearLayout>
 

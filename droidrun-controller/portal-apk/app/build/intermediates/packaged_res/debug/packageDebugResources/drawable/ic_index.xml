@@ -4,17 +4,16 @@
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-    <!-- Circle background -->
+    <!-- Outer circle - consistent 2dp stroke -->
     <path
-        android:pathData="M12,12m-9,0a9,9 0,1 1,18 0a9,9 0,1 1,-18 0"
+        android:pathData="M12,2 A10,10 0 1,1 12,22 A10,10 0 1,1 12,2"
         android:strokeWidth="2"
         android:strokeColor="#FFFFFF"
         android:fillColor="#00000000" />
-    <!-- Number 1 -->
+    <!-- Hash/pound symbol for index representation -->
     <path
-        android:pathData="M11,8 L13,8 L12,8 L12,16"
-        android:strokeWidth="2"
+        android:pathData="M10,8 L10,16 M14,8 L14,16 M8,10.5 L16,10.5 M8,13.5 L16,13.5"
+        android:strokeWidth="1.5"
         android:strokeColor="#FFFFFF"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
+        android:strokeLineCap="round" />
 </vector>

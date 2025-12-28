@@ -1,0 +1,40 @@
+{
+  "discovered_files": {
+    "droidrun-controller/portal-apk/app/src/main/res/values/colors.xml": {
+      "description": "Enhanced color palette with comprehensive color system: accent colors with light/dark/container variants, gradient colors for modern effects, glow colors for status indicators, button/icon/card/shimmer colors for UI components, and scrim colors for overlays. All follow semantic naming convention (accent_[color], accent_[color]_light, accent_[color]_dark, accent_[color]_container, accent_[color]_container_high).",
+      "category": "colors",
+      "discovered_at": "2025-12-25T01:15:59.281433+00:00"
+    },
+    "droidrun-controller/portal-apk/app/src/main/res/values/themes.xml": {
+      "description": "Comprehensive shape appearance system added to themes.xml with 40+ ShapeAppearance styles organized by component type: Base shapes (ExtraSmall/Small/Medium/Large/ExtraLarge/Full), Card shapes, Dialog/BottomSheet shapes, Chip shapes, TextField shapes, Button shapes, Status indicators, Navigation shapes, Cut corner variants, and Special component shapes. All follow Material Design 3 conventions with ShapeAppearance.Portal.* naming pattern.",
+      "category": "theme-system",
+      "discovered_at": "2025-12-25T01:23:52.928076+00:00"
+    },
+    "droidrun-controller/portal-apk/app/src/main/res/layout/activity_main.xml": {
+      "description": "Debug Tools and Connection Info sections now use consistent patterns: 44dp icon containers with icon_container_background.xml, 18dp start padding, 16dp vertical padding, 14dp margin from icon container to text. Connection info has icons (ic_network for TCP, ic_terminal for ADB) with accent_cyan and accent_green tints respectively. Both sections use dividers like the Status section.",
+      "category": "layout_patterns",
+      "discovered_at": "2025-12-25T01:32:01.938651+00:00"
+    },
+    "droidrun-controller/portal-apk/app/src/main/res/drawable/status_indicator_animated.xml": {
+      "description": "Animated state selector for status indicators with 200ms cross-fade transitions. Uses view states for status mapping: activated=on (green), focused=warning (yellow), focused+selected=pending (blue), default=off (red). Apply to views and set view states programmatically to trigger smooth transitions.",
+      "category": "ui-pattern",
+      "discovered_at": "2025-12-25T01:34:56.475288+00:00"
+    },
+    "droidrun-controller/portal-apk/app/src/main/res/drawable/": {
+      "description": "Icon enhancement patterns: Use consistent 24dp dimensions, strokeWidth of 2dp for main elements and 1.5dp for detail elements, strokeLineCap=\"round\" and strokeLineJoin=\"round\" for softer appearance, fillColor=\"#FFFFFF\" for solid icons and strokeColor=\"#FFFFFF\" for outlined icons. Hash/pound symbol (#) is a good representation for \"index\" concepts.",
+      "category": "icon-patterns",
+      "discovered_at": "2025-12-25T01:35:32.778334+00:00"
+    },
+    "droidrun-controller/portal-apk/app/src/main/java/com/agent/portal/MainActivity.kt": {
+      "description": "Status indicator animation pattern in MainActivity.kt: Uses combination of StateListDrawable cross-fade (200ms) for color transitions, scale pulse animation (1.15x) with AnimatorSet for state changes, fade out/in for text transitions, and scale animations (0.95x) for button text changes. Animation timing constants: ANIMATION_DURATION=250ms, ANIMATION_DURATION_SHORT=150ms. Smart animation triggers only when state actually changes (tracked via prevState variables).",
+      "category": "animation-patterns",
+      "discovered_at": "2025-12-25T01:41:55.700657+00:00"
+    },
+    "droidrun-controller/portal-apk/": {
+      "description": "Complete UI/UX enhancement implementation: Enhanced color palette with 135 colors (accents, gradients, glow, status, borders, buttons, cards), comprehensive typography system (Display/Headline/Title/Body/Label with Large/Medium/Small variants), 30+ button styles (Primary/Secondary/Tonal/Outlined/Text/Danger/Icon/FAB), 40+ shape appearances, animated status indicators with 200ms cross-fade, and micro-animations for all interactive elements (buttons, switches, refresh).",
+      "category": "ui-implementation",
+      "discovered_at": "2025-12-25T01:45:11.913458+00:00"
+    }
+  },
+  "last_updated": "2025-12-25T01:45:11.913466+00:00"
+}

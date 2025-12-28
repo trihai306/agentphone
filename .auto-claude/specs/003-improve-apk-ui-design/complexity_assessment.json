@@ -1,0 +1,103 @@
+{
+  "complexity": "standard",
+  "workflow_type": "feature",
+  "confidence": 0.80,
+  "reasoning": "UI/UX redesign task for a native Android app with existing Material Design 3 implementation. Involves multiple XML layout files, color resources, themes, and potentially drawable resources. The scope is contained to the portal-apk service with clear existing patterns to follow.",
+
+  "analysis": {
+    "scope": {
+      "estimated_files": 8,
+      "estimated_services": 1,
+      "is_cross_cutting": false,
+      "notes": "Changes will primarily affect: activity_main.xml (main layout), colors.xml, themes.xml, drawable resources (icons/backgrounds), and potentially string resources. All changes are localized to the portal-apk Android project."
+    },
+    "integrations": {
+      "external_services": [],
+      "new_dependencies": [],
+      "research_needed": false,
+      "notes": "No external integrations needed. The app already uses Material Design 3 components (MaterialCardView, MaterialButton, MaterialSwitch) which provide a solid foundation for UI improvements."
+    },
+    "infrastructure": {
+      "docker_changes": false,
+      "database_changes": false,
+      "config_changes": false,
+      "notes": "No infrastructure changes required. This is purely a UI/UX enhancement focused on visual design, layout improvements, and user experience refinements."
+    },
+    "knowledge": {
+      "patterns_exist": true,
+      "research_required": false,
+      "unfamiliar_tech": [],
+      "notes": "The codebase already follows Material Design 3 patterns with a well-structured dark theme. Current implementation shows good practices: custom color palette, proper text hierarchies, MaterialCardView usage, and component styling. Design improvements can build on these existing patterns."
+    },
+    "risk": {
+      "level": "low",
+      "concerns": [
+        "Maintaining accessibility standards while improving aesthetics",
+        "Ensuring status indicators remain clear and visible",
+        "Preserving functional button states and user feedback",
+        "Keeping consistent spacing and alignment across different screen sizes"
+      ],
+      "notes": "Low risk as changes are visual only and don't affect core functionality. The app's existing structure (service status monitoring, permission management) remains unchanged."
+    }
+  },
+
+  "recommended_phases": [
+    "discovery",
+    "requirements",
+    "context",
+    "spec_writing",
+    "planning",
+    "validation"
+  ],
+
+  "flags": {
+    "needs_research": false,
+    "needs_self_critique": false,
+    "needs_infrastructure_setup": false
+  },
+
+  "validation_recommendations": {
+    "risk_level": "low",
+    "skip_validation": false,
+    "minimal_mode": true,
+    "test_types_required": ["unit"],
+    "security_scan_required": false,
+    "staging_deployment_required": false,
+    "reasoning": "UI-only changes with no functional logic modifications. Visual regression testing and manual UI review would be sufficient. No security or data handling changes involved."
+  },
+
+  "design_context": {
+    "current_state": {
+      "ui_framework": "Native Android (Kotlin)",
+      "design_system": "Material Design 3 (Theme.Material3.Dark.NoActionBar)",
+      "layout_files": [
+        "res/layout/activity_main.xml"
+      ],
+      "theme_files": [
+        "res/values/colors.xml",
+        "res/values/themes.xml"
+      ],
+      "current_color_scheme": "Dark theme with blue/cyan/purple accents",
+      "component_library": "com.google.android.material"
+    },
+    "improvement_opportunities": [
+      "Enhanced visual hierarchy and spacing",
+      "More polished icon design and illustrations",
+      "Improved card layouts and elevation",
+      "Better status indicator designs",
+      "Refined typography and text styling",
+      "Enhanced button states and interactions",
+      "More professional color palette refinement",
+      "Improved empty states and feedback messages"
+    ],
+    "constraints": [
+      "Must maintain dark theme aesthetic",
+      "Must preserve all existing functionality",
+      "Must remain accessible (status indicators must be clear)",
+      "Must support various Android screen sizes",
+      "Must follow Material Design 3 guidelines"
+    ]
+  },
+
+  "created_at": "2025-12-25T08:00:00Z"
+}

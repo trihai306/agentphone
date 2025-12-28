@@ -1,0 +1,32 @@
+{
+  "project_root": "/Users/hainc/duan/agent",
+  "project_type": "single",
+  "services": {
+    "portal-apk": {
+      "path": "droidrun-controller/portal-apk",
+      "tech_stack": ["kotlin", "android", "material-design-3"],
+      "min_sdk": 26,
+      "target_sdk": 34,
+      "build_command": "./gradlew assembleDebug",
+      "install_command": "adb install -r app/build/outputs/apk/debug/app-debug.apk",
+      "launch_command": "adb shell am start -n com.agent.portal/.MainActivity"
+    }
+  },
+  "infrastructure": {
+    "docker": false,
+    "database": false,
+    "build_system": "gradle"
+  },
+  "conventions": {
+    "language": "kotlin",
+    "view_binding": true,
+    "design_system": "material_design_3",
+    "theme": "dark",
+    "naming_convention": {
+      "colors": "accent_[color], surface_[variant], text_[level]",
+      "styles": "Widget.Portal.[Component].[Variant]",
+      "text_appearances": "TextAppearance.Portal.[Level]",
+      "shapes": "ShapeAppearance.Portal.[Size]"
+    }
+  }
+}

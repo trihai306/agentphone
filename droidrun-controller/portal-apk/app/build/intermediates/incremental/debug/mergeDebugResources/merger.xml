@@ -11423,7 +11423,7 @@
   </style></file><file path="/Users/hainc/.gradle/caches/8.9/transforms/32291949121f2c33c612b170c474ea52/transformed/material-1.11.0/res/values-zu/values-zu.xml" qualifiers="zu"><plurals name="mtrl_badge_content_description">
     <item quantity="one">%d izaziso ezintsha</item>
     <item quantity="other">%d izaziso ezintsha</item>
-  </plurals><string name="bottomsheet_action_collapse">Goqa ishidi eliphansi</string><string name="bottomsheet_action_expand">Nweba ishidi eliphansi</string><string name="bottomsheet_action_expand_halfway">Nweba phakathi</string><string name="bottomsheet_drag_handle_clicked">Hudula isibambi esithephwe kabili</string><string name="bottomsheet_drag_handle_content_description">Hudula isibambi</string><string name="character_counter_content_description">Izinhlamvu ezifakiwe ezingu-%1$d zokungu-%2$d</string><string name="character_counter_overflowed_content_description">Umkhawulo wezinhlamvu udlule u-%1$d kokungu-%2$d</string><string name="clear_text_end_icon_content_description">Sula umbhalo</string><string name="error_icon_content_description">Iphutha</string><string name="exposed_dropdown_menu_content_description">Bonisa imenyu yokudonsela phansi</string><string name="icon_content_description">Isithonjana sebhokisi</string><string name="item_view_role_description">Ithebhu</string><string name="material_clock_toggle_content_description">Khetha u-AM noma u-PM</string><string name="material_hour_24h_suffix">amahora angu-%1$s</string><string name="material_hour_selection">Khetha ihora</string><string name="material_hour_suffix">%1$s ezimpondweni</string><string name="material_minute_selection">Khetha amaminithi</string><string name="material_minute_suffix">amaminithi angu-%1$s</string><string name="material_timepicker_am">AM</string><string name="material_timepicker_clock_mode_description">Shintshela kumodi yewashi ngokufakwa kwesikhathi.</string><string name="material_timepicker_hour">Ihora</string><string name="material_timepicker_minute">Iminithi</string><string name="material_timepicker_pm">PM</string><string name="material_timepicker_select_time">Khetha isikhathi</string><string name="material_timepicker_text_input_mode_description">Shintshela kumodi yokufaka umbhalo ngokufaka isikhathi.</string><string name="mtrl_badge_numberless_content_description">Isaziso esisha</string><string name="mtrl_chip_close_icon_content_description">Susa i-%1$s</string><string name="mtrl_exceed_max_badge_number_content_description" ns2:ignore="PluralsCandidate">Izaziso ezintsha ezingaphezu kokungu-%1$d</string><string name="mtrl_picker_a11y_next_month">Shintshela kunyanga elandelayo</string><string name="mtrl_picker_a11y_prev_month">Shintshela kunyanga edlule</string><string name="mtrl_picker_announce_current_range_selection">Ukukhethwa kosuku lokuqala: %1$s – Ukukhethwa kosuku lokuphela: %2$s</string><string name="mtrl_picker_announce_current_selection">Ukukhetha kwamanje: %1$s</string><string name="mtrl_picker_announce_current_selection_none">lutho</string><string name="mtrl_picker_cancel">Khansela</string><string name="mtrl_picker_confirm">KULUNGILE</string><string name="mtrl_picker_date_header_selected">%1$s</string><string name="mtrl_picker_date_header_title">Khetha Idethi</string><string name="mtrl_picker_date_header_unselected">Khetha idethi</string><string name="mtrl_picker_day_of_week_column_header">Ikholomu yezinsuku: %1$s</string><string name="mtrl_picker_end_date_description">Ilanga lokuphela %1$s</string><string name="mtrl_picker_invalid_format">Ifomethi engavumelekile.</string><string name="mtrl_picker_invalid_format_example">Isibonelo: %1$s</string><string name="mtrl_picker_invalid_format_use">Sebenzisa: %1$s</string><string name="mtrl_picker_invalid_range">Ibanga elingavumelekile.</string><string name="mtrl_picker_navigate_to_current_year_description">Funa onyakeni wamanje %1$d</string><string name="mtrl_picker_navigate_to_year_description">Zulela onyakeni %1$d</string><string name="mtrl_picker_out_of_range">Ikude kubanga: %1$s</string><string name="mtrl_picker_range_header_only_end_selected">Idethi yokuqala – %1$s</string><string name="mtrl_picker_range_header_only_start_selected">%1$s – Idethi yokuphela</string><string name="mtrl_picker_range_header_selected">%1$s – %2$s</string><string name="mtrl_picker_range_header_title">Khetha Ibanga</string><string name="mtrl_picker_range_header_unselected">Idethi yokuqala – Idethi yokuphela</string><string name="mtrl_picker_save">Londoloza</string><string name="mtrl_picker_start_date_description">Ilanga lokuqala %1$s</string><string name="mtrl_picker_text_input_date_hint">Idethi</string><string name="mtrl_picker_text_input_date_range_end_hint">Idethi yokuphela</string><string name="mtrl_picker_text_input_date_range_start_hint">Idethi yokuqala</string><string name="mtrl_picker_text_input_day_abbr">d</string><string name="mtrl_picker_text_input_month_abbr">m</string><string name="mtrl_picker_text_input_year_abbr">y</string><string name="mtrl_picker_today_description">Namuhla %1$s</string><string name="mtrl_picker_toggle_to_calendar_input_mode">Shintshela kwimodi yokufaka yekhalenda</string><string name="mtrl_picker_toggle_to_day_selection">Thepha ukuze ushintshele ekubukeni Kwekhalenda</string><string name="mtrl_picker_toggle_to_text_input_mode">Shintshela kwimodi yokufaka yombhalo</string><string name="mtrl_picker_toggle_to_year_selection">Thepha ukuze ushintshele ekubukeni konyaka</string><string name="mtrl_timepicker_cancel">Khansela</string><string name="mtrl_timepicker_confirm">KULUNGILE</string><string name="password_toggle_content_description">Bonisa iphasiwedi</string></file></source></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main" generated-set="main$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/res"><file name="ic_notification" path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/res/drawable/ic_notification.xml" qualifiers="" type="drawable"/><file name="ic_refresh" path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/res/drawable/ic_refresh.xml" qualifiers="" type="drawable"/><file name="status_indicator_off" path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/res/drawable/status_indicator_off.xml" qualifiers="" type="drawable"/><file name="ic_launcher_foreground" path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/res/drawable/ic_launcher_foreground.xml" qualifiers="" type="drawable"/><file name="divider_horizontal" path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/res/drawable/divider_horizontal.xml" qualifiers="" type="drawable"/><file name="status_indicator_on" path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/res/drawable/status_indicator_on.xml" qualifiers="" type="drawable"/><file name="status_indicator_warning" path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/res/drawable/status_indicator_warning.xml" qualifiers="" type="drawable"/><file name="ic_index" path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/res/drawable/ic_index.xml" qualifiers="" type="drawable"/><file name="ic_bounds" path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/res/drawable/ic_bounds.xml" qualifiers="" type="drawable"/><file name="activity_main" path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/res/layout/activity_main.xml" qualifiers="" type="layout"/><file path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/res/values/colors.xml" qualifiers=""><color name="purple_200">#FFBB86FC</color><color name="purple_500">#FF6200EE</color><color name="purple_700">#FF3700B3</color><color name="teal_200">#FF03DAC5</color><color name="teal_700">#FF018786</color><color name="black">#FF000000</color><color name="white">#FFFFFFFF</color><color name="background_dark">#FF0D0D0D</color><color name="surface_dark">#FF0D0D0D</color><color name="surface_elevated">#FF1A1A1A</color><color name="surface_container">#FF242424</color><color name="text_primary">#FFFFFFFF</color><color name="text_secondary">#B3FFFFFF</color><color name="text_tertiary">#66FFFFFF</color><color name="text_disabled">#33FFFFFF</color><color name="accent_blue">#FF60A5FA</color><color name="accent_blue_container">#1A60A5FA</color><color name="accent_green">#FF4ADE80</color><color name="accent_green_container">#1A4ADE80</color><color name="accent_red">#FFEF4444</color><color name="accent_red_container">#1AEF4444</color><color name="accent_orange">#FFFBBF24</color><color name="accent_orange_container">#1AFBBF24</color><color name="accent_purple">#FFA78BFA</color><color name="accent_purple_container">#1AA78BFA</color><color name="accent_cyan">#FF22D3EE</color><color name="accent_cyan_container">#1A22D3EE</color><color name="status_on">#FF4ADE80</color><color name="status_off">#FFEF4444</color><color name="status_warning">#FFFBBF24</color><color name="border_default">#1AFFFFFF</color><color name="border_interactive">#FF60A5FA</color><color name="bounds_clickable">#FF60A5FA</color><color name="bounds_editable">#FF4ADE80</color><color name="bounds_scrollable">#FFA78BFA</color><color name="bounds_focusable">#FFFBBF24</color><color name="bounds_default">#66FFFFFF</color><color name="button_primary">#FF60A5FA</color><color name="button_primary_container">#1A60A5FA</color><color name="button_secondary">#FF1A1A1A</color><color name="button_secondary_container">#0DFFFFFF</color><color name="divider">#0DFFFFFF</color></file><file path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/res/values/themes.xml" qualifiers=""><style name="Theme.AgentPortal" parent="Theme.Material3.Dark.NoActionBar">
+  </plurals><string name="bottomsheet_action_collapse">Goqa ishidi eliphansi</string><string name="bottomsheet_action_expand">Nweba ishidi eliphansi</string><string name="bottomsheet_action_expand_halfway">Nweba phakathi</string><string name="bottomsheet_drag_handle_clicked">Hudula isibambi esithephwe kabili</string><string name="bottomsheet_drag_handle_content_description">Hudula isibambi</string><string name="character_counter_content_description">Izinhlamvu ezifakiwe ezingu-%1$d zokungu-%2$d</string><string name="character_counter_overflowed_content_description">Umkhawulo wezinhlamvu udlule u-%1$d kokungu-%2$d</string><string name="clear_text_end_icon_content_description">Sula umbhalo</string><string name="error_icon_content_description">Iphutha</string><string name="exposed_dropdown_menu_content_description">Bonisa imenyu yokudonsela phansi</string><string name="icon_content_description">Isithonjana sebhokisi</string><string name="item_view_role_description">Ithebhu</string><string name="material_clock_toggle_content_description">Khetha u-AM noma u-PM</string><string name="material_hour_24h_suffix">amahora angu-%1$s</string><string name="material_hour_selection">Khetha ihora</string><string name="material_hour_suffix">%1$s ezimpondweni</string><string name="material_minute_selection">Khetha amaminithi</string><string name="material_minute_suffix">amaminithi angu-%1$s</string><string name="material_timepicker_am">AM</string><string name="material_timepicker_clock_mode_description">Shintshela kumodi yewashi ngokufakwa kwesikhathi.</string><string name="material_timepicker_hour">Ihora</string><string name="material_timepicker_minute">Iminithi</string><string name="material_timepicker_pm">PM</string><string name="material_timepicker_select_time">Khetha isikhathi</string><string name="material_timepicker_text_input_mode_description">Shintshela kumodi yokufaka umbhalo ngokufaka isikhathi.</string><string name="mtrl_badge_numberless_content_description">Isaziso esisha</string><string name="mtrl_chip_close_icon_content_description">Susa i-%1$s</string><string name="mtrl_exceed_max_badge_number_content_description" ns2:ignore="PluralsCandidate">Izaziso ezintsha ezingaphezu kokungu-%1$d</string><string name="mtrl_picker_a11y_next_month">Shintshela kunyanga elandelayo</string><string name="mtrl_picker_a11y_prev_month">Shintshela kunyanga edlule</string><string name="mtrl_picker_announce_current_range_selection">Ukukhethwa kosuku lokuqala: %1$s – Ukukhethwa kosuku lokuphela: %2$s</string><string name="mtrl_picker_announce_current_selection">Ukukhetha kwamanje: %1$s</string><string name="mtrl_picker_announce_current_selection_none">lutho</string><string name="mtrl_picker_cancel">Khansela</string><string name="mtrl_picker_confirm">KULUNGILE</string><string name="mtrl_picker_date_header_selected">%1$s</string><string name="mtrl_picker_date_header_title">Khetha Idethi</string><string name="mtrl_picker_date_header_unselected">Khetha idethi</string><string name="mtrl_picker_day_of_week_column_header">Ikholomu yezinsuku: %1$s</string><string name="mtrl_picker_end_date_description">Ilanga lokuphela %1$s</string><string name="mtrl_picker_invalid_format">Ifomethi engavumelekile.</string><string name="mtrl_picker_invalid_format_example">Isibonelo: %1$s</string><string name="mtrl_picker_invalid_format_use">Sebenzisa: %1$s</string><string name="mtrl_picker_invalid_range">Ibanga elingavumelekile.</string><string name="mtrl_picker_navigate_to_current_year_description">Funa onyakeni wamanje %1$d</string><string name="mtrl_picker_navigate_to_year_description">Zulela onyakeni %1$d</string><string name="mtrl_picker_out_of_range">Ikude kubanga: %1$s</string><string name="mtrl_picker_range_header_only_end_selected">Idethi yokuqala – %1$s</string><string name="mtrl_picker_range_header_only_start_selected">%1$s – Idethi yokuphela</string><string name="mtrl_picker_range_header_selected">%1$s – %2$s</string><string name="mtrl_picker_range_header_title">Khetha Ibanga</string><string name="mtrl_picker_range_header_unselected">Idethi yokuqala – Idethi yokuphela</string><string name="mtrl_picker_save">Londoloza</string><string name="mtrl_picker_start_date_description">Ilanga lokuqala %1$s</string><string name="mtrl_picker_text_input_date_hint">Idethi</string><string name="mtrl_picker_text_input_date_range_end_hint">Idethi yokuphela</string><string name="mtrl_picker_text_input_date_range_start_hint">Idethi yokuqala</string><string name="mtrl_picker_text_input_day_abbr">d</string><string name="mtrl_picker_text_input_month_abbr">m</string><string name="mtrl_picker_text_input_year_abbr">y</string><string name="mtrl_picker_today_description">Namuhla %1$s</string><string name="mtrl_picker_toggle_to_calendar_input_mode">Shintshela kwimodi yokufaka yekhalenda</string><string name="mtrl_picker_toggle_to_day_selection">Thepha ukuze ushintshele ekubukeni Kwekhalenda</string><string name="mtrl_picker_toggle_to_text_input_mode">Shintshela kwimodi yokufaka yombhalo</string><string name="mtrl_picker_toggle_to_year_selection">Thepha ukuze ushintshele ekubukeni konyaka</string><string name="mtrl_timepicker_cancel">Khansela</string><string name="mtrl_timepicker_confirm">KULUNGILE</string><string name="password_toggle_content_description">Bonisa iphasiwedi</string></file></source></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main" generated-set="main$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res"><file name="ic_network" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/drawable/ic_network.xml" qualifiers="" type="drawable"/><file name="icon_container_background" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/drawable/icon_container_background.xml" qualifiers="" type="drawable"/><file name="status_indicator_pending" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/drawable/status_indicator_pending.xml" qualifiers="" type="drawable"/><file name="ic_notification" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/drawable/ic_notification.xml" qualifiers="" type="drawable"/><file name="ic_refresh" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/drawable/ic_refresh.xml" qualifiers="" type="drawable"/><file name="status_indicator_off" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/drawable/status_indicator_off.xml" qualifiers="" type="drawable"/><file name="hero_glow_background" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/drawable/hero_glow_background.xml" qualifiers="" type="drawable"/><file name="ic_launcher_foreground" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/drawable/ic_launcher_foreground.xml" qualifiers="" type="drawable"/><file name="version_badge_background" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/drawable/version_badge_background.xml" qualifiers="" type="drawable"/><file name="divider_horizontal" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/drawable/divider_horizontal.xml" qualifiers="" type="drawable"/><file name="status_indicator_on" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/drawable/status_indicator_on.xml" qualifiers="" type="drawable"/><file name="ic_copy" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/drawable/ic_copy.xml" qualifiers="" type="drawable"/><file name="connection_info_row_background" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/drawable/connection_info_row_background.xml" qualifiers="" type="drawable"/><file name="ic_terminal" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/drawable/ic_terminal.xml" qualifiers="" type="drawable"/><file name="status_indicator_animated" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/drawable/status_indicator_animated.xml" qualifiers="" type="drawable"/><file name="status_indicator_warning" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/drawable/status_indicator_warning.xml" qualifiers="" type="drawable"/><file name="ic_index" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/drawable/ic_index.xml" qualifiers="" type="drawable"/><file name="ic_bounds" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/drawable/ic_bounds.xml" qualifiers="" type="drawable"/><file name="activity_main" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/layout/activity_main.xml" qualifiers="" type="layout"/><file name="button_ripple_secondary" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/color/button_ripple_secondary.xml" qualifiers="" type="color"/><file name="button_ripple_icon" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/color/button_ripple_icon.xml" qualifiers="" type="color"/><file name="button_ripple_outlined" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/color/button_ripple_outlined.xml" qualifiers="" type="color"/><file name="button_primary_selector" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/color/button_primary_selector.xml" qualifiers="" type="color"/><file name="button_danger_selector" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/color/button_danger_selector.xml" qualifiers="" type="color"/><file name="button_outlined_stroke_selector" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/color/button_outlined_stroke_selector.xml" qualifiers="" type="color"/><file name="button_secondary_selector" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/color/button_secondary_selector.xml" qualifiers="" type="color"/><file name="button_ripple_primary" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/color/button_ripple_primary.xml" qualifiers="" type="color"/><file name="button_text_tonal" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/color/button_text_tonal.xml" qualifiers="" type="color"/><file name="button_ripple_tonal" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/color/button_ripple_tonal.xml" qualifiers="" type="color"/><file name="button_ripple_danger" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/color/button_ripple_danger.xml" qualifiers="" type="color"/><file name="button_text_primary" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/color/button_text_primary.xml" qualifiers="" type="color"/><file name="button_text_icon" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/color/button_text_icon.xml" qualifiers="" type="color"/><file name="button_tonal_selector" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/color/button_tonal_selector.xml" qualifiers="" type="color"/><file name="button_ripple_text" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/color/button_ripple_text.xml" qualifiers="" type="color"/><file name="button_text_outlined" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/color/button_text_outlined.xml" qualifiers="" type="color"/><file path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/values/colors.xml" qualifiers=""><color name="purple_200">#FFBB86FC</color><color name="purple_500">#FF6200EE</color><color name="purple_700">#FF3700B3</color><color name="teal_200">#FF03DAC5</color><color name="teal_700">#FF018786</color><color name="black">#FF000000</color><color name="white">#FFFFFFFF</color><color name="background_dark">#FF0D0D0D</color><color name="surface_dark">#FF0D0D0D</color><color name="surface_elevated">#FF1A1A1A</color><color name="surface_container">#FF242424</color><color name="surface_container_high">#FF2E2E2E</color><color name="surface_container_highest">#FF383838</color><color name="text_primary">#FFFFFFFF</color><color name="text_secondary">#B3FFFFFF</color><color name="text_tertiary">#66FFFFFF</color><color name="text_disabled">#33FFFFFF</color><color name="accent_blue">#FF60A5FA</color><color name="accent_blue_light">#FF93C5FD</color><color name="accent_blue_dark">#FF3B82F6</color><color name="accent_blue_container">#1A60A5FA</color><color name="accent_blue_container_high">#3360A5FA</color><color name="accent_green">#FF4ADE80</color><color name="accent_green_light">#FF86EFAC</color><color name="accent_green_dark">#FF22C55E</color><color name="accent_green_container">#1A4ADE80</color><color name="accent_green_container_high">#334ADE80</color><color name="accent_red">#FFEF4444</color><color name="accent_red_light">#FFFCA5A5</color><color name="accent_red_dark">#FFDC2626</color><color name="accent_red_container">#1AEF4444</color><color name="accent_red_container_high">#33EF4444</color><color name="accent_orange">#FFFBBF24</color><color name="accent_orange_light">#FFFDE68A</color><color name="accent_orange_dark">#FFF59E0B</color><color name="accent_orange_container">#1AFBBF24</color><color name="accent_orange_container_high">#33FBBF24</color><color name="accent_purple">#FFA78BFA</color><color name="accent_purple_light">#FFC4B5FD</color><color name="accent_purple_dark">#FF8B5CF6</color><color name="accent_purple_container">#1AA78BFA</color><color name="accent_purple_container_high">#33A78BFA</color><color name="accent_cyan">#FF22D3EE</color><color name="accent_cyan_light">#FF67E8F9</color><color name="accent_cyan_dark">#FF06B6D4</color><color name="accent_cyan_container">#1A22D3EE</color><color name="accent_cyan_container_high">#3322D3EE</color><color name="gradient_blue_start">#FF3B82F6</color><color name="gradient_blue_end">#FF8B5CF6</color><color name="gradient_green_start">#FF22C55E</color><color name="gradient_green_end">#FF14B8A6</color><color name="gradient_purple_start">#FF8B5CF6</color><color name="gradient_purple_end">#FFEC4899</color><color name="gradient_cyan_start">#FF06B6D4</color><color name="gradient_cyan_end">#FF3B82F6</color><color name="gradient_sunset_start">#FFFBBF24</color><color name="gradient_sunset_end">#FFEF4444</color><color name="glow_blue">#4D60A5FA</color><color name="glow_green">#4D4ADE80</color><color name="glow_red">#4DEF4444</color><color name="glow_purple">#4DA78BFA</color><color name="glow_cyan">#4D22D3EE</color><color name="glow_orange">#4DFBBF24</color><color name="status_on">#FF4ADE80</color><color name="status_on_glow">#4D4ADE80</color><color name="status_off">#FFEF4444</color><color name="status_off_glow">#4DEF4444</color><color name="status_warning">#FFFBBF24</color><color name="status_warning_glow">#4DFBBF24</color><color name="status_pending">#FF60A5FA</color><color name="status_pending_glow">#4D60A5FA</color><color name="border_default">#1AFFFFFF</color><color name="border_subtle">#0DFFFFFF</color><color name="border_interactive">#FF60A5FA</color><color name="border_focused">#FF93C5FD</color><color name="bounds_clickable">#FF60A5FA</color><color name="bounds_editable">#FF4ADE80</color><color name="bounds_scrollable">#FFA78BFA</color><color name="bounds_focusable">#FFFBBF24</color><color name="bounds_default">#66FFFFFF</color><color name="button_primary">#FF60A5FA</color><color name="button_primary_pressed">#FF3B82F6</color><color name="button_primary_container">#1A60A5FA</color><color name="button_primary_container_pressed">#3360A5FA</color><color name="button_secondary">#FF1A1A1A</color><color name="button_secondary_pressed">#FF242424</color><color name="button_secondary_container">#0DFFFFFF</color><color name="button_disabled">#33FFFFFF</color><color name="button_disabled_container">#0DFFFFFF</color><color name="icon_primary">#FFFFFFFF</color><color name="icon_secondary">#B3FFFFFF</color><color name="icon_accent">#FF60A5FA</color><color name="icon_disabled">#33FFFFFF</color><color name="card_background">#FF1A1A1A</color><color name="card_background_elevated">#FF242424</color><color name="card_border">#1AFFFFFF</color><color name="card_ripple">#1AFFFFFF</color><color name="shimmer_base">#FF1A1A1A</color><color name="shimmer_highlight">#FF2E2E2E</color><color name="divider">#0DFFFFFF</color><color name="divider_strong">#1AFFFFFF</color><color name="scrim">#80000000</color><color name="scrim_light">#4D000000</color></file><file path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/values/themes.xml" qualifiers=""><style name="Theme.AgentPortal" parent="Theme.Material3.Dark.NoActionBar">
         
         <item name="colorPrimary">@color/accent_blue</item>
         <item name="colorPrimaryContainer">@color/accent_blue_container</item>
@@ -11483,45 +11483,392 @@
     </style><style name="ShapeAppearance.Portal.Large" parent="ShapeAppearance.Material3.LargeComponent">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">24dp</item>
-    </style><style name="TextAppearance.Portal.Headline" parent="TextAppearance.Material3.HeadlineMedium">
-        <item name="android:textSize">22sp</item>
+    </style><style name="TextAppearance.Portal.Display.Large" parent="TextAppearance.Material3.DisplayLarge">
+        <item name="android:textSize">57sp</item>
+        <item name="android:lineHeight">64sp</item>
+        <item name="fontFamily">sans-serif-light</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">-0.025</item>
+    </style><style name="TextAppearance.Portal.Display.Medium" parent="TextAppearance.Material3.DisplayMedium">
+        <item name="android:textSize">45sp</item>
+        <item name="android:lineHeight">52sp</item>
+        <item name="fontFamily">sans-serif-light</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">0</item>
+    </style><style name="TextAppearance.Portal.Display.Small" parent="TextAppearance.Material3.DisplaySmall">
+        <item name="android:textSize">36sp</item>
+        <item name="android:lineHeight">44sp</item>
+        <item name="fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">0</item>
+    </style><style name="TextAppearance.Portal.Headline.Large" parent="TextAppearance.Material3.HeadlineLarge">
+        <item name="android:textSize">32sp</item>
+        <item name="android:lineHeight">40sp</item>
+        <item name="fontFamily">sans-serif</item>
         <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">0</item>
+    </style><style name="TextAppearance.Portal.Headline" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:textSize">24sp</item>
+        <item name="android:lineHeight">32sp</item>
         <item name="fontFamily">sans-serif-medium</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">0</item>
+    </style><style name="TextAppearance.Portal.Headline.Medium" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:textSize">24sp</item>
+        <item name="android:lineHeight">32sp</item>
+        <item name="fontFamily">sans-serif-medium</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">0</item>
+    </style><style name="TextAppearance.Portal.Headline.Small" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:textSize">20sp</item>
+        <item name="android:lineHeight">28sp</item>
+        <item name="fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">0</item>
+    </style><style name="TextAppearance.Portal.Title.Large" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:textSize">22sp</item>
+        <item name="android:lineHeight">28sp</item>
+        <item name="fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">0</item>
     </style><style name="TextAppearance.Portal.Title" parent="TextAppearance.Material3.TitleMedium">
         <item name="android:textSize">16sp</item>
-        <item name="android:textStyle">normal</item>
+        <item name="android:lineHeight">24sp</item>
         <item name="fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">0.01</item>
+    </style><style name="TextAppearance.Portal.Title.Medium" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textSize">16sp</item>
+        <item name="android:lineHeight">24sp</item>
+        <item name="fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">0.01</item>
+    </style><style name="TextAppearance.Portal.Title.Small" parent="TextAppearance.Material3.TitleSmall">
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineHeight">20sp</item>
+        <item name="fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">0.01</item>
+    </style><style name="TextAppearance.Portal.Body.Large" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:textSize">16sp</item>
+        <item name="android:lineHeight">24sp</item>
+        <item name="fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:letterSpacing">0.03</item>
     </style><style name="TextAppearance.Portal.Body" parent="TextAppearance.Material3.BodyMedium">
         <item name="android:textSize">14sp</item>
+        <item name="android:lineHeight">20sp</item>
+        <item name="fontFamily">sans-serif</item>
         <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:letterSpacing">0.025</item>
+    </style><style name="TextAppearance.Portal.Body.Medium" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineHeight">20sp</item>
+        <item name="fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:letterSpacing">0.025</item>
+    </style><style name="TextAppearance.Portal.Body.Small" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:textSize">12sp</item>
+        <item name="android:lineHeight">16sp</item>
+        <item name="fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:letterSpacing">0.04</item>
+    </style><style name="TextAppearance.Portal.Label.Large" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineHeight">20sp</item>
+        <item name="fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">0.01</item>
     </style><style name="TextAppearance.Portal.Label" parent="TextAppearance.Material3.LabelMedium">
         <item name="android:textSize">12sp</item>
+        <item name="android:lineHeight">16sp</item>
+        <item name="fontFamily">sans-serif-medium</item>
         <item name="android:textAllCaps">true</item>
-        <item name="android:letterSpacing">0.1</item>
+        <item name="android:letterSpacing">0.05</item>
         <item name="android:textColor">@color/text_tertiary</item>
-    </style><style name="Widget.Portal.Button.Tonal" parent="Widget.Material3.Button.TonalButton">
+    </style><style name="TextAppearance.Portal.Label.Medium" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textSize">12sp</item>
+        <item name="android:lineHeight">16sp</item>
+        <item name="fontFamily">sans-serif-medium</item>
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style><style name="TextAppearance.Portal.Label.Small" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:textSize">11sp</item>
+        <item name="android:lineHeight">16sp</item>
+        <item name="fontFamily">sans-serif-medium</item>
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+    </style><style name="TextAppearance.Portal.Caption" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:textSize">11sp</item>
+        <item name="android:lineHeight">14sp</item>
+        <item name="fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+        <item name="android:letterSpacing">0.04</item>
+    </style><style name="TextAppearance.Portal.Overline" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:textSize">10sp</item>
+        <item name="android:lineHeight">14sp</item>
+        <item name="fontFamily">sans-serif-medium</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.15</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+    </style><style name="TextAppearance.Portal.Button" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineHeight">20sp</item>
+        <item name="fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">0.01</item>
+        <item name="android:textAllCaps">false</item>
+    </style><style name="TextAppearance.Portal.Status" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textSize">13sp</item>
+        <item name="android:lineHeight">18sp</item>
+        <item name="fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style><style name="TextAppearance.Portal.Code" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textSize">13sp</item>
+        <item name="android:lineHeight">18sp</item>
+        <item name="fontFamily">monospace</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:letterSpacing">0</item>
+    </style><style name="TextAppearance.Portal.Accent" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineHeight">20sp</item>
+        <item name="fontFamily">sans-serif-medium</item>
         <item name="android:textColor">@color/accent_blue</item>
-        <item name="backgroundTint">@color/accent_blue_container</item>
+        <item name="android:letterSpacing">0.01</item>
+    </style><style name="Widget.Portal.Button.Base" parent="Widget.Material3.Button">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:letterSpacing">0.01</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style><style name="Widget.Portal.Button.Primary" parent="Widget.Portal.Button.Base">
+        <item name="android:textColor">@color/background_dark</item>
+        <item name="backgroundTint">@color/button_primary_selector</item>
+        <item name="rippleColor">@color/button_ripple_primary</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingStart">24dp</item>
+        <item name="android:paddingEnd">24dp</item>
+        <item name="iconTint">@color/background_dark</item>
+        <item name="iconPadding">8dp</item>
+        <item name="elevation">0dp</item>
+    </style><style name="Widget.Portal.Button.Primary.Small">
         <item name="android:minHeight">36dp</item>
-        <item name="cornerRadius">18dp</item>
         <item name="android:paddingStart">16dp</item>
         <item name="android:paddingEnd">16dp</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:textSize">13sp</item>
+    </style><style name="Widget.Portal.Button.Primary.Large">
+        <item name="android:minHeight">56dp</item>
+        <item name="android:paddingStart">32dp</item>
+        <item name="android:paddingEnd">32dp</item>
+        <item name="cornerRadius">20dp</item>
+        <item name="android:textSize">16sp</item>
+    </style><style name="Widget.Portal.Button.Secondary" parent="Widget.Portal.Button.Base">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="backgroundTint">@color/button_secondary_selector</item>
+        <item name="rippleColor">@color/button_ripple_secondary</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingStart">24dp</item>
+        <item name="android:paddingEnd">24dp</item>
+        <item name="iconTint">@color/icon_secondary</item>
+        <item name="iconPadding">8dp</item>
+        <item name="elevation">0dp</item>
+    </style><style name="Widget.Portal.Button.Tonal" parent="Widget.Material3.Button.TonalButton">
+        <item name="android:textColor">@color/accent_blue</item>
+        <item name="backgroundTint">@color/button_tonal_selector</item>
+        <item name="rippleColor">@color/button_ripple_tonal</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:minHeight">40dp</item>
+        <item name="cornerRadius">20dp</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
         <item name="android:textAllCaps">false</item>
+        <item name="android:letterSpacing">0.01</item>
+        <item name="iconTint">@color/accent_blue</item>
+        <item name="iconPadding">8dp</item>
+    </style><style name="Widget.Portal.Button.Tonal.Small">
+        <item name="android:minHeight">32dp</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:textSize">12sp</item>
+    </style><style name="Widget.Portal.Button.Tonal.Secondary" parent="Widget.Portal.Button.Tonal">
+        <item name="android:textColor">@color/accent_cyan</item>
+        <item name="backgroundTint">@color/accent_cyan_container</item>
+        <item name="iconTint">@color/accent_cyan</item>
+    </style><style name="Widget.Portal.Button.Tonal.Success" parent="Widget.Portal.Button.Tonal">
+        <item name="android:textColor">@color/accent_green</item>
+        <item name="backgroundTint">@color/accent_green_container</item>
+        <item name="iconTint">@color/accent_green</item>
+    </style><style name="Widget.Portal.Button.Tonal.Warning" parent="Widget.Portal.Button.Tonal">
+        <item name="android:textColor">@color/accent_orange</item>
+        <item name="backgroundTint">@color/accent_orange_container</item>
+        <item name="iconTint">@color/accent_orange</item>
     </style><style name="Widget.Portal.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:textColor">@color/text_secondary</item>
+        <item name="strokeColor">@color/button_outlined_stroke_selector</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="rippleColor">@color/button_ripple_outlined</item>
+        <item name="iconTint">@color/text_secondary</item>
+        <item name="iconPadding">8dp</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:letterSpacing">0.01</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style><style name="Widget.Portal.Button.Outlined.Small">
+        <item name="android:minHeight">36dp</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:textSize">13sp</item>
+    </style><style name="Widget.Portal.Button.Outlined.Primary" parent="Widget.Portal.Button.Outlined">
+        <item name="android:textColor">@color/accent_blue</item>
+        <item name="strokeColor">@color/accent_blue</item>
+        <item name="iconTint">@color/accent_blue</item>
+    </style><style name="Widget.Portal.Button.Text" parent="Widget.Material3.Button.TextButton">
+        <item name="android:textColor">@color/accent_blue</item>
+        <item name="rippleColor">@color/button_ripple_text</item>
+        <item name="iconTint">@color/accent_blue</item>
+        <item name="iconPadding">8dp</item>
+        <item name="android:minHeight">40dp</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:letterSpacing">0.01</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style><style name="Widget.Portal.Button.Text.Secondary" parent="Widget.Portal.Button.Text">
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="iconTint">@color/text_secondary</item>
+    </style><style name="Widget.Portal.Button.Danger" parent="Widget.Portal.Button.Base">
+        <item name="android:textColor">@color/background_dark</item>
+        <item name="backgroundTint">@color/button_danger_selector</item>
+        <item name="rippleColor">@color/button_ripple_danger</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingStart">24dp</item>
+        <item name="android:paddingEnd">24dp</item>
+        <item name="iconTint">@color/background_dark</item>
+        <item name="iconPadding">8dp</item>
+    </style><style name="Widget.Portal.Button.Danger.Tonal" parent="Widget.Portal.Button.Tonal">
+        <item name="android:textColor">@color/accent_red</item>
+        <item name="backgroundTint">@color/accent_red_container</item>
+        <item name="iconTint">@color/accent_red</item>
+    </style><style name="Widget.Portal.Button.Danger.Outlined" parent="Widget.Portal.Button.Outlined">
+        <item name="android:textColor">@color/accent_red</item>
+        <item name="strokeColor">@color/accent_red</item>
+        <item name="iconTint">@color/accent_red</item>
+    </style><style name="Widget.Portal.IconButton" parent="Widget.Material3.Button.IconButton">
+        <item name="iconTint">@color/icon_secondary</item>
+        <item name="rippleColor">@color/button_ripple_icon</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="iconSize">24dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:padding">12dp</item>
+    </style><style name="Widget.Portal.IconButton.Small">
+        <item name="android:minWidth">36dp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="iconSize">20dp</item>
+        <item name="android:padding">8dp</item>
+    </style><style name="Widget.Portal.IconButton.Large">
+        <item name="android:minWidth">56dp</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="iconSize">28dp</item>
+        <item name="android:padding">14dp</item>
+    </style><style name="Widget.Portal.IconButton.Primary" parent="Widget.Portal.IconButton">
+        <item name="iconTint">@color/accent_blue</item>
+    </style><style name="Widget.Portal.IconButton.Filled" parent="Widget.Material3.Button.IconButton.Filled">
+        <item name="iconTint">@color/background_dark</item>
+        <item name="backgroundTint">@color/button_primary_selector</item>
+        <item name="rippleColor">@color/button_ripple_primary</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="iconSize">24dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+    </style><style name="Widget.Portal.IconButton.FilledTonal" parent="Widget.Material3.Button.IconButton.Filled.Tonal">
+        <item name="iconTint">@color/accent_blue</item>
+        <item name="backgroundTint">@color/button_tonal_selector</item>
+        <item name="rippleColor">@color/button_ripple_tonal</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="iconSize">24dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+    </style><style name="Widget.Portal.IconButton.Outlined" parent="Widget.Material3.Button.IconButton.Outlined">
+        <item name="iconTint">@color/icon_secondary</item>
         <item name="strokeColor">@color/border_default</item>
         <item name="strokeWidth">1dp</item>
-        <item name="iconTint">@color/text_secondary</item>
-        <item name="cornerRadius">16dp</item>
-        <item name="android:textAllCaps">false</item>
-    </style><style name="Widget.Portal.Button.Primary" parent="Widget.Material3.Button">
-        <item name="android:textColor">@color/background_dark</item>
+        <item name="rippleColor">@color/button_ripple_outlined</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="iconSize">24dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetRight">0dp</item>
+    </style><style name="Widget.Portal.FAB" parent="Widget.Material3.FloatingActionButton.Primary">
         <item name="backgroundTint">@color/accent_blue</item>
-        <item name="cornerRadius">16dp</item>
+        <item name="tint">@color/background_dark</item>
+        <item name="rippleColor">@color/button_ripple_primary</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Portal.FAB</item>
+        <item name="elevation">4dp</item>
+        <item name="hoveredFocusedTranslationZ">2dp</item>
+        <item name="pressedTranslationZ">4dp</item>
+    </style><style name="Widget.Portal.FAB.Small" parent="Widget.Material3.FloatingActionButton.Small">
+        <item name="backgroundTint">@color/accent_blue</item>
+        <item name="tint">@color/background_dark</item>
+        <item name="rippleColor">@color/button_ripple_primary</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Portal.FAB.Small</item>
+    </style><style name="Widget.Portal.FAB.Large" parent="Widget.Material3.FloatingActionButton.Large">
+        <item name="backgroundTint">@color/accent_blue</item>
+        <item name="tint">@color/background_dark</item>
+        <item name="rippleColor">@color/button_ripple_primary</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Portal.FAB.Large</item>
+    </style><style name="Widget.Portal.FAB.Secondary" parent="Widget.Portal.FAB">
+        <item name="backgroundTint">@color/surface_container</item>
+        <item name="tint">@color/accent_blue</item>
+        <item name="rippleColor">@color/button_ripple_secondary</item>
+    </style><style name="Widget.Portal.FAB.Tertiary" parent="Widget.Portal.FAB">
+        <item name="backgroundTint">@color/accent_purple</item>
+        <item name="tint">@color/background_dark</item>
+    </style><style name="Widget.Portal.ExtendedFAB" parent="Widget.Material3.ExtendedFloatingActionButton.Primary">
+        <item name="backgroundTint">@color/accent_blue</item>
+        <item name="android:textColor">@color/background_dark</item>
+        <item name="iconTint">@color/background_dark</item>
+        <item name="rippleColor">@color/button_ripple_primary</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Portal.FAB</item>
         <item name="android:textAllCaps">false</item>
-    </style></file><file path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/res/values/strings.xml" qualifiers=""><string name="app_name">Agent Portal</string><string name="accessibility_service_description">Enables AI agent to read and interact with UI elements on screen for automation purposes.</string><string name="keyboard_label">Agent Portal Keyboard</string><string name="status_accessibility_enabled">Accessibility Service: ENABLED</string><string name="status_accessibility_disabled">Accessibility Service: DISABLED</string><string name="status_server_running">HTTP Server: Running on port %d</string><string name="status_server_stopped">HTTP Server: Stopped</string><string name="status_keyboard_enabled">Keyboard: ENABLED</string><string name="status_keyboard_disabled">Keyboard: DISABLED</string><string name="btn_enable_accessibility">Enable Accessibility</string><string name="btn_start_server">Start Server</string><string name="btn_stop_server">Stop Server</string><string name="btn_enable_keyboard">Enable Keyboard</string><string name="notification_channel_name">Agent Portal Service</string><string name="notification_title">Agent Portal Active</string><string name="notification_text">Listening for agent commands</string></file><file path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/res/values/ic_launcher_background.xml" qualifiers=""><color name="ic_launcher_background">#1A73E8</color></file><file name="accessibility_service_config" path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/res/xml/accessibility_service_config.xml" qualifiers="" type="xml"/><file name="keyboard_method" path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/res/xml/keyboard_method.xml" qualifiers="" type="xml"/><file name="ic_launcher" path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" qualifiers="anydpi-v26" type="mipmap"/><file name="ic_launcher_round" path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" qualifiers="anydpi-v26" type="mipmap"/></source></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="debug$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/debug/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="debug" generated-set="debug$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/src/debug/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/build/generated/res/resValues/debug"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated" generated-set="generated$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/hainc/duan/agent/droidrun-controller/portal-apk/app/build/generated/res/resValues/debug"/></dataSet><mergedItems><configuration qualifiers=""><declare-styleable name="AlertDialog">
+        <item name="android:letterSpacing">0.01</item>
+    </style><style name="ShapeAppearance.Portal.FAB" parent="ShapeAppearance.Material3.Corner.Full">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style><style name="ShapeAppearance.Portal.FAB.Small" parent="ShapeAppearance.Portal.FAB">
+        <item name="cornerSize">12dp</item>
+    </style><style name="ShapeAppearance.Portal.FAB.Large" parent="ShapeAppearance.Portal.FAB">
+        <item name="cornerSize">28dp</item>
+    </style></file><file path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/values/strings.xml" qualifiers=""><string name="app_name">Agent Portal</string><string name="accessibility_service_description">Enables AI agent to read and interact with UI elements on screen for automation purposes.</string><string name="keyboard_label">Agent Portal Keyboard</string><string name="status_accessibility_enabled">Accessibility Service: ENABLED</string><string name="status_accessibility_disabled">Accessibility Service: DISABLED</string><string name="status_server_running">HTTP Server: Running on port %d</string><string name="status_server_stopped">HTTP Server: Stopped</string><string name="status_keyboard_enabled">Keyboard: ENABLED</string><string name="status_keyboard_disabled">Keyboard: DISABLED</string><string name="btn_enable_accessibility">Enable Accessibility</string><string name="btn_start_server">Start Server</string><string name="btn_stop_server">Stop Server</string><string name="btn_enable_keyboard">Enable Keyboard</string><string name="notification_channel_name">Agent Portal Service</string><string name="notification_title">Agent Portal Active</string><string name="notification_text">Listening for agent commands</string></file><file path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/values/ic_launcher_background.xml" qualifiers=""><color name="ic_launcher_background">#1A73E8</color></file><file name="accessibility_service_config" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/xml/accessibility_service_config.xml" qualifiers="" type="xml"/><file name="keyboard_method" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/xml/keyboard_method.xml" qualifiers="" type="xml"/><file name="ic_launcher" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" qualifiers="anydpi-v26" type="mipmap"/><file name="ic_launcher_round" path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" qualifiers="anydpi-v26" type="mipmap"/></source></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="debug$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/debug/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="debug" generated-set="debug$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/src/debug/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/build/generated/res/resValues/debug"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated" generated-set="generated$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/Users/hainc/duan/agent/.worktrees/003-improve-apk-ui-design/droidrun-controller/portal-apk/app/build/generated/res/resValues/debug"/></dataSet><mergedItems><configuration qualifiers=""><declare-styleable name="AlertDialog">
         <attr name="android:layout"/>
         <attr format="reference" name="buttonPanelSideLayout"/>
         <attr format="reference" name="listLayout"/>
