@@ -218,10 +218,12 @@ class UserResource extends Resource
 
                     Tables\Actions\DeleteAction::make()
                         ->before(function (User $record, Tables\Actions\DeleteAction $action) {
-                            if (self::isLastAdmin($record)) {
+                            if (self::isProtectedFromDeletion($record)) {
+                                $message = self::getProtectionMessage($record);
+
                                 Notification::make()
-                                    ->title('Cannot delete the last admin user')
-                                    ->body('There must be at least one admin user in the system.')
+                                    ->title('Deletion Not Allowed')
+                                    ->body($message)
                                     ->danger()
                                     ->send();
 
@@ -234,8 +236,40 @@ class UserResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
                         ->before(function (\Illuminate\Database\Eloquent\Collection $records, Tables\Actions\DeleteBulkAction $action) {
+                            $idsToDelete = $records->pluck('id');
+
+                            // Check for super admin protection
+                            $superAdminRoles = ['super_admin', 'super-admin'];
+                            $remainingSuperAdmins = User::whereNotIn('id', $idsToDelete)
+                                ->whereHas('roles', function (Builder $q) use ($superAdminRoles) {
+                                    $q->whereIn('name', $superAdminRoles);
+                                })
+                                ->count();
+
+                            $deletingAnySuperAdmin = $records->contains(function (User $user) use ($superAdminRoles) {
+                                foreach ($superAdminRoles as $role) {
+                                    if ($user->hasRole($role)) {
+                                        return true;
+                                    }
+                                }
+                                return false;
+                            });
+
+                            if ($remainingSuperAdmins === 0 && $deletingAnySuperAdmin) {
+                                Notification::make()
+                                    ->title('Cannot delete all super admin users')
+                                    ->body('This action would remove all super admin users from the system.')
+                                    ->danger()
+                                    ->send();
+
+                                $action->cancel();
+
+                                return;
+                            }
+
+                            // Check for admin protection
                             $adminRole = 'admin';
-                            $remainingAdmins = User::role($adminRole)->whereNotIn('id', $records->pluck('id'))->count();
+                            $remainingAdmins = User::role($adminRole)->whereNotIn('id', $idsToDelete)->count();
 
                             if ($remainingAdmins === 0 && $records->contains(fn (User $user) => $user->hasRole($adminRole))) {
                                 Notification::make()
@@ -324,6 +358,63 @@ class UserResource extends Resource
         }
 
         return User::role('admin')->count() <= 1;
+    }
+
+    /**
+     * Check if this is the last super admin user.
+     * Checks both 'super_admin' and 'super-admin' role naming conventions.
+     */
+    protected static function isLastSuperAdmin(User $user): bool
+    {
+        $superAdminRoles = ['super_admin', 'super-admin'];
+
+        // Check if user has any super admin role
+        $hasSuperAdminRole = false;
+        foreach ($superAdminRoles as $role) {
+            if ($user->hasRole($role)) {
+                $hasSuperAdminRole = true;
+                break;
+            }
+        }
+
+        if (!$hasSuperAdminRole) {
+            return false;
+        }
+
+        // Count remaining super admins
+        $remainingSuperAdmins = User::where(function (Builder $query) use ($superAdminRoles) {
+            foreach ($superAdminRoles as $role) {
+                $query->orWhereHas('roles', function (Builder $q) use ($role) {
+                    $q->where('name', $role);
+                });
+            }
+        })->count();
+
+        return $remainingSuperAdmins <= 1;
+    }
+
+    /**
+     * Check if user is protected from deletion (last admin or last super admin).
+     */
+    protected static function isProtectedFromDeletion(User $user): bool
+    {
+        return self::isLastAdmin($user) || self::isLastSuperAdmin($user);
+    }
+
+    /**
+     * Get protection message for user deletion.
+     */
+    protected static function getProtectionMessage(User $user): string
+    {
+        if (self::isLastSuperAdmin($user)) {
+            return 'Cannot delete the last super admin user. There must be at least one super admin in the system.';
+        }
+
+        if (self::isLastAdmin($user)) {
+            return 'Cannot delete the last admin user. There must be at least one admin in the system.';
+        }
+
+        return '';
     }
 
     /**
