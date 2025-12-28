@@ -1,11 +1,17 @@
 """Test configuration and fixtures."""
 
 import asyncio
+import sys
+from pathlib import Path
+
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
-from droidrun_controller.models import Base
+# Add parent directory to path to allow imports from app
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from app.database import Base
 
 
 @pytest.fixture(scope="session")

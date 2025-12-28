@@ -217,5 +217,43 @@ class WorkflowDB(Base):
         return len(steps_data)
 
 
+class UserDB(Base):
+    """SQLAlchemy ORM model for user authentication storage.
+
+    Stores user credentials for authentication. Passwords are stored as
+    bcrypt hashes, never in plain text.
+
+    Attributes:
+        id: Auto-incrementing integer primary key.
+        email: User email address (unique, indexed for fast lookups).
+        password_hash: Bcrypt hash of the user's password.
+        created_at: When the user account was created.
+    """
+    __tablename__ = "users"
+
+    # Primary key - auto-incrementing integer
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    # User credentials
+    email: Mapped[str] = mapped_column(
+        String(255),
+        unique=True,
+        index=True,
+        nullable=False
+    )
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        server_default=func.now(),
+        nullable=False
+    )
+
+    def __repr__(self) -> str:
+        return f"UserDB(id={self.id!r}, email={self.email!r})"
+
+
 # Alias for backward compatibility and simpler imports
 Workflow = WorkflowDB

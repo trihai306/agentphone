@@ -2,11 +2,19 @@
 
 import flet as ft
 from .theme import COLORS, get_theme, get_colors, set_theme_mode, get_theme_mode, SPACING, RADIUS, ANIMATION, get_shadow
-from .views import DevicesView, WorkflowsView, ExecutionsView, SettingsView, AgentRunnerView
+from .views import DevicesView, WorkflowsView, ExecutionsView, SettingsView, AgentRunnerView, LoginView, RegisterView
 from .views.analytics import AnalyticsView
 from .views.phone_viewer import PhoneViewerView
 from .components.toast import ToastManager
 from .backend import backend
+from .services.auth_service import get_auth_service, AuthResult
+from .utils.auth import verify_access_token
+
+
+# Storage keys for session persistence
+SESSION_TOKEN_KEY = "droidrun.auth.token"
+SESSION_EMAIL_KEY = "droidrun.auth.email"
+SESSION_USER_ID_KEY = "droidrun.auth.user_id"
 
 
 class DroidrunApp:
@@ -34,10 +42,20 @@ class DroidrunApp:
         self.sidebar_visible = True
         self._current_width = 1440
 
+        # Authentication state
+        self._is_authenticated = False
+        self._auth_token: str | None = None
+        self._current_user_email: str | None = None
+        self._current_user_id: int | None = None
+        self._current_auth_view = "login"  # "login" or "register"
+        self._auth_service = get_auth_service()
+
         self._setup_page()
-        self._build_ui()
-        self.page.run_task(self._initialize)
+        # Start with auth UI, then check for stored session
+        self._build_auth_ui_initial()
         self.page.on_resized = self._on_resize
+        # Check for stored session after page is ready
+        self.page.run_task(self._restore_session)
 
     def _setup_page(self):
         """Configure the page settings."""
@@ -50,6 +68,188 @@ class DroidrunApp:
         self.page.window.min_height = 600
         self.page.window.width = 1440
         self.page.window.height = 900
+
+    def _build_auth_ui_initial(self):
+        """Build initial auth UI with loading state while checking session."""
+        self.page.controls.clear()
+        # Show a loading container initially
+        loading_container = ft.Container(
+            content=ft.Column(
+                [
+                    ft.ProgressRing(width=40, height=40),
+                    ft.Text("Loading...", color=COLORS["text_secondary"]),
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                alignment=ft.MainAxisAlignment.CENTER,
+                spacing=16,
+            ),
+            expand=True,
+            bgcolor=COLORS["bg_primary"],
+            alignment=ft.alignment.center,
+        )
+        self.page.add(loading_container)
+        self.page.update()
+
+    async def _restore_session(self):
+        """Restore session from client storage if a valid token exists."""
+        try:
+            # Check if we have a stored token
+            if self.page.client_storage.contains_key(SESSION_TOKEN_KEY):
+                token = self.page.client_storage.get(SESSION_TOKEN_KEY)
+
+                if token:
+                    # Verify the token is still valid (not expired)
+                    payload = verify_access_token(token)
+
+                    if payload:
+                        # Token is valid - restore session
+                        self._is_authenticated = True
+                        self._auth_token = token
+                        self._current_user_email = payload["email"]
+                        self._current_user_id = payload["user_id"]
+
+                        # Build main app UI
+                        self._build_app()
+                        self.toast.success("Welcome back!")
+                        return
+
+            # No valid session - show login page
+            self._build_app()
+
+        except Exception:
+            # On any error, clear storage and show login
+            self._clear_stored_session()
+            self._build_app()
+
+    def _build_app(self):
+        """Build the application - routes to auth or main UI based on authentication state."""
+        self.page.controls.clear()
+
+        if self._is_authenticated:
+            # Show main application UI
+            self._build_ui()
+            self.page.run_task(self._initialize)
+        else:
+            # Show authentication UI (login or register)
+            self._build_auth_ui()
+
+        self.page.update()
+
+    def _build_auth_ui(self):
+        """Build the authentication UI (login or register page)."""
+        if self._current_auth_view == "login":
+            auth_view = LoginView(
+                on_login=self._handle_login,
+                on_navigate_to_register=self._navigate_to_register,
+            )
+        else:
+            auth_view = RegisterView(
+                on_register=self._handle_register,
+                on_navigate_to_login=self._navigate_to_login,
+            )
+
+        # Wrap in a container with background
+        auth_container = ft.Container(
+            content=auth_view,
+            expand=True,
+            bgcolor=COLORS["bg_primary"],
+        )
+
+        self.page.add(auth_container)
+
+    async def _handle_login(self, email: str, password: str):
+        """Handle login attempt from LoginView.
+
+        Args:
+            email: The user's email address.
+            password: The user's password.
+        """
+        result = await self._auth_service.login(email, password)
+
+        if result.success:
+            # Update authentication state
+            self._is_authenticated = True
+            self._auth_token = result.token
+            self._current_user_email = result.email
+            self._current_user_id = result.user_id
+
+            # Store session in client storage for persistence
+            self._store_session(result.token, result.email, result.user_id)
+
+            # Rebuild UI to show main app
+            self._build_app()
+            self.toast.success("Welcome back!")
+        else:
+            # Show error in the login view
+            raise Exception(result.message)
+
+    async def _handle_register(self, email: str, password: str):
+        """Handle registration attempt from RegisterView.
+
+        Args:
+            email: The user's email address.
+            password: The user's password.
+        """
+        result = await self._auth_service.register(email, password)
+
+        if result.success:
+            # Registration successful - navigate to login
+            self._current_auth_view = "login"
+            self._build_app()
+            self.toast.success("Account created! Please sign in.")
+        else:
+            # Show error in the register view
+            raise Exception(result.message)
+
+    def _navigate_to_register(self):
+        """Navigate from login page to register page."""
+        self._current_auth_view = "register"
+        self._build_app()
+
+    def _navigate_to_login(self):
+        """Navigate from register page to login page."""
+        self._current_auth_view = "login"
+        self._build_app()
+
+    def logout(self):
+        """Logout the current user and return to login page."""
+        self._is_authenticated = False
+        self._auth_token = None
+        self._current_user_email = None
+        self._current_user_id = None
+        self._current_auth_view = "login"
+
+        # Clear stored session
+        self._clear_stored_session()
+
+        self._build_app()
+        self.toast.info("You have been logged out.")
+
+    def _store_session(self, token: str, email: str, user_id: int):
+        """Store authentication session in client storage for persistence.
+
+        Args:
+            token: JWT access token.
+            email: User's email address.
+            user_id: User's database ID.
+        """
+        try:
+            self.page.client_storage.set(SESSION_TOKEN_KEY, token)
+            self.page.client_storage.set(SESSION_EMAIL_KEY, email)
+            self.page.client_storage.set(SESSION_USER_ID_KEY, user_id)
+        except Exception:
+            # Storage might not be available, fail silently
+            pass
+
+    def _clear_stored_session(self):
+        """Clear stored authentication session from client storage."""
+        try:
+            self.page.client_storage.remove(SESSION_TOKEN_KEY)
+            self.page.client_storage.remove(SESSION_EMAIL_KEY)
+            self.page.client_storage.remove(SESSION_USER_ID_KEY)
+        except Exception:
+            # Storage might not be available, fail silently
+            pass
 
     def _build_ui(self):
         """Build the main UI layout."""
@@ -254,6 +454,24 @@ class DroidrunApp:
                             "settings", ft.Icons.SETTINGS_OUTLINED, ft.Icons.SETTINGS
                         ),
                         ft.Container(height=8),
+                        # Logout button - collapsed version
+                        ft.Container(
+                            content=ft.Icon(
+                                ft.Icons.LOGOUT,
+                                size=22,
+                                color=colors["error"],
+                            ),
+                            width=46,
+                            height=46,
+                            border_radius=RADIUS["md"],
+                            bgcolor="transparent",
+                            alignment=ft.alignment.center,
+                            animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
+                            on_hover=self._on_logout_hover,
+                            on_click=lambda _: self.logout(),
+                            tooltip="Logout",
+                        ),
+                        ft.Container(height=8),
                         collapse_toggle,
                     ],
                     spacing=0,
@@ -439,6 +657,34 @@ class DroidrunApp:
                         animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
                         on_click=lambda _: self.toast.info("Help coming soon..."),
                         on_hover=self._on_nav_hover_secondary,
+                    ),
+                    ft.Container(height=SPACING["sm"]),
+                    # Logout button - polished secondary nav item
+                    ft.Container(
+                        content=ft.Row(
+                            [
+                                ft.Container(
+                                    content=ft.Icon(ft.Icons.LOGOUT, size=18, color=colors["error"]),
+                                    width=36,
+                                    height=36,
+                                    border_radius=RADIUS["sm"],
+                                    alignment=ft.alignment.center,
+                                ),
+                                ft.Container(width=SPACING["sm"]),
+                                ft.Text(
+                                    "Logout",
+                                    size=13,
+                                    weight=ft.FontWeight.W_500,
+                                    color=colors["text_secondary"],
+                                ),
+                            ],
+                        ),
+                        padding=ft.padding.only(left=10, right=14, top=8, bottom=8),
+                        border_radius=RADIUS["md"],
+                        border=ft.border.all(1, "transparent"),
+                        animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
+                        on_click=lambda _: self.logout(),
+                        on_hover=self._on_logout_hover,
                     ),
                     ft.Container(height=SPACING["sm"]),
                     # Collapse toggle - polished
@@ -634,6 +880,17 @@ class DroidrunApp:
             e.control.border = ft.border.all(1, "transparent")
         e.control.update()
 
+    def _on_logout_hover(self, e):
+        """Handle logout button hover with error-tinted feedback."""
+        colors = COLORS
+        if e.data == "true":
+            e.control.bgcolor = f"{colors['error']}15"
+            e.control.border = ft.border.all(1, f"{colors['error']}30")
+        else:
+            e.control.bgcolor = "transparent"
+            e.control.border = ft.border.all(1, "transparent")
+        e.control.update()
+
     def _on_action_hover(self, e):
         """Handle action button hover with elevation effect."""
         colors = COLORS
@@ -671,9 +928,12 @@ class DroidrunApp:
         self.page.theme_mode = ft.ThemeMode.DARK if new_mode == "dark" else ft.ThemeMode.LIGHT
         self.page.bgcolor = COLORS["bg_primary"]
 
-        # Rebuild UI
+        # Rebuild UI - use _build_app to preserve auth state
         self.page.controls.clear()
-        self._build_ui()
+        if self._is_authenticated:
+            self._build_ui()
+        else:
+            self._build_auth_ui()
         self.page.update()
 
         self.toast.info(f"Switched to {new_mode} mode")
@@ -850,10 +1110,13 @@ class DroidrunApp:
 
         self._current_width = new_width
 
-        # Only rebuild if crossing a breakpoint
+        # Only rebuild if crossing a breakpoint and authenticated (main UI)
         if old_is_mobile != new_is_mobile or old_is_tablet != new_is_tablet:
             self.page.controls.clear()
-            self._build_ui()
+            if self._is_authenticated:
+                self._build_ui()
+            else:
+                self._build_auth_ui()
             self.page.update()
 
     async def _initialize(self):

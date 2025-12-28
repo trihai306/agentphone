@@ -1,6 +1,7 @@
 """Services for Droidrun Controller app."""
 
 from .ai_service import AIService
+from .auth_service import AuthResult, AuthService, get_auth_service, reset_auth_service
 from .screen_service import ScreenService, screen_service
 from .selector_generator import SelectorGenerator, get_selector_generator, selector_generator
 from .step_namer import StepNamer, get_step_namer, step_namer
@@ -17,6 +18,10 @@ from .replay_engine import (
 
 __all__ = [
     "AIService",
+    "AuthResult",
+    "AuthService",
+    "get_auth_service",
+    "reset_auth_service",
     "ScreenService",
     "screen_service",
     "SelectorGenerator",
