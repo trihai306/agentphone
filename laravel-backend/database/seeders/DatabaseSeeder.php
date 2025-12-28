@@ -2,23 +2,22 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
     /**
      * Seed the application's database.
+     *
+     * Seeders are called in the following order:
+     * 1. RolesAndPermissionsSeeder - Creates roles and permissions (required for admin user)
+     * 2. AdminUserSeeder - Creates default admin user with admin role
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'password' => bcrypt('password123'),
+        $this->call([
+            RolesAndPermissionsSeeder::class,
+            AdminUserSeeder::class,
         ]);
     }
 }
