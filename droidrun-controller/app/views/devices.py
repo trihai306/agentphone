@@ -35,6 +35,9 @@ class DevicesView(ft.Column):
             # Stats row
             self._build_stats_row(),
             ft.Container(height=28),
+            # Quick actions row
+            self._build_quick_actions_row(),
+            ft.Container(height=28),
             # Main content
             self._build_main_content(),
         ]
@@ -194,9 +197,34 @@ class DevicesView(ft.Column):
         e.control.update()
 
     def _build_stats_row(self):
-        """Build the enhanced stats cards row."""
+        """Build the enhanced stats cards row with device aggregated data."""
         total = len(self.devices)
         online = len([d for d in self.devices if d.get("status") == "connected"])
+
+        # Calculate aggregated device stats
+        total_battery = 0
+        total_storage_used = 0
+        total_storage_total = 0
+        devices_with_battery = 0
+        devices_with_storage = 0
+
+        for device in self.devices:
+            # Battery aggregation
+            battery = device.get("battery_level")
+            if battery is not None:
+                total_battery += battery
+                devices_with_battery += 1
+
+            # Storage aggregation
+            storage_used = device.get("storage_used")
+            storage_total = device.get("storage_total")
+            if storage_used is not None and storage_total is not None:
+                total_storage_used += storage_used
+                total_storage_total += storage_total
+                devices_with_storage += 1
+
+        avg_battery = round(total_battery / devices_with_battery) if devices_with_battery > 0 else 0
+        storage_percent = round((total_storage_used / total_storage_total) * 100) if total_storage_total > 0 else 0
 
         stats = [
             {
@@ -216,20 +244,20 @@ class DevicesView(ft.Column):
                 "trend": "up" if online > 0 else None,
             },
             {
-                "title": "Agent Runs",
-                "value": "12",
-                "subtitle": "Total executions today",
-                "icon": ft.Icons.SMART_TOY_OUTLINED,
-                "color": COLORS["accent_purple"],
-                "trend": "up",
+                "title": "Avg Battery",
+                "value": f"{avg_battery}%",
+                "subtitle": f"Across {devices_with_battery} device(s)",
+                "icon": ft.Icons.BATTERY_CHARGING_FULL_ROUNDED,
+                "color": COLORS["success"] if avg_battery > 50 else COLORS["warning"] if avg_battery > 20 else COLORS["error"],
+                "trend": "up" if avg_battery > 50 else "down" if avg_battery < 30 else None,
             },
             {
-                "title": "Success Rate",
-                "value": "85%",
-                "subtitle": "Last 24 hours",
-                "icon": ft.Icons.TRENDING_UP_ROUNDED,
-                "color": COLORS["success"],
-                "trend": "up",
+                "title": "Storage Used",
+                "value": f"{storage_percent}%",
+                "subtitle": f"Across {devices_with_storage} device(s)",
+                "icon": ft.Icons.STORAGE_ROUNDED,
+                "color": COLORS["error"] if storage_percent > 80 else COLORS["warning"] if storage_percent > 60 else COLORS["accent_purple"],
+                "trend": "up" if storage_percent > 80 else None,
             },
         ]
 
@@ -351,6 +379,146 @@ class DevicesView(ft.Column):
             e.control.shadow = get_shadow("xs")
             e.control.scale = 1.0
         e.control.update()
+
+    def _build_quick_actions_row(self):
+        """Build the quick actions row with action cards."""
+        online_count = len([d for d in self.devices if d.get("status") == "connected"])
+
+        actions = [
+            {
+                "title": "Scan for Devices",
+                "description": "Discover new Android devices",
+                "icon": ft.Icons.RADAR_ROUNDED,
+                "color": COLORS["primary"],
+                "action": "scan",
+            },
+            {
+                "title": "View All Devices",
+                "description": f"{len(self.devices)} device(s) available",
+                "icon": ft.Icons.PHONE_ANDROID_ROUNDED,
+                "color": COLORS["accent_blue"],
+                "action": "view_devices",
+            },
+            {
+                "title": "Quick Connect",
+                "description": "Connect via WiFi ADB",
+                "icon": ft.Icons.WIFI_ROUNDED,
+                "color": COLORS["accent_cyan"],
+                "action": "wifi_connect",
+            },
+            {
+                "title": "Run Agent",
+                "description": f"{online_count} device(s) ready",
+                "icon": ft.Icons.SMART_TOY_ROUNDED,
+                "color": COLORS["accent_purple"],
+                "action": "run_agent",
+            },
+        ]
+
+        cards = [self._build_quick_action_card(action) for action in actions]
+        return ft.Row(cards, spacing=16)
+
+    def _build_quick_action_card(self, action: dict):
+        """Build a single quick action card with hover effects."""
+        color = action["color"]
+
+        return ft.Container(
+            content=ft.Row(
+                [
+                    # Icon container
+                    ft.Container(
+                        content=ft.Icon(
+                            action["icon"],
+                            size=22,
+                            color=color,
+                        ),
+                        width=48,
+                        height=48,
+                        border_radius=RADIUS["lg"],
+                        bgcolor=f"{color}12",
+                        alignment=ft.alignment.center,
+                        border=ft.border.all(1, f"{color}20"),
+                    ),
+                    ft.Container(width=14),
+                    # Text content
+                    ft.Column(
+                        [
+                            ft.Text(
+                                action["title"],
+                                size=14,
+                                weight=ft.FontWeight.W_600,
+                                color=COLORS["text_primary"],
+                            ),
+                            ft.Text(
+                                action["description"],
+                                size=12,
+                                weight=ft.FontWeight.W_400,
+                                color=COLORS["text_muted"],
+                            ),
+                        ],
+                        spacing=2,
+                        expand=True,
+                    ),
+                    # Arrow indicator
+                    ft.Icon(
+                        ft.Icons.ARROW_FORWARD_IOS_ROUNDED,
+                        size=14,
+                        color=COLORS["text_muted"],
+                    ),
+                ],
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            bgcolor=COLORS["bg_card"],
+            border_radius=RADIUS["lg"],
+            padding=ft.padding.symmetric(horizontal=16, vertical=14),
+            border=ft.border.all(1, COLORS["border"]),
+            shadow=get_shadow("xs"),
+            expand=True,
+            animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
+            animate_scale=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
+            on_hover=lambda e, c=color: self._on_quick_action_hover(e, c),
+            on_click=lambda e, a=action["action"]: self._on_quick_action_click(a),
+            data={"color": color, "action": action["action"]},
+        )
+
+    def _on_quick_action_hover(self, e, color):
+        """Handle quick action card hover effect."""
+        if e.data == "true":
+            e.control.border = ft.border.all(1, f"{color}40")
+            e.control.shadow = ft.BoxShadow(
+                spread_radius=0,
+                blur_radius=20,
+                color=f"{color}20",
+                offset=ft.Offset(0, 6),
+            )
+            e.control.scale = 1.01
+        else:
+            e.control.border = ft.border.all(1, COLORS["border"])
+            e.control.shadow = get_shadow("xs")
+            e.control.scale = 1.0
+        e.control.update()
+
+    def _on_quick_action_click(self, action: str):
+        """Handle quick action card click."""
+        if action == "scan":
+            # Trigger device scan
+            if self.page:
+                self.page.run_task(self._on_refresh, None)
+        elif action == "view_devices":
+            # Navigate to phone viewer
+            if self.app_state and hasattr(self.app_state, 'navigate'):
+                self.app_state.navigate("phone_viewer")
+            elif self.page:
+                # Try to change tab through navigation
+                self.toast.info("Navigate to Phones tab to view all devices")
+        elif action == "wifi_connect":
+            # Show WiFi ADB connection info
+            self.toast.info("Use 'adb tcpip 5555' on connected device, then 'adb connect <IP>:5555'")
+        elif action == "run_agent":
+            if len([d for d in self.devices if d.get("status") == "connected"]) > 0:
+                self.toast.info("Select a device to run an agent")
+            else:
+                self.toast.warning("No online devices available")
 
     def _build_main_content(self):
         """Build the main content area."""

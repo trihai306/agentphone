@@ -2,7 +2,7 @@
 
 import flet as ft
 from typing import Optional, Callable
-from ..theme import get_colors, RADIUS, get_shadow
+from ..theme import get_colors, RADIUS, get_shadow, SPACING, ANIMATION
 
 
 class DeviceCard(ft.Container):
@@ -20,6 +20,17 @@ class DeviceCard(ft.Container):
         on_click: Optional[Callable] = None,
         on_select: Optional[Callable] = None,
         selected: bool = False,
+        # Extended device info
+        battery_level: Optional[int] = None,
+        storage_used: Optional[float] = None,
+        storage_total: Optional[float] = None,
+        ram_usage: Optional[int] = None,
+        # Quick action callbacks
+        on_view_details: Optional[Callable] = None,
+        on_screenshot: Optional[Callable] = None,
+        on_restart: Optional[Callable] = None,
+        on_clear_data: Optional[Callable] = None,
+        on_disconnect: Optional[Callable] = None,
     ):
         self.device_id = device_id
         self.device_name = device_name
@@ -31,6 +42,17 @@ class DeviceCard(ft.Container):
         self.on_card_click = on_click
         self.on_select = on_select
         self.selected = selected
+        # Extended info
+        self.battery_level = battery_level
+        self.storage_used = storage_used
+        self.storage_total = storage_total
+        self.ram_usage = ram_usage
+        # Quick action callbacks
+        self.on_view_details = on_view_details
+        self.on_screenshot = on_screenshot
+        self.on_restart = on_restart
+        self.on_clear_data = on_clear_data
+        self.on_disconnect = on_disconnect
 
         colors = get_colors()
         super().__init__(
@@ -165,6 +187,9 @@ class DeviceCard(ft.Container):
             alignment=ft.alignment.center,
         )
 
+        # Extended device info row (battery, storage, RAM)
+        extended_info = self._build_extended_info(colors)
+
         # Bottom action bar
         action_bar = ft.Container(
             content=ft.Row(
@@ -190,13 +215,8 @@ class DeviceCard(ft.Container):
                         tooltip="Refresh",
                         padding=4,
                     ),
-                    ft.IconButton(
-                        icon=ft.Icons.MORE_VERT,
-                        icon_size=16,
-                        icon_color=colors["text_muted"],
-                        tooltip="More",
-                        padding=4,
-                    ),
+                    # Quick actions context menu
+                    self._build_quick_actions_menu(colors),
                 ],
                 alignment=ft.MainAxisAlignment.SPACE_AROUND,
             ),
@@ -221,6 +241,7 @@ class DeviceCard(ft.Container):
                         device_info,
                         ft.Container(height=4),
                         preview,
+                        extended_info,
                         task_widget,
                         action_bar,
                     ],
@@ -254,9 +275,178 @@ class DeviceCard(ft.Container):
             self.shadow = get_shadow("sm") if self.selected else get_shadow("xs")
         self.update()
 
+    def _build_quick_actions_menu(self, colors):
+        """Build the quick actions popup menu.
+
+        Args:
+            colors: Theme colors dictionary
+
+        Returns:
+            PopupMenuButton with device action options
+        """
+        menu_items = [
+            ft.PopupMenuItem(
+                content=ft.Row(
+                    [
+                        ft.Icon(ft.Icons.INFO_OUTLINE, size=16, color=colors["text_secondary"]),
+                        ft.Text("View Details", size=12, color=colors["text_primary"]),
+                    ],
+                    spacing=8,
+                ),
+                on_click=lambda e: self.on_view_details(self.device_id) if self.on_view_details else None,
+            ),
+            ft.PopupMenuItem(),  # Divider
+            ft.PopupMenuItem(
+                content=ft.Row(
+                    [
+                        ft.Icon(ft.Icons.SCREENSHOT_MONITOR, size=16, color=colors["accent_blue"]),
+                        ft.Text("Take Screenshot", size=12, color=colors["text_primary"]),
+                    ],
+                    spacing=8,
+                ),
+                on_click=lambda e: self.on_screenshot(self.device_id) if self.on_screenshot else None,
+            ),
+            ft.PopupMenuItem(
+                content=ft.Row(
+                    [
+                        ft.Icon(ft.Icons.RESTART_ALT, size=16, color=colors["warning"]),
+                        ft.Text("Restart Device", size=12, color=colors["text_primary"]),
+                    ],
+                    spacing=8,
+                ),
+                on_click=lambda e: self.on_restart(self.device_id) if self.on_restart else None,
+            ),
+            ft.PopupMenuItem(
+                content=ft.Row(
+                    [
+                        ft.Icon(ft.Icons.DELETE_SWEEP, size=16, color=colors["warning"]),
+                        ft.Text("Clear App Data", size=12, color=colors["text_primary"]),
+                    ],
+                    spacing=8,
+                ),
+                on_click=lambda e: self.on_clear_data(self.device_id) if self.on_clear_data else None,
+            ),
+            ft.PopupMenuItem(),  # Divider
+            ft.PopupMenuItem(
+                content=ft.Row(
+                    [
+                        ft.Icon(ft.Icons.POWER_SETTINGS_NEW, size=16, color=colors["error"]),
+                        ft.Text("Disconnect", size=12, color=colors["error"]),
+                    ],
+                    spacing=8,
+                ),
+                on_click=lambda e: self.on_disconnect(self.device_id) if self.on_disconnect else None,
+            ),
+        ]
+
+        return ft.PopupMenuButton(
+            icon=ft.Icons.MORE_VERT,
+            icon_size=16,
+            icon_color=colors["text_muted"],
+            tooltip="More actions",
+            items=menu_items,
+            menu_position=ft.PopupMenuPosition.UNDER,
+        )
+
+    def _build_extended_info(self, colors):
+        """Build extended device info row (battery, storage, RAM).
+
+        Args:
+            colors: Theme colors dictionary
+
+        Returns:
+            Container with compact info row showing battery, storage, RAM
+        """
+        info_items = []
+
+        # Battery level with icon
+        if self.battery_level is not None:
+            battery_icon = ft.Icons.BATTERY_FULL if self.battery_level >= 80 else (
+                ft.Icons.BATTERY_5_BAR if self.battery_level >= 50 else (
+                    ft.Icons.BATTERY_3_BAR if self.battery_level >= 20 else ft.Icons.BATTERY_1_BAR
+                )
+            )
+            battery_color = colors["success"] if self.battery_level >= 50 else (
+                colors["warning"] if self.battery_level >= 20 else colors["error"]
+            )
+            info_items.append(
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Icon(battery_icon, size=12, color=battery_color),
+                            ft.Text(
+                                f"{self.battery_level}%",
+                                size=9,
+                                color=colors["text_muted"],
+                            ),
+                        ],
+                        spacing=2,
+                    ),
+                    tooltip=f"Battery: {self.battery_level}%",
+                )
+            )
+
+        # Storage info
+        if self.storage_used is not None and self.storage_total is not None:
+            storage_pct = int((self.storage_used / self.storage_total) * 100) if self.storage_total > 0 else 0
+            storage_color = colors["success"] if storage_pct < 70 else (
+                colors["warning"] if storage_pct < 90 else colors["error"]
+            )
+            info_items.append(
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Icon(ft.Icons.STORAGE, size=12, color=storage_color),
+                            ft.Text(
+                                f"{storage_pct}%",
+                                size=9,
+                                color=colors["text_muted"],
+                            ),
+                        ],
+                        spacing=2,
+                    ),
+                    tooltip=f"Storage: {self.storage_used:.1f}GB / {self.storage_total:.1f}GB ({storage_pct}%)",
+                )
+            )
+
+        # RAM usage
+        if self.ram_usage is not None:
+            ram_color = colors["success"] if self.ram_usage < 70 else (
+                colors["warning"] if self.ram_usage < 90 else colors["error"]
+            )
+            info_items.append(
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Icon(ft.Icons.MEMORY, size=12, color=ram_color),
+                            ft.Text(
+                                f"{self.ram_usage}%",
+                                size=9,
+                                color=colors["text_muted"],
+                            ),
+                        ],
+                        spacing=2,
+                    ),
+                    tooltip=f"RAM Usage: {self.ram_usage}%",
+                )
+            )
+
+        # Return empty container if no extended info available
+        if not info_items:
+            return ft.Container(height=0)
+
+        return ft.Container(
+            content=ft.Row(
+                info_items,
+                alignment=ft.MainAxisAlignment.SPACE_AROUND,
+                spacing=4,
+            ),
+            padding=ft.padding.symmetric(horizontal=8, vertical=2),
+        )
+
 
 class DeviceGridToolbar(ft.Container):
-    """Toolbar for device grid with action buttons."""
+    """Toolbar for device grid with action buttons and bulk operations."""
 
     def __init__(
         self,
@@ -266,6 +456,12 @@ class DeviceGridToolbar(ft.Container):
         on_functions: Optional[Callable] = None,
         on_copy: Optional[Callable] = None,
         on_refresh: Optional[Callable] = None,
+        # Bulk action callbacks
+        on_screenshot_all: Optional[Callable] = None,
+        on_restart_selected: Optional[Callable] = None,
+        on_clear_data: Optional[Callable] = None,
+        on_disconnect_all: Optional[Callable] = None,
+        selected_count: int = 0,
     ):
         self.on_automate = on_automate
         self.on_proxy = on_proxy
@@ -273,6 +469,12 @@ class DeviceGridToolbar(ft.Container):
         self.on_functions = on_functions
         self.on_copy = on_copy
         self.on_refresh = on_refresh
+        # Bulk action callbacks
+        self.on_screenshot_all = on_screenshot_all
+        self.on_restart_selected = on_restart_selected
+        self.on_clear_data = on_clear_data
+        self.on_disconnect_all = on_disconnect_all
+        self._selected_count = selected_count
 
         colors = get_colors()
         super().__init__(
@@ -285,45 +487,53 @@ class DeviceGridToolbar(ft.Container):
     def _build_content(self):
         """Build toolbar content."""
         colors = get_colors()
+
+        # Left side - Action buttons (always visible)
+        left_actions = ft.Row(
+            [
+                self._build_action_button(
+                    "Automate",
+                    ft.Icons.PLAY_CIRCLE_OUTLINE,
+                    colors["primary"],
+                    self.on_automate,
+                    primary=True,
+                ),
+                self._build_action_button(
+                    "Proxy Data",
+                    ft.Icons.VPN_KEY_OUTLINED,
+                    colors["text_secondary"],
+                    self.on_proxy,
+                ),
+                self._build_action_button(
+                    "Change Device",
+                    ft.Icons.SWAP_HORIZ,
+                    colors["text_secondary"],
+                    self.on_change_device,
+                ),
+                self._build_action_button(
+                    "Functions",
+                    ft.Icons.TUNE,
+                    colors["text_secondary"],
+                    self.on_functions,
+                ),
+                self._build_action_button(
+                    "Copy",
+                    ft.Icons.CONTENT_COPY,
+                    colors["text_secondary"],
+                    self.on_copy,
+                ),
+            ],
+            spacing=8,
+        )
+
+        # Bulk actions (shown when devices are selected)
+        bulk_actions = self._build_bulk_actions(colors) if self._selected_count > 0 else ft.Container()
+
         return ft.Row(
             [
-                # Left side - Action buttons
-                ft.Row(
-                    [
-                        self._build_action_button(
-                            "Automate",
-                            ft.Icons.PLAY_CIRCLE_OUTLINE,
-                            colors["primary"],
-                            self.on_automate,
-                            primary=True,
-                        ),
-                        self._build_action_button(
-                            "Proxy Data",
-                            ft.Icons.VPN_KEY_OUTLINED,
-                            colors["text_secondary"],
-                            self.on_proxy,
-                        ),
-                        self._build_action_button(
-                            "Change Device",
-                            ft.Icons.SWAP_HORIZ,
-                            colors["text_secondary"],
-                            self.on_change_device,
-                        ),
-                        self._build_action_button(
-                            "Functions",
-                            ft.Icons.TUNE,
-                            colors["text_secondary"],
-                            self.on_functions,
-                        ),
-                        self._build_action_button(
-                            "Copy",
-                            ft.Icons.CONTENT_COPY,
-                            colors["text_secondary"],
-                            self.on_copy,
-                        ),
-                    ],
-                    spacing=8,
-                ),
+                left_actions,
+                ft.Container(width=16),  # Spacer
+                bulk_actions,
                 ft.Container(expand=True),
                 # Right side - Refresh
                 ft.IconButton(
@@ -389,3 +599,134 @@ class DeviceGridToolbar(ft.Container):
         else:
             e.control.bgcolor = colors["primary"]
         e.control.update()
+
+    def _build_bulk_actions(self, colors):
+        """Build bulk action buttons shown when devices are selected.
+
+        Args:
+            colors: Theme colors dictionary
+
+        Returns:
+            Container with bulk action buttons and selection indicator
+        """
+        return ft.Container(
+            content=ft.Row(
+                [
+                    # Selection indicator
+                    ft.Container(
+                        content=ft.Row(
+                            [
+                                ft.Icon(ft.Icons.CHECK_CIRCLE, size=14, color=colors["primary"]),
+                                ft.Text(
+                                    f"{self._selected_count} selected",
+                                    size=12,
+                                    weight=ft.FontWeight.W_500,
+                                    color=colors["primary"],
+                                ),
+                            ],
+                            spacing=4,
+                        ),
+                        padding=ft.padding.symmetric(horizontal=8, vertical=4),
+                        border_radius=RADIUS["sm"],
+                        bgcolor=colors["primary_glow"],
+                    ),
+                    ft.Container(width=8),
+                    # Bulk action buttons
+                    self._build_bulk_button(
+                        "Screenshot All",
+                        ft.Icons.SCREENSHOT_MONITOR,
+                        colors["accent_blue"],
+                        lambda e: self.on_screenshot_all() if self.on_screenshot_all else None,
+                    ),
+                    self._build_bulk_button(
+                        "Restart",
+                        ft.Icons.RESTART_ALT,
+                        colors["warning"],
+                        lambda e: self.on_restart_selected() if self.on_restart_selected else None,
+                    ),
+                    self._build_bulk_button(
+                        "Clear Data",
+                        ft.Icons.DELETE_SWEEP,
+                        colors["warning"],
+                        lambda e: self.on_clear_data() if self.on_clear_data else None,
+                    ),
+                    self._build_bulk_button(
+                        "Disconnect",
+                        ft.Icons.POWER_SETTINGS_NEW,
+                        colors["error"],
+                        lambda e: self.on_disconnect_all() if self.on_disconnect_all else None,
+                    ),
+                ],
+                spacing=6,
+            ),
+            padding=ft.padding.symmetric(horizontal=8, vertical=4),
+            border_radius=RADIUS["md"],
+            bgcolor=colors["bg_secondary"],
+            border=ft.border.all(1, colors["border"]),
+            animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
+        )
+
+    def _build_bulk_button(
+        self,
+        label: str,
+        icon: str,
+        color: str,
+        on_click: Optional[Callable],
+    ):
+        """Build a compact bulk action button.
+
+        Args:
+            label: Button text
+            icon: Icon to display
+            color: Icon/text color
+            on_click: Click callback
+
+        Returns:
+            Container styled as a compact action button
+        """
+        colors = get_colors()
+        return ft.Container(
+            content=ft.Row(
+                [
+                    ft.Icon(icon, size=14, color=color),
+                    ft.Text(
+                        label,
+                        size=11,
+                        weight=ft.FontWeight.W_500,
+                        color=color,
+                    ),
+                ],
+                spacing=4,
+            ),
+            padding=ft.padding.symmetric(horizontal=8, vertical=4),
+            border_radius=RADIUS["sm"],
+            on_click=on_click,
+            on_hover=self._on_bulk_button_hover,
+        )
+
+    def _on_bulk_button_hover(self, e):
+        """Handle bulk button hover."""
+        colors = get_colors()
+        if e.data == "true":
+            e.control.bgcolor = colors["bg_hover"]
+        else:
+            e.control.bgcolor = "transparent"
+        e.control.update()
+
+    def update_selected_count(self, count: int):
+        """Update the selected device count and rebuild toolbar.
+
+        Args:
+            count: Number of selected devices
+        """
+        self._selected_count = count
+        self.content = self._build_content()
+        self.update()
+
+    def get_selected_count(self) -> int:
+        """Get current selected device count.
+
+        Returns:
+            Number of selected devices
+        """
+        return self._selected_count
