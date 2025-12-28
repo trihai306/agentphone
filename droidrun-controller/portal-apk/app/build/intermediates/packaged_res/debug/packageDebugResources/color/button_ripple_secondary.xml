@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Secondary button ripple color -->
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:color="@color/border_default" android:state_pressed="true"/>
-    <item android:color="@color/border_default"/>
-</selector>

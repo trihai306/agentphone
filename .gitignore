@@ -19,3 +19,24 @@ __pycache__/
 
 # Git worktrees
 .worktrees/
+
+# Android / Gradle
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+*.apk
+*.aab
+captures/
+.externalNativeBuild/
+.cxx/
+*.swp
+
+# Flet
+flet-build/
+storage.db
+
+# OS specific
+.DS_Store
+Thumbs.db
