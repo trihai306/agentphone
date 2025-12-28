@@ -1,4 +1,4 @@
-"""Pydantic models for workflow recording and replay."""
+"""Pydantic models for workflow recording and replay, and authentication."""
 
 from app.models.workflow import (
     ElementSelector,
@@ -13,7 +13,14 @@ from app.models.workflow import (
     TapData,
 )
 
+from app.models.auth import (
+    UserRegisterRequest,
+    UserLoginRequest,
+    AuthResponse,
+)
+
 __all__ = [
+    # Workflow models
     "ElementSelector",
     "WorkflowStep",
     "Workflow",
@@ -24,4 +31,8 @@ __all__ = [
     "InputTextData",
     "WaitData",
     "TapData",
+    # Auth models
+    "UserRegisterRequest",
+    "UserLoginRequest",
+    "AuthResponse",
 ]
