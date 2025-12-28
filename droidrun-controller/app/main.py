@@ -4,6 +4,8 @@ import flet as ft
 from .theme import COLORS, get_theme, get_colors, set_theme_mode, get_theme_mode, SPACING, RADIUS, ANIMATION, get_shadow
 from .views import DevicesView, WorkflowsView, ExecutionsView, SettingsView, AgentRunnerView, LoginView, RegisterView
 from .views.analytics import AnalyticsView
+from .views.login import LoginView
+from .views.registration import RegistrationView
 from .views.phone_viewer import PhoneViewerView
 from .components.toast import ToastManager
 from .backend import backend
@@ -277,6 +279,8 @@ class DroidrunApp:
             "executions": ExecutionsView(self.app_state, self.toast),
             "analytics": AnalyticsView(self.app_state, self.toast),
             "settings": SettingsView(self.app_state, self.toast),
+            "login": LoginView(self.app_state, self.toast, on_navigate=self._on_auth_navigate),
+            "registration": RegistrationView(self.app_state, self.toast, on_navigate=self._on_auth_navigate),
         }
 
         # Responsive padding
@@ -916,6 +920,11 @@ class DroidrunApp:
         self._update_sidebar_selection()
         self.page.update()
         self.page.run_task(self._load_view_data, key)
+
+    def _on_auth_navigate(self, target: str):
+        """Handle navigation from auth views (login/registration)."""
+        if target in self.views:
+            self._on_nav_click(target)
 
     def _toggle_theme(self, e):
         """Toggle between light and dark theme."""
