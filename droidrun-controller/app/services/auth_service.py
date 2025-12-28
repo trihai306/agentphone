@@ -1,10 +1,10 @@
-"""Authentication service for making API requests to auth endpoints.
+"""Authentication service for making API requests to Laravel backend.
 
 This module provides an API client for authentication operations:
 - Register: Create new user accounts
 - Login: Authenticate existing users
 
-The service communicates with the auth API server and returns typed responses
+The service communicates with the Laravel backend API and returns typed responses
 that can be used by the UI views.
 
 Usage:
@@ -39,25 +39,60 @@ class AuthResult:
     message: str
     user_id: Optional[int] = None
     email: Optional[str] = None
+    name: Optional[str] = None
     token: Optional[str] = None
 
     @classmethod
-    def from_api_response(cls, data: dict) -> "AuthResult":
-        """Create AuthResult from API response JSON.
+    def from_laravel_response(cls, data: dict, status_code: int) -> "AuthResult":
+        """Create AuthResult from Laravel API response.
 
         Args:
-            data: The JSON response from the auth API.
+            data: The JSON response from the Laravel API.
+            status_code: HTTP status code from the response.
 
         Returns:
             AuthResult populated with response data.
         """
-        return cls(
-            success=data.get("success", False),
-            message=data.get("message", "Unknown response"),
-            user_id=data.get("user_id"),
-            email=data.get("email"),
-            token=data.get("token"),
-        )
+        # Handle error responses
+        if status_code >= 400:
+            message = data.get("message", "Request failed")
+            return cls(success=False, message=message)
+
+        # Handle successful registration (no token returned)
+        if "user" in data and "token" not in data:
+            user = data["user"]
+            return cls(
+                success=True,
+                message=data.get("message", "Registration successful"),
+                user_id=user.get("id"),
+                email=user.get("email"),
+                name=user.get("name"),
+            )
+
+        # Handle successful login (token returned)
+        if "token" in data:
+            user = data.get("user", {})
+            return cls(
+                success=True,
+                message="Login successful",
+                user_id=user.get("id"),
+                email=user.get("email"),
+                name=user.get("name"),
+                token=data["token"],
+            )
+
+        # Handle user profile response (direct user object)
+        if "id" in data and "email" in data:
+            return cls(
+                success=True,
+                message="Profile retrieved",
+                user_id=data.get("id"),
+                email=data.get("email"),
+                name=data.get("name"),
+            )
+
+        # Unknown response format
+        return cls(success=False, message="Unknown response format")
 
     @classmethod
     def error(cls, message: str) -> "AuthResult":
@@ -73,14 +108,14 @@ class AuthResult:
 
 
 class AuthService:
-    """Service for interacting with the authentication API.
+    """Service for interacting with the Laravel authentication API.
 
     This service provides methods to register and login users via the
-    auth API endpoints. It handles HTTP communication, error handling,
+    Laravel API endpoints. It handles HTTP communication, error handling,
     and response parsing.
 
     Attributes:
-        base_url: The base URL for the auth API.
+        base_url: The base URL for the Laravel API.
     """
 
     def __init__(self, base_url: Optional[str] = None):
@@ -88,24 +123,37 @@ class AuthService:
 
         Args:
             base_url: Optional base URL for the API. If not provided,
-                      reads from API_BASE_URL environment variable or
-                      defaults to http://localhost:8000.
+                      reads from LARAVEL_API_URL environment variable or
+                      defaults to https://laravel-backend.test.
         """
         if base_url is None:
-            host = os.environ.get("API_HOST", "localhost")
-            port = os.environ.get("API_PORT", "8000")
-            # For client requests, use localhost instead of 0.0.0.0
-            if host == "0.0.0.0":
-                host = "localhost"
-            base_url = f"http://{host}:{port}"
+            base_url = os.environ.get("LARAVEL_API_URL", "https://laravel-backend.test")
 
         self.base_url = base_url.rstrip("/")
         self._timeout = aiohttp.ClientTimeout(total=30)
+        self._access_token: Optional[str] = None
+
+        # SSL context for development (bypass certificate verification)
+        # This is safe for local development with Valet/Herd self-signed certs
+        import ssl
+        self._ssl_context = ssl.create_default_context()
+        self._ssl_context.check_hostname = False
+        self._ssl_context.verify_mode = ssl.CERT_NONE
+
+    @property
+    def token(self) -> Optional[str]:
+        """Get the current access token."""
+        return self._access_token
+
+    @token.setter
+    def token(self, value: Optional[str]):
+        """Set the access token."""
+        self._access_token = value
 
     async def register(self, email: str, password: str) -> AuthResult:
         """Register a new user account.
 
-        Makes a POST request to /api/auth/register with the provided
+        Makes a POST request to /api/register with the provided
         email and password. Returns the result of the registration attempt.
 
         Args:
@@ -116,18 +164,23 @@ class AuthService:
             AuthResult with success status and user details on success,
             or error message on failure.
         """
-        url = f"{self.base_url}/api/auth/register"
+        url = f"{self.base_url}/api/register"
 
         try:
-            async with aiohttp.ClientSession(timeout=self._timeout) as session:
+            # Use connector with SSL context for HTTPS
+            connector = aiohttp.TCPConnector(ssl=self._ssl_context)
+            async with aiohttp.ClientSession(timeout=self._timeout, connector=connector) as session:
                 async with session.post(
                     url,
                     json={"email": email, "password": password},
-                    headers={"Content-Type": "application/json"},
+                    headers={
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                    },
                 ) as response:
                     try:
                         data = await response.json()
-                        return AuthResult.from_api_response(data)
+                        return AuthResult.from_laravel_response(data, response.status)
                     except aiohttp.ContentTypeError:
                         # Response is not JSON
                         return AuthResult.error(
@@ -150,7 +203,7 @@ class AuthService:
     async def login(self, email: str, password: str) -> AuthResult:
         """Login with existing credentials.
 
-        Makes a POST request to /api/auth/login with the provided
+        Makes a POST request to /api/login with the provided
         email and password. Returns the result including JWT token on success.
 
         Args:
@@ -161,18 +214,26 @@ class AuthService:
             AuthResult with success status, JWT token, and user details
             on success, or error message on failure.
         """
-        url = f"{self.base_url}/api/auth/login"
+        url = f"{self.base_url}/api/login"
 
         try:
-            async with aiohttp.ClientSession(timeout=self._timeout) as session:
+            # Use connector with SSL context for HTTPS
+            connector = aiohttp.TCPConnector(ssl=self._ssl_context)
+            async with aiohttp.ClientSession(timeout=self._timeout, connector=connector) as session:
                 async with session.post(
                     url,
                     json={"email": email, "password": password},
-                    headers={"Content-Type": "application/json"},
+                    headers={
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                    },
                 ) as response:
                     try:
                         data = await response.json()
-                        return AuthResult.from_api_response(data)
+                        result = AuthResult.from_laravel_response(data, response.status)
+                        if result.success and result.token:
+                            self.token = result.token
+                        return result
                     except aiohttp.ContentTypeError:
                         # Response is not JSON
                         return AuthResult.error(
@@ -192,8 +253,56 @@ class AuthService:
         except Exception as e:
             return AuthResult.error(f"An unexpected error occurred: {str(e)}")
 
+    async def get_user_profile(self, token: Optional[str] = None) -> AuthResult:
+        """Get the authenticated user's profile.
+
+        Makes a GET request to /api/user with the Bearer token.
+
+        Args:
+            token: The JWT access token. If None, uses stored token.
+
+        Returns:
+            AuthResult with user details on success.
+        """
+        target_token = token or self.token
+        if not target_token:
+            return AuthResult.error("No access token available. Please login first.")
+
+        url = f"{self.base_url}/api/user"
+
+        try:
+            connector = aiohttp.TCPConnector(ssl=self._ssl_context)
+            async with aiohttp.ClientSession(timeout=self._timeout, connector=connector) as session:
+                async with session.get(
+                    url,
+                    headers={
+                        "Authorization": f"Bearer {target_token}",
+                        "Accept": "application/json",
+                    },
+                ) as response:
+                    try:
+                        data = await response.json()
+                        return AuthResult.from_laravel_response(data, response.status)
+                    except aiohttp.ContentTypeError:
+                        return AuthResult.error(
+                            "Server returned invalid response format"
+                        )
+
+        except aiohttp.ClientConnectorError:
+            return AuthResult.error(
+                "Unable to connect to server. Please check your connection."
+            )
+        except asyncio.TimeoutError:
+            return AuthResult.error(
+                "Request timed out. Please try again."
+            )
+        except aiohttp.ClientError as e:
+            return AuthResult.error(f"Network error: {str(e)}")
+        except Exception as e:
+            return AuthResult.error(f"An unexpected error occurred: {str(e)}")
+
     async def check_health(self) -> bool:
-        """Check if the auth API server is reachable.
+        """Check if the Laravel API server is reachable.
 
         Makes a simple connection test to verify the server is running.
 
@@ -201,9 +310,10 @@ class AuthService:
             True if server is reachable, False otherwise.
         """
         try:
-            async with aiohttp.ClientSession(timeout=self._timeout) as session:
-                async with session.get(self.base_url) as response:
-                    # Any response means server is up
+            connector = aiohttp.TCPConnector(ssl=self._ssl_context)
+            async with aiohttp.ClientSession(timeout=self._timeout, connector=connector) as session:
+                async with session.get(f"{self.base_url}/api/user") as response:
+                    # Any response means server is up (even 401 unauthorized)
                     return True
         except Exception:
             return False

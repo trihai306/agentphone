@@ -543,22 +543,24 @@
         <item name="hoveredFocusedTranslationZ">2dp</item>
         <item name="pressedTranslationZ">4dp</item>
     </style>
-    <style name="Widget.Portal.FAB.Large" parent="Widget.Material3.FloatingActionButton.Large">
+    <style name="Widget.Portal.FAB.Large" parent="Widget.Material3.FloatingActionButton.Primary">
         <item name="backgroundTint">@color/accent_blue</item>
         <item name="tint">@color/background_dark</item>
         <item name="rippleColor">@color/button_ripple_primary</item>
         <item name="shapeAppearance">@style/ShapeAppearance.Portal.FAB.Large</item>
+        <item name="fabCustomSize">96dp</item>
     </style>
     <style name="Widget.Portal.FAB.Secondary" parent="Widget.Portal.FAB">
         <item name="backgroundTint">@color/surface_container</item>
         <item name="tint">@color/accent_blue</item>
         <item name="rippleColor">@color/button_ripple_secondary</item>
     </style>
-    <style name="Widget.Portal.FAB.Small" parent="Widget.Material3.FloatingActionButton.Small">
+    <style name="Widget.Portal.FAB.Small" parent="Widget.Material3.FloatingActionButton.Primary">
         <item name="backgroundTint">@color/accent_blue</item>
         <item name="tint">@color/background_dark</item>
         <item name="rippleColor">@color/button_ripple_primary</item>
         <item name="shapeAppearance">@style/ShapeAppearance.Portal.FAB.Small</item>
+        <item name="fabCustomSize">40dp</item>
     </style>
     <style name="Widget.Portal.FAB.Tertiary" parent="Widget.Portal.FAB">
         <item name="backgroundTint">@color/accent_purple</item>

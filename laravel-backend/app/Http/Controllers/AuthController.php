@@ -11,6 +11,36 @@ use Jenssegers\Agent\Agent;
 class AuthController extends Controller
 {
     /**
+     * Handle user registration.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function register(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6',
+            'name' => 'nullable|string|max:255',
+        ]);
+
+        $user = User::create([
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'name' => $request->name ?? $request->email,
+        ]);
+
+        return response()->json([
+            'message' => 'User registered successfully',
+            'user' => [
+                'id' => $user->id,
+                'email' => $user->email,
+                'name' => $user->name,
+            ],
+        ], 201);
+    }
+
+    /**
      * Handle user login and create device-specific token.
      *
      * @param Request $request
@@ -46,7 +76,26 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token->plainTextToken,
-            'device' => $deviceName,
+            'user' => [
+                'id' => $user->id,
+                'email' => $user->email,
+                'name' => $user->name,
+            ],
+        ]);
+    }
+
+    /**
+     * Handle user logout (revoke current token).
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function logout(Request $request): JsonResponse
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'message' => 'Logged out successfully',
         ]);
     }
 }

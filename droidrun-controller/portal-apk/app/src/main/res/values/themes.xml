@@ -579,19 +579,21 @@
     </style>
 
     <!-- FAB - Small size -->
-    <style name="Widget.Portal.FAB.Small" parent="Widget.Material3.FloatingActionButton.Small">
+    <style name="Widget.Portal.FAB.Small" parent="Widget.Material3.FloatingActionButton.Primary">
         <item name="backgroundTint">@color/accent_blue</item>
         <item name="tint">@color/background_dark</item>
         <item name="rippleColor">@color/button_ripple_primary</item>
         <item name="shapeAppearance">@style/ShapeAppearance.Portal.FAB.Small</item>
+        <item name="fabCustomSize">40dp</item>
     </style>
 
     <!-- FAB - Large size -->
-    <style name="Widget.Portal.FAB.Large" parent="Widget.Material3.FloatingActionButton.Large">
+    <style name="Widget.Portal.FAB.Large" parent="Widget.Material3.FloatingActionButton.Primary">
         <item name="backgroundTint">@color/accent_blue</item>
         <item name="tint">@color/background_dark</item>
         <item name="rippleColor">@color/button_ripple_primary</item>
         <item name="shapeAppearance">@style/ShapeAppearance.Portal.FAB.Large</item>
+        <item name="fabCustomSize">96dp</item>
     </style>
 
     <!-- FAB - Secondary color variant -->

@@ -4,8 +4,6 @@ import flet as ft
 from .theme import COLORS, get_theme, get_colors, set_theme_mode, get_theme_mode, SPACING, RADIUS, ANIMATION, get_shadow
 from .views import DevicesView, WorkflowsView, ExecutionsView, SettingsView, AgentRunnerView, LoginView, RegisterView
 from .views.analytics import AnalyticsView
-from .views.login import LoginView
-from .views.registration import RegistrationView
 from .views.phone_viewer import PhoneViewerView
 from .components.toast import ToastManager
 from .backend import backend
@@ -49,6 +47,7 @@ class DroidrunApp:
         self._auth_token: str | None = None
         self._current_user_email: str | None = None
         self._current_user_id: int | None = None
+        self._current_user_name: str | None = None
         self._current_auth_view = "login"  # "login" or "register"
         self._auth_service = get_auth_service()
 
@@ -110,9 +109,23 @@ class DroidrunApp:
                         self._current_user_email = payload["email"]
                         self._current_user_id = payload["user_id"]
 
+                        # Set token in auth service for future requests
+                        self._auth_service.token = token
+
+                        # Try to fetch fresh user profile
+                        try:
+                            profile = await self._auth_service.get_user_profile(token)
+                            if profile.success:
+                                self._current_user_name = profile.name
+                                if profile.email:
+                                    self._current_user_email = profile.email
+                        except Exception as e:
+                            print(f"Failed to fetch user profile: {e}")
+
                         # Build main app UI
                         self._build_app()
-                        self.toast.success("Welcome back!")
+                        welcome_msg = f"Welcome back, {self._current_user_name}!" if self._current_user_name else "Welcome back!"
+                        self.toast.success(welcome_msg)
                         return
 
             # No valid session - show login page
@@ -174,6 +187,7 @@ class DroidrunApp:
             self._auth_token = result.token
             self._current_user_email = result.email
             self._current_user_id = result.user_id
+            self._current_user_name = result.name
 
             # Store session in client storage for persistence
             self._store_session(result.token, result.email, result.user_id)
@@ -219,7 +233,9 @@ class DroidrunApp:
         self._auth_token = None
         self._current_user_email = None
         self._current_user_id = None
+        self._current_user_name = None
         self._current_auth_view = "login"
+        self._auth_service.token = None
 
         # Clear stored session
         self._clear_stored_session()
@@ -279,8 +295,6 @@ class DroidrunApp:
             "executions": ExecutionsView(self.app_state, self.toast),
             "analytics": AnalyticsView(self.app_state, self.toast),
             "settings": SettingsView(self.app_state, self.toast),
-            "login": LoginView(self.app_state, self.toast, on_navigate=self._on_auth_navigate),
-            "registration": RegistrationView(self.app_state, self.toast, on_navigate=self._on_auth_navigate),
         }
 
         # Responsive padding
@@ -630,6 +644,53 @@ class DroidrunApp:
                         margin=ft.margin.symmetric(horizontal=16),
                     ),
                     ft.Container(height=SPACING["md"]),
+
+                    # User Profile Card
+                    ft.Container(
+                        content=ft.Row(
+                            [
+                                ft.Container(
+                                    content=ft.Text(
+                                        (self._current_user_name[0].upper() if self._current_user_name else "U"),
+                                        size=14,
+                                        weight=ft.FontWeight.W_600,
+                                        color=colors["text_inverse"],
+                                    ),
+                                    width=32,
+                                    height=32,
+                                    border_radius=16,
+                                    bgcolor=colors["primary"],
+                                    alignment=ft.alignment.center,
+                                ),
+                                ft.Container(width=SPACING["sm"]),
+                                ft.Column(
+                                    [
+                                        ft.Text(
+                                            self._current_user_name or "User",
+                                            size=13,
+                                            weight=ft.FontWeight.W_600,
+                                            color=colors["text_primary"],
+                                            no_wrap=True,
+                                        ),
+                                        ft.Text(
+                                            self._current_user_email or "",
+                                            size=10,
+                                            color=colors["text_secondary"],
+                                            no_wrap=True,
+                                            overflow=ft.TextOverflow.ELLIPSIS,
+                                            width=160,
+                                        ),
+                                    ],
+                                    spacing=2,
+                                    alignment=ft.MainAxisAlignment.CENTER,
+                                    expand=True,
+                                ),
+                            ],
+                        ),
+                        padding=ft.padding.symmetric(horizontal=12, vertical=8),
+                        margin=ft.margin.only(bottom=SPACING["sm"]),
+                    ),
+
                     self._build_nav_item(
                         "settings", "Settings",
                         ft.Icons.SETTINGS_OUTLINED, ft.Icons.SETTINGS

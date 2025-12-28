@@ -299,9 +299,7 @@ class PortalAccessibilityService : AccessibilityService() {
             isClickable = false,
             isEditable = false,
             isScrollable = false,
-            additionalData = mapOf(
-                "gestureId" to event.gestureId
-            )
+            additionalData = emptyMap()
         )
 
         addCapturedEvent(capturedEvent)
