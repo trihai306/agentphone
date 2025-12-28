@@ -1,7 +1,7 @@
 """Authentication utility functions for password hashing and JWT token management.
 
 This module provides secure authentication utilities using:
-- passlib with bcrypt for password hashing (industry standard)
+- bcrypt for password hashing (industry standard)
 - PyJWT for JSON Web Token generation and verification
 
 Configuration is loaded from environment variables:
@@ -25,13 +25,8 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional, TypedDict
 
+import bcrypt
 import jwt
-from passlib.context import CryptContext
-
-
-# Password hashing configuration using bcrypt
-# bcrypt is the industry standard for password hashing with automatic salt generation
-_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 # JWT Configuration with sensible defaults
@@ -85,7 +80,7 @@ class TokenPayload(TypedDict):
 def hash_password(password: str) -> str:
     """Hash a password using bcrypt.
 
-    Uses passlib's CryptContext with bcrypt scheme for secure password hashing.
+    Uses bcrypt for secure password hashing with automatic salt generation.
     Each hash includes a unique salt, so the same password produces different
     hashes each time (this is expected and secure behavior).
 
@@ -100,13 +95,18 @@ def hash_password(password: str) -> str:
         >>> hashed.startswith("$2b$")
         True
     """
-    return _pwd_context.hash(password)
+    # Encode password to bytes, truncate to 72 bytes (bcrypt limit)
+    password_bytes = password.encode("utf-8")[:72]
+    # Generate salt and hash
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password_bytes, salt)
+    return hashed.decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash.
 
-    Uses constant-time comparison to prevent timing attacks.
+    Uses bcrypt's constant-time comparison to prevent timing attacks.
 
     Args:
         plain_password: The plain text password to verify.
@@ -122,7 +122,14 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         >>> verify_password("wrong_password", hashed)
         False
     """
-    return _pwd_context.verify(plain_password, hashed_password)
+    try:
+        # Encode both to bytes, truncate password to 72 bytes (bcrypt limit)
+        password_bytes = plain_password.encode("utf-8")[:72]
+        hashed_bytes = hashed_password.encode("utf-8")
+        return bcrypt.checkpw(password_bytes, hashed_bytes)
+    except (ValueError, TypeError):
+        # Invalid hash format or other error
+        return False
 
 
 def create_access_token(
