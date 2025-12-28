@@ -8,6 +8,13 @@ from .views.phone_viewer import PhoneViewerView
 from .components.toast import ToastManager
 from .backend import backend
 from .services.auth_service import get_auth_service, AuthResult
+from .utils.auth import verify_access_token
+
+
+# Storage keys for session persistence
+SESSION_TOKEN_KEY = "droidrun.auth.token"
+SESSION_EMAIL_KEY = "droidrun.auth.email"
+SESSION_USER_ID_KEY = "droidrun.auth.user_id"
 
 
 class DroidrunApp:
@@ -44,8 +51,11 @@ class DroidrunApp:
         self._auth_service = get_auth_service()
 
         self._setup_page()
-        self._build_app()
+        # Start with auth UI, then check for stored session
+        self._build_auth_ui_initial()
         self.page.on_resized = self._on_resize
+        # Check for stored session after page is ready
+        self.page.run_task(self._restore_session)
 
     def _setup_page(self):
         """Configure the page settings."""
@@ -58,6 +68,58 @@ class DroidrunApp:
         self.page.window.min_height = 600
         self.page.window.width = 1440
         self.page.window.height = 900
+
+    def _build_auth_ui_initial(self):
+        """Build initial auth UI with loading state while checking session."""
+        self.page.controls.clear()
+        # Show a loading container initially
+        loading_container = ft.Container(
+            content=ft.Column(
+                [
+                    ft.ProgressRing(width=40, height=40),
+                    ft.Text("Loading...", color=COLORS["text_secondary"]),
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                alignment=ft.MainAxisAlignment.CENTER,
+                spacing=16,
+            ),
+            expand=True,
+            bgcolor=COLORS["bg_primary"],
+            alignment=ft.alignment.center,
+        )
+        self.page.add(loading_container)
+        self.page.update()
+
+    async def _restore_session(self):
+        """Restore session from client storage if a valid token exists."""
+        try:
+            # Check if we have a stored token
+            if self.page.client_storage.contains_key(SESSION_TOKEN_KEY):
+                token = self.page.client_storage.get(SESSION_TOKEN_KEY)
+
+                if token:
+                    # Verify the token is still valid (not expired)
+                    payload = verify_access_token(token)
+
+                    if payload:
+                        # Token is valid - restore session
+                        self._is_authenticated = True
+                        self._auth_token = token
+                        self._current_user_email = payload["email"]
+                        self._current_user_id = payload["user_id"]
+
+                        # Build main app UI
+                        self._build_app()
+                        self.toast.success("Welcome back!")
+                        return
+
+            # No valid session - show login page
+            self._build_app()
+
+        except Exception:
+            # On any error, clear storage and show login
+            self._clear_stored_session()
+            self._build_app()
 
     def _build_app(self):
         """Build the application - routes to auth or main UI based on authentication state."""
@@ -111,6 +173,9 @@ class DroidrunApp:
             self._current_user_email = result.email
             self._current_user_id = result.user_id
 
+            # Store session in client storage for persistence
+            self._store_session(result.token, result.email, result.user_id)
+
             # Rebuild UI to show main app
             self._build_app()
             self.toast.success("Welcome back!")
@@ -153,8 +218,38 @@ class DroidrunApp:
         self._current_user_email = None
         self._current_user_id = None
         self._current_auth_view = "login"
+
+        # Clear stored session
+        self._clear_stored_session()
+
         self._build_app()
         self.toast.info("You have been logged out.")
+
+    def _store_session(self, token: str, email: str, user_id: int):
+        """Store authentication session in client storage for persistence.
+
+        Args:
+            token: JWT access token.
+            email: User's email address.
+            user_id: User's database ID.
+        """
+        try:
+            self.page.client_storage.set(SESSION_TOKEN_KEY, token)
+            self.page.client_storage.set(SESSION_EMAIL_KEY, email)
+            self.page.client_storage.set(SESSION_USER_ID_KEY, user_id)
+        except Exception:
+            # Storage might not be available, fail silently
+            pass
+
+    def _clear_stored_session(self):
+        """Clear stored authentication session from client storage."""
+        try:
+            self.page.client_storage.remove(SESSION_TOKEN_KEY)
+            self.page.client_storage.remove(SESSION_EMAIL_KEY)
+            self.page.client_storage.remove(SESSION_USER_ID_KEY)
+        except Exception:
+            # Storage might not be available, fail silently
+            pass
 
     def _build_ui(self):
         """Build the main UI layout."""
