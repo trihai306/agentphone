@@ -2,11 +2,12 @@
 
 import flet as ft
 from .theme import COLORS, get_theme, get_colors, set_theme_mode, get_theme_mode, SPACING, RADIUS, ANIMATION, get_shadow
-from .views import DevicesView, WorkflowsView, ExecutionsView, SettingsView, AgentRunnerView
+from .views import DevicesView, WorkflowsView, ExecutionsView, SettingsView, AgentRunnerView, LoginView, RegisterView
 from .views.analytics import AnalyticsView
 from .views.phone_viewer import PhoneViewerView
 from .components.toast import ToastManager
 from .backend import backend
+from .services.auth_service import get_auth_service, AuthResult
 
 
 class DroidrunApp:
@@ -34,9 +35,16 @@ class DroidrunApp:
         self.sidebar_visible = True
         self._current_width = 1440
 
+        # Authentication state
+        self._is_authenticated = False
+        self._auth_token: str | None = None
+        self._current_user_email: str | None = None
+        self._current_user_id: int | None = None
+        self._current_auth_view = "login"  # "login" or "register"
+        self._auth_service = get_auth_service()
+
         self._setup_page()
-        self._build_ui()
-        self.page.run_task(self._initialize)
+        self._build_app()
         self.page.on_resized = self._on_resize
 
     def _setup_page(self):
@@ -50,6 +58,103 @@ class DroidrunApp:
         self.page.window.min_height = 600
         self.page.window.width = 1440
         self.page.window.height = 900
+
+    def _build_app(self):
+        """Build the application - routes to auth or main UI based on authentication state."""
+        self.page.controls.clear()
+
+        if self._is_authenticated:
+            # Show main application UI
+            self._build_ui()
+            self.page.run_task(self._initialize)
+        else:
+            # Show authentication UI (login or register)
+            self._build_auth_ui()
+
+        self.page.update()
+
+    def _build_auth_ui(self):
+        """Build the authentication UI (login or register page)."""
+        if self._current_auth_view == "login":
+            auth_view = LoginView(
+                on_login=self._handle_login,
+                on_navigate_to_register=self._navigate_to_register,
+            )
+        else:
+            auth_view = RegisterView(
+                on_register=self._handle_register,
+                on_navigate_to_login=self._navigate_to_login,
+            )
+
+        # Wrap in a container with background
+        auth_container = ft.Container(
+            content=auth_view,
+            expand=True,
+            bgcolor=COLORS["bg_primary"],
+        )
+
+        self.page.add(auth_container)
+
+    async def _handle_login(self, email: str, password: str):
+        """Handle login attempt from LoginView.
+
+        Args:
+            email: The user's email address.
+            password: The user's password.
+        """
+        result = await self._auth_service.login(email, password)
+
+        if result.success:
+            # Update authentication state
+            self._is_authenticated = True
+            self._auth_token = result.token
+            self._current_user_email = result.email
+            self._current_user_id = result.user_id
+
+            # Rebuild UI to show main app
+            self._build_app()
+            self.toast.success("Welcome back!")
+        else:
+            # Show error in the login view
+            raise Exception(result.message)
+
+    async def _handle_register(self, email: str, password: str):
+        """Handle registration attempt from RegisterView.
+
+        Args:
+            email: The user's email address.
+            password: The user's password.
+        """
+        result = await self._auth_service.register(email, password)
+
+        if result.success:
+            # Registration successful - navigate to login
+            self._current_auth_view = "login"
+            self._build_app()
+            self.toast.success("Account created! Please sign in.")
+        else:
+            # Show error in the register view
+            raise Exception(result.message)
+
+    def _navigate_to_register(self):
+        """Navigate from login page to register page."""
+        self._current_auth_view = "register"
+        self._build_app()
+
+    def _navigate_to_login(self):
+        """Navigate from register page to login page."""
+        self._current_auth_view = "login"
+        self._build_app()
+
+    def logout(self):
+        """Logout the current user and return to login page."""
+        self._is_authenticated = False
+        self._auth_token = None
+        self._current_user_email = None
+        self._current_user_id = None
+        self._current_auth_view = "login"
+        self._build_app()
+        self.toast.info("You have been logged out.")
 
     def _build_ui(self):
         """Build the main UI layout."""
@@ -671,9 +776,12 @@ class DroidrunApp:
         self.page.theme_mode = ft.ThemeMode.DARK if new_mode == "dark" else ft.ThemeMode.LIGHT
         self.page.bgcolor = COLORS["bg_primary"]
 
-        # Rebuild UI
+        # Rebuild UI - use _build_app to preserve auth state
         self.page.controls.clear()
-        self._build_ui()
+        if self._is_authenticated:
+            self._build_ui()
+        else:
+            self._build_auth_ui()
         self.page.update()
 
         self.toast.info(f"Switched to {new_mode} mode")
@@ -850,10 +958,13 @@ class DroidrunApp:
 
         self._current_width = new_width
 
-        # Only rebuild if crossing a breakpoint
+        # Only rebuild if crossing a breakpoint and authenticated (main UI)
         if old_is_mobile != new_is_mobile or old_is_tablet != new_is_tablet:
             self.page.controls.clear()
-            self._build_ui()
+            if self._is_authenticated:
+                self._build_ui()
+            else:
+                self._build_auth_ui()
             self.page.update()
 
     async def _initialize(self):
