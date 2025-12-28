@@ -6,6 +6,7 @@ from .executions import ExecutionsView
 from .settings import SettingsView
 from .agent_runner import AgentRunnerView
 from .recording_panel import RecordingPanelView
+from .register import RegisterView
 
 __all__ = [
     "DevicesView",
@@ -14,4 +15,5 @@ __all__ = [
     "SettingsView",
     "AgentRunnerView",
     "RecordingPanelView",
+    "RegisterView",
 ]
