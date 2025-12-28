@@ -454,6 +454,24 @@ class DroidrunApp:
                             "settings", ft.Icons.SETTINGS_OUTLINED, ft.Icons.SETTINGS
                         ),
                         ft.Container(height=8),
+                        # Logout button - collapsed version
+                        ft.Container(
+                            content=ft.Icon(
+                                ft.Icons.LOGOUT,
+                                size=22,
+                                color=colors["error"],
+                            ),
+                            width=46,
+                            height=46,
+                            border_radius=RADIUS["md"],
+                            bgcolor="transparent",
+                            alignment=ft.alignment.center,
+                            animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
+                            on_hover=self._on_logout_hover,
+                            on_click=lambda _: self.logout(),
+                            tooltip="Logout",
+                        ),
+                        ft.Container(height=8),
                         collapse_toggle,
                     ],
                     spacing=0,
@@ -639,6 +657,34 @@ class DroidrunApp:
                         animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
                         on_click=lambda _: self.toast.info("Help coming soon..."),
                         on_hover=self._on_nav_hover_secondary,
+                    ),
+                    ft.Container(height=SPACING["sm"]),
+                    # Logout button - polished secondary nav item
+                    ft.Container(
+                        content=ft.Row(
+                            [
+                                ft.Container(
+                                    content=ft.Icon(ft.Icons.LOGOUT, size=18, color=colors["error"]),
+                                    width=36,
+                                    height=36,
+                                    border_radius=RADIUS["sm"],
+                                    alignment=ft.alignment.center,
+                                ),
+                                ft.Container(width=SPACING["sm"]),
+                                ft.Text(
+                                    "Logout",
+                                    size=13,
+                                    weight=ft.FontWeight.W_500,
+                                    color=colors["text_secondary"],
+                                ),
+                            ],
+                        ),
+                        padding=ft.padding.only(left=10, right=14, top=8, bottom=8),
+                        border_radius=RADIUS["md"],
+                        border=ft.border.all(1, "transparent"),
+                        animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
+                        on_click=lambda _: self.logout(),
+                        on_hover=self._on_logout_hover,
                     ),
                     ft.Container(height=SPACING["sm"]),
                     # Collapse toggle - polished
@@ -829,6 +875,17 @@ class DroidrunApp:
         if e.data == "true":
             e.control.bgcolor = colors["bg_hover"]
             e.control.border = ft.border.all(1, colors["border_light"])
+        else:
+            e.control.bgcolor = "transparent"
+            e.control.border = ft.border.all(1, "transparent")
+        e.control.update()
+
+    def _on_logout_hover(self, e):
+        """Handle logout button hover with error-tinted feedback."""
+        colors = COLORS
+        if e.data == "true":
+            e.control.bgcolor = f"{colors['error']}15"
+            e.control.border = ft.border.all(1, f"{colors['error']}30")
         else:
             e.control.bgcolor = "transparent"
             e.control.border = ft.border.all(1, "transparent")
