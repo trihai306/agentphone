@@ -25,7 +25,7 @@ class WalletResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Ví tiền';
 
-    protected static ?string $navigationGroup = 'Quản lý tài chính';
+    protected static ?string $navigationGroup = 'Finance Management';
 
     protected static ?int $navigationSort = 2;
 
@@ -33,7 +33,30 @@ class WalletResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Forms\Components\Select::make('user_id')
+                    ->relationship('user', 'name')
+                    ->searchable()
+                    ->required(),
+                Forms\Components\Select::make('currency')
+                    ->options([
+                        'USD' => 'USD',
+                        'EUR' => 'EUR',
+                        'VND' => 'VND',
+                    ])
+                    ->required(),
+                Forms\Components\TextInput::make('balance')
+                    ->required()
+                    ->numeric()
+                    ->prefix('$')
+                    ->default(0),
+                Forms\Components\TextInput::make('locked_balance')
+                    ->required()
+                    ->numeric()
+                    ->prefix('$')
+                    ->default(0),
+                Forms\Components\Toggle::make('is_active')
+                    ->required()
+                    ->default(true),
             ]);
     }
 
@@ -41,10 +64,38 @@ class WalletResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('User')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('currency')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('balance')
+                    ->money(fn ($record) => $record->currency)
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('locked_balance')
+                    ->money(fn ($record) => $record->currency)
+                    ->sortable(),
+                Tables\Columns\IconColumn::make('is_active')
+                    ->boolean(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('currency')
+                    ->options([
+                        'USD' => 'USD',
+                        'EUR' => 'EUR',
+                        'VND' => 'VND',
+                    ]),
+                Tables\Filters\TernaryFilter::make('is_active')
+                    ->label('Status')
+                    ->boolean()
+                    ->trueLabel('Active')
+                    ->falseLabel('Inactive'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

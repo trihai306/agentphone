@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
+use App\Filament\Resources\UserResource\RelationManagers\WalletsRelationManager;
 use App\Models\User;
 use App\States\UserWorkflow\Active;
 use App\States\UserWorkflow\Archived;
@@ -143,6 +144,16 @@ class UserResource extends Resource
                     ->multiple()
                     ->preload()
                     ->label('Role'),
+
+                Tables\Filters\TernaryFilter::make('email_verified_at')
+                    ->label('Email Verified')
+                    ->nullable()
+                    ->trueLabel('Verified')
+                    ->falseLabel('Unverified')
+                    ->queries(
+                        true: fn ($query) => $query->whereNotNull('email_verified_at'),
+                        false: fn ($query) => $query->whereNull('email_verified_at'),
+                    ),
 
                 Tables\Filters\SelectFilter::make('workflow_state')
                     ->label('Status')
@@ -289,7 +300,7 @@ class UserResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            WalletsRelationManager::class,
         ];
     }
 

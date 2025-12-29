@@ -464,79 +464,79 @@ RADIUS = {
 SHADOWS: Dict[str, ft.BoxShadow] = {
     "xs": ft.BoxShadow(
         spread_radius=0,
-        blur_radius=1,
-        color="#00000008",
+        blur_radius=2,
+        color="#00000005",
         offset=ft.Offset(0, 1),
     ),
     "sm": ft.BoxShadow(
         spread_radius=0,
-        blur_radius=2,
-        color="#0000000D",
-        offset=ft.Offset(0, 2),
+        blur_radius=3,
+        color="#0000000A",
+        offset=ft.Offset(0, 1),
     ),
     "md": ft.BoxShadow(
         spread_radius=0,
-        blur_radius=4,
-        color="#00000012",
-        offset=ft.Offset(0, 4),
+        blur_radius=6,
+        color="#0000000F",
+        offset=ft.Offset(0, 3),
     ),
     "lg": ft.BoxShadow(
         spread_radius=0,
-        blur_radius=8,
-        color="#00000018",
-        offset=ft.Offset(0, 8),
+        blur_radius=12,
+        color="#00000014",
+        offset=ft.Offset(0, 6),
     ),
     "xl": ft.BoxShadow(
         spread_radius=0,
-        blur_radius=12,
-        color="#0000001F",
-        offset=ft.Offset(0, 12),
+        blur_radius=20,
+        color="#0000001A",
+        offset=ft.Offset(0, 10),
     ),
     "xxl": ft.BoxShadow(
         spread_radius=0,
-        blur_radius=20,
-        color="#00000025",
-        offset=ft.Offset(0, 20),
+        blur_radius=32,
+        color="#00000020",
+        offset=ft.Offset(0, 16),
     ),
     "inner": ft.BoxShadow(
         spread_radius=-1,
         blur_radius=2,
         color="#0000000A",
-        offset=ft.Offset(0, 2),
+        offset=ft.Offset(0, 1),
     ),
 }
 
-# Colored shadow variants
+# Colored shadow variants - Refined for softer glow
 SHADOWS_COLORED = {
     "primary": lambda: ft.BoxShadow(
         spread_radius=0,
-        blur_radius=8,
+        blur_radius=12,
         color=get_colors()["primary_glow"],
-        offset=ft.Offset(0, 8),
+        offset=ft.Offset(0, 4),
     ),
     "success": lambda: ft.BoxShadow(
         spread_radius=0,
-        blur_radius=8,
+        blur_radius=12,
         color=get_colors()["success_glow"],
-        offset=ft.Offset(0, 8),
+        offset=ft.Offset(0, 4),
     ),
     "warning": lambda: ft.BoxShadow(
         spread_radius=0,
-        blur_radius=8,
+        blur_radius=12,
         color=get_colors()["warning_glow"],
-        offset=ft.Offset(0, 8),
+        offset=ft.Offset(0, 4),
     ),
     "error": lambda: ft.BoxShadow(
         spread_radius=0,
-        blur_radius=8,
+        blur_radius=12,
         color=get_colors()["error_glow"],
-        offset=ft.Offset(0, 8),
+        offset=ft.Offset(0, 4),
     ),
     "info": lambda: ft.BoxShadow(
         spread_radius=0,
-        blur_radius=8,
+        blur_radius=12,
         color=get_colors()["info_glow"],
-        offset=ft.Offset(0, 8),
+        offset=ft.Offset(0, 4),
     ),
 }
 

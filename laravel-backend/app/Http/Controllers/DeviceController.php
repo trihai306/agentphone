@@ -9,6 +9,39 @@ use Illuminate\Http\Response;
 class DeviceController extends Controller
 {
     /**
+     * Register or update a physical device.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $request->validate([
+            'device_id' => 'required|string',
+            'model' => 'nullable|string',
+            'android_version' => 'nullable|string',
+            'name' => 'nullable|string',
+        ]);
+
+        $device = \App\Models\Device::updateOrCreate(
+            ['device_id' => $request->device_id],
+            [
+                'user_id' => $request->user()->id,
+                'model' => $request->model,
+                'android_version' => $request->android_version,
+                'name' => $request->name,
+                'status' => 'active',
+                'last_active_at' => now(),
+            ]
+        );
+
+        return response()->json([
+            'message' => 'Device registered successfully',
+            'device' => $device,
+        ]);
+    }
+
+    /**
      * List all active devices (tokens) for the authenticated user.
      *
      * @param Request $request

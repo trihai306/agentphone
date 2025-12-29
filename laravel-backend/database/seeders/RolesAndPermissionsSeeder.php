@@ -19,19 +19,39 @@ class RolesAndPermissionsSeeder extends Seeder
         // Reset cached roles and permissions
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Define all permissions
-        $permissions = [
-            // User management permissions
-            'view-users',
-            'edit-users',
-            'manage-users',     // Full CRUD for users
-
-            // Role management permissions
-            'manage-roles',     // Full CRUD for roles
-
-            // Permission management permissions
-            'manage-permissions', // Full CRUD for permissions
+        // Define resources and actions
+        $resources = [
+            'users',
+            'roles',
+            'permissions',
+            'transactions',
+            'wallets',
+            'banks',
+            'user_bank_accounts',
+            'devices',
         ];
+
+        $actions = [
+            'view_any',
+            'view',
+            'create',
+            'update',
+            'delete',
+            'delete_any',
+            'force_delete',
+            'force_delete_any',
+            'restore',
+            'restore_any',
+            'reorder',
+        ];
+
+        $permissions = [];
+
+        foreach ($resources as $resource) {
+            foreach ($actions as $action) {
+                $permissions[] = "{$action}_{$resource}";
+            }
+        }
 
         // Create permissions
         foreach ($permissions as $permission) {
@@ -48,21 +68,23 @@ class RolesAndPermissionsSeeder extends Seeder
         );
         $adminRole->syncPermissions($permissions);
 
-        // Editor role - can view and edit users
+        // Editor role - example subset
         $editorRole = Role::firstOrCreate(
             ['name' => 'editor', 'guard_name' => 'web']
         );
-        $editorRole->syncPermissions([
-            'view-users',
-            'edit-users',
-        ]);
+        // Assign some basic permissions to editor
+        $editorPermissions = array_filter($permissions, function ($permission) {
+            return str_contains($permission, '_users') || str_contains($permission, '_transactions');
+        });
+        $editorRole->syncPermissions($editorPermissions);
 
-        // Viewer role - can only view users
+        // Viewer role - view only
         $viewerRole = Role::firstOrCreate(
             ['name' => 'viewer', 'guard_name' => 'web']
         );
-        $viewerRole->syncPermissions([
-            'view-users',
-        ]);
+        $viewerPermissions = array_filter($permissions, function ($permission) {
+            return str_starts_with($permission, 'view_');
+        });
+        $viewerRole->syncPermissions($viewerPermissions);
     }
 }
