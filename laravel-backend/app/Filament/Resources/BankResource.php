@@ -23,7 +23,7 @@ class BankResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Ngân hàng';
 
-    protected static ?string $navigationGroup = 'Quản lý tài chính';
+    protected static ?string $navigationGroup = 'Finance Management';
 
     protected static ?int $navigationSort = 3;
 

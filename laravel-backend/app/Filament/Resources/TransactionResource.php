@@ -27,7 +27,7 @@ class TransactionResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Giao dịch';
 
-    protected static ?string $navigationGroup = 'Quản lý tài chính';
+    protected static ?string $navigationGroup = 'Finance Management';
 
     protected static ?int $navigationSort = 1;
 
@@ -178,17 +178,20 @@ class TransactionResource extends Resource
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Số tiền')
                     ->money('VND')
-                    ->sortable(),
+                    ->sortable()
+                    ->summarize(Tables\Columns\Summarizers\Sum::make()->money('VND')),
 
                 Tables\Columns\TextColumn::make('fee')
                     ->label('Phí')
                     ->money('VND')
-                    ->sortable(),
+                    ->sortable()
+                    ->summarize(Tables\Columns\Summarizers\Sum::make()->money('VND')),
 
                 Tables\Columns\TextColumn::make('final_amount')
                     ->label('Thực nhận')
                     ->money('VND')
-                    ->sortable(),
+                    ->sortable()
+                    ->summarize(Tables\Columns\Summarizers\Sum::make()->money('VND')),
 
                 Tables\Columns\BadgeColumn::make('status')
                     ->label('Trạng thái')

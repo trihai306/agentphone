@@ -11,9 +11,6 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets;
-use App\Filament\Widgets\UserStatsWidget;
-use App\Filament\Widgets\RecentUsersWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -42,23 +39,22 @@ class AdminPanelProvider extends PanelProvider
             ->brandName(config('app.name', 'Laravel') . ' Admin')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
-            ->pages([
-                Pages\Dashboard::class,
-            ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
-                UserStatsWidget::class,
-                RecentUsersWidget::class,
+                // Widgets sẽ được khai báo trong từng page, không cần discover
             ])
             ->navigationGroups([
+                NavigationGroup::make()
+                    ->label('Phân Tích')
+                    ->icon('heroicon-o-chart-bar')
+                    ->collapsible()
+                    ->collapsed(false),
                 NavigationGroup::make()
                     ->label('User Management')
                     ->icon('heroicon-o-users')
                     ->collapsible(),
                 NavigationGroup::make()
-                    ->label('Access Control')
-                    ->icon('heroicon-o-shield-check')
+                    ->label('Finance Management')
+                    ->icon('heroicon-o-banknotes')
                     ->collapsible(),
             ])
             ->middleware([
