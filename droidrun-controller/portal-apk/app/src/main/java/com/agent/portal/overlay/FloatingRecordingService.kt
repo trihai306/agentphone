@@ -234,13 +234,18 @@ class FloatingRecordingService : Service() {
             // Start foreground service
             startForeground(NOTIFICATION_ID, createNotification())
 
+            // Get screen dimensions for initial position
+            val displayMetrics = resources.displayMetrics
+            screenWidth = displayMetrics.widthPixels
+            screenHeight = displayMetrics.heightPixels
+
             // Create bubble view with themed context
             // Services don't inherit app theme, so we need to wrap the context with the app theme
             val themedContext = android.view.ContextThemeWrapper(this, R.style.Theme_AgentPortal)
             val inflater = themedContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
             bubbleView = inflater.inflate(R.layout.layout_recording_bubble, null)
 
-            // Setup layout params
+            // Setup layout params - position at bottom-right corner
             val params = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
@@ -253,14 +258,10 @@ class FloatingRecordingService : Service() {
                 PixelFormat.TRANSLUCENT
             ).apply {
                 gravity = Gravity.TOP or Gravity.START
-                x = 20
-                y = 200
+                // Position at bottom-right corner
+                x = screenWidth - dpToPx(280)  // Bubble width + margin
+                y = screenHeight - dpToPx(180) // From bottom
             }
-
-            // Get screen dimensions for snap-to-edge
-            val displayMetrics = resources.displayMetrics
-            screenWidth = displayMetrics.widthPixels
-            screenHeight = displayMetrics.heightPixels
 
             // Setup touch listener for drag and click
             setupTouchListener(params)
@@ -634,5 +635,10 @@ class FloatingRecordingService : Service() {
                 start()
             }
         }
+    }
+
+    private fun dpToPx(dp: Int): Int {
+        val density = resources.displayMetrics.density
+        return (dp * density).toInt()
     }
 }

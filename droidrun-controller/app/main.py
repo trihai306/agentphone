@@ -1133,23 +1133,62 @@ class DroidrunApp:
         e.control.update()
 
     def _on_nav_click(self, key: str):
-        """Handle navigation item click."""
+        """Handle navigation item click with smooth loading transition."""
         print(f"[DEBUG] Navigation clicked: {key}")
         if self.current_view == key:
             print(f"[DEBUG] Already on view: {key}")
             return
 
         print(f"[DEBUG] Changing view from {self.current_view} to {key}")
+        
+        # Start async navigation with loading effect
+        self.page.run_task(self._navigate_with_loading, key)
+
+    async def _navigate_with_loading(self, key: str):
+        """Navigate to view with smooth loading animation."""
+        import asyncio
+        colors = get_colors()
+        
+        # Create loading overlay
+        loading_overlay = ft.Container(
+            content=ft.Column(
+                [
+                    ft.ProgressRing(
+                        width=32,
+                        height=32,
+                        stroke_width=3,
+                        color=colors["primary"],
+                    ),
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            bgcolor=f"{colors['bg_primary']}E6",  # Semi-transparent
+            expand=True,
+            alignment=ft.Alignment(0, 0),
+            animate_opacity=ft.Animation(150, ft.AnimationCurve.EASE_OUT),
+        )
+        
+        # Fade out current content
+        self.content_container.opacity = 0.3
+        self.content_container.update()
+        
+        # Brief delay for visual feedback
+        await asyncio.sleep(0.1)
+        
+        # Update view
         self.current_view = key
-        self.content_container.content = self.views[key]
-
-        # Rebuild entire UI to ensure navigation items update correctly
-        print("[DEBUG] Rebuilding UI after navigation...")
+        
+        # Rebuild UI
         self._build_app()
-        print("[DEBUG] UI rebuild complete")
-
+        
+        # Fade in new content
+        self.content_container.opacity = 1.0
+        self.content_container.animate_opacity = ft.Animation(200, ft.AnimationCurve.EASE_OUT)
+        self.content_container.update()
+        
         # Load view data
-        self.page.run_task(self._load_view_data, key)
+        await self._load_view_data(key)
 
     def _on_auth_navigate(self, target: str):
         """Handle navigation from auth views (login/registration)."""
