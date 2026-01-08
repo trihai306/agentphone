@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.AgentPortal" parent="Theme.Material3.Dark.NoActionBar">
+    <style name="Theme.AgentPortal" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary colors -->
         <item name="colorPrimary">@color/accent_blue</item>
         <item name="colorPrimaryContainer">@color/accent_blue_container</item>
@@ -38,11 +38,11 @@
         <item name="colorOutline">@color/border_default</item>
         <item name="colorOutlineVariant">@color/divider</item>
 
-        <!-- Status bar -->
+        <!-- Status bar (Light mode - dark icons) -->
         <item name="android:statusBarColor">@color/background_dark</item>
         <item name="android:navigationBarColor">@color/background_dark</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
 
         <!-- Shape -->
         <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Portal.Small</item>

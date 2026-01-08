@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginVertical="4dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="2dp"
-    app:cardBackgroundColor="@android:color/white"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="@color/surface_container"
+    app:strokeColor="@color/border_default"
+    app:strokeWidth="1dp"
     android:foreground="?attr/selectableItemBackground">
 
     <LinearLayout
@@ -16,18 +18,18 @@
         android:padding="16dp"
         android:gravity="center_vertical">
 
-        <!-- Workflow icon -->
+        <!-- Workflow icon with gradient background -->
         <FrameLayout
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:background="@drawable/bg_recording_card_gradient">
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_workflow_icon">
 
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_play_recording"
-                android:tint="@android:color/white"
+                app:tint="@android:color/white"
                 android:contentDescription="Workflow" />
 
         </FrameLayout>
@@ -37,7 +39,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="14dp"
             android:orientation="vertical">
 
             <TextView
@@ -55,7 +57,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="6dp"
                 android:gravity="center_vertical">
 
                 <!-- Event count badge -->
@@ -64,10 +66,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_event_badge"
-                    android:paddingHorizontal="8dp"
-                    android:paddingVertical="2dp"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="4dp"
                     android:textSize="11sp"
-                    android:textColor="#60A5FA"
+                    android:textColor="@color/accent_blue"
+                    android:fontFamily="sans-serif-medium"
                     android:text="15 events" />
 
                 <!-- Duration -->
@@ -75,9 +78,10 @@
                     android:id="@+id/tvDuration"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="10dp"
                     android:textSize="12sp"
                     android:textColor="@color/text_tertiary"
+                    android:drawablePadding="4dp"
                     android:text="1m 23s" />
 
                 <!-- Date -->
@@ -85,7 +89,7 @@
                     android:id="@+id/tvDate"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="10dp"
                     android:textSize="12sp"
                     android:textColor="@color/text_tertiary"
                     android:text="Jan 05" />
@@ -95,24 +99,26 @@
         </LinearLayout>
 
         <!-- Action buttons -->
-        <ImageButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnPlay"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_play"
-            android:tint="#10B981"
+            style="@style/Widget.Portal.IconButton.FilledTonal"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
+            app:icon="@drawable/ic_play"
+            app:iconTint="@color/accent_green"
+            app:backgroundTint="@color/accent_green_container"
             android:contentDescription="Play workflow" />
 
-        <ImageButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnMore"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_more"
-            android:tint="@color/text_tertiary"
+            style="@style/Widget.Portal.IconButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            app:icon="@android:drawable/ic_menu_more"
+            app:iconTint="@color/text_tertiary"
             android:contentDescription="More options" />
 
     </LinearLayout>
 
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

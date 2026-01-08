@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:paddingHorizontal="16dp"
-    android:paddingTop="16dp">
+    android:paddingTop="20dp">
 
     <!-- App header with icon -->
     <LinearLayout
@@ -15,30 +15,30 @@
         android:gravity="center_vertical"
         android:paddingBottom="12dp">
 
-        <!-- App icon -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="#F5F5F5">
+        <!-- App icon with elevated card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@color/surface_elevated">
 
             <ImageView
                 android:id="@+id/ivAppIcon"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
                 android:layout_gravity="center"
                 android:scaleType="fitCenter"
                 android:contentDescription="App icon" />
 
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- App name and workflow count -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="14dp"
             android:orientation="vertical">
 
             <TextView
@@ -48,19 +48,38 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
+                android:fontFamily="sans-serif-medium"
                 android:text="App Name" />
 
             <TextView
                 android:id="@+id/tvWorkflowCount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
+                android:layout_marginTop="2dp"
+                android:textSize="13sp"
                 android:textColor="@color/text_secondary"
                 android:text="3 workflows" />
 
         </LinearLayout>
 
+        <!-- Expand/Collapse indicator (optional) -->
+        <ImageView
+            android:id="@+id/ivExpandIndicator"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_arrow_down"
+            app:tint="@color/text_tertiary"
+            android:contentDescription="Expand"
+            android:visibility="gone" />
+
     </LinearLayout>
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/divider"
+        android:layout_marginBottom="8dp" />
 
     <!-- Workflows for this app -->
     <androidx.recyclerview.widget.RecyclerView
@@ -68,6 +87,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:nestedScrollingEnabled="false"
-        android:overScrollMode="never" />
+        android:overScrollMode="never"
+        android:clipToPadding="false"
+        android:paddingBottom="8dp" />
 
 </LinearLayout>

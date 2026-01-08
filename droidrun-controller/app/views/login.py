@@ -1,11 +1,15 @@
 """Professional Login view for Droidrun Controller - 2025 Edition.
 
 Polished login page with form validation, email/password fields, and enhanced styling.
+Uses standardized component library for consistent UI.
 """
 
 import re
 import flet as ft
 from ..theme import get_colors, RADIUS, get_shadow, ANIMATION, Typography, Easing
+from ..components import Button, ButtonVariant, ButtonSize
+from ..components.ui.input import TextField, PasswordInput, InputSize
+from ..components.common.cards import AlertCard
 
 
 # Validation patterns
@@ -125,54 +129,13 @@ class LoginView(ft.Container):
             on_submit=self._on_submit,
         )
 
-        # Login button with enhanced hover effects
-        self.login_button = ft.Container(
-            content=ft.Row(
-                [
-                    ft.Text(
-                        "Sign In",
-                        size=Typography.BODY_LG,
-                        weight=ft.FontWeight.W_600,
-                        color=colors["text_inverse"],
-                    ),
-                ],
-                alignment=ft.MainAxisAlignment.CENTER,
-            ),
-            height=52,
-            bgcolor=colors["primary"],
-            border_radius=RADIUS["md"],
-            alignment=ft.Alignment(0, 0),
-            animate=ft.Animation(ANIMATION["normal"], Easing.EASE_OUT),
-            animate_scale=ft.Animation(ANIMATION["normal"], Easing.EASE_OUT),
+        # Login button using component library
+        self.login_button = Button(
+            text="Sign In",
+            variant=ButtonVariant.PRIMARY,
+            size=ButtonSize.LARGE,
+            full_width=True,
             on_click=self._on_login_click,
-            on_hover=self._on_button_hover,
-        )
-
-        # Loading indicator (hidden by default)
-        self.loading_indicator = ft.Container(
-            content=ft.Row(
-                [
-                    ft.ProgressRing(
-                        width=20,
-                        height=20,
-                        stroke_width=2,
-                        color=colors["text_inverse"],
-                    ),
-                    ft.Container(width=12),
-                    ft.Text(
-                        "Signing in...",
-                        size=Typography.BODY_LG,
-                        weight=ft.FontWeight.W_600,
-                        color=colors["text_inverse"],
-                    ),
-                ],
-                alignment=ft.MainAxisAlignment.CENTER,
-            ),
-            height=52,
-            bgcolor=colors["primary_dark"],
-            border_radius=RADIUS["md"],
-            alignment=ft.Alignment(0, 0),
-            visible=False,
         )
 
         # Register link with subtle hover
@@ -233,9 +196,8 @@ class LoginView(ft.Container):
                     # Forgot password
                     forgot_password_link,
                     ft.Container(height=24),
-                    # Login button
+                    # Login button (handles its own loading state)
                     self.login_button,
-                    self.loading_indicator,
                     ft.Container(height=28),
                     # Divider with text
                     self._build_divider("or continue with"),
@@ -440,14 +402,15 @@ class LoginView(ft.Container):
     def _set_loading(self, loading: bool):
         """Set loading state."""
         self._is_loading = loading
-        self.login_button.visible = not loading
-        self.loading_indicator.visible = loading
+        # Use Button's built-in loading state
+        self.login_button.set_loading(loading)
         self.email_field.disabled = loading
         self.password_field.disabled = loading
         # Only update if still in page (may have been removed after successful login)
         try:
             if self.page:
-                self.update()
+                self.email_field.update()
+                self.password_field.update()
         except RuntimeError:
             # Control was removed from page, ignore
             pass
@@ -504,19 +467,6 @@ class LoginView(ft.Container):
         """Handle register link click."""
         if self.on_navigate_to_register:
             self.on_navigate_to_register()
-
-    def _on_button_hover(self, e):
-        """Handle button hover effect."""
-        colors = get_colors()
-        if self._is_loading:
-            return
-        if e.data == "true":
-            e.control.scale = 1.02
-            
-        else:
-            e.control.scale = 1.0
-            
-        e.control.update()
 
     def _on_link_hover(self, e):
         """Handle link hover effect."""

@@ -1,11 +1,13 @@
 """Professional Registration view for Droidrun Controller - 2025 Edition.
 
 Polished registration page with form validation, email/password fields, and enhanced styling.
+Uses standardized component library for consistent UI.
 """
 
 import re
 import flet as ft
 from ..theme import get_colors, RADIUS, get_shadow, ANIMATION, Typography, Easing
+from ..components import Button, ButtonVariant, ButtonSize
 
 
 # Validation patterns
@@ -155,54 +157,13 @@ class RegisterView(ft.Container):
             on_submit=self._on_submit,
         )
 
-        # Register button with enhanced hover effects
-        self.register_button = ft.Container(
-            content=ft.Row(
-                [
-                    ft.Text(
-                        "Create Account",
-                        size=Typography.BODY_LG,
-                        weight=ft.FontWeight.W_600,
-                        color=colors["text_inverse"],
-                    ),
-                ],
-                alignment=ft.MainAxisAlignment.CENTER,
-            ),
-            height=52,
-            bgcolor=colors["primary"],
-            border_radius=RADIUS["md"],
-            alignment=ft.Alignment(0, 0),
-            animate=ft.Animation(ANIMATION["normal"], Easing.EASE_OUT),
-            animate_scale=ft.Animation(ANIMATION["normal"], Easing.EASE_OUT),
+        # Register button using component library
+        self.register_button = Button(
+            text="Create Account",
+            variant=ButtonVariant.PRIMARY,
+            size=ButtonSize.LARGE,
+            full_width=True,
             on_click=self._on_register_click,
-            on_hover=self._on_button_hover,
-        )
-
-        # Loading indicator (hidden by default)
-        self.loading_indicator = ft.Container(
-            content=ft.Row(
-                [
-                    ft.ProgressRing(
-                        width=20,
-                        height=20,
-                        stroke_width=2,
-                        color=colors["text_inverse"],
-                    ),
-                    ft.Container(width=12),
-                    ft.Text(
-                        "Creating account...",
-                        size=Typography.BODY_LG,
-                        weight=ft.FontWeight.W_600,
-                        color=colors["text_inverse"],
-                    ),
-                ],
-                alignment=ft.MainAxisAlignment.CENTER,
-            ),
-            height=52,
-            bgcolor=colors["primary_dark"],
-            border_radius=RADIUS["md"],
-            alignment=ft.Alignment(0, 0),
-            visible=False,
         )
 
         # Password requirements helper with enhanced styling
@@ -284,9 +245,8 @@ class RegisterView(ft.Container):
                     self.confirm_password_field,
                     self.confirm_password_error,
                     ft.Container(height=24),
-                    # Register button
+                    # Register button (handles its own loading state)
                     self.register_button,
-                    self.loading_indicator,
                     ft.Container(height=28),
                     # Divider
                     self._build_divider("or continue with"),
@@ -535,13 +495,18 @@ class RegisterView(ft.Container):
     def _set_loading(self, loading: bool):
         """Set loading state."""
         self._is_loading = loading
-        self.register_button.visible = not loading
-        self.loading_indicator.visible = loading
+        # Use Button's built-in loading state
+        self.register_button.set_loading(loading)
         self.email_field.disabled = loading
         self.password_field.disabled = loading
         self.confirm_password_field.disabled = loading
-        if self.page:
-            self.update()
+        try:
+            if self.page:
+                self.email_field.update()
+                self.password_field.update()
+                self.confirm_password_field.update()
+        except RuntimeError:
+            pass
 
     async def _on_register_click(self, e):
         """Handle register button click."""
@@ -603,18 +568,7 @@ class RegisterView(ft.Container):
         if self.on_navigate_to_login:
             self.on_navigate_to_login()
 
-    def _on_button_hover(self, e):
-        """Handle button hover effect."""
-        colors = get_colors()
-        if self._is_loading:
-            return
-        if e.data == "true":
-            e.control.scale = 1.02
-            
-        else:
-            e.control.scale = 1.0
-            
-        e.control.update()
+
 
     def _on_link_hover(self, e):
         """Handle link hover effect."""

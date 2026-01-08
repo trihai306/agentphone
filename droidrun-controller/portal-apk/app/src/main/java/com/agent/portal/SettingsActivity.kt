@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatActivity
 import com.agent.portal.databinding.ActivitySettingsBinding
 import com.agent.portal.recording.RecordingManager
@@ -28,6 +29,7 @@ class SettingsActivity : AppCompatActivity() {
         const val KEY_MAX_EVENTS = "max_events"
         const val KEY_VOLUME_SHORTCUTS = "volume_shortcuts"
         const val KEY_AUTO_UPLOAD = "auto_upload"
+        const val KEY_DARK_MODE = "dark_mode"
         const val KEY_PYTHON_BACKEND_URL = "python_backend_url"
 
         // Default values
@@ -36,6 +38,7 @@ class SettingsActivity : AppCompatActivity() {
         const val DEFAULT_MAX_EVENTS = 1000
         const val DEFAULT_VOLUME_SHORTCUTS = true
         const val DEFAULT_AUTO_UPLOAD = false
+        const val DEFAULT_DARK_MODE = true
         const val DEFAULT_PYTHON_BACKEND_URL = "http://localhost:5000"
 
         /**
@@ -91,6 +94,10 @@ class SettingsActivity : AppCompatActivity() {
         // Load Volume Shortcuts
         val volumeShortcuts = prefs.getBoolean(KEY_VOLUME_SHORTCUTS, DEFAULT_VOLUME_SHORTCUTS)
         binding.switchVolumeShortcuts.isChecked = volumeShortcuts
+
+        // Load Dark Mode
+        val darkMode = prefs.getBoolean(KEY_DARK_MODE, DEFAULT_DARK_MODE)
+        binding.switchDarkMode.isChecked = darkMode
     }
 
     private fun setupListeners() {
@@ -175,8 +182,26 @@ class SettingsActivity : AppCompatActivity() {
 
         // Configure Shortcuts Button
         binding.btnConfigureShortcuts.setOnClickListener {
-            // TODO: Open shortcut configuration dialog
             Toast.makeText(this, "Shortcut configuration coming soon", Toast.LENGTH_SHORT).show()
+        }
+
+        // Dark Mode Toggle
+        binding.switchDarkMode.setOnCheckedChangeListener { view, isChecked ->
+            if (view.isPressed) {
+                prefs.edit().putBoolean(KEY_DARK_MODE, isChecked).apply()
+                animateToggle(view)
+
+                // Apply theme immediately
+                val nightMode = if (isChecked) {
+                    AppCompatDelegate.MODE_NIGHT_YES
+                } else {
+                    AppCompatDelegate.MODE_NIGHT_NO
+                }
+                AppCompatDelegate.setDefaultNightMode(nightMode)
+
+                val message = if (isChecked) "Dark mode enabled" else "Light mode enabled"
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+            }
         }
 
         // Clear Screenshots Button
