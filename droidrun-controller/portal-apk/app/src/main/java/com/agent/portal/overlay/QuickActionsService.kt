@@ -16,6 +16,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.provider.Settings
+import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -33,6 +34,7 @@ import com.agent.portal.R
 import com.agent.portal.accessibility.AccessibilityShortcutHelper
 import com.agent.portal.accessibility.PortalAccessibilityService
 import com.agent.portal.databinding.LayoutQuickActionsBinding
+import com.agent.portal.databinding.LayoutQuickActionsBubbleBinding
 import com.agent.portal.recording.RecordingManager
 import kotlin.math.abs
 
@@ -40,11 +42,14 @@ import kotlin.math.abs
  * Service that shows a floating Quick Actions panel for common shortcuts.
  * 
  * Features:
- * - Draggable floating panel
+ * - Starts as a small bubble in corner (collapsed mode)
+ * - Tap bubble to expand full panel
+ * - Draggable floating panel and bubble
  * - Haptic feedback on button taps
  * - Button scale animations
  * - Swipe to dismiss gesture
  * - Pulse animation for recording state
+ * - Auto-collapse after action (optional)
  */
 class QuickActionsService : Service() {
 
@@ -56,6 +61,9 @@ class QuickActionsService : Service() {
         // Swipe threshold for dismissing panel
         private const val SWIPE_THRESHOLD = 150f
         private const val SWIPE_VELOCITY_THRESHOLD = 500f
+
+        // Bubble margin from screen edge
+        private const val BUBBLE_MARGIN = 16
 
         const val ACTION_SHOW = "com.agent.portal.SHOW_QUICK_ACTIONS"
         const val ACTION_HIDE = "com.agent.portal.HIDE_QUICK_ACTIONS"
@@ -69,8 +77,17 @@ class QuickActionsService : Service() {
     }
 
     private var windowManager: WindowManager? = null
-    private var binding: LayoutQuickActionsBinding? = null
+    
+    // Bubble (collapsed state)
+    private var bubbleBinding: LayoutQuickActionsBubbleBinding? = null
+    private var bubbleParams: WindowManager.LayoutParams? = null
+    
+    // Full panel (expanded state)
+    private var panelBinding: LayoutQuickActionsBinding? = null
+    private var panelParams: WindowManager.LayoutParams? = null
+    
     private var isQuickActionsVisible = false
+    private var isExpanded = false  // Track if panel is expanded or collapsed (bubble)
 
     private val handler = Handler(Looper.getMainLooper())
     private var vibrator: Vibrator? = null
@@ -83,6 +100,11 @@ class QuickActionsService : Service() {
     private var initialTouchY = 0f
     private var velocityTracker: VelocityTracker? = null
     private var isDragging = false
+    private var lastClickTime = 0L
+
+    // Screen dimensions
+    private var screenWidth = 0
+    private var screenHeight = 0
 
     override fun onCreate() {
         super.onCreate()
@@ -90,6 +112,15 @@ class QuickActionsService : Service() {
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         vibrator = getVibratorService()
         createNotificationChannel()
+        getScreenDimensions()
+    }
+
+    private fun getScreenDimensions() {
+        val displayMetrics = DisplayMetrics()
+        @Suppress("DEPRECATION")
+        windowManager?.defaultDisplay?.getMetrics(displayMetrics)
+        screenWidth = displayMetrics.widthPixels
+        screenHeight = displayMetrics.heightPixels
     }
 
     private fun getVibratorService(): Vibrator {
@@ -145,7 +176,7 @@ class QuickActionsService : Service() {
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Quick Actions")
-            .setContentText("Tap to open app")
+            .setContentText("Tap bubble to expand")
             .setSmallIcon(R.drawable.ic_record)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
@@ -161,6 +192,9 @@ class QuickActionsService : Service() {
         }
     }
 
+    /**
+     * Show the Quick Actions - starts in collapsed (bubble) mode
+     */
     private fun showQuickActions() {
         if (isQuickActionsVisible) return
 
@@ -172,46 +206,249 @@ class QuickActionsService : Service() {
         startForeground(NOTIFICATION_ID, createNotification())
 
         try {
-            binding = LayoutQuickActionsBinding.inflate(LayoutInflater.from(this))
-
-            val params = WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                else
-                    WindowManager.LayoutParams.TYPE_PHONE,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                PixelFormat.TRANSLUCENT
-            ).apply {
-                gravity = Gravity.CENTER
-            }
-
-            // Setup touch listener for dragging and swipe to dismiss
-            setupTouchListener(params)
-
-            // Setup action buttons
-            setupActionButtons()
-
-            windowManager?.addView(binding?.root, params)
+            showBubble()
             isQuickActionsVisible = true
-
-            // Animate in
-            binding?.root?.alpha = 0f
-            binding?.root?.scaleX = 0.8f
-            binding?.root?.scaleY = 0.8f
-            binding?.root?.animate()
-                ?.alpha(1f)
-                ?.scaleX(1f)
-                ?.scaleY(1f)
-                ?.setDuration(200)
-                ?.setInterpolator(OvershootInterpolator(1.2f))
-                ?.start()
-
-            Log.i(TAG, "Quick Actions shown")
+            isExpanded = false
+            Log.i(TAG, "Quick Actions shown (bubble mode)")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to show quick actions", e)
+        }
+    }
+
+    /**
+     * Show the collapsed bubble
+     */
+    private fun showBubble() {
+        bubbleBinding = LayoutQuickActionsBubbleBinding.inflate(LayoutInflater.from(this))
+
+        bubbleParams = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            else
+                WindowManager.LayoutParams.TYPE_PHONE,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = Gravity.TOP or Gravity.START
+            // Position at bottom-right corner
+            x = screenWidth - dpToPx(70)
+            y = screenHeight / 2
+        }
+
+        setupBubbleTouchListener()
+        updateBubbleRecordingState()
+
+        windowManager?.addView(bubbleBinding?.root, bubbleParams)
+
+        // Animate in
+        bubbleBinding?.root?.alpha = 0f
+        bubbleBinding?.root?.scaleX = 0.5f
+        bubbleBinding?.root?.scaleY = 0.5f
+        bubbleBinding?.root?.animate()
+            ?.alpha(1f)
+            ?.scaleX(1f)
+            ?.scaleY(1f)
+            ?.setDuration(200)
+            ?.setInterpolator(OvershootInterpolator(1.5f))
+            ?.start()
+    }
+
+    /**
+     * Update bubble appearance based on recording state
+     */
+    private fun updateBubbleRecordingState() {
+        val isRecording = RecordingManager.getState() == RecordingManager.RecordingState.RECORDING
+        
+        if (isRecording) {
+            bubbleBinding?.ivBubbleIcon?.setImageResource(R.drawable.ic_stop_circle)
+            bubbleBinding?.bubbleContainer?.setBackgroundResource(R.drawable.bg_quick_action_bubble_recording)
+        } else {
+            bubbleBinding?.ivBubbleIcon?.setImageResource(R.drawable.ic_grid_actions)
+            bubbleBinding?.bubbleContainer?.setBackgroundResource(R.drawable.bg_quick_action_bubble_button)
+        }
+    }
+
+    /**
+     * Setup touch listener for bubble - drag and tap to expand
+     */
+    private fun setupBubbleTouchListener() {
+        bubbleBinding?.bubbleContainer?.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    initialX = bubbleParams?.x ?: 0
+                    initialY = bubbleParams?.y ?: 0
+                    initialTouchX = event.rawX
+                    initialTouchY = event.rawY
+                    isDragging = false
+                    lastClickTime = System.currentTimeMillis()
+                    true
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val deltaX = event.rawX - initialTouchX
+                    val deltaY = event.rawY - initialTouchY
+                    
+                    if (abs(deltaX) > 10 || abs(deltaY) > 10) {
+                        isDragging = true
+                    }
+                    
+                    bubbleParams?.x = initialX + deltaX.toInt()
+                    bubbleParams?.y = initialY + deltaY.toInt()
+                    windowManager?.updateViewLayout(bubbleBinding?.root, bubbleParams)
+                    true
+                }
+                MotionEvent.ACTION_UP -> {
+                    val clickDuration = System.currentTimeMillis() - lastClickTime
+                    val deltaX = abs(event.rawX - initialTouchX)
+                    val deltaY = abs(event.rawY - initialTouchY)
+                    
+                    // If it was a tap (short duration, minimal movement)
+                    if (clickDuration < 200 && deltaX < 20 && deltaY < 20) {
+                        performHapticFeedback()
+                        expandPanel()
+                    } else {
+                        // Snap to edge after drag
+                        snapBubbleToEdge()
+                    }
+                    isDragging = false
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+
+    /**
+     * Snap bubble to nearest screen edge
+     */
+    private fun snapBubbleToEdge() {
+        val currentX = bubbleParams?.x ?: 0
+        val targetX = if (currentX < screenWidth / 2) {
+            dpToPx(BUBBLE_MARGIN)
+        } else {
+            screenWidth - dpToPx(70)
+        }
+
+        bubbleBinding?.root?.animate()
+            ?.translationX(0f)
+            ?.setDuration(200)
+            ?.setInterpolator(OvershootInterpolator(1.2f))
+            ?.withEndAction {
+                bubbleParams?.x = targetX
+                try {
+                    windowManager?.updateViewLayout(bubbleBinding?.root, bubbleParams)
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to update bubble position", e)
+                }
+            }
+            ?.start()
+    }
+
+    /**
+     * Expand from bubble to full panel
+     */
+    private fun expandPanel() {
+        if (isExpanded) return
+
+        try {
+            // Hide bubble with animation
+            bubbleBinding?.root?.animate()
+                ?.alpha(0f)
+                ?.scaleX(0.5f)
+                ?.scaleY(0.5f)
+                ?.setDuration(150)
+                ?.withEndAction {
+                    try {
+                        windowManager?.removeView(bubbleBinding?.root)
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to remove bubble", e)
+                    }
+                    bubbleBinding = null
+                    
+                    // Show full panel
+                    showFullPanel()
+                }
+                ?.start()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to expand panel", e)
+        }
+    }
+
+    /**
+     * Show the full expanded panel
+     */
+    private fun showFullPanel() {
+        panelBinding = LayoutQuickActionsBinding.inflate(LayoutInflater.from(this))
+
+        panelParams = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            else
+                WindowManager.LayoutParams.TYPE_PHONE,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = Gravity.CENTER
+        }
+
+        setupPanelTouchListener()
+        setupActionButtons()
+
+        windowManager?.addView(panelBinding?.root, panelParams)
+        isExpanded = true
+
+        // Animate in
+        panelBinding?.root?.alpha = 0f
+        panelBinding?.root?.scaleX = 0.8f
+        panelBinding?.root?.scaleY = 0.8f
+        panelBinding?.root?.animate()
+            ?.alpha(1f)
+            ?.scaleX(1f)
+            ?.scaleY(1f)
+            ?.setDuration(200)
+            ?.setInterpolator(OvershootInterpolator(1.2f))
+            ?.start()
+
+        Log.i(TAG, "Quick Actions panel expanded")
+    }
+
+    /**
+     * Collapse panel back to bubble
+     */
+    private fun collapseToButton() {
+        if (!isExpanded) return
+
+        try {
+            stopPulseAnimation()
+            
+            // Animate panel out
+            panelBinding?.root?.animate()
+                ?.alpha(0f)
+                ?.scaleX(0.8f)
+                ?.scaleY(0.8f)
+                ?.setDuration(150)
+                ?.withEndAction {
+                    try {
+                        windowManager?.removeView(panelBinding?.root)
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to remove panel", e)
+                    }
+                    panelBinding = null
+                    isExpanded = false
+                    
+                    // Show bubble again
+                    showBubble()
+                }
+                ?.start()
+                
+            Log.i(TAG, "Quick Actions collapsed to bubble")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to collapse panel", e)
         }
     }
 
@@ -221,25 +458,50 @@ class QuickActionsService : Service() {
         try {
             stopPulseAnimation()
             
-            // Animate out
-            binding?.root?.animate()
-                ?.alpha(0f)
-                ?.scaleX(0.8f)
-                ?.scaleY(0.8f)
-                ?.setDuration(150)
-                ?.withEndAction {
-                    windowManager?.removeView(binding?.root)
-                    binding = null
-                    isQuickActionsVisible = false
-                    stopForeground(true)
-                    stopSelf()
-                }
-                ?.start()
+            // Hide whichever view is currently shown
+            if (isExpanded && panelBinding != null) {
+                panelBinding?.root?.animate()
+                    ?.alpha(0f)
+                    ?.scaleX(0.8f)
+                    ?.scaleY(0.8f)
+                    ?.setDuration(150)
+                    ?.withEndAction {
+                        try {
+                            windowManager?.removeView(panelBinding?.root)
+                        } catch (e: Exception) { }
+                        panelBinding = null
+                        finishHide()
+                    }
+                    ?.start()
+            } else if (bubbleBinding != null) {
+                bubbleBinding?.root?.animate()
+                    ?.alpha(0f)
+                    ?.scaleX(0.5f)
+                    ?.scaleY(0.5f)
+                    ?.setDuration(150)
+                    ?.withEndAction {
+                        try {
+                            windowManager?.removeView(bubbleBinding?.root)
+                        } catch (e: Exception) { }
+                        bubbleBinding = null
+                        finishHide()
+                    }
+                    ?.start()
+            } else {
+                finishHide()
+            }
 
             Log.i(TAG, "Quick Actions hidden")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to hide quick actions", e)
         }
+    }
+
+    private fun finishHide() {
+        isQuickActionsVisible = false
+        isExpanded = false
+        stopForeground(true)
+        stopSelf()
     }
 
     /**
@@ -254,35 +516,37 @@ class QuickActionsService : Service() {
             if (velocityY > 0) 500f else -500f
         } else 0f
 
-        binding?.root?.animate()
+        panelBinding?.root?.animate()
             ?.translationX(translationX)
             ?.translationY(translationY)
             ?.alpha(0f)
             ?.setDuration(200)
             ?.setInterpolator(AccelerateDecelerateInterpolator())
             ?.withEndAction {
-                windowManager?.removeView(binding?.root)
-                binding = null
-                isQuickActionsVisible = false
-                stopForeground(true)
-                stopSelf()
+                try {
+                    windowManager?.removeView(panelBinding?.root)
+                } catch (e: Exception) { }
+                panelBinding = null
+                isExpanded = false
+                
+                // Show bubble instead of closing completely
+                showBubble()
             }
             ?.start()
 
-        Log.i(TAG, "Quick Actions dismissed with swipe")
+        Log.i(TAG, "Quick Actions dismissed with swipe - collapsed to bubble")
     }
 
-    private fun setupTouchListener(params: WindowManager.LayoutParams) {
-        binding?.cardQuickActions?.setOnTouchListener { _, event ->
+    private fun setupPanelTouchListener() {
+        panelBinding?.cardQuickActions?.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
-                    initialX = params.x
-                    initialY = params.y
+                    initialX = panelParams?.x ?: 0
+                    initialY = panelParams?.y ?: 0
                     initialTouchX = event.rawX
                     initialTouchY = event.rawY
                     isDragging = false
                     
-                    // Initialize velocity tracker
                     velocityTracker?.recycle()
                     velocityTracker = VelocityTracker.obtain()
                     velocityTracker?.addMovement(event)
@@ -294,14 +558,13 @@ class QuickActionsService : Service() {
                     val deltaX = event.rawX - initialTouchX
                     val deltaY = event.rawY - initialTouchY
                     
-                    // Check if user is dragging
                     if (abs(deltaX) > 10 || abs(deltaY) > 10) {
                         isDragging = true
                     }
                     
-                    params.x = initialX + deltaX.toInt()
-                    params.y = initialY + deltaY.toInt()
-                    windowManager?.updateViewLayout(binding?.root, params)
+                    panelParams?.x = initialX + deltaX.toInt()
+                    panelParams?.y = initialY + deltaY.toInt()
+                    windowManager?.updateViewLayout(panelBinding?.root, panelParams)
                     true
                 }
                 MotionEvent.ACTION_UP -> {
@@ -314,7 +577,6 @@ class QuickActionsService : Service() {
                     val deltaX = event.rawX - initialTouchX
                     val deltaY = event.rawY - initialTouchY
                     
-                    // Check for swipe to dismiss
                     val isSwipeX = abs(deltaX) > SWIPE_THRESHOLD && abs(velocityX) > SWIPE_VELOCITY_THRESHOLD
                     val isSwipeY = abs(deltaY) > SWIPE_THRESHOLD && abs(velocityY) > SWIPE_VELOCITY_THRESHOLD
                     
@@ -338,9 +600,6 @@ class QuickActionsService : Service() {
         }
     }
 
-    /**
-     * Perform haptic feedback when button is tapped
-     */
     private fun performHapticFeedback() {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -354,9 +613,6 @@ class QuickActionsService : Service() {
         }
     }
 
-    /**
-     * Animate button scale on click for visual feedback
-     */
     private fun animateButtonClick(view: View, action: () -> Unit) {
         performHapticFeedback()
         
@@ -379,91 +635,84 @@ class QuickActionsService : Service() {
             .start()
     }
 
-    /**
-     * Start pulse animation for recording button
-     */
     private fun startPulseAnimation() {
         try {
             pulseAnimation = AnimationUtils.loadAnimation(this, R.anim.anim_pulse)
-            binding?.btnQuickRecord?.startAnimation(pulseAnimation)
+            panelBinding?.btnQuickRecord?.startAnimation(pulseAnimation)
         } catch (e: Exception) {
             Log.w(TAG, "Failed to start pulse animation", e)
         }
     }
 
-    /**
-     * Stop pulse animation
-     */
     private fun stopPulseAnimation() {
         pulseAnimation?.cancel()
         pulseAnimation = null
-        binding?.btnQuickRecord?.clearAnimation()
+        panelBinding?.btnQuickRecord?.clearAnimation()
     }
 
     private fun setupActionButtons() {
         val a11yService = PortalAccessibilityService.instance
 
-        // Close button
-        binding?.btnCloseQuickActions?.setOnClickListener { view ->
+        // Close button - collapse to bubble instead of full hide
+        panelBinding?.btnCloseQuickActions?.setOnClickListener { view ->
             animateButtonClick(view) {
-                hideQuickActions()
+                collapseToButton()
             }
         }
 
         // Back button
-        binding?.btnQuickBack?.setOnClickListener { view ->
+        panelBinding?.btnQuickBack?.setOnClickListener { view ->
             animateButtonClick(view) {
                 a11yService?.let { AccessibilityShortcutHelper.pressBack(it) }
             }
         }
 
         // Home button
-        binding?.btnQuickHome?.setOnClickListener { view ->
+        panelBinding?.btnQuickHome?.setOnClickListener { view ->
             animateButtonClick(view) {
                 a11yService?.let { AccessibilityShortcutHelper.pressHome(it) }
             }
         }
 
         // Recents button
-        binding?.btnQuickRecents?.setOnClickListener { view ->
+        panelBinding?.btnQuickRecents?.setOnClickListener { view ->
             animateButtonClick(view) {
                 a11yService?.let { AccessibilityShortcutHelper.showRecents(it) }
             }
         }
 
         // Screenshot button
-        binding?.btnQuickScreenshot?.setOnClickListener { view ->
+        panelBinding?.btnQuickScreenshot?.setOnClickListener { view ->
             animateButtonClick(view) {
                 a11yService?.let {
                     AccessibilityShortcutHelper.takeScreenshot(it)
-                    // Hide panel after taking screenshot
-                    handler.postDelayed({ hideQuickActions() }, 300)
+                    handler.postDelayed({ collapseToButton() }, 300)
                 }
             }
         }
 
         // Notifications button
-        binding?.btnQuickNotifications?.setOnClickListener { view ->
+        panelBinding?.btnQuickNotifications?.setOnClickListener { view ->
             animateButtonClick(view) {
                 a11yService?.let {
                     AccessibilityShortcutHelper.showNotifications(it)
-                    hideQuickActions()
+                    collapseToButton()
                 }
             }
         }
 
         // Settings button
-        binding?.btnQuickSettings?.setOnClickListener { view ->
+        panelBinding?.btnQuickSettings?.setOnClickListener { view ->
             animateButtonClick(view) {
                 a11yService?.let {
                     AccessibilityShortcutHelper.showQuickSettings(it)
-                    hideQuickActions()
+                    collapseToButton()
                 }
             }
         }
 
         // Toggle Recording button
-        binding?.btnQuickRecord?.setOnClickListener { view ->
+        panelBinding?.btnQuickRecord?.setOnClickListener { view ->
             animateButtonClick(view) {
                 AccessibilityShortcutHelper.toggleRecording(this)
                 updateRecordingButton()
@@ -477,21 +726,24 @@ class QuickActionsService : Service() {
         val isRecording = RecordingManager.getState() == RecordingManager.RecordingState.RECORDING
 
         if (isRecording) {
-            binding?.ivQuickRecordIcon?.setImageResource(R.drawable.ic_stop_circle)
-            binding?.tvQuickRecordLabel?.text = "Stop"
-            binding?.btnQuickRecord?.setBackgroundResource(R.drawable.bg_quick_action_button_active)
-            binding?.tvQuickRecordLabel?.setTextColor(0xFFFF4757.toInt())
+            panelBinding?.ivQuickRecordIcon?.setImageResource(R.drawable.ic_stop_circle)
+            panelBinding?.tvQuickRecordLabel?.text = "Stop"
+            panelBinding?.btnQuickRecord?.setBackgroundResource(R.drawable.bg_quick_action_button_active)
+            panelBinding?.tvQuickRecordLabel?.setTextColor(0xFFFF4757.toInt())
             
-            // Start pulse animation when recording
             startPulseAnimation()
         } else {
-            binding?.ivQuickRecordIcon?.setImageResource(R.drawable.ic_record)
-            binding?.tvQuickRecordLabel?.text = "Record"
-            binding?.btnQuickRecord?.setBackgroundResource(R.drawable.bg_quick_action_button)
-            binding?.tvQuickRecordLabel?.setTextColor(0x99FFFFFF.toInt())
+            panelBinding?.ivQuickRecordIcon?.setImageResource(R.drawable.ic_record)
+            panelBinding?.tvQuickRecordLabel?.text = "Record"
+            panelBinding?.btnQuickRecord?.setBackgroundResource(R.drawable.bg_quick_action_button)
+            panelBinding?.tvQuickRecordLabel?.setTextColor(0x99FFFFFF.toInt())
             
-            // Stop pulse animation when not recording
             stopPulseAnimation()
         }
+    }
+
+    private fun dpToPx(dp: Int): Int {
+        val density = resources.displayMetrics.density
+        return (dp * density).toInt()
     }
 }

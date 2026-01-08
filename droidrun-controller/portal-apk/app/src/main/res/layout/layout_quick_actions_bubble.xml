@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="4dp">
+
+    <!-- Bubble container -->
+    <FrameLayout
+        android:id="@+id/bubbleContainer"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:background="@drawable/bg_quick_action_bubble_button"
+        android:elevation="6dp">
+
+        <ImageView
+            android:id="@+id/ivBubbleIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_grid_actions"
+            app:tint="@android:color/white"
+            android:contentDescription="Quick Actions" />
+
+    </FrameLayout>
+
+</FrameLayout>
