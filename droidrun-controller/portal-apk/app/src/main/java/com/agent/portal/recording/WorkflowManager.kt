@@ -49,13 +49,15 @@ object WorkflowManager {
      * @param appPackage Package name of the recorded app
      * @param appName Display name of the recorded app
      * @param events List of recorded events
+     * @param category Workflow category (LOGIN, SEARCH, etc.)
      * @return Workflow ID if successful, null if failed
      */
     fun saveWorkflow(
         name: String,
         appPackage: String,
         appName: String?,
-        events: List<RecordedEvent>
+        events: List<RecordedEvent>,
+        category: String = "GENERAL"
     ): String? {
         val context = contextRef ?: return null
 
@@ -84,7 +86,8 @@ object WorkflowManager {
                 events = events,
                 createdAt = timestamp,
                 durationMs = duration,
-                eventCount = events.size
+                eventCount = events.size,
+                category = category
             )
 
             // Save workflow file
@@ -104,7 +107,8 @@ object WorkflowManager {
                 appName = appName ?: appPackage,
                 createdAt = timestamp,
                 durationMs = duration,
-                eventCount = events.size
+                eventCount = events.size,
+                category = category
             )
             workflowIndex.add(0, metadata) // Add to beginning (most recent first)
             saveIndex()
@@ -301,7 +305,8 @@ data class Workflow(
     val events: List<RecordedEvent>,
     val createdAt: Long,
     val durationMs: Long,
-    val eventCount: Int
+    val eventCount: Int,
+    val category: String = "GENERAL"
 ) {
     /**
      * Format creation date for display
@@ -335,7 +340,8 @@ data class WorkflowMetadata(
     val appName: String,
     val createdAt: Long,
     val durationMs: Long,
-    val eventCount: Int
+    val eventCount: Int,
+    val category: String = "GENERAL"
 ) {
     /**
      * Format creation date for display

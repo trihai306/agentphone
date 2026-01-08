@@ -62,6 +62,41 @@
 
     </LinearLayout>
 
+    <!-- Smart Analysis Results -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="16dp"
+        android:visibility="visible">
+
+        <!-- Category Badge -->
+        <TextView
+            android:id="@+id/tvCategory"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_category_badge"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp"
+            android:textSize="13sp"
+            android:textColor="@color/accent_blue"
+            android:fontFamily="sans-serif-medium"
+            android:text="📱 General"
+            android:visibility="gone" />
+
+        <!-- Optimization Stats -->
+        <TextView
+            android:id="@+id/tvOptimizationStats"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textSize="12sp"
+            android:textColor="@color/accent_green"
+            android:text="✨ Optimized: removed 5 redundant events"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
     <!-- Workflow name input -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tilWorkflowName"

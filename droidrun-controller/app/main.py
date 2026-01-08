@@ -3,7 +3,6 @@
 import flet as ft
 from .theme import get_theme, get_colors, set_theme_mode, get_theme_mode, SPACING, RADIUS, ANIMATION, get_shadow
 from .views import DevicesView, WorkflowsView, ExecutionsView, SettingsView, AgentRunnerView, LoginView, RegisterView
-from .views.analytics import AnalyticsView
 from .views.phone_viewer import PhoneViewerView
 from .components.toast import ToastManager
 from .components.notification_panel import NotificationPanel
@@ -442,7 +441,6 @@ class DroidrunApp:
                 "agent_runner": AgentRunnerView(self.app_state, self.toast),
                 "workflows": WorkflowsView(self.app_state, self.toast),
                 "executions": ExecutionsView(self.app_state, self.toast),
-                "analytics": AnalyticsView(self.app_state, self.toast),
                 "settings": SettingsView(self.app_state, self.toast),
             }
             print("[DEBUG] Views created successfully")
@@ -458,9 +456,9 @@ class DroidrunApp:
             bottom=16 if is_mobile else 24
         )
 
-        # Content area
+        # Content area - use current_view instead of hardcoded "dashboard"
         self.content_container = ft.Container(
-            content=self.views["dashboard"],
+            content=self.views.get(self.current_view, self.views["dashboard"]),
             expand=True,
             padding=content_padding,
             bgcolor=get_colors()["bg_primary"],
@@ -604,7 +602,6 @@ class DroidrunApp:
                 ("agent_runner", ft.Icons.SMART_TOY_OUTLINED, ft.Icons.SMART_TOY),
                 ("workflows", ft.Icons.ACCOUNT_TREE_OUTLINED, ft.Icons.ACCOUNT_TREE),
                 ("executions", ft.Icons.HISTORY_OUTLINED, ft.Icons.HISTORY),
-                ("analytics", ft.Icons.ANALYTICS_OUTLINED, ft.Icons.ANALYTICS),
             ]
 
             main_nav = ft.Column(
@@ -720,7 +717,6 @@ class DroidrunApp:
             ("agent_runner", "Agent Runner", ft.Icons.SMART_TOY_OUTLINED, ft.Icons.SMART_TOY),
             ("workflows", "Workflows", ft.Icons.ACCOUNT_TREE_OUTLINED, ft.Icons.ACCOUNT_TREE),
             ("executions", "History", ft.Icons.HISTORY_OUTLINED, ft.Icons.HISTORY),
-            ("analytics", "Analytics", ft.Icons.ANALYTICS_OUTLINED, ft.Icons.ANALYTICS),
         ]
 
         main_nav = ft.Column(

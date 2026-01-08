@@ -149,31 +149,36 @@ class PhoneViewerView(ft.Container):
         """Handle search input change."""
         self._search_query = query
         self.content = self._build_content()
-        self.update()
+        if self.page:
+            self.update()
 
     def _on_status_filter_change(self, status: str):
         """Handle status filter change."""
         self._status_filter = status
         self.content = self._build_content()
-        self.update()
+        if self.page:
+            self.update()
 
     def _on_version_filter_change(self, version: str):
         """Handle version filter change."""
         self._version_filter = version
         self.content = self._build_content()
-        self.update()
+        if self.page:
+            self.update()
 
     def _on_sort_change(self, sort_by: str):
         """Handle sort selection change."""
         self._sort_by = sort_by
         self.content = self._build_content()
-        self.update()
+        if self.page:
+            self.update()
 
     def _on_view_mode_change(self, mode: str):
         """Handle view mode toggle change."""
         self._view_mode = mode
         self.content = self._build_content()
-        self.update()
+        if self.page:
+            self.update()
 
     def _build_content(self):
         """Build the view content with modern spacing."""

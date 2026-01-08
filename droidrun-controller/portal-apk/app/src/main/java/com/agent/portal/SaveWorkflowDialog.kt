@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.agent.portal.recording.RecordedEvent
 import com.agent.portal.recording.RecordingManager
 import com.agent.portal.recording.Workflow
+import com.agent.portal.recording.WorkflowAnalyzer
 import com.agent.portal.recording.WorkflowManager
 import com.google.android.material.chip.Chip
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -22,7 +23,12 @@ import com.google.android.material.textfield.TextInputLayout
 
 /**
  * Dialog for saving recorded workflow with a user-defined name.
- * Shows app info, event stats, and suggested names.
+ * 
+ * Enhanced with:
+ * - Smart workflow analysis and optimization
+ * - Auto-generated intelligent names
+ * - Category detection and display
+ * - Optimization stats
  */
 class SaveWorkflowDialog(
     private val context: Context,
@@ -33,8 +39,21 @@ class SaveWorkflowDialog(
 ) {
 
     private var dialog: AlertDialog? = null
+    private var analysis: WorkflowAnalyzer.WorkflowAnalysis? = null
 
     fun show() {
+        // Get app name first
+        val appName = try {
+            context.packageManager.getApplicationLabel(
+                context.packageManager.getApplicationInfo(appPackage, 0)
+            ).toString()
+        } catch (e: Exception) {
+            appPackage.substringAfterLast(".")
+        }
+
+        // Analyze workflow (this also optimizes events)
+        analysis = WorkflowAnalyzer.analyzeWorkflow(events, appName)
+
         // Inflate dialog view
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_save_workflow, null)
 
@@ -50,6 +69,10 @@ class SaveWorkflowDialog(
         val chipTest = dialogView.findViewById<Chip>(R.id.chipTest)
         val rvEventPreview = dialogView.findViewById<RecyclerView>(R.id.rvEventPreview)
 
+        // Optional: Category badge (if view exists)
+        val tvCategory = dialogView.findViewById<TextView>(R.id.tvCategory)
+        val tvOptimizationStats = dialogView.findViewById<TextView>(R.id.tvOptimizationStats)
+
         // Load app info
         try {
             val pm = context.packageManager
@@ -60,29 +83,57 @@ class SaveWorkflowDialog(
             tvAppName.text = appPackage
         }
 
+        // Use optimized events for stats
+        val optimizedEvents = analysis?.optimizedEvents ?: events
+        
         // Calculate duration
-        val durationMs = if (events.size >= 2) {
-            events.last().relativeTimestamp - events.first().relativeTimestamp
+        val durationMs = if (optimizedEvents.size >= 2) {
+            optimizedEvents.last().relativeTimestamp - optimizedEvents.first().relativeTimestamp
         } else {
             0L
         }
         val seconds = (durationMs / 1000) % 60
         val minutes = (durationMs / 1000 / 60) % 60
         val durationStr = if (minutes > 0) "${minutes}m ${seconds}s" else "${seconds}s"
-        tvEventStats.text = "${events.size} events • $durationStr"
-
-        // Generate default name based on app and timestamp
-        val appName = try {
-            context.packageManager.getApplicationLabel(
-                context.packageManager.getApplicationInfo(appPackage, 0)
-            ).toString()
-        } catch (e: Exception) {
-            appPackage.substringAfterLast(".")
+        
+        // Show event stats with optimization info
+        val originalCount = analysis?.originalEventCount ?: events.size
+        val optimizedCount = analysis?.optimizedEventCount ?: events.size
+        
+        if (originalCount != optimizedCount) {
+            tvEventStats.text = "${optimizedCount} events • $durationStr (optimized from $originalCount)"
+        } else {
+            tvEventStats.text = "${optimizedCount} events • $durationStr"
         }
 
-        val defaultName = "$appName Workflow"
-        etWorkflowName.setText(defaultName)
+        // Show category if view exists
+        tvCategory?.let { categoryView ->
+            analysis?.let { a ->
+                categoryView.visibility = View.VISIBLE
+                categoryView.text = "${a.category.icon} ${a.category.displayName}"
+            }
+        }
+
+        // Show optimization stats if view exists
+        tvOptimizationStats?.let { statsView ->
+            analysis?.let { a ->
+                if (a.originalEventCount != a.optimizedEventCount) {
+                    statsView.visibility = View.VISIBLE
+                    val saved = a.originalEventCount - a.optimizedEventCount
+                    statsView.text = "✨ Optimized: removed $saved redundant events"
+                } else {
+                    statsView.visibility = View.GONE
+                }
+            }
+        }
+
+        // Use smart generated name
+        val smartName = analysis?.suggestedName ?: "$appName Workflow"
+        etWorkflowName.setText(smartName)
         etWorkflowName.selectAll()
+
+        // Update chips based on detected category
+        updateChipsForCategory(analysis?.category, chipLogin, chipCheckout, chipNavigation, chipTest)
 
         // Setup suggestion chips
         val suggestions = listOf(
@@ -99,10 +150,10 @@ class SaveWorkflowDialog(
             }
         }
 
-        // Setup event preview (show first 5 events)
-        val previewEvents = events.take(5)
+        // Setup event preview (show optimized events)
+        val previewEvents = optimizedEvents.take(5)
         rvEventPreview.layoutManager = LinearLayoutManager(context)
-        rvEventPreview.adapter = EventPreviewAdapter(previewEvents, events.size)
+        rvEventPreview.adapter = EventPreviewAdapter(previewEvents, optimizedEvents.size)
 
         // Build and show dialog
         dialog = MaterialAlertDialogBuilder(context)
@@ -118,16 +169,24 @@ class SaveWorkflowDialog(
                 // Initialize WorkflowManager if needed
                 WorkflowManager.init(context)
 
-                // Save workflow
+                // Save workflow with OPTIMIZED events
+                val eventsToSave = analysis?.optimizedEvents ?: events
+                val category = analysis?.category?.name ?: "GENERAL"
+
                 val workflowId = WorkflowManager.saveWorkflow(
                     name = name,
                     appPackage = appPackage,
                     appName = appName,
-                    events = events
+                    events = eventsToSave,
+                    category = category
                 )
 
                 if (workflowId != null) {
-                    Toast.makeText(context, "Workflow saved: $name", Toast.LENGTH_SHORT).show()
+                    val savedCount = eventsToSave.size
+                    val optimizedMsg = if (events.size != savedCount) {
+                        " (optimized from ${events.size})"
+                    } else ""
+                    Toast.makeText(context, "Saved: $name ($savedCount events$optimizedMsg)", Toast.LENGTH_SHORT).show()
                     onSaved(workflowId, name)
                 } else {
                     Toast.makeText(context, "Failed to save workflow", Toast.LENGTH_SHORT).show()
@@ -140,6 +199,30 @@ class SaveWorkflowDialog(
             .create()
 
         dialog?.show()
+    }
+
+    /**
+     * Highlight the chip that matches detected category
+     */
+    private fun updateChipsForCategory(
+        category: WorkflowAnalyzer.WorkflowCategory?,
+        chipLogin: Chip,
+        chipCheckout: Chip,
+        chipNavigation: Chip,
+        chipTest: Chip
+    ) {
+        // Reset all chips
+        listOf(chipLogin, chipCheckout, chipNavigation, chipTest).forEach {
+            it.isChecked = false
+        }
+
+        // Highlight matching category
+        when (category) {
+            WorkflowAnalyzer.WorkflowCategory.LOGIN -> chipLogin.isChecked = true
+            WorkflowAnalyzer.WorkflowCategory.CHECKOUT -> chipCheckout.isChecked = true
+            WorkflowAnalyzer.WorkflowCategory.NAVIGATION -> chipNavigation.isChecked = true
+            else -> { /* No chip to highlight */ }
+        }
     }
 
     /**
