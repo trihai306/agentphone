@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/quickActionsContainer"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="8dp">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardQuickActions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="#F0171923"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="16dp"
+        app:strokeColor="#33FFFFFF"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:background="@drawable/bg_recording_bubble_gradient">
+
+            <!-- Header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingBottom="8dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Quick Actions"
+                    android:textSize="14sp"
+                    android:textColor="#FFFFFF"
+                    android:fontFamily="sans-serif-medium" />
+
+                <ImageView
+                    android:id="@+id/btnCloseQuickActions"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_close"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Close"
+                    app:tint="#99FFFFFF" />
+
+            </LinearLayout>
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#1AFFFFFF"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Action Buttons Row 1 -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <!-- Back Button -->
+                <FrameLayout
+                    android:id="@+id/btnQuickBack"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/bg_quick_action_button"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_arrow_back"
+                            app:tint="#60A5FA"
+                            android:contentDescription="Back" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Back"
+                            android:textSize="9sp"
+                            android:textColor="#99FFFFFF"
+                            android:layout_marginTop="2dp" />
+
+                    </LinearLayout>
+
+                </FrameLayout>
+
+                <!-- Home Button -->
+                <FrameLayout
+                    android:id="@+id/btnQuickHome"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/bg_quick_action_button"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_home"
+                            app:tint="#4ADE80"
+                            android:contentDescription="Home" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Home"
+                            android:textSize="9sp"
+                            android:textColor="#99FFFFFF"
+                            android:layout_marginTop="2dp" />
+
+                    </LinearLayout>
+
+                </FrameLayout>
+
+                <!-- Recents Button -->
+                <FrameLayout
+                    android:id="@+id/btnQuickRecents"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/bg_quick_action_button"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_recents"
+                            app:tint="#A78BFA"
+                            android:contentDescription="Recents" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Recents"
+                            android:textSize="9sp"
+                            android:textColor="#99FFFFFF"
+                            android:layout_marginTop="2dp" />
+
+                    </LinearLayout>
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+            <!-- Action Buttons Row 2 -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="4dp">
+
+                <!-- Screenshot Button -->
+                <FrameLayout
+                    android:id="@+id/btnQuickScreenshot"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/bg_quick_action_button"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_screenshot"
+                            app:tint="#FBBF24"
+                            android:contentDescription="Screenshot" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Shot"
+                            android:textSize="9sp"
+                            android:textColor="#99FFFFFF"
+                            android:layout_marginTop="2dp" />
+
+                    </LinearLayout>
+
+                </FrameLayout>
+
+                <!-- Notifications Button -->
+                <FrameLayout
+                    android:id="@+id/btnQuickNotifications"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/bg_quick_action_button"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_notifications"
+                            app:tint="#22D3EE"
+                            android:contentDescription="Notifications" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Notify"
+                            android:textSize="9sp"
+                            android:textColor="#99FFFFFF"
+                            android:layout_marginTop="2dp" />
+
+                    </LinearLayout>
+
+                </FrameLayout>
+
+                <!-- Toggle Recording Button -->
+                <FrameLayout
+                    android:id="@+id/btnQuickRecord"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/bg_quick_action_button_active"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:id="@+id/ivQuickRecordIcon"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_stop_circle"
+                            app:tint="#FF4757"
+                            android:contentDescription="Stop Recording" />
+
+                        <TextView
+                            android:id="@+id/tvQuickRecordLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Stop"
+                            android:textSize="9sp"
+                            android:textColor="#FF4757"
+                            android:fontFamily="sans-serif-medium"
+                            android:layout_marginTop="2dp" />
+
+                    </LinearLayout>
+
+                </FrameLayout>
+
+                <!-- Settings Button -->
+                <FrameLayout
+                    android:id="@+id/btnQuickSettings"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/bg_quick_action_button"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_settings_quick"
+                            app:tint="#94A3B8"
+                            android:contentDescription="Settings" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Settings"
+                            android:textSize="9sp"
+                            android:textColor="#99FFFFFF"
+                            android:layout_marginTop="2dp" />
+
+                    </LinearLayout>
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+</FrameLayout>

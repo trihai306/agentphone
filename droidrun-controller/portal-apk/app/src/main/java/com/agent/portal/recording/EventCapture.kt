@@ -24,15 +24,26 @@ object EventCapture {
 
     private const val TAG = "EventCapture"
 
+    // Packages to exclude from recording (e.g., the portal app itself)
+    // This prevents Quick Actions button clicks from polluting the recording history
+    private val EXCLUDED_PACKAGES = setOf(
+        "com.agent.portal"
+    )
+
     // Event type constants for consistent naming in recorded events
     private const val EVENT_TAP = "tap"
+    private const val EVENT_DOUBLE_TAP = "double_tap"
     private const val EVENT_LONG_TAP = "long_tap"
     private const val EVENT_TEXT_INPUT = "text_input"
+    private const val EVENT_TEXT_DELETE = "text_delete"
     private const val EVENT_SCROLL = "scroll"
     private const val EVENT_FOCUS = "focus"
     private const val EVENT_GESTURE_START = "gesture_start"
     private const val EVENT_GESTURE_END = "gesture_end"
     private const val EVENT_UNKNOWN = "unknown"
+
+    // Advanced gesture detector instance
+    private val gestureDetector = AdvancedGestureDetector()
 
     /**
      * Process an AccessibilityEvent and extract relevant data for recording.
@@ -47,52 +58,365 @@ object EventCapture {
      * @return RecordedEvent if the event is recordable, null if it should be ignored
      */
     fun captureEvent(event: AccessibilityEvent): RecordedEvent? {
-        // Get the source node - critical for extracting element properties
-        val node = event.source ?: return null
+        // Filter out events from excluded packages (e.g., portal app itself)
+        // This prevents Quick Actions button clicks from being recorded
+        val packageName = event.packageName?.toString() ?: ""
+        if (packageName in EXCLUDED_PACKAGES) {
+            Log.d(TAG, "Ignoring event from excluded package: $packageName")
+            return null
+        }
+
+        // Map event type to recording action first
+        var eventType = mapEventType(event.eventType)
+        if (eventType == null) {
+            Log.d(TAG, "Ignoring event type: ${event.eventType}")
+            return null
+        }
+
+        // Handle scroll debouncing - only record when gesture is complete
+        if (eventType == EVENT_SCROLL) {
+            return captureScrollEvent(event)
+        }
+
+        // Get the source node - may be null for some events
+        val node = event.source
 
         return try {
-            // Map event type to recording action
-            val eventType = mapEventType(event.eventType)
-            if (eventType == null) {
-                Log.d(TAG, "Ignoring event type: ${event.eventType}")
-                return null
+            if (node != null) {
+                // Extract element properties from node
+                val elementData = extractElementData(node)
+
+                // Build action-specific data (may be enhanced with gesture detection)
+                var actionData = extractActionData(event)
+
+                // Detect advanced gestures for tap events
+                if (eventType == EVENT_TAP) {
+                    val gestureType = gestureDetector.processTapEvent(
+                        event,
+                        elementData.centerX,
+                        elementData.centerY,
+                        elementData.resourceId
+                    )
+
+                    if (gestureType == GestureType.DOUBLE_TAP) {
+                        eventType = EVENT_DOUBLE_TAP
+                        actionData = (actionData ?: mutableMapOf()).toMutableMap().apply {
+                            put("gesture_type", "double_tap")
+                            put("tap_count", 2)
+                        }
+                        Log.d(TAG, "✓ Converted tap to double_tap")
+                    }
+                }
+
+                // Detect text operations for text change events
+                if (eventType == EVENT_TEXT_INPUT) {
+                    val beforeText = event.beforeText?.toString() ?: ""
+                    val currentText = getTextFromEvent(event)
+                    val textOp = gestureDetector.processTextChange(
+                        beforeText,
+                        currentText,
+                        event.addedCount,
+                        event.removedCount
+                    )
+
+                    // If it's a deletion, change event type
+                    if (textOp == TextOperationType.DELETE) {
+                        eventType = EVENT_TEXT_DELETE
+                        actionData = (actionData ?: mutableMapOf()).toMutableMap().apply {
+                            put("operation_type", "delete")
+                            put("is_backspace", event.removedCount == 1)
+                            put("deleted_text", beforeText.substring(
+                                event.fromIndex,
+                                minOf(event.fromIndex + event.removedCount, beforeText.length)
+                            ))
+                        }
+                        Log.d(TAG, "✓ Detected text deletion: ${event.removedCount} chars")
+                    }
+                }
+
+                // Create the recorded event with full data
+                RecordedEvent(
+                    eventType = eventType,
+                    timestamp = System.currentTimeMillis(),
+                    packageName = event.packageName?.toString() ?: "",
+                    className = event.className?.toString() ?: "",
+                    resourceId = elementData.resourceId,
+                    contentDescription = elementData.contentDescription,
+                    text = elementData.text,
+                    bounds = elementData.bounds,
+                    isClickable = elementData.isClickable,
+                    isEditable = elementData.isEditable,
+                    isScrollable = elementData.isScrollable,
+                    actionData = actionData,
+                    x = elementData.centerX,
+                    y = elementData.centerY,
+                    nodeIndex = null  // Will be calculated if needed during replay
+                )
+            } else {
+                // Create event with available data when source is null
+                Log.d(TAG, "Event source is null, creating basic event: $eventType")
+                val actionData = extractActionData(event)
+                RecordedEvent(
+                    eventType = eventType,
+                    timestamp = System.currentTimeMillis(),
+                    packageName = event.packageName?.toString() ?: "",
+                    className = event.className?.toString() ?: "",
+                    resourceId = "",
+                    contentDescription = event.contentDescription?.toString() ?: "",
+                    text = event.text?.joinToString(" ") ?: "",
+                    bounds = "",
+                    isClickable = false,
+                    isEditable = false,
+                    isScrollable = false,
+                    actionData = actionData,
+                    x = null,
+                    y = null,
+                    nodeIndex = null
+                )
             }
-
-            // Extract element properties
-            val elementData = extractElementData(node)
-
-            // Build action-specific data
-            val actionData = extractActionData(event)
-
-            // Create the recorded event
-            RecordedEvent(
-                eventType = eventType,
-                timestamp = System.currentTimeMillis(),
-                packageName = event.packageName?.toString() ?: "",
-                className = event.className?.toString() ?: "",
-                resourceId = elementData.resourceId,
-                contentDescription = elementData.contentDescription,
-                text = elementData.text,
-                bounds = elementData.bounds,
-                isClickable = elementData.isClickable,
-                isEditable = elementData.isEditable,
-                isScrollable = elementData.isScrollable,
-                actionData = actionData,
-                x = elementData.centerX,
-                y = elementData.centerY,
-                nodeIndex = null  // Will be calculated if needed during replay
-            )
         } catch (e: Exception) {
             Log.e(TAG, "Error capturing event", e)
             null
         } finally {
             // CRITICAL: Always recycle the node to prevent memory leaks
-            try {
-                node.recycle()
-            } catch (e: Exception) {
-                Log.w(TAG, "Error recycling node", e)
+            if (node != null) {
+                try {
+                    node.recycle()
+                } catch (e: Exception) {
+                    Log.w(TAG, "Error recycling node", e)
+                }
             }
         }
+    }
+
+    /**
+     * Capture scroll event with debouncing.
+     * Multiple rapid scroll events are accumulated into a single event.
+     *
+     * @param event The scroll AccessibilityEvent
+     * @return RecordedEvent if scroll gesture is complete, null if still accumulating
+     */
+    private fun captureScrollEvent(event: AccessibilityEvent): RecordedEvent? {
+        val packageName = event.packageName?.toString() ?: ""
+        val className = event.className?.toString() ?: ""
+
+        // Extract scroll data
+        val deltaX = if (event.maxScrollX > 0) event.scrollDeltaX else 0
+        val deltaY = if (event.maxScrollY > 0) event.scrollDeltaY else 0
+
+        // Determine direction
+        val direction = when {
+            deltaY > 0 -> "down"
+            deltaY < 0 -> "up"
+            deltaX > 0 -> "right"
+            deltaX < 0 -> "left"
+            else -> "unknown"
+        }
+
+        // Process with debouncing
+        val scrollResult = gestureDetector.processScrollEvent(
+            direction = direction,
+            deltaX = deltaX,
+            deltaY = deltaY,
+            packageName = packageName,
+            className = className
+        )
+
+        // If not ready to record yet, return null
+        if (!scrollResult.shouldRecord) {
+            Log.d(TAG, "Scroll debounced, waiting for more events or timeout")
+            return null
+        }
+
+        // Create scroll event with accumulated deltas
+        Log.d(TAG, "✓ Recording scroll: direction=${scrollResult.direction}, deltaX=${scrollResult.accumulatedDeltaX}, deltaY=${scrollResult.accumulatedDeltaY}")
+
+        val node = event.source
+        return try {
+            val actionData = buildScrollActionData(
+                scrollResult.direction,
+                scrollResult.accumulatedDeltaX,
+                scrollResult.accumulatedDeltaY,
+                event.scrollX,
+                event.scrollY,
+                event.maxScrollX,
+                event.maxScrollY
+            )
+
+            if (node != null) {
+                val elementData = extractElementData(node)
+                RecordedEvent(
+                    eventType = EVENT_SCROLL,
+                    timestamp = System.currentTimeMillis(),
+                    packageName = packageName,
+                    className = className,
+                    resourceId = elementData.resourceId,
+                    contentDescription = elementData.contentDescription,
+                    text = elementData.text,
+                    bounds = elementData.bounds,
+                    isClickable = elementData.isClickable,
+                    isEditable = elementData.isEditable,
+                    isScrollable = elementData.isScrollable,
+                    actionData = actionData,
+                    x = elementData.centerX,
+                    y = elementData.centerY,
+                    nodeIndex = null
+                )
+            } else {
+                RecordedEvent(
+                    eventType = EVENT_SCROLL,
+                    timestamp = System.currentTimeMillis(),
+                    packageName = packageName,
+                    className = className,
+                    resourceId = "",
+                    contentDescription = event.contentDescription?.toString() ?: "",
+                    text = event.text?.joinToString(" ") ?: "",
+                    bounds = "",
+                    isClickable = false,
+                    isEditable = false,
+                    isScrollable = true,
+                    actionData = actionData,
+                    x = null,
+                    y = null,
+                    nodeIndex = null
+                )
+            }
+        } finally {
+            node?.recycle()
+        }
+    }
+
+    /**
+     * Build action data map for scroll events with swipe coordinates for replay.
+     */
+    private fun buildScrollActionData(
+        direction: String,
+        accumulatedDeltaX: Int,
+        accumulatedDeltaY: Int,
+        scrollX: Int,
+        scrollY: Int,
+        maxScrollX: Int,
+        maxScrollY: Int
+    ): Map<String, Any> {
+        val screenWidth = android.content.res.Resources.getSystem().displayMetrics.widthPixels
+        val screenHeight = android.content.res.Resources.getSystem().displayMetrics.heightPixels
+
+        // Calculate swipe coordinates based on scroll direction
+        val (startX, startY, endX, endY) = when (direction) {
+            "up" -> {
+                val centerX = screenWidth / 2
+                val startY = (screenHeight * 0.7).toInt()
+                val endY = (screenHeight * 0.3).toInt()
+                listOf(centerX, startY, centerX, endY)
+            }
+            "down" -> {
+                val centerX = screenWidth / 2
+                val startY = (screenHeight * 0.3).toInt()
+                val endY = (screenHeight * 0.7).toInt()
+                listOf(centerX, startY, centerX, endY)
+            }
+            "left" -> {
+                val centerY = screenHeight / 2
+                val startX = (screenWidth * 0.7).toInt()
+                val endX = (screenWidth * 0.3).toInt()
+                listOf(startX, centerY, endX, centerY)
+            }
+            "right" -> {
+                val centerY = screenHeight / 2
+                val startX = (screenWidth * 0.3).toInt()
+                val endX = (screenWidth * 0.7).toInt()
+                listOf(startX, centerY, endX, centerY)
+            }
+            else -> listOf(0, 0, 0, 0)
+        }
+
+        return mapOf(
+            "scroll_x" to scrollX,
+            "scroll_y" to scrollY,
+            "delta_x" to accumulatedDeltaX,
+            "delta_y" to accumulatedDeltaY,
+            "max_scroll_x" to maxScrollX,
+            "max_scroll_y" to maxScrollY,
+            "direction" to direction,
+            "start_x" to startX,
+            "start_y" to startY,
+            "end_x" to endX,
+            "end_y" to endY,
+            "duration" to 300
+        )
+    }
+
+    /**
+     * Check for pending scroll events that should be flushed.
+     * Call this periodically or when recording stops.
+     *
+     * @return RecordedEvent if there's a pending scroll, null otherwise
+     */
+    fun checkPendingScrollEvent(packageName: String = "", className: String = ""): RecordedEvent? {
+        val scrollResult = gestureDetector.checkScrollTimeout() ?: return null
+
+        Log.d(TAG, "✓ Flushing pending scroll: direction=${scrollResult.direction}")
+
+        val actionData = buildScrollActionData(
+            scrollResult.direction,
+            scrollResult.accumulatedDeltaX,
+            scrollResult.accumulatedDeltaY,
+            0, 0, 0, 0
+        )
+
+        return RecordedEvent(
+            eventType = EVENT_SCROLL,
+            timestamp = System.currentTimeMillis(),
+            packageName = packageName,
+            className = className,
+            resourceId = "",
+            contentDescription = "",
+            text = "",
+            bounds = "",
+            isClickable = false,
+            isEditable = false,
+            isScrollable = true,
+            actionData = actionData,
+            x = null,
+            y = null,
+            nodeIndex = null
+        )
+    }
+
+    /**
+     * Flush any pending scroll when recording stops.
+     *
+     * @return RecordedEvent if there was a pending scroll, null otherwise
+     */
+    fun flushPendingScroll(packageName: String = "", className: String = ""): RecordedEvent? {
+        val scrollResult = gestureDetector.flushPendingScroll() ?: return null
+
+        Log.d(TAG, "✓ Final flush scroll: direction=${scrollResult.direction}")
+
+        val actionData = buildScrollActionData(
+            scrollResult.direction,
+            scrollResult.accumulatedDeltaX,
+            scrollResult.accumulatedDeltaY,
+            0, 0, 0, 0
+        )
+
+        return RecordedEvent(
+            eventType = EVENT_SCROLL,
+            timestamp = System.currentTimeMillis(),
+            packageName = packageName,
+            className = className,
+            resourceId = "",
+            contentDescription = "",
+            text = "",
+            bounds = "",
+            isClickable = false,
+            isEditable = false,
+            isScrollable = true,
+            actionData = actionData,
+            x = null,
+            y = null,
+            nodeIndex = null
+        )
     }
 
     /**
@@ -214,6 +538,45 @@ object EventCapture {
                     else -> "unknown"
                 }
 
+                // IMPORTANT: For scroll events outside app (home screen, launcher),
+                // we also store swipe coordinates for replay reliability
+                // Get screen dimensions for swipe coordinate calculation
+                val screenWidth = android.content.res.Resources.getSystem().displayMetrics.widthPixels
+                val screenHeight = android.content.res.Resources.getSystem().displayMetrics.heightPixels
+
+                // Calculate swipe coordinates based on scroll direction
+                val (startX, startY, endX, endY) = when (direction) {
+                    "up" -> {
+                        // Swipe from bottom to top (scroll content up)
+                        val centerX = screenWidth / 2
+                        val startY = (screenHeight * 0.7).toInt()
+                        val endY = (screenHeight * 0.3).toInt()
+                        listOf(centerX, startY, centerX, endY)
+                    }
+                    "down" -> {
+                        // Swipe from top to bottom (scroll content down)
+                        val centerX = screenWidth / 2
+                        val startY = (screenHeight * 0.3).toInt()
+                        val endY = (screenHeight * 0.7).toInt()
+                        listOf(centerX, startY, centerX, endY)
+                    }
+                    "left" -> {
+                        // Swipe from right to left
+                        val centerY = screenHeight / 2
+                        val startX = (screenWidth * 0.7).toInt()
+                        val endX = (screenWidth * 0.3).toInt()
+                        listOf(startX, centerY, endX, centerY)
+                    }
+                    "right" -> {
+                        // Swipe from left to right
+                        val centerY = screenHeight / 2
+                        val startX = (screenWidth * 0.3).toInt()
+                        val endX = (screenWidth * 0.7).toInt()
+                        listOf(startX, centerY, endX, centerY)
+                    }
+                    else -> listOf(0, 0, 0, 0)
+                }
+
                 mapOf(
                     "scroll_x" to fromX,
                     "scroll_y" to fromY,
@@ -221,7 +584,13 @@ object EventCapture {
                     "delta_y" to deltaY,
                     "max_scroll_x" to event.maxScrollX,
                     "max_scroll_y" to event.maxScrollY,
-                    "direction" to direction
+                    "direction" to direction,
+                    // Add swipe coordinates for fallback replay
+                    "start_x" to startX,
+                    "start_y" to startY,
+                    "end_x" to endX,
+                    "end_y" to endY,
+                    "duration" to 300
                 )
             }
             AccessibilityEvent.TYPE_VIEW_FOCUSED -> {
@@ -319,6 +688,15 @@ object EventCapture {
             null
         }
         // Note: Caller is responsible for recycling the node
+    }
+
+    /**
+     * Reset gesture detector state.
+     * Call this when recording stops to clear gesture tracking.
+     */
+    fun resetGestureDetector() {
+        gestureDetector.reset()
+        Log.d(TAG, "Gesture detector reset")
     }
 }
 
