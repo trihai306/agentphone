@@ -133,7 +133,7 @@ class DeviceCard(ft.Container):
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             ),
             padding=ft.padding.symmetric(horizontal=8),
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
         )
 
         # Screenshot preview area
@@ -172,7 +172,7 @@ class DeviceCard(ft.Container):
                 bgcolor=colors["bg_tertiary"],
                 border_radius=RADIUS["sm"],
                 margin=ft.margin.symmetric(horizontal=8),
-                alignment=ft.alignment.center,
+                alignment=ft.Alignment(0, 0),
             )
 
         # Task status
@@ -184,7 +184,7 @@ class DeviceCard(ft.Container):
                 text_align=ft.TextAlign.CENTER,
             ),
             padding=ft.padding.symmetric(horizontal=8, vertical=4),
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
         )
 
         # Extended device info row (battery, storage, RAM)
@@ -229,7 +229,7 @@ class DeviceCard(ft.Container):
                 value=self.selected,
                 on_change=lambda e: self.on_select(self.device_id, e.control.value) if self.on_select else None,
             ),
-            alignment=ft.alignment.top_left,
+            alignment=ft.Alignment(-1, -1),
             padding=0,
         )
 

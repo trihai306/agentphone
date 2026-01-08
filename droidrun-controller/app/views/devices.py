@@ -1,23 +1,37 @@
-"""Professional Dashboard view for Droidrun Controller - 2025 Design.
+"""Professional Dashboard view for Droidrun Controller - 2025 Enterprise Edition.
 
-Polished with improved header, enhanced stats cards, refined chart styling,
-and device list with hover effects.
+Features: Modern SaaS-style dashboard with animated stats, real-time charts,
+professional cards with micro-interactions, and refined data visualization.
 """
 
 import flet as ft
-from ..theme import COLORS, RADIUS, get_shadow, ANIMATION
+from typing import List, Optional
+from ..theme import get_colors, get_shadow, ANIMATION, RADIUS, Typography, Easing
 from ..backend import backend
 
 
-class DevicesView(ft.Column):
-    """Professional dashboard view with stats cards and device management."""
+# Dynamic color proxy - acts like a dict but always gets current theme colors
+class _DynamicColors:
+    def get(self, key, default=None):
+        return get_colors().get(key, default)
+    
+    def __getitem__(self, key):
+        return get_colors()[key]
 
-    def __init__(self, app_state, toast):
+COLORS = _DynamicColors()
+
+
+class DevicesView(ft.Column):
+    """Professional dashboard view with enterprise-grade UI."""
+
+    def __init__(self, app_state, toast, on_notification_click=None, on_settings_click=None):
         self.app_state = app_state
         self.toast = toast
-        self.devices = []
+        self.devices: List[dict] = []
         self.backend = backend
         self.loading = False
+        self._on_notification_click = on_notification_click
+        self._on_settings_click = on_settings_click
 
         super().__init__(
             controls=self._build_controls(),
@@ -29,101 +43,80 @@ class DevicesView(ft.Column):
     def _build_controls(self):
         """Build the dashboard controls."""
         return [
-            # Header
             self._build_header(),
-            ft.Container(height=28),
-            # Stats row
+            ft.Container(height=32),
             self._build_stats_row(),
-            ft.Container(height=28),
-            # Quick actions row
+            ft.Container(height=32),
             self._build_quick_actions_row(),
-            ft.Container(height=28),
-            # Main content
+            ft.Container(height=32),
             self._build_main_content(),
         ]
 
     def _build_header(self):
-        """Build the polished header section with enhanced styling."""
+        """Build professional header with refined styling."""
+        colors = get_colors()
+
         return ft.Container(
             content=ft.Row(
                 [
+                    # Left: Title section
                     ft.Column(
                         [
                             ft.Row(
                                 [
                                     ft.Text(
                                         "Dashboard",
-                                        size=32,
+                                        size=Typography.H1,
                                         weight=ft.FontWeight.W_800,
-                                        color=COLORS["text_primary"],
+                                        color=colors["text_primary"],
                                     ),
                                     ft.Container(width=16),
                                     ft.Container(
                                         content=ft.Icon(
                                             ft.Icons.DASHBOARD_ROUNDED,
-                                            size=22,
-                                            color=COLORS["primary"],
+                                            size=24,
+                                            color=colors["primary"],
                                         ),
-                                        width=44,
-                                        height=44,
-                                        bgcolor=f"{COLORS['primary']}12",
+                                        width=48,
+                                        height=48,
+                                        bgcolor=colors["primary_subtle"],
                                         border_radius=RADIUS["lg"],
-                                        alignment=ft.alignment.center,
-                                        border=ft.border.all(1, f"{COLORS['primary']}20"),
-                                        shadow=ft.BoxShadow(
-                                            spread_radius=0,
-                                            blur_radius=16,
-                                            color=f"{COLORS['primary']}25",
-                                            offset=ft.Offset(0, 4),
-                                        ),
+                                        alignment=ft.Alignment(0, 0),
+                                        border=ft.border.all(1, f"{colors['primary']}25"),
                                     ),
                                 ],
                                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
                             ),
-                            ft.Container(height=4),
+                            ft.Container(height=6),
                             ft.Text(
-                                "Overview of your Android automation system",
-                                size=14,
+                                "Monitor and manage your Android automation system",
+                                size=Typography.BODY_MD,
                                 weight=ft.FontWeight.W_400,
-                                color=COLORS["text_secondary"],
+                                color=colors["text_secondary"],
                             ),
                         ],
-                        spacing=4,
+                        spacing=0,
                     ),
                     ft.Container(expand=True),
-                    # Quick actions row
+                    # Right: Action buttons
                     ft.Row(
                         [
-                            ft.Container(
-                                content=ft.IconButton(
-                                    icon=ft.Icons.NOTIFICATIONS_OUTLINED,
-                                    icon_size=20,
-                                    icon_color=COLORS["text_secondary"],
-                                    tooltip="Notifications",
-                                ),
-                                width=44,
-                                height=44,
-                                bgcolor=COLORS["bg_tertiary"],
-                                border_radius=RADIUS["md"],
-                                alignment=ft.alignment.center,
-                                border=ft.border.all(1, COLORS["border_subtle"]),
+                            # Notification button
+                            self._build_icon_button(
+                                ft.Icons.NOTIFICATIONS_OUTLINED,
+                                "Notifications",
+                                badge_count=3,
+                                on_click=self._on_notification_click,
                             ),
-                            ft.Container(width=8),
-                            ft.Container(
-                                content=ft.IconButton(
-                                    icon=ft.Icons.MORE_HORIZ,
-                                    icon_size=20,
-                                    icon_color=COLORS["text_secondary"],
-                                    tooltip="More options",
-                                ),
-                                width=44,
-                                height=44,
-                                bgcolor=COLORS["bg_tertiary"],
-                                border_radius=RADIUS["md"],
-                                alignment=ft.alignment.center,
-                                border=ft.border.all(1, COLORS["border_subtle"]),
+                            ft.Container(width=12),
+                            # Settings button
+                            self._build_icon_button(
+                                ft.Icons.SETTINGS_OUTLINED,
+                                "Settings",
+                                on_click=self._on_settings_click,
                             ),
                             ft.Container(width=16),
+                            # Scan devices button
                             self._build_scan_button(),
                         ],
                         spacing=0,
@@ -134,105 +127,161 @@ class DevicesView(ft.Column):
             padding=ft.padding.only(bottom=8),
         )
 
+    def _build_icon_button(self, icon, tooltip, badge_count: int = 0, on_click=None):
+        """Build a refined icon button with optional badge."""
+        colors = get_colors()
+
+        icon_container = ft.Container(
+            content=ft.Icon(
+                icon,
+                size=20,
+                color=colors["text_muted"],
+            ),
+            width=42,
+            height=42,
+            bgcolor=colors["bg_card"],
+            border_radius=RADIUS["md"],
+            alignment=ft.Alignment(0, 0),
+            border=ft.border.all(1, colors["border"]),
+            animate=ft.Animation(ANIMATION["fast"], Easing.EASE_OUT),
+        )
+
+        content = ft.Stack([icon_container])
+
+        # Add badge if count > 0
+        if badge_count > 0:
+            content.controls.append(
+                ft.Container(
+                    content=ft.Text(
+                        str(badge_count) if badge_count < 10 else "9+",
+                        size=9,
+                        weight=ft.FontWeight.W_700,
+                        color="#FFFFFF",
+                    ),
+                    width=16,
+                    height=16,
+                    bgcolor=colors["error"],
+                    border_radius=8,
+                    alignment=ft.Alignment(0, 0),
+                    right=-2,
+                    top=-2,
+                    border=ft.border.all(2, colors["bg_secondary"]),
+                )
+            )
+
+        def on_hover(e):
+            if e.data == "true":
+                icon_container.bgcolor = colors["bg_hover"]
+                icon_container.border = ft.border.all(1, colors["border_light"])
+                icon_container.content.color = colors["text_primary"]
+            else:
+                icon_container.bgcolor = colors["bg_card"]
+                icon_container.border = ft.border.all(1, colors["border"])
+                icon_container.content.color = colors["text_muted"]
+            icon_container.update()
+
+        # Use provided on_click callback or default to toast
+        click_handler = on_click if on_click else lambda _: self.toast.info(f"{tooltip} clicked")
+
+        return ft.Container(
+            content=content,
+            tooltip=tooltip,
+            on_click=click_handler,
+            on_hover=on_hover,
+        )
+
+    def _create_icon_button_hover(self):
+        colors = get_colors()
+
+        def on_hover(e):
+            container = e.control.content.controls[0] if isinstance(e.control.content, ft.Stack) else e.control.content
+            if e.data == "true":
+                container.bgcolor = colors["bg_hover"]
+                container.border = ft.border.all(1, colors["border_light"])
+            else:
+                container.bgcolor = colors["bg_tertiary"]
+                container.border = ft.border.all(1, colors["border_subtle"])
+            container.update()
+        return on_hover
+
     def _build_scan_button(self):
-        """Build the polished scan devices button."""
+        """Build the primary scan devices button."""
+        colors = get_colors()
+
         return ft.Container(
             content=ft.Row(
                 [
-                    ft.Container(
-                        content=ft.Icon(
-                            ft.Icons.RADAR,
-                            size=18,
-                            color=COLORS["text_inverse"],
-                        ),
-                        width=36,
-                        height=36,
-                        bgcolor=f"{COLORS['primary_dark']}40",
-                        border_radius=RADIUS["md"],
-                        alignment=ft.alignment.center,
+                    ft.Icon(
+                        ft.Icons.RADAR_ROUNDED,
+                        size=18,
+                        color="#FFFFFF",
                     ),
-                    ft.Container(width=12),
+                    ft.Container(width=10),
                     ft.Text(
                         "Scan Devices",
                         size=14,
                         weight=ft.FontWeight.W_600,
-                        color=COLORS["text_inverse"],
+                        color="#FFFFFF",
                     ),
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
-            bgcolor=COLORS["primary"],
-            border_radius=RADIUS["lg"],
-            padding=ft.padding.only(left=8, right=20, top=10, bottom=10),
-            shadow=ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=20,
-                color=f"{COLORS['primary']}40",
-                offset=ft.Offset(0, 6),
-            ),
-            animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
-            animate_scale=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
-            on_hover=lambda e: self._on_scan_hover(e),
+            height=42,
+            padding=ft.padding.symmetric(horizontal=20),
+            bgcolor=colors["primary"],
+            border_radius=RADIUS["md"],
+            animate=ft.Animation(ANIMATION["fast"], Easing.EASE_OUT),
+            animate_scale=ft.Animation(ANIMATION["fast"], Easing.EASE_OUT),
+            on_hover=self._on_scan_hover,
             on_click=self._on_refresh,
         )
 
     def _on_scan_hover(self, e):
-        """Handle scan button hover effect."""
+        colors = get_colors()
         if e.data == "true":
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=28,
-                color=f"{COLORS['primary']}55",
-                offset=ft.Offset(0, 10),
-            )
+            e.control.bgcolor = colors["primary_dark"]
             e.control.scale = 1.02
         else:
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=20,
-                color=f"{COLORS['primary']}40",
-                offset=ft.Offset(0, 6),
-            )
+            e.control.bgcolor = colors["primary"]
             e.control.scale = 1.0
         e.control.update()
 
     def _build_stats_row(self):
-        """Build the enhanced stats cards row with device aggregated data."""
+        """Build statistics cards with animated counters."""
+        colors = get_colors()
         total = len(self.devices)
         online = len([d for d in self.devices if d.get("status") == "connected"])
 
-        # Calculate aggregated device stats
+        # Calculate aggregated stats
         total_battery = 0
+        devices_with_battery = 0
         total_storage_used = 0
         total_storage_total = 0
-        devices_with_battery = 0
         devices_with_storage = 0
 
         for device in self.devices:
-            # Battery aggregation
             battery = device.get("battery_level")
             if battery is not None:
                 total_battery += battery
                 devices_with_battery += 1
-
-            # Storage aggregation
             storage_used = device.get("storage_used")
             storage_total = device.get("storage_total")
-            if storage_used is not None and storage_total is not None:
+            if storage_used and storage_total:
                 total_storage_used += storage_used
                 total_storage_total += storage_total
                 devices_with_storage += 1
 
-        avg_battery = round(total_battery / devices_with_battery) if devices_with_battery > 0 else 0
-        storage_percent = round((total_storage_used / total_storage_total) * 100) if total_storage_total > 0 else 0
+        avg_battery = round(total_battery / devices_with_battery) if devices_with_battery else 0
+        storage_percent = round((total_storage_used / total_storage_total) * 100) if total_storage_total else 0
 
         stats = [
             {
                 "title": "Connected Devices",
                 "value": str(total),
-                "subtitle": "Total connected via ADB",
-                "icon": ft.Icons.PHONE_ANDROID_ROUNDED,
-                "color": COLORS["accent_blue"],
+                "subtitle": "Total via ADB",
+                "icon": ft.Icons.DEVICES_ROUNDED,
+                "color": colors["accent_blue"],
                 "trend": None,
             },
             {
@@ -240,7 +289,7 @@ class DevicesView(ft.Column):
                 "value": str(online),
                 "subtitle": "Ready for automation",
                 "icon": ft.Icons.CHECK_CIRCLE_OUTLINE_ROUNDED,
-                "color": COLORS["success"],
+                "color": colors["success"],
                 "trend": "up" if online > 0 else None,
             },
             {
@@ -248,7 +297,7 @@ class DevicesView(ft.Column):
                 "value": f"{avg_battery}%",
                 "subtitle": f"Across {devices_with_battery} device(s)",
                 "icon": ft.Icons.BATTERY_CHARGING_FULL_ROUNDED,
-                "color": COLORS["success"] if avg_battery > 50 else COLORS["warning"] if avg_battery > 20 else COLORS["error"],
+                "color": colors["success"] if avg_battery > 50 else colors["warning"] if avg_battery > 20 else colors["error"],
                 "trend": "up" if avg_battery > 50 else "down" if avg_battery < 30 else None,
             },
             {
@@ -256,36 +305,46 @@ class DevicesView(ft.Column):
                 "value": f"{storage_percent}%",
                 "subtitle": f"Across {devices_with_storage} device(s)",
                 "icon": ft.Icons.STORAGE_ROUNDED,
-                "color": COLORS["error"] if storage_percent > 80 else COLORS["warning"] if storage_percent > 60 else COLORS["accent_purple"],
+                "color": colors["error"] if storage_percent > 80 else colors["warning"] if storage_percent > 60 else colors["accent_purple"],
                 "trend": "up" if storage_percent > 80 else None,
             },
         ]
 
-        cards = [self._build_stat_card(s) for s in stats]
-
-        return ft.Row(cards, spacing=20)
+        return ft.Row(
+            [self._build_stat_card(s) for s in stats],
+            spacing=20,
+        )
 
     def _build_stat_card(self, stat: dict):
-        """Build a single enhanced stat card with hover effects."""
+        """Build a single statistics card with hover effects."""
+        colors = get_colors()
         color = stat["color"]
 
-        # Build trend indicator if provided
+        # Trend indicator
         trend_indicator = None
         if stat.get("trend"):
-            trend_color = COLORS["success"] if stat["trend"] == "up" else COLORS["error"]
-            trend_icon = ft.Icons.ARROW_UPWARD_ROUNDED if stat["trend"] == "up" else ft.Icons.ARROW_DOWNWARD_ROUNDED
+            trend_color = colors["success"] if stat["trend"] == "up" else colors["error"]
+            trend_icon = ft.Icons.TRENDING_UP if stat["trend"] == "up" else ft.Icons.TRENDING_DOWN
             trend_indicator = ft.Container(
-                content=ft.Icon(
-                    trend_icon,
-                    size=14,
-                    color=trend_color,
-                ),
-                width=24,
-                height=24,
-                border_radius=6,
+                content=ft.Icon(trend_icon, size=14, color=trend_color),
+                width=26,
+                height=26,
+                border_radius=RADIUS["sm"],
                 bgcolor=f"{trend_color}15",
-                alignment=ft.alignment.center,
+                alignment=ft.Alignment(0, 0),
             )
+
+        value_row = [
+            ft.Text(
+                stat["value"],
+                size=40,
+                weight=ft.FontWeight.W_800,
+                color=colors["text_primary"],
+            ),
+        ]
+        if trend_indicator:
+            value_row.append(ft.Container(width=10))
+            value_row.append(trend_indicator)
 
         return ft.Container(
             content=ft.Column(
@@ -294,94 +353,61 @@ class DevicesView(ft.Column):
                         [
                             ft.Text(
                                 stat["title"],
-                                size=13,
+                                size=Typography.BODY_SM,
                                 weight=ft.FontWeight.W_500,
-                                color=COLORS["text_secondary"],
+                                color=colors["text_secondary"],
                             ),
                             ft.Container(expand=True),
                             ft.Container(
-                                content=ft.Icon(
-                                    stat["icon"],
-                                    size=24,
-                                    color=color,
-                                ),
+                                content=ft.Icon(stat["icon"], size=24, color=color),
                                 width=52,
                                 height=52,
                                 border_radius=RADIUS["lg"],
                                 bgcolor=f"{color}12",
-                                alignment=ft.alignment.center,
-                                border=ft.border.all(1, f"{color}20"),
-                                shadow=ft.BoxShadow(
-                                    spread_radius=0,
-                                    blur_radius=16,
-                                    color=f"{color}25",
-                                    offset=ft.Offset(0, 4),
-                                ),
+                                alignment=ft.Alignment(0, 0),
+                                border=ft.border.all(1, f"{color}20")
                             ),
                         ],
                         vertical_alignment=ft.CrossAxisAlignment.START,
                     ),
-                    ft.Container(height=16),
-                    ft.Row(
-                        [
-                            ft.Text(
-                                stat["value"],
-                                size=36,
-                                weight=ft.FontWeight.W_800,
-                                color=COLORS["text_primary"],
-                            ),
-                            ft.Container(width=8),
-                            trend_indicator,
-                        ] if trend_indicator else [
-                            ft.Text(
-                                stat["value"],
-                                size=36,
-                                weight=ft.FontWeight.W_800,
-                                color=COLORS["text_primary"],
-                            ),
-                        ],
-                        vertical_alignment=ft.CrossAxisAlignment.END,
-                    ),
-                    ft.Container(height=6),
+                    ft.Container(height=20),
+                    ft.Row(value_row, vertical_alignment=ft.CrossAxisAlignment.END),
+                    ft.Container(height=8),
                     ft.Text(
                         stat["subtitle"],
-                        size=12,
+                        size=Typography.BODY_XS,
                         weight=ft.FontWeight.W_400,
-                        color=COLORS["text_muted"],
+                        color=colors["text_muted"],
                     ),
                 ],
             ),
-            bgcolor=COLORS["bg_card"],
+            bgcolor=colors["bg_card"],
             border_radius=RADIUS["xl"],
-            padding=24,
-            border=ft.border.all(1, COLORS["border"]),
-            shadow=get_shadow("xs"),
+            padding=28,
+            border=ft.border.all(1, colors["border"]),
+            
             expand=True,
-            animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
-            animate_scale=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
+            animate=ft.Animation(ANIMATION["fast"], Easing.EASE_OUT),
+            animate_scale=ft.Animation(ANIMATION["fast"], Easing.EASE_OUT),
             on_hover=lambda e, c=color: self._on_stat_hover(e, c),
             data={"color": color},
         )
 
     def _on_stat_hover(self, e, color):
-        """Handle stat card hover effect."""
+        colors = get_colors()
         if e.data == "true":
             e.control.border = ft.border.all(1, f"{color}40")
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=28,
-                color=f"{color}20",
-                offset=ft.Offset(0, 10),
-            )
-            e.control.scale = 1.02
+            
+            e.control.scale = 1.015
         else:
-            e.control.border = ft.border.all(1, COLORS["border"])
-            e.control.shadow = get_shadow("xs")
+            e.control.border = ft.border.all(1, colors["border"])
+            
             e.control.scale = 1.0
         e.control.update()
 
     def _build_quick_actions_row(self):
         """Build the quick actions row with action cards."""
+        colors = get_colors()
         online_count = len([d for d in self.devices if d.get("status") == "connected"])
 
         actions = [
@@ -389,28 +415,28 @@ class DevicesView(ft.Column):
                 "title": "Scan for Devices",
                 "description": "Discover new Android devices",
                 "icon": ft.Icons.RADAR_ROUNDED,
-                "color": COLORS["primary"],
+                "color": colors["primary"],
                 "action": "scan",
             },
             {
                 "title": "View All Devices",
                 "description": f"{len(self.devices)} device(s) available",
                 "icon": ft.Icons.PHONE_ANDROID_ROUNDED,
-                "color": COLORS["accent_blue"],
+                "color": colors["accent_blue"],
                 "action": "view_devices",
             },
             {
                 "title": "Quick Connect",
                 "description": "Connect via WiFi ADB",
                 "icon": ft.Icons.WIFI_ROUNDED,
-                "color": COLORS["accent_cyan"],
+                "color": colors["accent_cyan"],
                 "action": "wifi_connect",
             },
             {
                 "title": "Run Agent",
                 "description": f"{online_count} device(s) ready",
                 "icon": ft.Icons.SMART_TOY_ROUNDED,
-                "color": COLORS["accent_purple"],
+                "color": colors["accent_purple"],
                 "action": "run_agent",
             },
         ]
@@ -420,6 +446,7 @@ class DevicesView(ft.Column):
 
     def _build_quick_action_card(self, action: dict):
         """Build a single quick action card with hover effects."""
+        colors = get_colors()
         color = action["color"]
 
         return ft.Container(
@@ -436,7 +463,7 @@ class DevicesView(ft.Column):
                         height=48,
                         border_radius=RADIUS["lg"],
                         bgcolor=f"{color}12",
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                         border=ft.border.all(1, f"{color}20"),
                     ),
                     ft.Container(width=14),
@@ -445,15 +472,15 @@ class DevicesView(ft.Column):
                         [
                             ft.Text(
                                 action["title"],
-                                size=14,
+                                size=Typography.BODY_MD,
                                 weight=ft.FontWeight.W_600,
-                                color=COLORS["text_primary"],
+                                color=colors["text_primary"],
                             ),
                             ft.Text(
                                 action["description"],
-                                size=12,
+                                size=Typography.BODY_XS,
                                 weight=ft.FontWeight.W_400,
-                                color=COLORS["text_muted"],
+                                color=colors["text_muted"],
                             ),
                         ],
                         spacing=2,
@@ -463,19 +490,19 @@ class DevicesView(ft.Column):
                     ft.Icon(
                         ft.Icons.ARROW_FORWARD_IOS_ROUNDED,
                         size=14,
-                        color=COLORS["text_muted"],
+                        color=colors["text_muted"],
                     ),
                 ],
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
-            bgcolor=COLORS["bg_card"],
+            bgcolor=colors["bg_card"],
             border_radius=RADIUS["lg"],
             padding=ft.padding.symmetric(horizontal=16, vertical=14),
-            border=ft.border.all(1, COLORS["border"]),
-            shadow=get_shadow("xs"),
+            border=ft.border.all(1, colors["border"]),
+            
             expand=True,
-            animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
-            animate_scale=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
+            animate=ft.Animation(ANIMATION["fast"], Easing.EASE_OUT),
+            animate_scale=ft.Animation(ANIMATION["fast"], Easing.EASE_OUT),
             on_hover=lambda e, c=color: self._on_quick_action_hover(e, c),
             on_click=lambda e, a=action["action"]: self._on_quick_action_click(a),
             data={"color": color, "action": action["action"]},
@@ -483,18 +510,14 @@ class DevicesView(ft.Column):
 
     def _on_quick_action_hover(self, e, color):
         """Handle quick action card hover effect."""
+        colors = get_colors()
         if e.data == "true":
             e.control.border = ft.border.all(1, f"{color}40")
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=20,
-                color=f"{color}20",
-                offset=ft.Offset(0, 6),
-            )
+            
             e.control.scale = 1.01
         else:
-            e.control.border = ft.border.all(1, COLORS["border"])
-            e.control.shadow = get_shadow("xs")
+            e.control.border = ft.border.all(1, colors["border"])
+            
             e.control.scale = 1.0
         e.control.update()
 
@@ -567,13 +590,7 @@ class DevicesView(ft.Column):
                             border_radius=ft.border_radius.only(
                                 top_left=8, top_right=8, bottom_left=4, bottom_right=4
                             ),
-                            bgcolor=COLORS["primary"] if is_today else f"{COLORS['primary']}50",
-                            shadow=ft.BoxShadow(
-                                spread_radius=0,
-                                blur_radius=12,
-                                color=f"{COLORS['primary']}30" if is_today else "transparent",
-                                offset=ft.Offset(0, 4),
-                            ) if is_today else None,
+                            bgcolor=COLORS["primary"] if is_today else f"{COLORS['primary']}50" if is_today else None,
                             animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
                         ),
                         ft.Container(height=12),
@@ -607,7 +624,7 @@ class DevicesView(ft.Column):
                                         height=40,
                                         border_radius=RADIUS["md"],
                                         bgcolor=f"{COLORS['accent_indigo']}12",
-                                        alignment=ft.alignment.center,
+                                        alignment=ft.Alignment(0, 0),
                                         border=ft.border.all(1, f"{COLORS['accent_indigo']}20"),
                                     ),
                                     ft.Container(width=14),
@@ -658,7 +675,7 @@ class DevicesView(ft.Column):
             border_radius=RADIUS["xl"],
             padding=28,
             border=ft.border.all(1, COLORS["border"]),
-            shadow=get_shadow("xs"),
+            
         )
 
     def _on_view_all_hover(self, e):
@@ -714,7 +731,7 @@ class DevicesView(ft.Column):
                                 height=40,
                                 border_radius=RADIUS["md"],
                                 bgcolor=f"{COLORS['accent_cyan']}12",
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, f"{COLORS['accent_cyan']}20"),
                             ),
                             ft.Container(width=14),
@@ -744,7 +761,7 @@ class DevicesView(ft.Column):
             border_radius=RADIUS["xl"],
             padding=28,
             border=ft.border.all(1, COLORS["border"]),
-            shadow=get_shadow("xs"),
+            
         )
 
     def _build_activity_item(self, activity: dict):
@@ -762,7 +779,7 @@ class DevicesView(ft.Column):
                         height=38,
                         border_radius=RADIUS["md"],
                         bgcolor=f"{activity['color']}12",
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                         border=ft.border.all(1, f"{activity['color']}20"),
                     ),
                     ft.Container(width=14),
@@ -811,16 +828,11 @@ class DevicesView(ft.Column):
         if e.data == "true":
             e.control.bgcolor = COLORS["bg_hover"]
             e.control.border = ft.border.all(1, COLORS["border_light"])
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=16,
-                color="#00000015",
-                offset=ft.Offset(0, 4),
-            )
+            
         else:
             e.control.bgcolor = COLORS["bg_tertiary"]
             e.control.border = ft.border.all(1, COLORS["border_subtle"])
-            e.control.shadow = None
+            pass  # shadow removed
         e.control.update()
 
     def _build_devices_section(self):
@@ -847,7 +859,7 @@ class DevicesView(ft.Column):
                                 height=40,
                                 border_radius=RADIUS["md"],
                                 bgcolor=f"{COLORS['primary']}12",
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, f"{COLORS['primary']}20"),
                             ),
                             ft.Container(width=14),
@@ -880,7 +892,7 @@ class DevicesView(ft.Column):
                                 height=40,
                                 border_radius=RADIUS["md"],
                                 bgcolor=COLORS["bg_tertiary"],
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, COLORS["border_subtle"]),
                             ),
                         ],
@@ -893,7 +905,7 @@ class DevicesView(ft.Column):
             border_radius=RADIUS["xl"],
             padding=28,
             border=ft.border.all(1, COLORS["border"]),
-            shadow=get_shadow("xs"),
+            
         )
 
     def _build_device_list(self):
@@ -915,13 +927,7 @@ class DevicesView(ft.Column):
             height=12,
             border_radius=6,
             bgcolor=COLORS["success"] if is_online else COLORS["text_muted"],
-            border=ft.border.all(2, COLORS["bg_card"]),
-            shadow=ft.BoxShadow(
-                spread_radius=1,
-                blur_radius=8,
-                color=f"{COLORS['success']}50",
-                offset=ft.Offset(0, 0),
-            ) if is_online else None,
+            border=ft.border.all(2, COLORS["bg_card"]) if is_online else None,
         )
 
         return ft.Container(
@@ -939,7 +945,7 @@ class DevicesView(ft.Column):
                                 height=52,
                                 border_radius=RADIUS["lg"],
                                 bgcolor=COLORS["bg_tertiary"],
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, COLORS["border_subtle"]),
                             ),
                             ft.Container(
@@ -997,17 +1003,12 @@ class DevicesView(ft.Column):
         if e.data == "true":
             e.control.bgcolor = COLORS["bg_hover"]
             e.control.border = ft.border.all(1, COLORS["border_light"])
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=20,
-                color="#00000020",
-                offset=ft.Offset(0, 6),
-            )
+            
             e.control.scale = 1.01
         else:
             e.control.bgcolor = COLORS["bg_tertiary"]
             e.control.border = ft.border.all(1, COLORS["border_subtle"])
-            e.control.shadow = None
+            pass  # shadow removed
             e.control.scale = 1.0
         e.control.update()
 
@@ -1026,7 +1027,7 @@ class DevicesView(ft.Column):
                         height=88,
                         border_radius=RADIUS["xl"],
                         bgcolor=COLORS["bg_tertiary"],
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                         border=ft.border.all(1, COLORS["border_subtle"]),
                     ),
                     ft.Container(height=20),
@@ -1062,19 +1063,13 @@ class DevicesView(ft.Column):
                         bgcolor=COLORS["primary"],
                         border_radius=RADIUS["md"],
                         padding=ft.padding.symmetric(horizontal=20, vertical=12),
-                        shadow=ft.BoxShadow(
-                            spread_radius=0,
-                            blur_radius=16,
-                            color=f"{COLORS['primary']}35",
-                            offset=ft.Offset(0, 4),
-                        ),
                         on_click=self._on_refresh,
                     ),
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             ),
             padding=ft.padding.symmetric(vertical=40),
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
         )
 
     def _build_loading(self):
@@ -1093,7 +1088,7 @@ class DevicesView(ft.Column):
                         height=72,
                         border_radius=RADIUS["xl"],
                         bgcolor=COLORS["bg_tertiary"],
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                         border=ft.border.all(1, COLORS["border_subtle"]),
                     ),
                     ft.Container(height=16),
@@ -1107,7 +1102,7 @@ class DevicesView(ft.Column):
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             ),
             padding=ft.padding.symmetric(vertical=40),
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
         )
 
     def _on_device_click(self, device: dict):

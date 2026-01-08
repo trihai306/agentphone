@@ -7,7 +7,7 @@ from typing import Optional, List
 from enum import Enum
 from dataclasses import dataclass
 
-from ..theme import COLORS, RADIUS, get_shadow, ANIMATION, SPACING, get_colored_shadow
+from ..theme import get_colors, RADIUS, get_shadow, ANIMATION, SPACING, get_colored_shadow
 from ..backend import backend
 from ..services.ai_service import get_ai_service
 
@@ -15,6 +15,17 @@ from ..services.ai_service import get_ai_service
 EASE_OUT = ft.AnimationCurve.EASE_OUT
 EASE_IN_OUT = ft.AnimationCurve.EASE_IN_OUT
 
+
+
+# Dynamic color proxy - acts like a dict but always gets current theme colors
+class _DynamicColors:
+    def get(self, key, default=None):
+        return get_colors().get(key, default)
+    
+    def __getitem__(self, key):
+        return get_colors()[key]
+
+COLORS = _DynamicColors()
 
 class MessageType(Enum):
     """Message types for chat."""
@@ -113,14 +124,8 @@ class AgentRunnerView(ft.Column):
                                 height=52,
                                 border_radius=RADIUS["lg"],
                                 bgcolor=f"{COLORS['primary']}12",
-                                alignment=ft.alignment.center,
-                                border=ft.border.all(1, f"{COLORS['primary']}20"),
-                                shadow=ft.BoxShadow(
-                                    spread_radius=0,
-                                    blur_radius=16,
-                                    color=f"{COLORS['primary']}25",
-                                    offset=ft.Offset(0, 4),
-                                ),
+                                alignment=ft.Alignment(0, 0),
+                                border=ft.border.all(1, f"{COLORS['primary']}20")
                             ),
                             ft.Container(width=16),
                             ft.Column(
@@ -190,7 +195,7 @@ class AgentRunnerView(ft.Column):
             height=44,
             border_radius=RADIUS["md"],
             bgcolor=COLORS["bg_tertiary"],
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             border=ft.border.all(1, COLORS["border_subtle"]),
             tooltip=tooltip,
             animate=ft.Animation(ANIMATION["fast"], EASE_OUT),
@@ -203,16 +208,11 @@ class AgentRunnerView(ft.Column):
         if e.data == "true":
             e.control.bgcolor = COLORS["bg_hover"]
             e.control.border = ft.border.all(1, f"{color}40")
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=8,
-                color=f"{color}15",
-                offset=ft.Offset(0, 2),
-            )
+            
         else:
             e.control.bgcolor = COLORS["bg_tertiary"]
             e.control.border = ft.border.all(1, COLORS["border_subtle"])
-            e.control.shadow = None
+            pass  # shadow removed
         e.control.update()
 
     def _build_device_selector_card(self):
@@ -256,7 +256,7 @@ class AgentRunnerView(ft.Column):
                     height=36,
                     border_radius=8,
                     bgcolor=COLORS["bg_tertiary"],
-                    alignment=ft.alignment.center,
+                    alignment=ft.Alignment(0, 0),
                 ),
                 ft.Container(width=10),
                 ft.Column(
@@ -309,7 +309,7 @@ class AgentRunnerView(ft.Column):
                     height=36,
                     border_radius=8,
                     bgcolor=f"{provider_color}20",
-                    alignment=ft.alignment.center,
+                    alignment=ft.Alignment(0, 0),
                 ),
                 ft.Container(width=10),
                 ft.Column(
@@ -421,7 +421,7 @@ class AgentRunnerView(ft.Column):
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     ),
                     padding=40,
-                    alignment=ft.alignment.center,
+                    alignment=ft.Alignment(0, 0),
                 )
             )
         else:
@@ -627,7 +627,7 @@ class AgentRunnerView(ft.Column):
                     height=36,
                     border_radius=8,
                     bgcolor=COLORS["bg_tertiary"],
-                    alignment=ft.alignment.center,
+                    alignment=ft.Alignment(0, 0),
                 ),
                 ft.Container(width=10),
                 ft.Column(
@@ -677,7 +677,7 @@ class AgentRunnerView(ft.Column):
                             height=36,
                             border_radius=8,
                             bgcolor=COLORS["primary_glow"] if is_online else COLORS["bg_tertiary"],
-                            alignment=ft.alignment.center,
+                            alignment=ft.Alignment(0, 0),
                         ),
                         ft.Container(
                             width=10,
@@ -808,7 +808,7 @@ class AgentRunnerView(ft.Column):
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     ),
                     padding=40,
-                    alignment=ft.alignment.center,
+                    alignment=ft.Alignment(0, 0),
                 )
             )
         else:
@@ -888,7 +888,7 @@ class AgentRunnerView(ft.Column):
                                 height=56,
                                 border_radius=12,
                                 bgcolor=COLORS["primary_glow"] if is_online else COLORS["bg_tertiary"],
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                             ),
                             ft.Container(
                                 width=14,
@@ -1156,15 +1156,9 @@ class AgentRunnerView(ft.Column):
             height=44,
             border_radius=RADIUS["md"],
             bgcolor=COLORS["primary"],
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             tooltip="Send message",
             animate=ft.Animation(ANIMATION["fast"], EASE_OUT),
-            shadow=ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=12,
-                color=f"{COLORS['primary']}40",
-                offset=ft.Offset(0, 4),
-            ),
             on_click=self._on_send,
             on_hover=self._on_send_hover,
         )
@@ -1181,16 +1175,10 @@ class AgentRunnerView(ft.Column):
             height=44,
             border_radius=RADIUS["md"],
             bgcolor=COLORS["error"],
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             tooltip="Stop execution",
             visible=False,
             animate=ft.Animation(ANIMATION["fast"], EASE_OUT),
-            shadow=ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=12,
-                color=f"{COLORS['error']}40",
-                offset=ft.Offset(0, 4),
-            ),
             on_click=self._on_stop,
             on_hover=self._on_stop_hover,
         )
@@ -1199,52 +1187,27 @@ class AgentRunnerView(ft.Column):
         """Handle send button hover."""
         if e.data == "true":
             e.control.scale = 1.05
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=20,
-                color=f"{COLORS['primary']}50",
-                offset=ft.Offset(0, 6),
-            )
+            
         else:
             e.control.scale = 1.0
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=12,
-                color=f"{COLORS['primary']}40",
-                offset=ft.Offset(0, 4),
-            )
+            
         e.control.update()
 
     def _on_stop_hover(self, e):
         """Handle stop button hover."""
         if e.data == "true":
             e.control.scale = 1.05
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=20,
-                color=f"{COLORS['error']}50",
-                offset=ft.Offset(0, 6),
-            )
+            
         else:
             e.control.scale = 1.0
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=12,
-                color=f"{COLORS['error']}40",
-                offset=ft.Offset(0, 4),
-            )
+            
         e.control.update()
 
     def _on_input_focus(self, e):
         """Handle input focus with visual feedback."""
         if self.input_container:
             self.input_container.border = ft.border.all(1, COLORS["primary"])
-            self.input_container.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=16,
-                color=f"{COLORS['primary']}20",
-                offset=ft.Offset(0, 4),
-            )
+            
             self.input_container.update()
 
     def _on_input_blur(self, e):
@@ -1268,7 +1231,7 @@ class AgentRunnerView(ft.Column):
                     height=40,
                     border_radius=RADIUS["md"],
                     bgcolor=COLORS["bg_tertiary"],
-                    alignment=ft.alignment.center,
+                    alignment=ft.Alignment(0, 0),
                 ),
                 tooltip="Quick actions",
                 items=[
@@ -1281,7 +1244,7 @@ class AgentRunnerView(ft.Column):
                                     height=32,
                                     border_radius=RADIUS["sm"],
                                     bgcolor=f"{COLORS['accent_blue']}15",
-                                    alignment=ft.alignment.center,
+                                    alignment=ft.Alignment(0, 0),
                                 ),
                                 ft.Container(width=10),
                                 ft.Column(
@@ -1304,7 +1267,7 @@ class AgentRunnerView(ft.Column):
                                     height=32,
                                     border_radius=RADIUS["sm"],
                                     bgcolor=f"{COLORS['error']}15",
-                                    alignment=ft.alignment.center,
+                                    alignment=ft.Alignment(0, 0),
                                 ),
                                 ft.Container(width=10),
                                 ft.Column(
@@ -1327,7 +1290,7 @@ class AgentRunnerView(ft.Column):
                                     height=32,
                                     border_radius=RADIUS["sm"],
                                     bgcolor=f"{COLORS['text_secondary']}15",
-                                    alignment=ft.alignment.center,
+                                    alignment=ft.Alignment(0, 0),
                                 ),
                                 ft.Container(width=10),
                                 ft.Column(
@@ -1350,7 +1313,7 @@ class AgentRunnerView(ft.Column):
                                     height=32,
                                     border_radius=RADIUS["sm"],
                                     bgcolor=f"{COLORS['accent_purple']}15",
-                                    alignment=ft.alignment.center,
+                                    alignment=ft.Alignment(0, 0),
                                 ),
                                 ft.Container(width=10),
                                 ft.Column(
@@ -1397,15 +1360,9 @@ class AgentRunnerView(ft.Column):
                                         height=72,
                                         border_radius=18,
                                         bgcolor=f"{COLORS['primary']}15",
-                                        alignment=ft.alignment.center,
+                                        alignment=ft.Alignment(0, 0),
                                         left=14,
-                                        top=14,
-                                        shadow=ft.BoxShadow(
-                                            spread_radius=0,
-                                            blur_radius=20,
-                                            color=f"{COLORS['primary']}30",
-                                            offset=ft.Offset(0, 6),
-                                        ),
+                                        top=14
                                     ),
                                 ],
                             ),
@@ -1462,7 +1419,7 @@ class AgentRunnerView(ft.Column):
                     ],
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
-                alignment=ft.alignment.center,
+                alignment=ft.Alignment(0, 0),
                 expand=True,
             ),
         ]
@@ -1478,7 +1435,7 @@ class AgentRunnerView(ft.Column):
                         height=48,
                         border_radius=RADIUS["md"],
                         bgcolor=f"{COLORS['primary']}12",
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                         border=ft.border.all(1, f"{COLORS['primary']}20"),
                     ),
                     ft.Container(height=10),
@@ -1512,16 +1469,11 @@ class AgentRunnerView(ft.Column):
         if e.data == "true":
             e.control.bgcolor = COLORS["bg_hover"]
             e.control.border = ft.border.all(1, f"{COLORS['primary']}30")
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=12,
-                color=f"{COLORS['primary']}15",
-                offset=ft.Offset(0, 4),
-            )
+            
         else:
             e.control.bgcolor = COLORS["bg_card"]
             e.control.border = ft.border.all(1, COLORS["border_subtle"])
-            e.control.shadow = None
+            pass  # shadow removed
         e.control.update()
 
     def _build_example_chip(self, text: str, icon=None):
@@ -1774,7 +1726,7 @@ class AgentRunnerView(ft.Column):
                         height=36,
                         border_radius=RADIUS["md"],
                         bgcolor=f"{icon_color}20",
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                     ),
                     ft.Container(width=12),
                     bubble,

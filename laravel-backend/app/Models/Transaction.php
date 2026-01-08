@@ -35,6 +35,7 @@ class Transaction extends Model
         'amount' => 'decimal:2',
         'fee' => 'decimal:2',
         'final_amount' => 'decimal:2',
+        'payment_details' => 'array',
         'proof_images' => 'array',
         'approved_at' => 'datetime',
         'completed_at' => 'datetime',

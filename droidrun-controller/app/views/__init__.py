@@ -8,6 +8,8 @@ from .agent_runner import AgentRunnerView
 from .recording_panel import RecordingPanelView
 from .register import RegisterView
 from .login import LoginView
+from .packages import PackagesView
+from .interaction_history import InteractionHistoryView
 
 __all__ = [
     "DevicesView",
@@ -18,4 +20,6 @@ __all__ = [
     "RecordingPanelView",
     "RegisterView",
     "LoginView",
+    "PackagesView",
+    "InteractionHistoryView",
 ]

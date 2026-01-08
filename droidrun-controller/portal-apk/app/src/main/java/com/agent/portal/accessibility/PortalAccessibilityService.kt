@@ -43,9 +43,18 @@ class PortalAccessibilityService : AccessibilityService() {
     private var nodeIndex = 0
     private val screenshotExecutor = Executors.newSingleThreadExecutor()
 
+    // Advanced shortcut features
+    private var volumeButtonManager: VolumeButtonShortcutManager? = null
+    private var gestureDetector: AccessibilityGestureDetector? = null
+    private var shortcutConfig: ShortcutConfigManager? = null
+
     override fun onCreate() {
         super.onCreate()
         instance = this
+
+        // Initialize shortcut configuration
+        shortcutConfig = ShortcutConfigManager(this)
+
         Log.i(TAG, "Accessibility Service created")
     }
 
@@ -60,14 +69,104 @@ class PortalAccessibilityService : AccessibilityService() {
             flags = flags or
                     AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS or
                     AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS or
-                    AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS
+                    AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS or
+                    AccessibilityServiceInfo.FLAG_REQUEST_ACCESSIBILITY_BUTTON or
+                    // Request key event filtering for volume button shortcuts (Android 8+)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
+                    } else {
+                        0
+                    }
             notificationTimeout = 100
         }
 
         Log.i(TAG, "Accessibility Service connected")
 
+        // Initialize shortcut managers
+        initializeShortcuts()
+
         // Start HTTP server
         startService(Intent(this, HttpServerService::class.java))
+    }
+
+    /**
+     * Initialize accessibility shortcuts (volume buttons, gestures, accessibility button)
+     */
+    private fun initializeShortcuts() {
+        val config = shortcutConfig ?: return
+
+        // Setup Accessibility Button callback
+        val buttonAction = config.accessibilityButtonAction
+        AccessibilityShortcutHelper.setupAccessibilityButton(this) {
+            executeShortcutAction(buttonAction)
+        }
+        Log.i(TAG, "Accessibility button configured: ${config.getActionName(buttonAction)}")
+
+        // Setup Volume Button shortcuts (if enabled)
+        if (config.volumeShortcutsEnabled) {
+            volumeButtonManager = VolumeButtonShortcutManager(this)
+            volumeButtonManager?.enable()
+            Log.i(TAG, "Volume button shortcuts enabled")
+        }
+
+        // Setup Gesture detection (if enabled)
+        if (config.gestureShortcutsEnabled) {
+            gestureDetector = AccessibilityGestureDetector(this) { gestureType ->
+                handleGestureShortcut(gestureType)
+            }
+            Log.i(TAG, "Gesture shortcuts enabled")
+        }
+    }
+
+    /**
+     * Execute shortcut action based on configuration
+     */
+    private fun executeShortcutAction(action: String) {
+        when (action) {
+            ShortcutConfigManager.ACTION_TOGGLE_RECORDING ->
+                AccessibilityShortcutHelper.toggleRecording(this)
+            ShortcutConfigManager.ACTION_SHOW_QUICK_ACTIONS ->
+                AccessibilityShortcutHelper.showQuickActionsPanel(this)
+            ShortcutConfigManager.ACTION_TAKE_SCREENSHOT ->
+                AccessibilityShortcutHelper.takeScreenshot(this)
+            ShortcutConfigManager.ACTION_PRESS_BACK ->
+                AccessibilityShortcutHelper.pressBack(this)
+            ShortcutConfigManager.ACTION_PRESS_HOME ->
+                AccessibilityShortcutHelper.pressHome(this)
+            ShortcutConfigManager.ACTION_SHOW_RECENTS ->
+                AccessibilityShortcutHelper.showRecents(this)
+            ShortcutConfigManager.ACTION_LOCK_SCREEN ->
+                AccessibilityShortcutHelper.lockScreen(this)
+            ShortcutConfigManager.ACTION_SHOW_NOTIFICATIONS ->
+                AccessibilityShortcutHelper.showNotifications(this)
+            ShortcutConfigManager.ACTION_SHOW_QUICK_SETTINGS ->
+                AccessibilityShortcutHelper.showQuickSettings(this)
+            ShortcutConfigManager.ACTION_SHOW_POWER_DIALOG ->
+                AccessibilityShortcutHelper.showPowerDialog(this)
+            ShortcutConfigManager.ACTION_NONE -> {
+                // Do nothing
+            }
+            else -> Log.w(TAG, "Unknown shortcut action: $action")
+        }
+    }
+
+    /**
+     * Handle gesture shortcut based on gesture type
+     */
+    private fun handleGestureShortcut(gestureType: AccessibilityGestureDetector.GestureType) {
+        val config = shortcutConfig ?: return
+
+        val action = when (gestureType) {
+            AccessibilityGestureDetector.GestureType.DOUBLE_TAP -> config.doubleTapAction
+            AccessibilityGestureDetector.GestureType.TRIPLE_TAP -> config.tripleTapAction
+            AccessibilityGestureDetector.GestureType.LONG_PRESS -> config.longPressAction
+            else -> ShortcutConfigManager.ACTION_NONE
+        }
+
+        if (action != ShortcutConfigManager.ACTION_NONE) {
+            Log.i(TAG, "Gesture detected: $gestureType -> ${config.getActionName(action)}")
+            executeShortcutAction(action)
+        }
     }
 
     // ========================================================================
@@ -165,15 +264,51 @@ class PortalAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
 
+        // Pass event to gesture detector for gesture shortcut detection
+        gestureDetector?.onAccessibilityEvent(event)
+
+        // Log ALL events when recording to debug event reception (limit to recordable types)
+        val isRecordable = EventCapture.isRecordableEvent(event.eventType)
+        val isActivelyRecording = RecordingManager.isActivelyRecording()
+
+        // Log state for debugging
+        if (isRecordable) {
+            if (isActivelyRecording) {
+                Log.d(TAG, ">>> Event received (RECORDING): ${EventCapture.getEventTypeName(event.eventType)} | pkg: ${event.packageName} | hasSource: ${event.source != null}")
+            } else {
+                Log.d(TAG, ">>> Event received (NOT RECORDING): ${EventCapture.getEventTypeName(event.eventType)} | State: ${RecordingManager.getState()}")
+            }
+        }
+
         // Only process events when RecordingManager is actively recording
-        if (!RecordingManager.isActivelyRecording()) return
+        if (!isActivelyRecording) return
+
+        // Check if this is a recordable event type
+        if (!isRecordable) {
+            return
+        }
 
         // Use EventCapture to process the event and add to RecordingManager
         val recordedEvent = EventCapture.captureEvent(event)
         if (recordedEvent != null) {
             RecordingManager.addEvent(recordedEvent)
-            Log.d(TAG, "Captured event: ${recordedEvent.eventType} - ${recordedEvent.resourceId.ifEmpty { recordedEvent.text.take(20) }}")
+            Log.i(TAG, "✓ Event captured: ${recordedEvent.eventType} | Total events: ${RecordingManager.getEventCount()}")
+        } else {
+            Log.w(TAG, "✗ Failed to capture event: ${EventCapture.getEventTypeName(event.eventType)}")
         }
+    }
+
+    /**
+     * Handle key events (for volume button shortcuts)
+     * Requires FLAG_REQUEST_FILTER_KEY_EVENTS
+     */
+    override fun onKeyEvent(event: android.view.KeyEvent): Boolean {
+        // Pass to volume button manager
+        val consumed = volumeButtonManager?.handleKeyEvent(event) ?: false
+
+        // Return true to consume the event (prevent normal volume behavior)
+        // Return false to pass through to system
+        return consumed
     }
 
     /**
@@ -332,6 +467,16 @@ class PortalAccessibilityService : AccessibilityService() {
 
     override fun onDestroy() {
         super.onDestroy()
+
+        // Clean up shortcut managers
+        volumeButtonManager?.disable()
+        volumeButtonManager = null
+
+        gestureDetector?.destroy()
+        gestureDetector = null
+
+        shortcutConfig = null
+
         instance = null
         screenshotExecutor.shutdown()
         Log.i(TAG, "Accessibility Service destroyed")
@@ -975,6 +1120,156 @@ class PortalAccessibilityService : AccessibilityService() {
             }
         } else {
             ActionResult(false, "Unknown key action: $keyAction. Supported: back, home, recents, notifications, quick_settings, power_dialog, lock_screen, take_screenshot")
+        }
+    }
+
+    // ========================================================================
+    // SOCKET JOB EXECUTOR API - Simplified Boolean return methods
+    // ========================================================================
+
+    /**
+     * Perform tap (simplified API for JobExecutor)
+     * Returns Boolean instead of ActionResult
+     */
+    fun performTap(x: Int, y: Int): Boolean {
+        return tapAtCoordinates(x, y).success
+    }
+
+    /**
+     * Perform long press (simplified API for JobExecutor)
+     * Returns Boolean instead of ActionResult
+     */
+    fun performLongPress(x: Int, y: Int, duration: Long = 1000): Boolean {
+        return longPressAtCoordinates(x, y, duration).success
+    }
+
+    /**
+     * Perform swipe (simplified API for JobExecutor)
+     * Returns Boolean instead of ActionResult
+     */
+    fun performSwipe(startX: Int, startY: Int, endX: Int, endY: Int, duration: Long = 300): Boolean {
+        return swipeGesture(startX, startY, endX, endY, duration).success
+    }
+
+    /**
+     * Perform scroll up (simplified API for JobExecutor)
+     * Returns Boolean instead of ActionResult
+     */
+    fun performScrollUp(amount: Int): Boolean {
+        // Swipe from bottom to top (scroll up shows content below)
+        val displayMetrics = resources.displayMetrics
+        val screenHeight = displayMetrics.heightPixels
+        val screenWidth = displayMetrics.widthPixels
+        val centerX = screenWidth / 2
+        val scrollDistance = (screenHeight * 0.4 * amount).toInt()
+
+        return swipeGesture(
+            centerX,
+            screenHeight - 200,
+            centerX,
+            screenHeight - 200 - scrollDistance,
+            300
+        ).success
+    }
+
+    /**
+     * Perform scroll down (simplified API for JobExecutor)
+     * Returns Boolean instead of ActionResult
+     */
+    fun performScrollDown(amount: Int): Boolean {
+        // Swipe from top to bottom (scroll down shows content above)
+        val displayMetrics = resources.displayMetrics
+        val screenHeight = displayMetrics.heightPixels
+        val screenWidth = displayMetrics.widthPixels
+        val centerX = screenWidth / 2
+        val scrollDistance = (screenHeight * 0.4 * amount).toInt()
+
+        return swipeGesture(
+            centerX,
+            200,
+            centerX,
+            200 + scrollDistance,
+            300
+        ).success
+    }
+
+    /**
+     * Perform scroll left (simplified API for JobExecutor)
+     * Returns Boolean instead of ActionResult
+     */
+    fun performScrollLeft(amount: Int): Boolean {
+        // Swipe from right to left
+        val displayMetrics = resources.displayMetrics
+        val screenHeight = displayMetrics.heightPixels
+        val screenWidth = displayMetrics.widthPixels
+        val centerY = screenHeight / 2
+        val scrollDistance = (screenWidth * 0.4 * amount).toInt()
+
+        return swipeGesture(
+            screenWidth - 200,
+            centerY,
+            screenWidth - 200 - scrollDistance,
+            centerY,
+            300
+        ).success
+    }
+
+    /**
+     * Perform scroll right (simplified API for JobExecutor)
+     * Returns Boolean instead of ActionResult
+     */
+    fun performScrollRight(amount: Int): Boolean {
+        // Swipe from left to right
+        val displayMetrics = resources.displayMetrics
+        val screenHeight = displayMetrics.heightPixels
+        val screenWidth = displayMetrics.widthPixels
+        val centerY = screenHeight / 2
+        val scrollDistance = (screenWidth * 0.4 * amount).toInt()
+
+        return swipeGesture(
+            200,
+            centerY,
+            200 + scrollDistance,
+            centerY,
+            300
+        ).success
+    }
+
+    /**
+     * Input text (simplified API for JobExecutor)
+     * Returns Boolean instead of ActionResult
+     */
+    fun inputText(text: String): Boolean {
+        // Find focused editable node
+        val focusedNode = rootInActiveWindow?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+
+        if (focusedNode != null && focusedNode.isEditable) {
+            val args = android.os.Bundle()
+            args.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text)
+            val success = focusedNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
+            focusedNode.recycle()
+            return success
+        }
+
+        return false
+    }
+
+    /**
+     * Press key by keyCode (simplified API for JobExecutor)
+     * Accepts Int keyCode and returns Boolean
+     */
+    fun pressKey(keyCode: Int): Boolean {
+        // Map Android key codes to global actions
+        val actionCode = when (keyCode) {
+            4 -> GLOBAL_ACTION_BACK  // KEYCODE_BACK
+            3 -> GLOBAL_ACTION_HOME  // KEYCODE_HOME
+            else -> -1
+        }
+
+        return if (actionCode != -1) {
+            performGlobalAction(actionCode)
+        } else {
+            false
         }
     }
 }

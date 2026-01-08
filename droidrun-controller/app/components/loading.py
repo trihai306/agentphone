@@ -4,8 +4,19 @@ Enhanced with improved shadows, better visual hierarchy, and smoother animations
 """
 
 import flet as ft
-from ..theme import COLORS, ANIMATION, RADIUS, get_shadow
+from ..theme import get_colors, ANIMATION, RADIUS, get_shadow
 
+
+
+# Dynamic color proxy - acts like a dict but always gets current theme colors
+class _DynamicColors:
+    def get(self, key, default=None):
+        return get_colors().get(key, default)
+    
+    def __getitem__(self, key):
+        return get_colors()[key]
+
+COLORS = _DynamicColors()
 
 class LoadingSpinner(ft.Container):
     """A modern loading spinner with enhanced styling and glow effects.
@@ -49,20 +60,14 @@ class LoadingSpinner(ft.Container):
                 content=spinner,
                 width=spinner_size + 20,
                 height=spinner_size + 20,
-                alignment=ft.alignment.center,
-                shadow=ft.BoxShadow(
-                    spread_radius=0,
-                    blur_radius=size_config["glow_radius"],
-                    color=f"{spinner_color}20",
-                    offset=ft.Offset(0, 0),
-                ),
+                alignment=ft.Alignment(0, 0)
             )
         else:
             content = spinner
 
         super().__init__(
             content=content,
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
             **kwargs
         )
@@ -102,26 +107,14 @@ class LoadingOverlay(ft.Container):
                 content=spinner_content,
                 width=spinner_size + 32,
                 height=spinner_size + 32,
-                alignment=ft.alignment.center,
+                alignment=ft.Alignment(0, 0),
                 border_radius=RADIUS["full"],
                 bgcolor=f"{spinner_color}08",
-                border=ft.border.all(1, f"{spinner_color}12"),
-                shadow=ft.BoxShadow(
-                    spread_radius=0,
-                    blur_radius=16,
-                    color=f"{spinner_color}18",
-                    offset=ft.Offset(0, 0),
-                ),
+                border=ft.border.all(1, f"{spinner_color}12")
             )
         else:
             spinner_container = ft.Container(
-                content=spinner_content,
-                shadow=ft.BoxShadow(
-                    spread_radius=0,
-                    blur_radius=12,
-                    color=COLORS["primary_glow"],
-                    offset=ft.Offset(0, 0),
-                ),
+                content=spinner_content
             )
 
         # Build content items
@@ -161,17 +154,11 @@ class LoadingOverlay(ft.Container):
                 border_radius=RADIUS["xl"],
                 padding=ft.padding.symmetric(horizontal=52, vertical=44),
                 border=ft.border.all(1, COLORS["border"]),
-                shadow=ft.BoxShadow(
-                    spread_radius=0,
-                    blur_radius=20,
-                    color="#00000020",
-                    offset=ft.Offset(0, 8),
-                ),
                 animate=ft.Animation(ANIMATION["slow"], ft.AnimationCurve.EASE_OUT),
                 animate_scale=ft.Animation(ANIMATION["slow"], ft.AnimationCurve.EASE_OUT),
             ),
             bgcolor=COLORS["backdrop"],
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             expand=True,
             animate_opacity=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
             **kwargs
@@ -409,7 +396,7 @@ class EmptyState(ft.Container):
             border_radius=icon_container_size // 2,
             bgcolor=variant_config["icon_bg"],
             border=variant_config["icon_border"],
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             shadow=variant_config["icon_shadow"],
             animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
         )
@@ -452,7 +439,7 @@ class EmptyState(ft.Container):
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=0,
             ),
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             padding=padding_size,
             animate=ft.Animation(ANIMATION["slow"], ft.AnimationCurve.EASE_OUT),
             **kwargs
@@ -606,15 +593,9 @@ class ProgressOverlay(ft.Container):
                     ),
                     width=72,
                     height=72,
-                    alignment=ft.alignment.center,
+                    alignment=ft.Alignment(0, 0),
                     border_radius=RADIUS["full"],
-                    bgcolor=f"{COLORS['primary']}08",
-                    shadow=ft.BoxShadow(
-                        spread_radius=0,
-                        blur_radius=12,
-                        color=COLORS["primary_glow"],
-                        offset=ft.Offset(0, 0),
-                    ),
+                    bgcolor=f"{COLORS['primary']}08"
                 )
             )
 
@@ -662,16 +643,10 @@ class ProgressOverlay(ft.Container):
                 border_radius=RADIUS["xl"],
                 padding=ft.padding.symmetric(horizontal=52, vertical=40),
                 border=ft.border.all(1, COLORS["border"]),
-                shadow=ft.BoxShadow(
-                    spread_radius=0,
-                    blur_radius=20,
-                    color="#00000020",
-                    offset=ft.Offset(0, 8),
-                ),
                 animate=ft.Animation(ANIMATION["slow"], ft.AnimationCurve.EASE_OUT),
             ),
             bgcolor=COLORS["backdrop"],
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             expand=True,
             animate_opacity=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
             **kwargs

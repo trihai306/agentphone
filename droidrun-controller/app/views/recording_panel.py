@@ -11,7 +11,7 @@ import flet as ft
 from datetime import datetime
 from typing import List, Optional, Dict, Any, Callable
 
-from ..theme import COLORS, RADIUS, get_shadow, ANIMATION
+from ..theme import get_colors, RADIUS, get_shadow, ANIMATION
 from ..models.workflow import (
     Workflow,
     WorkflowStep,
@@ -21,6 +21,17 @@ from ..models.workflow import (
 )
 from ..services import get_selector_generator, get_step_namer
 
+
+
+# Dynamic color proxy - acts like a dict but always gets current theme colors
+class _DynamicColors:
+    def get(self, key, default=None):
+        return get_colors().get(key, default)
+    
+    def __getitem__(self, key):
+        return get_colors()[key]
+
+COLORS = _DynamicColors()
 
 class RecordingState:
     """Recording state enumeration."""
@@ -149,14 +160,8 @@ class RecordingPanelView(ft.Container):
                                         height=44,
                                         bgcolor=f"{COLORS['error']}12",
                                         border_radius=RADIUS["lg"],
-                                        alignment=ft.alignment.center,
-                                        border=ft.border.all(1, f"{COLORS['error']}20"),
-                                        shadow=ft.BoxShadow(
-                                            spread_radius=0,
-                                            blur_radius=16,
-                                            color=f"{COLORS['error']}25",
-                                            offset=ft.Offset(0, 4),
-                                        ),
+                                        alignment=ft.Alignment(0, 0),
+                                        border=ft.border.all(1, f"{COLORS['error']}20")
                                     ),
                                 ],
                                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
@@ -199,7 +204,7 @@ class RecordingPanelView(ft.Container):
                         height=36,
                         bgcolor=f"{COLORS['error_dark']}40",
                         border_radius=RADIUS["sm"],
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                     ),
                     ft.Container(width=12),
                     ft.Text(
@@ -213,12 +218,6 @@ class RecordingPanelView(ft.Container):
             bgcolor=COLORS["error"],
             padding=ft.padding.only(left=10, right=20, top=12, bottom=12),
             border_radius=RADIUS["lg"],
-            shadow=ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=16,
-                color=f"{COLORS['error']}35",
-                offset=ft.Offset(0, 4),
-            ),
             animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
             animate_scale=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
             visible=is_idle,
@@ -240,7 +239,7 @@ class RecordingPanelView(ft.Container):
                         height=36,
                         bgcolor=f"{COLORS['warning_dark']}40",
                         border_radius=RADIUS["sm"],
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                     ),
                     ft.Container(width=12),
                     ft.Text(
@@ -254,12 +253,6 @@ class RecordingPanelView(ft.Container):
             bgcolor=COLORS["warning"],
             padding=ft.padding.only(left=10, right=20, top=12, bottom=12),
             border_radius=RADIUS["lg"],
-            shadow=ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=16,
-                color=f"{COLORS['warning']}35",
-                offset=ft.Offset(0, 4),
-            ),
             animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
             animate_scale=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
             visible=is_recording or is_paused,
@@ -281,7 +274,7 @@ class RecordingPanelView(ft.Container):
                         height=36,
                         bgcolor=f"{COLORS['primary_dark']}40",
                         border_radius=RADIUS["sm"],
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                     ),
                     ft.Container(width=12),
                     ft.Text(
@@ -295,12 +288,6 @@ class RecordingPanelView(ft.Container):
             bgcolor=COLORS["primary"],
             padding=ft.padding.only(left=10, right=20, top=12, bottom=12),
             border_radius=RADIUS["lg"],
-            shadow=ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=20,
-                color=f"{COLORS['primary']}40",
-                offset=ft.Offset(0, 6),
-            ),
             animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
             animate_scale=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
             visible=is_recording or is_paused,
@@ -424,14 +411,8 @@ class RecordingPanelView(ft.Container):
                                 height=52,
                                 border_radius=RADIUS["lg"],
                                 bgcolor=f"{color}12",
-                                alignment=ft.alignment.center,
-                                border=ft.border.all(1, f"{color}20"),
-                                shadow=ft.BoxShadow(
-                                    spread_radius=0,
-                                    blur_radius=16,
-                                    color=f"{color}25",
-                                    offset=ft.Offset(0, 4),
-                                ),
+                                alignment=ft.Alignment(0, 0),
+                                border=ft.border.all(1, f"{color}20")
                             ),
                         ],
                         vertical_alignment=ft.CrossAxisAlignment.START,
@@ -486,7 +467,7 @@ class RecordingPanelView(ft.Container):
                                 height=40,
                                 border_radius=RADIUS["md"],
                                 bgcolor=f"{COLORS['accent_purple']}12",
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, f"{COLORS['accent_purple']}20"),
                             ),
                             ft.Container(width=14),
@@ -555,7 +536,7 @@ class RecordingPanelView(ft.Container):
                         height=88,
                         border_radius=RADIUS["xl"],
                         bgcolor=COLORS["bg_tertiary"],
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                         border=ft.border.all(1, COLORS["border_subtle"]),
                     ),
                     ft.Container(height=24),
@@ -577,7 +558,7 @@ class RecordingPanelView(ft.Container):
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             ),
             padding=ft.padding.symmetric(vertical=40),
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
         )
 
     def _build_event_item(self, step: WorkflowStep, index: int):
@@ -600,7 +581,7 @@ class RecordingPanelView(ft.Container):
                         height=28,
                         border_radius=RADIUS["full"],
                         bgcolor=action_config["color"],
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                     ),
                     ft.Container(width=14),
                     # Action icon
@@ -614,7 +595,7 @@ class RecordingPanelView(ft.Container):
                         height=40,
                         border_radius=RADIUS["md"],
                         bgcolor=f"{action_config['color']}12",
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                         border=ft.border.all(1, f"{action_config['color']}20"),
                     ),
                     ft.Container(width=14),
@@ -671,7 +652,7 @@ class RecordingPanelView(ft.Container):
                         height=32,
                         border_radius=RADIUS["sm"],
                         bgcolor=COLORS["bg_tertiary"],
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                         border=ft.border.all(1, COLORS["border_subtle"]),
                         animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
                         on_click=lambda e, sid=step.id: self._on_remove_step(sid),
@@ -877,60 +858,30 @@ class RecordingPanelView(ft.Container):
     def _on_primary_hover(self, e):
         """Handle primary button hover effect."""
         if e.data == "true":
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=28,
-                color=f"{COLORS['primary']}55",
-                offset=ft.Offset(0, 10),
-            )
+            
             e.control.scale = 1.02
         else:
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=20,
-                color=f"{COLORS['primary']}40",
-                offset=ft.Offset(0, 6),
-            )
+            
             e.control.scale = 1.0
         e.control.update()
 
     def _on_danger_hover(self, e):
         """Handle danger button hover effect."""
         if e.data == "true":
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=24,
-                color=f"{COLORS['error']}50",
-                offset=ft.Offset(0, 8),
-            )
+            
             e.control.scale = 1.02
         else:
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=16,
-                color=f"{COLORS['error']}35",
-                offset=ft.Offset(0, 4),
-            )
+            
             e.control.scale = 1.0
         e.control.update()
 
     def _on_warning_hover(self, e):
         """Handle warning button hover effect."""
         if e.data == "true":
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=24,
-                color=f"{COLORS['warning']}50",
-                offset=ft.Offset(0, 8),
-            )
+            
             e.control.scale = 1.02
         else:
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=16,
-                color=f"{COLORS['warning']}35",
-                offset=ft.Offset(0, 4),
-            )
+            
             e.control.scale = 1.0
         e.control.update()
 
@@ -949,28 +900,18 @@ class RecordingPanelView(ft.Container):
         if e.data == "true":
             e.control.bgcolor = COLORS["bg_hover"]
             e.control.border = ft.border.all(1, COLORS["border_light"])
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=20,
-                color="#00000020",
-                offset=ft.Offset(0, 6),
-            )
+            
         else:
             e.control.bgcolor = COLORS["bg_tertiary"]
             e.control.border = ft.border.all(1, COLORS["border_subtle"])
-            e.control.shadow = None
+            pass  # shadow removed
         e.control.update()
 
     def _on_stat_hover(self, e, color):
         """Handle stat card hover effect."""
         if e.data == "true":
             e.control.border = ft.border.all(1, f"{color}40")
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=28,
-                color=f"{color}20",
-                offset=ft.Offset(0, 10),
-            )
+            
             e.control.scale = 1.02
         else:
             e.control.border = ft.border.all(1, COLORS["border"])
@@ -983,14 +924,9 @@ class RecordingPanelView(ft.Container):
         if e.data == "true":
             e.control.bgcolor = f"{color}15"
             e.control.border = ft.border.all(1, f"{color}30")
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=8,
-                color=f"{color}20",
-                offset=ft.Offset(0, 2),
-            )
+            
         else:
             e.control.bgcolor = COLORS["bg_tertiary"]
             e.control.border = ft.border.all(1, COLORS["border_subtle"])
-            e.control.shadow = None
+            pass  # shadow removed
         e.control.update()

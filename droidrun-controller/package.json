@@ -1,0 +1,16 @@
+{
+  "name": "socket-job-server",
+  "version": "1.0.0",
+  "description": "WebSocket server for sending jobs to Android devices",
+  "main": "test_socket_server.js",
+  "scripts": {
+    "start": "node test_socket_server.js",
+    "dev": "nodemon test_socket_server.js"
+  },
+  "dependencies": {
+    "socket.io": "^4.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  }
+}

@@ -49,6 +49,12 @@ dependencies {
     // NanoHTTPD for HTTP server
     implementation("org.nanohttpd:nanohttpd:2.3.1")
 
+    // OkHttp for HTTP client (upload to Python backend)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // Socket.IO for real-time job receiving
+    implementation("io.socket:socket.io-client:2.1.0")
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 

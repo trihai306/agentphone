@@ -1,8 +1,19 @@
 """Toast notification manager with enhanced styling."""
 
 import flet as ft
-from ..theme import COLORS, RADIUS, SPACING, get_shadow
+from ..theme import get_colors, RADIUS, SPACING, get_shadow
 
+
+
+# Dynamic color proxy - acts like a dict but always gets current theme colors
+class _DynamicColors:
+    def get(self, key, default=None):
+        return get_colors().get(key, default)
+    
+    def __getitem__(self, key):
+        return get_colors()[key]
+
+COLORS = _DynamicColors()
 
 class ToastManager:
     """Manages toast notifications with polished styling."""
@@ -57,7 +68,7 @@ class ToastManager:
             height=32,
             border_radius=RADIUS["md"],
             bgcolor=config["bgcolor"],
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
         )
 
         # Toast content with improved layout

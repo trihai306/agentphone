@@ -32,8 +32,17 @@ export default function CommandPalette() {
             }
         };
 
+        // Listen for custom event to open command palette
+        const handleOpenCommandPalette = () => {
+            setIsOpen(true);
+        };
+
         window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+        window.addEventListener('open-command-palette', handleOpenCommandPalette);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('open-command-palette', handleOpenCommandPalette);
+        };
     }, []);
 
     const handleSelect = (href) => {

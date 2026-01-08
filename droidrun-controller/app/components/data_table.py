@@ -1,8 +1,19 @@
 """Data table component."""
 
 import flet as ft
-from ..theme import COLORS
+from ..theme import get_colors
 
+
+
+# Dynamic color proxy - acts like a dict but always gets current theme colors
+class _DynamicColors:
+    def get(self, key, default=None):
+        return get_colors().get(key, default)
+    
+    def __getitem__(self, key):
+        return get_colors()[key]
+
+COLORS = _DynamicColors()
 
 class DataTable(ft.Container):
     """A styled data table."""

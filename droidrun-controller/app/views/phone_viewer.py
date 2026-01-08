@@ -3,7 +3,7 @@
 import flet as ft
 import asyncio
 from typing import List, Dict, Set
-from ..theme import COLORS, RADIUS, SPACING, SHADOWS, get_shadow, ANIMATION, get_colors
+from ..theme import get_colors, RADIUS, SPACING, SHADOWS, get_shadow, ANIMATION, get_colors
 from ..components.device_card import DeviceCard, DeviceGridToolbar
 from ..components.empty_state import EmptyState
 from ..components.search_filter import SearchFilter, SearchFilterCompact
@@ -12,6 +12,17 @@ from ..components.device_detail_modal import DeviceDetailModal, show_device_deta
 from ..backend import backend
 from ..services.screen_service import screen_service
 
+
+
+# Dynamic color proxy - acts like a dict but always gets current theme colors
+class _DynamicColors:
+    def get(self, key, default=None):
+        return get_colors().get(key, default)
+    
+    def __getitem__(self, key):
+        return get_colors()[key]
+
+COLORS = _DynamicColors()
 
 class PhoneViewerView(ft.Container):
     """Cloud device farm style grid view for managing multiple devices."""
@@ -165,16 +176,18 @@ class PhoneViewerView(ft.Container):
         self.update()
 
     def _build_content(self):
-        """Build the view content."""
+        """Build the view content with modern spacing."""
         # Choose device display based on view mode
         device_display = self._build_device_list() if self._view_mode == "list" else self._build_device_grid()
 
         main_content = ft.Column(
             [
                 self._build_header(),
-                ft.Container(height=SPACING["lg"]),
+                ft.Container(height=SPACING["md"]),
                 self._build_search_filter(),
+                ft.Container(height=SPACING["md"]),
                 self._build_toolbar(),
+                ft.Container(height=SPACING["lg"]),
                 device_display,
             ],
             spacing=0,
@@ -246,7 +259,7 @@ class PhoneViewerView(ft.Container):
         )
 
     def _build_header(self):
-        """Build the header section with polished styling."""
+        """Build the header section with modern glass morphism styling."""
         is_mobile = self._is_mobile()
         selected_count = len(self.selected_devices)
         total_count = len(self.devices)
@@ -270,8 +283,8 @@ class PhoneViewerView(ft.Container):
                             [
                                 ft.Text(
                                     "Device Farm",
-                                    size=22,
-                                    weight=ft.FontWeight.W_700,
+                                    size=24,
+                                    weight=ft.FontWeight.BOLD,
                                     color=COLORS["text_primary"],
                                 ),
                                 ft.Container(expand=True),
@@ -291,48 +304,59 @@ class PhoneViewerView(ft.Container):
                         ),
                     ],
                 ),
-                padding=ft.padding.only(bottom=SPACING["sm"]),
+                padding=ft.padding.only(bottom=SPACING["lg"]),
             )
 
+        # Desktop header with glass morphism card
         return ft.Container(
-            content=ft.Row(
-                [
-                    ft.Column(
-                        [
-                            ft.Row(
-                                [
-                                    # Title with gradient-like effect
-                                    ft.Text(
-                                        "Device Farm",
-                                        size=28,
-                                        weight=ft.FontWeight.W_700,
-                                        color=COLORS["text_primary"],
-                                    ),
-                                    ft.Container(width=SPACING["md"]),
-                                    # Online count badge with pulse indicator
-                                    self._build_online_badge(online_count),
-                                    ft.Container(width=SPACING["sm"]),
-                                    # Filtered count badge (shown when filters are active)
-                                    self._build_filtered_badge(filtered_count, total_count) if has_active_filters else ft.Container(),
-                                    ft.Container(width=SPACING["sm"]) if has_active_filters else ft.Container(),
-                                    # Selected count badge
-                                    self._build_selected_badge(selected_count) if selected_count > 0 else ft.Container(),
-                                ],
-                            ),
-                            ft.Container(height=SPACING["xs"]),
-                            ft.Text(
-                                "Manage and control your cloud devices",
-                                size=14,
-                                color=COLORS["text_secondary"],
-                            ),
-                        ],
-                        spacing=0,
-                    ),
-                    ft.Container(expand=True),
-                    self._build_right_actions(),
-                ],
+            content=ft.Container(
+                content=ft.Row(
+                    [
+                        ft.Column(
+                            [
+                                ft.Row(
+                                    [
+                                        # Title with modern styling
+                                        ft.Text(
+                                            "Device Farm",
+                                            size=32,
+                                            weight=ft.FontWeight.BOLD,
+                                            color=COLORS["text_primary"],
+                                        ),
+                                        ft.Container(width=SPACING["md"]),
+                                        # Online count badge with pulse indicator
+                                        self._build_online_badge(online_count),
+                                        ft.Container(width=SPACING["sm"]),
+                                        # Filtered count badge (shown when filters are active)
+                                        self._build_filtered_badge(filtered_count, total_count) if has_active_filters else ft.Container(),
+                                        ft.Container(width=SPACING["sm"]) if has_active_filters else ft.Container(),
+                                        # Selected count badge
+                                        self._build_selected_badge(selected_count) if selected_count > 0 else ft.Container(),
+                                    ],
+                                    alignment=ft.MainAxisAlignment.START,
+                                ),
+                                ft.Container(height=SPACING["xs"]),
+                                ft.Text(
+                                    "Manage and control your cloud devices",
+                                    size=15,
+                                    color=COLORS["text_secondary"],
+                                    weight=ft.FontWeight.W_400,
+                                ),
+                            ],
+                            spacing=0,
+                        ),
+                        ft.Container(expand=True),
+                        self._build_right_actions(),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+                padding=ft.padding.all(SPACING["xl"]),
+                bgcolor=COLORS["bg_card"],
+                border_radius=RADIUS["xl"],
+                shadow=get_shadow("lg"),
+                border=ft.border.all(1, COLORS["border"]),
             ),
-            padding=ft.padding.only(bottom=SPACING["sm"]),
+            padding=ft.padding.only(bottom=SPACING["xl"]),
         )
 
     def _build_status_badge(self, text: str, color: str, bg_color: str):
@@ -360,13 +384,7 @@ class PhoneViewerView(ft.Container):
                         width=8,
                         height=8,
                         border_radius=4,
-                        bgcolor=COLORS["success"],
-                        shadow=ft.BoxShadow(
-                            spread_radius=0,
-                            blur_radius=6,
-                            color=COLORS["success_glow"],
-                            offset=ft.Offset(0, 0),
-                        ),
+                        bgcolor=COLORS["success"]
                     ),
                     ft.Container(width=6),
                     ft.Text(
@@ -725,7 +743,7 @@ class PhoneViewerView(ft.Container):
         )
 
     def _build_bulk_action_button(self, label: str, icon: str, color: str, on_click):
-        """Build a compact bulk action button.
+        """Build a modern bulk action button with enhanced styling.
 
         Args:
             label: Button text
@@ -734,25 +752,28 @@ class PhoneViewerView(ft.Container):
             on_click: Click callback
 
         Returns:
-            Container styled as a compact action button
+            Container styled as a modern action button
         """
         return ft.Container(
             content=ft.Row(
                 [
-                    ft.Icon(icon, size=14, color=color),
+                    ft.Icon(icon, size=16, color=color),
                     ft.Text(
                         label,
-                        size=11,
-                        weight=ft.FontWeight.W_500,
+                        size=12,
+                        weight=ft.FontWeight.W_600,
                         color=color,
                     ),
                 ],
-                spacing=4,
+                spacing=6,
             ),
-            padding=ft.padding.symmetric(horizontal=8, vertical=4),
-            border_radius=RADIUS["sm"],
+            padding=ft.padding.symmetric(horizontal=12, vertical=8),
+            border_radius=RADIUS["md"],
             on_click=on_click,
             on_hover=self._on_button_hover,
+            bgcolor=COLORS["bg_secondary"],
+            border=ft.border.all(1, COLORS["border"]),
+            animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
         )
 
     def _build_device_grid(self):
@@ -785,7 +806,7 @@ class PhoneViewerView(ft.Container):
                 )
             )
 
-        # Wrap in scrollable grid with padding
+        # Wrap in scrollable grid with modern padding
         return ft.Container(
             content=ft.Column(
                 [
@@ -793,10 +814,10 @@ class PhoneViewerView(ft.Container):
                         content=ft.Row(
                             cards,
                             wrap=True,
-                            spacing=SPACING["lg"],
-                            run_spacing=SPACING["lg"],
+                            spacing=SPACING["xl"],
+                            run_spacing=SPACING["xl"],
                         ),
-                        padding=ft.padding.all(SPACING["xl"]),
+                        padding=ft.padding.all(SPACING["xxl"]),
                     ),
                 ],
                 scroll=ft.ScrollMode.AUTO,
@@ -942,7 +963,7 @@ class PhoneViewerView(ft.Container):
                             check_color=colors["text_inverse"],
                         ),
                         width=48,
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                     ),
                     # Device info (model + brand)
                     ft.Container(
@@ -958,7 +979,7 @@ class PhoneViewerView(ft.Container):
                                     height=40,
                                     border_radius=RADIUS["md"],
                                     bgcolor=colors["primary_glow"],
-                                    alignment=ft.alignment.center,
+                                    alignment=ft.Alignment(0, 0),
                                 ),
                                 ft.Container(width=SPACING["sm"]),
                                 ft.Column(
@@ -989,13 +1010,7 @@ class PhoneViewerView(ft.Container):
                                     width=8,
                                     height=8,
                                     border_radius=4,
-                                    bgcolor=status_color,
-                                    shadow=ft.BoxShadow(
-                                        spread_radius=0,
-                                        blur_radius=4,
-                                        color=f"{status_color}60",
-                                        offset=ft.Offset(0, 0),
-                                    ) if status == "connected" else None,
+                                    bgcolor=status_color if status == "connected" else None,
                                 ),
                                 ft.Container(width=6),
                                 ft.Text(
@@ -1083,7 +1098,7 @@ class PhoneViewerView(ft.Container):
             width=28,
             height=28,
             border_radius=RADIUS["sm"],
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             on_click=on_click,
             on_hover=self._on_action_icon_hover,
             tooltip=tooltip,
@@ -1115,7 +1130,7 @@ class PhoneViewerView(ft.Container):
                         height=90,
                         border_radius=RADIUS["xl"],
                         bgcolor=COLORS["bg_tertiary"],
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                         border=ft.border.all(1, COLORS["border"]),
                     ),
                     ft.Container(height=SPACING["xl"]),
@@ -1162,7 +1177,7 @@ class PhoneViewerView(ft.Container):
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             ),
             padding=SPACING["xxxl"],
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             expand=True,
         )
 
@@ -1196,7 +1211,7 @@ class PhoneViewerView(ft.Container):
             COLORS["primary"] if is_selected else COLORS["border"]
         )
 
-        # Header with status indicator and device ID
+        # Header with status indicator and device ID - enhanced design
         header = ft.Container(
             content=ft.Row(
                 [
@@ -1205,56 +1220,56 @@ class PhoneViewerView(ft.Container):
                         content=ft.Row(
                             [
                                 ft.Container(
-                                    width=6,
-                                    height=6,
-                                    border_radius=3,
-                                    bgcolor=status_color,
-                                    shadow=ft.BoxShadow(
-                                        spread_radius=0,
-                                        blur_radius=4,
-                                        color=f"{status_color}60",
-                                        offset=ft.Offset(0, 0),
-                                    ) if status == "connected" else None,
+                                    width=7,
+                                    height=7,
+                                    border_radius=4,
+                                    bgcolor=status_color if status == "connected" else COLORS["text_muted"],
                                 ),
-                                ft.Container(width=4),
+                                ft.Container(width=5),
                                 ft.Text(
                                     "Cloud",
-                                    size=9,
+                                    size=10,
                                     color=COLORS["primary"],
-                                    weight=ft.FontWeight.W_600,
+                                    weight=ft.FontWeight.W_700,
                                 ),
                             ],
                             spacing=0,
                         ),
-                        padding=ft.padding.symmetric(horizontal=8, vertical=3),
-                        border_radius=RADIUS["sm"],
+                        padding=ft.padding.symmetric(horizontal=10, vertical=4),
+                        border_radius=RADIUS["md"],
                         bgcolor=COLORS["primary_glow"],
+                        border=ft.border.all(1, COLORS["primary"] + "20"),
                     ),
                     ft.Container(expand=True),
                     # Device ID with enhanced styling
-                    ft.Text(
-                        device_id[:3] if len(device_id) >= 3 else device_id,
-                        size=14,
-                        weight=ft.FontWeight.W_700,
-                        color=COLORS["primary"],
+                    ft.Container(
+                        content=ft.Text(
+                            device_id[:3] if len(device_id) >= 3 else device_id,
+                            size=15,
+                            weight=ft.FontWeight.BOLD,
+                            color=COLORS["primary"],
+                        ),
+                        padding=ft.padding.symmetric(horizontal=8, vertical=2),
+                        border_radius=RADIUS["sm"],
+                        bgcolor=COLORS["bg_secondary"],
                     ),
                 ],
             ),
-            padding=ft.padding.only(left=10, right=10, top=8, bottom=4),
+            padding=ft.padding.only(left=12, right=12, top=10, bottom=6),
         )
 
-        # Device model name
+        # Device model name with enhanced styling
         device_model = device.get("model", "Galaxy S7")
         device_info = ft.Container(
             content=ft.Text(
-                device_model[:14] + "..." if len(device_model) > 14 else device_model,
-                size=11,
-                weight=ft.FontWeight.W_600,
-                color=COLORS["primary"],
+                device_model[:16] + "..." if len(device_model) > 16 else device_model,
+                size=12,
+                weight=ft.FontWeight.W_700,
+                color=COLORS["text_primary"],
                 text_align=ft.TextAlign.CENTER,
             ),
-            padding=ft.padding.symmetric(horizontal=10),
-            alignment=ft.alignment.center,
+            padding=ft.padding.symmetric(horizontal=12),
+            alignment=ft.Alignment(0, 0),
         )
 
         # Screenshot preview with phone frame aesthetic
@@ -1283,7 +1298,7 @@ class PhoneViewerView(ft.Container):
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
             padding=ft.padding.symmetric(horizontal=10, vertical=6),
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
         )
 
         # Enhanced action bar with polished buttons
@@ -1297,11 +1312,11 @@ class PhoneViewerView(ft.Container):
                 active_color=COLORS["primary"],
                 check_color=COLORS["text_inverse"],
             ),
-            alignment=ft.alignment.top_left,
+            alignment=ft.Alignment(-1, -1),
             padding=2,
         )
 
-        # Main phone frame container
+        # Main phone frame container with enhanced styling
         return ft.Container(
             content=ft.Stack(
                 [
@@ -1309,7 +1324,7 @@ class PhoneViewerView(ft.Container):
                         [
                             header,
                             device_info,
-                            ft.Container(height=6),
+                            ft.Container(height=8),
                             preview,
                             task_widget,
                             action_bar,
@@ -1319,20 +1334,15 @@ class PhoneViewerView(ft.Container):
                     checkbox,
                 ],
             ),
-            width=165,
-            height=290,
-            border_radius=RADIUS["lg"],
+            width=180,
+            height=310,
+            border_radius=RADIUS["xl"],
             bgcolor=COLORS["bg_card"],
             border=frame_border,
-            shadow=ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=12 if is_selected else 6,
-                color=f"{COLORS['primary']}25" if is_selected else "#00000010",
-                offset=ft.Offset(0, 4 if is_selected else 2),
-            ),
             on_click=lambda e, sid=serial: self._on_device_click(sid),
             on_hover=lambda e, sel=is_selected: self._on_card_hover(e, sel),
             animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
+            shadow=get_shadow("md"),
         )
 
     def _build_screenshot_preview(self, screenshot_url: str, android_version: str):
@@ -1356,7 +1366,7 @@ class PhoneViewerView(ft.Container):
                         height=60,
                         border_radius=RADIUS["md"],
                         bgcolor=COLORS["bg_hover"],
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                     ),
                     ft.Container(height=8),
                     ft.Text(
@@ -1377,7 +1387,7 @@ class PhoneViewerView(ft.Container):
             bgcolor=COLORS["bg_tertiary"],
             border_radius=RADIUS["md"],
             margin=ft.margin.symmetric(horizontal=10),
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             border=ft.border.all(1, COLORS["border_subtle"]),
         )
 
@@ -1417,17 +1427,19 @@ class PhoneViewerView(ft.Container):
         )
 
     def _build_action_icon(self, icon: str, color: str, tooltip: str, on_click):
-        """Build an enhanced action icon button."""
+        """Build an enhanced action icon button with modern styling."""
         return ft.Container(
-            content=ft.Icon(icon, size=18, color=color),
-            width=32,
-            height=32,
-            border_radius=RADIUS["sm"],
-            alignment=ft.alignment.center,
+            content=ft.Icon(icon, size=19, color=color),
+            width=36,
+            height=36,
+            border_radius=RADIUS["md"],
+            alignment=ft.Alignment(0, 0),
             on_click=on_click,
             on_hover=self._on_action_icon_hover,
             tooltip=tooltip,
             animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
+            bgcolor=COLORS["bg_secondary"],
+            border=ft.border.all(1, COLORS["border"]),
         )
 
     def _build_empty_state(self):
@@ -1481,7 +1493,7 @@ class PhoneViewerView(ft.Container):
                             height=32,
                             border_radius=16,
                             bgcolor=colors["primary_glow"],
-                            alignment=ft.alignment.center,
+                            alignment=ft.Alignment(0, 0),
                         ),
                         ft.Container(width=SPACING["md"]),
                         # Step content
@@ -1549,14 +1561,8 @@ class PhoneViewerView(ft.Container):
                         height=88,
                         border_radius=44,
                         bgcolor=colors["bg_tertiary"],
-                        alignment=ft.alignment.center,
-                        border=ft.border.all(1, colors["border"]),
-                        shadow=ft.BoxShadow(
-                            spread_radius=0,
-                            blur_radius=20,
-                            color=f"{colors['text_muted']}12",
-                            offset=ft.Offset(0, 6),
-                        ),
+                        alignment=ft.Alignment(0, 0),
+                        border=ft.border.all(1, colors["border"])
                     ),
                     ft.Container(height=SPACING["lg"]),
                     ft.Text(
@@ -1660,12 +1666,6 @@ class PhoneViewerView(ft.Container):
                         bgcolor=colors["primary"],
                         on_click=self._on_refresh,
                         on_hover=self._on_primary_hover,
-                        shadow=ft.BoxShadow(
-                            spread_radius=0,
-                            blur_radius=16,
-                            color=colors.get("primary_glow", f"{colors['primary']}25"),
-                            offset=ft.Offset(0, 4),
-                        ),
                         animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
                     ),
                 ],
@@ -1673,7 +1673,7 @@ class PhoneViewerView(ft.Container):
                 scroll=ft.ScrollMode.AUTO,
             ),
             padding=SPACING["xl"] if is_mobile else SPACING["xxl"],
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             expand=True,
         )
 
@@ -1694,13 +1694,7 @@ class PhoneViewerView(ft.Container):
                         height=80,
                         border_radius=RADIUS["xl"],
                         bgcolor=COLORS["bg_tertiary"],
-                        alignment=ft.alignment.center,
-                        shadow=ft.BoxShadow(
-                            spread_radius=0,
-                            blur_radius=20,
-                            color=COLORS["primary_glow"],
-                            offset=ft.Offset(0, 0),
-                        ),
+                        alignment=ft.Alignment(0, 0)
                     ),
                     ft.Container(height=SPACING["xl"]),
                     ft.Text(
@@ -1719,7 +1713,7 @@ class PhoneViewerView(ft.Container):
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             ),
             padding=SPACING["xxxl"],
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             expand=True,
         )
 
@@ -1757,27 +1751,17 @@ class PhoneViewerView(ft.Container):
                 2 if is_selected else 1,
                 COLORS["primary"]
             )
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=16,
-                color=f"{COLORS['primary']}30",
-                offset=ft.Offset(0, 6),
-            )
+            
         else:
             e.control.border = ft.border.all(
                 2 if is_selected else 1,
                 COLORS["primary"] if is_selected else COLORS["border"]
             )
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=12 if is_selected else 6,
-                color=f"{COLORS['primary']}25" if is_selected else "#00000010",
-                offset=ft.Offset(0, 4 if is_selected else 2),
-            )
+            
         e.control.update()
 
     def _on_device_click(self, serial: str):
-        """Handle device card/row click - open device detail modal."""
+        """Handle device card/row click - open professional phone viewer."""
         # Find the device by serial
         device = None
         for d in self.devices:
@@ -1789,38 +1773,14 @@ class PhoneViewerView(ft.Container):
             self.toast.error(f"Device not found: {serial}")
             return
 
-        # Define modal action callbacks
-        def on_close():
-            if self.page:
-                self.page.close(self._current_modal)
-                self._current_modal = None
+        # Open the professional phone viewer modal
+        from ..components.phone_viewer_modal import show_phone_viewer
 
-        def on_screenshot(e):
-            self.toast.info(f"Taking screenshot of {device.get('model', 'device')}...")
-            on_close()
-
-        def on_restart(e):
-            self.toast.info(f"Restarting {device.get('model', 'device')}...")
-            on_close()
-
-        def on_disconnect(e):
-            self.toast.info(f"Disconnecting {device.get('model', 'device')}...")
-            on_close()
-
-        def on_run_agent(e):
-            self.toast.info(f"Running agent on {device.get('model', 'device')}...")
-            on_close()
-
-        # Show the device detail modal
         if self.page:
-            self._current_modal = show_device_detail_modal(
+            show_phone_viewer(
                 page=self.page,
-                device=device,
-                on_close=on_close,
-                on_screenshot=on_screenshot,
-                on_restart=on_restart,
-                on_disconnect=on_disconnect,
-                on_run_agent=on_run_agent,
+                device_serial=serial,
+                device_info=device,
             )
 
     def _on_device_select(self, device_id: str, selected: bool):

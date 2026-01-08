@@ -1,3 +1,176 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ================================================
+   ReactFlow Professional Dark Theme
+   ================================================ */
+
+.react-flow {
+    --xy-edge-stroke-default: #6366f1;
+    --xy-edge-stroke-width-default: 2;
+    --xy-edge-stroke-selected-default: #8b5cf6;
+    --xy-connectionline-stroke-default: #6366f1;
+    --xy-connectionline-stroke-width-default: 2;
+    --xy-attribution-background-color-default: transparent;
+}
+
+/* Edge Styling */
+.react-flow__edge-path {
+    stroke: #6366f1;
+    stroke-width: 2;
+    transition: stroke 0.2s ease, stroke-width 0.2s ease;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+    stroke: #8b5cf6;
+    stroke-width: 3;
+}
+
+.react-flow__edge:hover .react-flow__edge-path {
+    stroke: #a78bfa;
+    stroke-width: 3;
+}
+
+/* Edge Animation */
+.react-flow__edge.animated .react-flow__edge-path {
+    stroke-dasharray: 5;
+    animation: flowEdgeAnimation 0.5s linear infinite;
+}
+
+@keyframes flowEdgeAnimation {
+    from {
+        stroke-dashoffset: 10;
+    }
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* Handle Styling */
+.react-flow__handle {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.react-flow__handle:hover {
+    transform: scale(1.4);
+    filter: brightness(1.2);
+}
+
+.react-flow__handle.connecting {
+    animation: handlePulse 1s ease-in-out infinite;
+}
+
+@keyframes handlePulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 currentColor;
+    }
+    50% {
+        transform: scale(1.2);
+        box-shadow: 0 0 0 6px transparent;
+    }
+}
+
+/* MiniMap Styling */
+.react-flow__minimap {
+    background-color: #0a0a0a !important;
+    border-radius: 12px !important;
+    border: 1px solid #1e1e1e !important;
+    overflow: hidden;
+}
+
+.react-flow__minimap-mask {
+    fill: rgba(99, 102, 241, 0.08);
+}
+
+.react-flow__minimap-node {
+    fill: #3a3a3a;
+    stroke: none;
+    rx: 4;
+    ry: 4;
+}
+
+/* Hide Attribution */
+.react-flow__attribution {
+    display: none !important;
+}
+
+/* Selection Box */
+.react-flow__selection {
+    background: rgba(99, 102, 241, 0.08) !important;
+    border: 1px solid rgba(99, 102, 241, 0.5) !important;
+    border-radius: 4px;
+}
+
+/* Connection Line */
+.react-flow__connection-line {
+    stroke: #6366f1 !important;
+    stroke-width: 2 !important;
+}
+
+/* Node Selected State */
+.react-flow__node.selected {
+    z-index: 10 !important;
+}
+
+/* Pane */
+.react-flow__pane {
+    cursor: grab;
+}
+
+.react-flow__pane:active {
+    cursor: grabbing;
+}
+
+/* ================================================
+   Custom Scrollbar for Flow Editor
+   ================================================ */
+
+.flow-editor-sidebar {
+    scrollbar-width: thin;
+    scrollbar-color: #2a2a2a #0f0f0f;
+}
+
+.flow-editor-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.flow-editor-sidebar::-webkit-scrollbar-track {
+    background: #0f0f0f;
+    border-radius: 3px;
+}
+
+.flow-editor-sidebar::-webkit-scrollbar-thumb {
+    background: #2a2a2a;
+    border-radius: 3px;
+    transition: background 0.2s ease;
+}
+
+.flow-editor-sidebar::-webkit-scrollbar-thumb:hover {
+    background: #3a3a3a;
+}
+
+/* ================================================
+   Drag & Drop Enhancements
+   ================================================ */
+
+[draggable="true"] {
+    -webkit-user-drag: element;
+    user-select: none;
+}
+
+/* Flow node drag animation */
+.react-flow__node {
+    transition: transform 0.1s ease-out;
+}
+
+.react-flow__node.dragging {
+    cursor: grabbing !important;
+    z-index: 1000 !important;
+}
+
+/* Canvas drop zone feedback */
+.react-flow__renderer {
+    transition: background-color 0.2s ease;
+}

@@ -4,10 +4,21 @@ Polished with improved workflow cards, better list styling, and enhanced empty s
 """
 
 import flet as ft
-from ..theme import COLORS, RADIUS, ANIMATION
+from ..theme import get_colors, RADIUS, ANIMATION
 from ..components.card import Card
 from ..backend import backend
 
+
+
+# Dynamic color proxy - acts like a dict but always gets current theme colors
+class _DynamicColors:
+    def get(self, key, default=None):
+        return get_colors().get(key, default)
+    
+    def __getitem__(self, key):
+        return get_colors()[key]
+
+COLORS = _DynamicColors()
 
 class WorkflowsView(ft.Container):
     """Professional view for managing automation workflows."""
@@ -66,7 +77,7 @@ class WorkflowsView(ft.Container):
                                         height=44,
                                         bgcolor=f"{COLORS['accent_purple']}12",
                                         border_radius=RADIUS["lg"],
-                                        alignment=ft.alignment.center,
+                                        alignment=ft.Alignment(0, 0),
                                         border=ft.border.all(1, f"{COLORS['accent_purple']}20"),
                                     ),
                                     ft.Container(width=12),
@@ -111,7 +122,7 @@ class WorkflowsView(ft.Container):
                                             height=32,
                                             bgcolor=f"{COLORS['error_dark']}40",
                                             border_radius=RADIUS["sm"],
-                                            alignment=ft.alignment.center,
+                                            alignment=ft.Alignment(0, 0),
                                         ),
                                         ft.Container(width=10),
                                         ft.Text(
@@ -144,7 +155,7 @@ class WorkflowsView(ft.Container):
                                             height=32,
                                             bgcolor=f"{COLORS['primary_dark']}40",
                                             border_radius=RADIUS["sm"],
-                                            alignment=ft.alignment.center,
+                                            alignment=ft.Alignment(0, 0),
                                         ),
                                         ft.Container(width=10),
                                         ft.Text(
@@ -236,7 +247,7 @@ class WorkflowsView(ft.Container):
                 height=24,
                 border_radius=6,
                 bgcolor=f"{trend_color}15",
-                alignment=ft.alignment.center,
+                alignment=ft.Alignment(0, 0),
             )
 
         return ft.Container(
@@ -261,7 +272,7 @@ class WorkflowsView(ft.Container):
                                 height=52,
                                 border_radius=RADIUS["lg"],
                                 bgcolor=f"{color}12",
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, f"{color}20"),
                             ),
                         ],
@@ -343,7 +354,7 @@ class WorkflowsView(ft.Container):
                                 height=40,
                                 border_radius=RADIUS["md"],
                                 bgcolor=f"{COLORS['accent_purple']}12",
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, f"{COLORS['accent_purple']}20"),
                             ),
                             ft.Container(width=14),
@@ -419,7 +430,7 @@ class WorkflowsView(ft.Container):
                                 height=56,
                                 border_radius=RADIUS["lg"],
                                 bgcolor=f"{COLORS['accent_purple']}12" if is_active else COLORS["bg_tertiary"],
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, f"{COLORS['accent_purple']}20" if is_active else COLORS["border_subtle"]),
                             ),
                             ft.Container(
@@ -428,13 +439,7 @@ class WorkflowsView(ft.Container):
                                     height=12,
                                     border_radius=6,
                                     bgcolor=status_color,
-                                    border=ft.border.all(2, COLORS["bg_card"]),
-                                    shadow=ft.BoxShadow(
-                                        spread_radius=1,
-                                        blur_radius=6,
-                                        color=f"{status_color}50",
-                                        offset=ft.Offset(0, 0),
-                                    ) if is_active else None,
+                                    border=ft.border.all(2, COLORS["bg_card"]) if is_active else None,
                                 ),
                                 right=-2,
                                 bottom=-2,
@@ -525,7 +530,7 @@ class WorkflowsView(ft.Container):
                                 height=38,
                                 border_radius=RADIUS["md"],
                                 bgcolor=f"{COLORS['success']}10",
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, f"{COLORS['success']}20"),
                                 animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
                                 tooltip="Run Workflow",
@@ -543,7 +548,7 @@ class WorkflowsView(ft.Container):
                                 height=38,
                                 border_radius=RADIUS["md"],
                                 bgcolor=COLORS["bg_tertiary"],
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, COLORS["border_subtle"]),
                                 animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
                                 tooltip="Edit",
@@ -561,7 +566,7 @@ class WorkflowsView(ft.Container):
                                 height=38,
                                 border_radius=RADIUS["md"],
                                 bgcolor=COLORS["bg_tertiary"],
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, COLORS["border_subtle"]),
                                 animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
                                 tooltip="Duplicate",
@@ -579,7 +584,7 @@ class WorkflowsView(ft.Container):
                                 height=38,
                                 border_radius=RADIUS["md"],
                                 bgcolor=f"{COLORS['error']}08",
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, f"{COLORS['error']}15"),
                                 animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
                                 tooltip="Delete",
@@ -635,7 +640,7 @@ class WorkflowsView(ft.Container):
                                 height=40,
                                 border_radius=RADIUS["md"],
                                 bgcolor=f"{COLORS['accent_purple']}12",
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, f"{COLORS['accent_purple']}20"),
                             ),
                             ft.Container(width=14),
@@ -672,7 +677,7 @@ class WorkflowsView(ft.Container):
                                     height=88,
                                     border_radius=RADIUS["xl"],
                                     bgcolor=COLORS["bg_tertiary"],
-                                    alignment=ft.alignment.center,
+                                    alignment=ft.Alignment(0, 0),
                                     border=ft.border.all(1, COLORS["border_subtle"]),
                                 ),
                                 ft.Container(height=24),
@@ -743,7 +748,7 @@ class WorkflowsView(ft.Container):
                             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
                         padding=ft.padding.symmetric(vertical=40),
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                     ),
                 ],
             ),
@@ -770,7 +775,7 @@ class WorkflowsView(ft.Container):
                                 height=40,
                                 border_radius=RADIUS["md"],
                                 bgcolor=f"{COLORS['accent_purple']}12",
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, f"{COLORS['accent_purple']}20"),
                             ),
                             ft.Container(width=14),
@@ -807,7 +812,7 @@ class WorkflowsView(ft.Container):
                                     height=72,
                                     border_radius=RADIUS["xl"],
                                     bgcolor=COLORS["bg_tertiary"],
-                                    alignment=ft.alignment.center,
+                                    alignment=ft.Alignment(0, 0),
                                     border=ft.border.all(1, COLORS["border_subtle"]),
                                 ),
                                 ft.Container(height=16),
@@ -821,7 +826,7 @@ class WorkflowsView(ft.Container):
                             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
                         padding=ft.padding.symmetric(vertical=40),
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                     ),
                 ],
             ),

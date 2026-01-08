@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers\WalletsRelationManager;
 use App\Models\User;
+use App\Models\UserServicePackage;
 use App\States\UserWorkflow\Active;
 use App\States\UserWorkflow\Archived;
 use App\States\UserWorkflow\Pending;
@@ -122,6 +123,33 @@ class UserResource extends Resource
                     ->formatStateUsing(fn ($state): string => $state instanceof UserWorkflowState ? $state->label() : (string) $state)
                     ->color(fn ($state): string => $state instanceof UserWorkflowState ? $state->color() : 'gray')
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('credits_balance')
+                    ->label('Credits')
+                    ->getStateUsing(function (User $record): int {
+                        return (int) UserServicePackage::where('user_id', $record->id)
+                            ->where('status', 'active')
+                            ->sum('credits_remaining');
+                    })
+                    ->badge()
+                    ->color('success')
+                    ->sortable(query: function ($query, string $direction) {
+                        return $query->withSum([
+                            'servicePackages as credits_total' => function ($q) {
+                                $q->where('status', 'active');
+                            }
+                        ], 'credits_remaining')
+                        ->orderBy('credits_total', $direction);
+                    }),
+
+                Tables\Columns\TextColumn::make('wallet_balance')
+                    ->label('Wallet (VND)')
+                    ->getStateUsing(function (User $record): string {
+                        $balance = $record->wallets()->sum('balance');
+                        return number_format($balance, 0, ',', '.') . ' ₫';
+                    })
+                    ->badge()
+                    ->color('info'),
 
                 Tables\Columns\TextColumn::make('email_verified_at')
                     ->dateTime()

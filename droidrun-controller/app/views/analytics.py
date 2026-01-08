@@ -6,11 +6,22 @@ and enhanced data visualization with hover effects.
 
 import flet as ft
 from datetime import datetime, timedelta
-from ..theme import COLORS, RADIUS, get_shadow, ANIMATION
+from ..theme import get_colors, RADIUS, get_shadow, ANIMATION
 from ..components.card import Card, StatsCard
 from ..components.action_button import ActionButton
 from ..components.empty_state import EmptyState
 
+
+
+# Dynamic color proxy - acts like a dict but always gets current theme colors
+class _DynamicColors:
+    def get(self, key, default=None):
+        return get_colors().get(key, default)
+    
+    def __getitem__(self, key):
+        return get_colors()[key]
+
+COLORS = _DynamicColors()
 
 class AnalyticsView(ft.Container):
     """Professional view for token consumption analytics."""
@@ -92,14 +103,8 @@ class AnalyticsView(ft.Container):
                                         height=44,
                                         bgcolor=f"{COLORS['accent_orange']}12",
                                         border_radius=RADIUS["lg"],
-                                        alignment=ft.alignment.center,
-                                        border=ft.border.all(1, f"{COLORS['accent_orange']}20"),
-                                        shadow=ft.BoxShadow(
-                                            spread_radius=0,
-                                            blur_radius=16,
-                                            color=f"{COLORS['accent_orange']}25",
-                                            offset=ft.Offset(0, 4),
-                                        ),
+                                        alignment=ft.Alignment(0, 0),
+                                        border=ft.border.all(1, f"{COLORS['accent_orange']}20")
                                     ),
                                     ft.Container(width=12),
                                     ft.Container(
@@ -155,7 +160,7 @@ class AnalyticsView(ft.Container):
                                             height=32,
                                             bgcolor=COLORS["bg_tertiary"],
                                             border_radius=RADIUS["sm"],
-                                            alignment=ft.alignment.center,
+                                            alignment=ft.Alignment(0, 0),
                                         ),
                                         ft.Container(width=10),
                                         ft.Text(
@@ -187,7 +192,7 @@ class AnalyticsView(ft.Container):
                                             height=32,
                                             bgcolor=f"{COLORS['accent_orange']}40",
                                             border_radius=RADIUS["sm"],
-                                            alignment=ft.alignment.center,
+                                            alignment=ft.Alignment(0, 0),
                                         ),
                                         ft.Container(width=10),
                                         ft.Text(
@@ -201,12 +206,6 @@ class AnalyticsView(ft.Container):
                                 bgcolor=COLORS["accent_orange"],
                                 padding=ft.padding.only(left=8, right=18, top=10, bottom=10),
                                 border_radius=RADIUS["lg"],
-                                shadow=ft.BoxShadow(
-                                    spread_radius=0,
-                                    blur_radius=20,
-                                    color=f"{COLORS['accent_orange']}40",
-                                    offset=ft.Offset(0, 6),
-                                ),
                                 animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
                                 animate_scale=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
                                 on_click=self._on_refresh,
@@ -362,14 +361,8 @@ class AnalyticsView(ft.Container):
                                 height=52,
                                 border_radius=RADIUS["lg"],
                                 bgcolor=f"{color}12",
-                                alignment=ft.alignment.center,
-                                border=ft.border.all(1, f"{color}20"),
-                                shadow=ft.BoxShadow(
-                                    spread_radius=0,
-                                    blur_radius=16,
-                                    color=f"{color}25",
-                                    offset=ft.Offset(0, 4),
-                                ),
+                                alignment=ft.Alignment(0, 0),
+                                border=ft.border.all(1, f"{color}20")
                             ),
                         ],
                         vertical_alignment=ft.CrossAxisAlignment.START,
@@ -412,12 +405,7 @@ class AnalyticsView(ft.Container):
         """Handle stat card hover effect."""
         if e.data == "true":
             e.control.border = ft.border.all(1, f"{color}40")
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=28,
-                color=f"{color}20",
-                offset=ft.Offset(0, 10),
-            )
+            
             e.control.scale = 1.02
         else:
             e.control.border = ft.border.all(1, COLORS["border"])
@@ -464,13 +452,7 @@ class AnalyticsView(ft.Container):
                                 height=bar_height,
                                 border_radius=ft.border_radius.only(top_left=8, top_right=8),
                                 bgcolor=COLORS["accent_orange"] if is_today else f"{COLORS['accent_orange']}50",
-                                border=ft.border.all(1, f"{COLORS['accent_orange']}30") if is_today else None,
-                                shadow=ft.BoxShadow(
-                                    spread_radius=0,
-                                    blur_radius=12,
-                                    color=f"{COLORS['accent_orange']}30",
-                                    offset=ft.Offset(0, 4),
-                                ) if is_today else None,
+                                border=ft.border.all(1, f"{COLORS['accent_orange']}30") if is_today else None if is_today else None,
                                 animate=ft.Animation(ANIMATION["slow"], ft.AnimationCurve.EASE_OUT),
                             ),
                             ft.Container(height=10),
@@ -511,7 +493,7 @@ class AnalyticsView(ft.Container):
                                 height=40,
                                 border_radius=RADIUS["md"],
                                 bgcolor=f"{COLORS['accent_orange']}12",
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, f"{COLORS['accent_orange']}20"),
                             ),
                             ft.Container(width=14),
@@ -652,7 +634,7 @@ class AnalyticsView(ft.Container):
                                                             vertical_alignment=ft.CrossAxisAlignment.END,
                                                         ),
                                                         height=210,
-                                                        alignment=ft.alignment.bottom_center,
+                                                        alignment=ft.Alignment(0, 1),
                                                     ),
                                                 ],
                                             ),
@@ -683,21 +665,9 @@ class AnalyticsView(ft.Container):
         if e.data == "true":
             bar_container.bgcolor = COLORS["accent_orange"]
             bar_container.border = ft.border.all(1, f"{COLORS['accent_orange']}40")
-            bar_container.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=16,
-                color=f"{COLORS['accent_orange']}40",
-                offset=ft.Offset(0, 6),
-            )
         else:
             bar_container.bgcolor = COLORS["accent_orange"] if is_today else f"{COLORS['accent_orange']}50"
             bar_container.border = ft.border.all(1, f"{COLORS['accent_orange']}30") if is_today else None
-            bar_container.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=12,
-                color=f"{COLORS['accent_orange']}30",
-                offset=ft.Offset(0, 4),
-            ) if is_today else None
         bar_container.update()
 
     def _build_usage_breakdown(self):
@@ -726,7 +696,7 @@ class AnalyticsView(ft.Container):
                                 height=40,
                                 border_radius=RADIUS["md"],
                                 bgcolor=f"{COLORS['accent_purple']}12",
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, f"{COLORS['accent_purple']}20"),
                             ),
                             ft.Container(width=14),
@@ -795,14 +765,8 @@ class AnalyticsView(ft.Container):
                                 height=44,
                                 border_radius=RADIUS["md"],
                                 bgcolor=f"{color}12",
-                                alignment=ft.alignment.center,
-                                border=ft.border.all(1, f"{color}20"),
-                                shadow=ft.BoxShadow(
-                                    spread_radius=0,
-                                    blur_radius=12,
-                                    color=f"{color}20",
-                                    offset=ft.Offset(0, 4),
-                                ),
+                                alignment=ft.Alignment(0, 0),
+                                border=ft.border.all(1, f"{color}20")
                             ),
                             ft.Container(width=16),
                             ft.Column(
@@ -856,12 +820,6 @@ class AnalyticsView(ft.Container):
                                     height=8,
                                     border_radius=4,
                                     bgcolor=color,
-                                    shadow=ft.BoxShadow(
-                                        spread_radius=0,
-                                        blur_radius=8,
-                                        color=f"{color}40",
-                                        offset=ft.Offset(0, 2),
-                                    ),
                                     animate=ft.Animation(ANIMATION["slow"], ft.AnimationCurve.EASE_OUT),
                                 ),
                             ],
@@ -884,17 +842,12 @@ class AnalyticsView(ft.Container):
         if e.data == "true":
             e.control.bgcolor = COLORS["bg_hover"]
             e.control.border = ft.border.all(1, f"{color}30")
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=20,
-                color=f"{color}15",
-                offset=ft.Offset(0, 6),
-            )
+            
             e.control.scale = 1.01
         else:
             e.control.bgcolor = COLORS["bg_tertiary"]
             e.control.border = ft.border.all(1, COLORS["border_subtle"])
-            e.control.shadow = None
+            pass  # shadow removed
             e.control.scale = 1.0
         e.control.update()
 
@@ -945,7 +898,7 @@ class AnalyticsView(ft.Container):
                                 height=40,
                                 border_radius=RADIUS["md"],
                                 bgcolor=f"{COLORS['success']}12",
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, f"{COLORS['success']}20"),
                             ),
                             ft.Container(width=14),
@@ -1062,13 +1015,7 @@ class AnalyticsView(ft.Container):
                                                 width=100,  # 25% of typical width
                                                 height=8,
                                                 border_radius=4,
-                                                bgcolor=COLORS["success"],
-                                                shadow=ft.BoxShadow(
-                                                    spread_radius=0,
-                                                    blur_radius=8,
-                                                    color=f"{COLORS['success']}40",
-                                                    offset=ft.Offset(0, 2),
-                                                ),
+                                                bgcolor=COLORS["success"]
                                             ),
                                         ],
                                     ),
@@ -1113,7 +1060,7 @@ class AnalyticsView(ft.Container):
                         height=36,
                         border_radius=RADIUS["md"],
                         bgcolor=f"{color}12",
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                         border=ft.border.all(1, f"{color}20"),
                     ),
                     ft.Container(width=12),
@@ -1168,16 +1115,11 @@ class AnalyticsView(ft.Container):
         if e.data == "true":
             e.control.bgcolor = COLORS["bg_hover"]
             e.control.border = ft.border.all(1, f"{color}30")
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=16,
-                color=f"{color}15",
-                offset=ft.Offset(0, 4),
-            )
+            
         else:
             e.control.bgcolor = COLORS["bg_tertiary"]
             e.control.border = ft.border.all(1, COLORS["border_subtle"])
-            e.control.shadow = None
+            pass  # shadow removed
         e.control.update()
 
     def _format_number(self, num):
@@ -1189,20 +1131,10 @@ class AnalyticsView(ft.Container):
     def _on_primary_hover(self, e):
         """Handle primary button hover effect."""
         if e.data == "true":
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=28,
-                color=f"{COLORS['accent_orange']}55",
-                offset=ft.Offset(0, 10),
-            )
+            
             e.control.scale = 1.02
         else:
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=20,
-                color=f"{COLORS['accent_orange']}40",
-                offset=ft.Offset(0, 6),
-            )
+            
             e.control.scale = 1.0
         e.control.update()
 

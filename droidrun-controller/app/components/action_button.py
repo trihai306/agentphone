@@ -1,8 +1,19 @@
 """Professional action button components with polished transitions."""
 
 import flet as ft
-from ..theme import COLORS, ANIMATION
+from ..theme import get_colors, ANIMATION
 
+
+
+# Dynamic color proxy - acts like a dict but always gets current theme colors
+class _DynamicColors:
+    def get(self, key, default=None):
+        return get_colors().get(key, default)
+    
+    def __getitem__(self, key):
+        return get_colors()[key]
+
+COLORS = _DynamicColors()
 
 class ActionButton(ft.Container):
     """A modern styled action button with enhanced effects and polished transitions."""
@@ -128,14 +139,9 @@ class ActionButton(ft.Container):
             )
             content_items.append(self.text_control)
 
-        # Determine initial shadow based on variant
+        # Determine initial shadow based on variant - minimal for cleaner look
         has_glow = variant in ["primary", "success", "danger", "warning"]
-        initial_shadow = ft.BoxShadow(
-            spread_radius=0,
-            blur_radius=6 if has_glow else 4,
-            color=self.style_config["shadow_color"],
-            offset=ft.Offset(0, 4),
-        ) if has_glow or variant == "secondary" else None
+        initial_shadow = None  # No shadow by default for cleaner UI
 
         super().__init__(
             content=ft.Row(
@@ -160,21 +166,11 @@ class ActionButton(ft.Container):
         )
 
     def _on_hover(self, e):
-        """Handle hover effect with enhanced animations and glow effects."""
-        has_glow = self.variant in ["primary", "success", "danger", "warning"]
-
+        """Handle hover effect with enhanced animations."""
         if e.data == "true":
-            # Hover state - enhanced
+            # Hover state - subtle
             e.control.bgcolor = self.style_config["hover_bg"]
-            e.control.scale = 1.02
-
-            # Enhanced shadow on hover with moderate glow
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=1,
-                blur_radius=10 if has_glow else 8,
-                color=self.style_config["shadow_hover_color"],
-                offset=ft.Offset(0, 8),
-            )
+            e.control.scale = 1.01
 
             # Update border on hover for outline/secondary variants
             if self.variant in ["outline", "secondary"]:
@@ -183,14 +179,6 @@ class ActionButton(ft.Container):
             # Normal state
             e.control.bgcolor = self.style_config["bgcolor"]
             e.control.scale = 1.0
-
-            # Reset shadow
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=6 if has_glow else 4,
-                color=self.style_config["shadow_color"],
-                offset=ft.Offset(0, 4),
-            ) if has_glow or self.variant == "secondary" else None
 
             # Reset border
             if self.variant in ["outline", "secondary"]:
@@ -251,7 +239,7 @@ class IconButton(ft.Container):
             width=size,
             height=size,
             border_radius=size // 4 + 2,  # Proportional rounded corners
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             on_click=on_click,
             on_hover=self._on_hover,
             animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT_CUBIC),
@@ -269,17 +257,12 @@ class IconButton(ft.Container):
             self.icon_control.color = self.hover_color
 
             # Add subtle shadow on hover
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=12,
-                color=self.variant_config["hover_shadow"],
-                offset=ft.Offset(0, 4),
-            )
+            
         else:
             e.control.bgcolor = "transparent"
             e.control.scale = 1.0
             self.icon_control.color = self.default_color
-            e.control.shadow = None
+            pass  # shadow removed
 
         self.icon_control.update()
         e.control.update()
@@ -321,17 +304,11 @@ class FloatingActionButton(ft.Container):
             height=self.size_config["height"],
             border_radius=self.size_config["radius"],
             bgcolor=self.base_color,
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             on_click=on_click,
             on_hover=self._on_hover,
             animate=ft.Animation(ANIMATION["slow"], ft.AnimationCurve.EASE_OUT_CUBIC),
             animate_scale=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.ELASTIC_OUT),
-            shadow=ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=20,
-                color=self.glow_normal,
-                offset=ft.Offset(0, 6),
-            ),
             tooltip=tooltip,
             ink=True,
             **kwargs
@@ -341,21 +318,11 @@ class FloatingActionButton(ft.Container):
         """Handle hover effect with enhanced scale, shadow, and glow animation."""
         if e.data == "true":
             e.control.scale = 1.1
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=2,
-                blur_radius=32,
-                color=self.glow_hover,
-                offset=ft.Offset(0, 10),
-            )
+            
             # Subtle rotation effect could be added via transform
         else:
             e.control.scale = 1.0
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=20,
-                color=self.glow_normal,
-                offset=ft.Offset(0, 6),
-            )
+            
         e.control.update()
 
 

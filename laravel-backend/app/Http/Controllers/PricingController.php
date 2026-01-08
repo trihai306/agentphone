@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ServicePackage;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -9,62 +10,41 @@ class PricingController extends Controller
 {
     public function index()
     {
-        $plans = [
-            [
-                'id' => 1,
-                'name' => 'Starter',
-                'price' => 0,
-                'period' => 'month',
-                'description' => 'Perfect for individuals and small projects',
-                'features' => [
-                    '5 devices',
-                    'Basic analytics',
-                    'Email support',
-                    '1 GB storage',
-                    'Community access',
-                ],
-                'highlighted' => false,
-            ],
-            [
-                'id' => 2,
-                'name' => 'Professional',
-                'price' => 29,
-                'period' => 'month',
-                'description' => 'Best for growing businesses and teams',
-                'features' => [
-                    '50 devices',
-                    'Advanced analytics',
-                    'Priority support',
-                    '50 GB storage',
-                    'Team collaboration',
-                    'API access',
-                    'Custom integrations',
-                ],
-                'highlighted' => true,
-            ],
-            [
-                'id' => 3,
-                'name' => 'Enterprise',
-                'price' => 99,
-                'period' => 'month',
-                'description' => 'For large organizations with advanced needs',
-                'features' => [
-                    'Unlimited devices',
-                    'Real-time analytics',
-                    '24/7 phone support',
-                    'Unlimited storage',
-                    'Advanced team features',
-                    'Full API access',
-                    'Custom integrations',
-                    'Dedicated account manager',
-                    'SLA guarantee',
-                ],
-                'highlighted' => false,
-            ],
-        ];
+        // Lấy tất cả gói dịch vụ active, sắp xếp theo priority và giá
+        $packages = ServicePackage::active()
+            ->ordered()
+            ->get()
+            ->map(function ($package) {
+                return [
+                    'id' => $package->id,
+                    'code' => $package->code,
+                    'name' => $package->name,
+                    'description' => $package->description,
+                    'type' => $package->type,
+                    'price' => (float) $package->price,
+                    'original_price' => $package->original_price ? (float) $package->original_price : null,
+                    'currency' => $package->currency,
+                    'duration_days' => $package->duration_days,
+                    'credits' => $package->credits,
+                    'features' => $package->features ?? [],
+                    'limits' => $package->limits ?? [],
+                    'max_devices' => $package->max_devices,
+                    'is_featured' => $package->is_featured,
+                    'is_trial' => $package->is_trial,
+                    'trial_days' => $package->trial_days,
+                    'badge' => $package->badge,
+                    'badge_color' => $package->badge_color,
+                    'icon' => $package->icon,
+                    'discount_percent' => $package->discount_percent,
+                    'formatted_price' => $package->formatted_price,
+                    'active_subscribers' => $package->active_subscribers,
+                ];
+            })
+            ->values()
+            ->toArray();
 
         return Inertia::render('Pricing/Index', [
-            'plans' => $plans,
+            'packages' => $packages,
         ]);
     }
 }

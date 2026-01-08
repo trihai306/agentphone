@@ -20,6 +20,7 @@ import com.agent.portal.accessibility.PortalAccessibilityService
 import com.agent.portal.keyboard.PortalKeyboardIME
 import com.agent.portal.overlay.OverlayService
 import com.agent.portal.recording.RecordingManager
+import com.agent.portal.recording.RealTimeUploader
 import com.google.gson.Gson
 import fi.iki.elonen.NanoHTTPD
 import java.io.ByteArrayOutputStream
@@ -27,6 +28,7 @@ import kotlin.concurrent.thread
 
 /**
  * HTTP Server Service for agent communication
+ * With API Key authentication for security
  */
 class HttpServerService : Service() {
 
@@ -36,22 +38,97 @@ class HttpServerService : Service() {
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "agent_portal_channel"
 
+        // API Key settings
+        private const val PREFS_NAME = "http_server_settings"
+        private const val KEY_API_KEY = "api_key"
+        private const val KEY_API_KEY_ENABLED = "api_key_enabled"
+        private const val HEADER_API_KEY = "X-API-Key"
+        private const val HEADER_AUTHORIZATION = "Authorization"
+
         @Volatile
         var instance: HttpServerService? = null
             private set
 
         fun isRunning(): Boolean = instance?.server?.isAlive == true
+
+        /**
+         * Generate a new random API key
+         */
+        fun generateApiKey(): String {
+            val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+            return (1..32).map { chars.random() }.joinToString("")
+        }
     }
 
     private var server: PortalHttpServer? = null
     private val gson = Gson()
     private val mainHandler = Handler(Looper.getMainLooper())
 
+    // API Key settings
+    private var apiKey: String? = null
+    private var apiKeyEnabled: Boolean = false
+
     override fun onCreate() {
         super.onCreate()
         instance = this
         createNotificationChannel()
+        loadApiKeySettings()
     }
+
+    /**
+     * Load API key settings from SharedPreferences
+     */
+    private fun loadApiKeySettings() {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        apiKeyEnabled = prefs.getBoolean(KEY_API_KEY_ENABLED, false)
+        apiKey = prefs.getString(KEY_API_KEY, null)
+
+        if (apiKeyEnabled && apiKey == null) {
+            // Generate a new API key if enabled but not set
+            apiKey = generateApiKey()
+            prefs.edit().putString(KEY_API_KEY, apiKey).apply()
+            Log.i(TAG, "Generated new API key")
+        }
+
+        Log.i(TAG, "API Key authentication: ${if (apiKeyEnabled) "enabled" else "disabled"}")
+    }
+
+    /**
+     * Enable or disable API key authentication
+     */
+    fun setApiKeyEnabled(enabled: Boolean) {
+        apiKeyEnabled = enabled
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        prefs.edit().putBoolean(KEY_API_KEY_ENABLED, enabled).apply()
+
+        if (enabled && apiKey == null) {
+            apiKey = generateApiKey()
+            prefs.edit().putString(KEY_API_KEY, apiKey).apply()
+        }
+
+        Log.i(TAG, "API Key authentication ${if (enabled) "enabled" else "disabled"}")
+    }
+
+    /**
+     * Get the current API key
+     */
+    fun getApiKey(): String? = apiKey
+
+    /**
+     * Regenerate the API key
+     */
+    fun regenerateApiKey(): String {
+        apiKey = generateApiKey()
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        prefs.edit().putString(KEY_API_KEY, apiKey).apply()
+        Log.i(TAG, "API key regenerated")
+        return apiKey!!
+    }
+
+    /**
+     * Check if API key authentication is enabled
+     */
+    fun isApiKeyEnabled(): Boolean = apiKeyEnabled
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground(NOTIFICATION_ID, createNotification())
@@ -74,17 +151,40 @@ class HttpServerService : Service() {
     private fun startServer() {
         thread {
             try {
+                // Stop any existing server first
+                server?.let {
+                    try {
+                        it.stop()
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Error stopping existing server", e)
+                    }
+                }
+                server = null
+
+                // Small delay to allow port to be released
+                Thread.sleep(100)
+
                 server = PortalHttpServer(PORT)
                 server?.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false)
                 Log.i(TAG, "HTTP Server started on port $PORT")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to start HTTP server", e)
+                // If port is in use, try to clean up and notify user
+                if (e is java.net.BindException) {
+                    mainHandler.post {
+                        stopSelf()
+                    }
+                }
             }
         }
     }
 
     private fun stopServer() {
-        server?.stop()
+        try {
+            server?.stop()
+        } catch (e: Exception) {
+            Log.w(TAG, "Error stopping server", e)
+        }
         server = null
         Log.i(TAG, "HTTP Server stopped")
     }
@@ -128,9 +228,21 @@ class HttpServerService : Service() {
 
             Log.d(TAG, "Request: $method $uri")
 
+            // Check API key authentication (skip for /ping and /api/key endpoints)
+            if (apiKeyEnabled && uri != "/ping" && !uri.startsWith("/api/key")) {
+                val authResult = checkApiKeyAuth(session)
+                if (authResult != null) {
+                    return authResult
+                }
+            }
+
             return try {
                 when {
                     uri == "/ping" -> handlePing()
+                    // API Key management endpoints
+                    uri == "/api/key/status" && method == Method.GET -> handleGetApiKeyStatus()
+                    uri == "/api/key/enable" && method == Method.POST -> handleEnableApiKey(session)
+                    uri == "/api/key/regenerate" && method == Method.POST -> handleRegenerateApiKey()
                     uri == "/state" -> handleGetState()
                     uri == "/screenshot" -> handleScreenshot(session)
                     uri == "/keyboard/input" && method == Method.POST -> handleKeyboardInput(session)
@@ -160,6 +272,8 @@ class HttpServerService : Service() {
                     uri == "/recording/resume" && method == Method.POST -> handleResumeRecording(session)
                     uri == "/recording/events" && method == Method.GET -> handleGetRecordingEvents(session)
                     uri == "/recording/status" && method == Method.GET -> handleGetRecordingStatus()
+                    uri == "/recording/config/realtime" && method == Method.POST -> handleConfigRealTimeUpload(session)
+                    uri == "/recording/config/realtime" && method == Method.GET -> handleGetRealTimeUploadStatus()
                     else -> newFixedLengthResponse(
                         Response.Status.NOT_FOUND,
                         MIME_PLAINTEXT,
@@ -174,6 +288,109 @@ class HttpServerService : Service() {
                     gson.toJson(mapOf("status" to "error", "error" to e.message))
                 )
             }
+        }
+
+        // ====================================================================
+        // API KEY AUTHENTICATION
+        // ====================================================================
+
+        /**
+         * Check API key authentication
+         * @return null if authenticated, Response with error if not
+         */
+        private fun checkApiKeyAuth(session: IHTTPSession): Response? {
+            // Get API key from headers
+            val providedKey = session.headers[HEADER_API_KEY.lowercase()]
+                ?: session.headers[HEADER_AUTHORIZATION.lowercase()]?.removePrefix("Bearer ")
+
+            if (providedKey == null) {
+                Log.w(TAG, "API key missing in request")
+                return newFixedLengthResponse(
+                    Response.Status.UNAUTHORIZED,
+                    "application/json",
+                    gson.toJson(mapOf(
+                        "status" to "error",
+                        "error" to "API key required. Include '$HEADER_API_KEY' header."
+                    ))
+                )
+            }
+
+            if (providedKey != apiKey) {
+                Log.w(TAG, "Invalid API key provided")
+                return newFixedLengthResponse(
+                    Response.Status.FORBIDDEN,
+                    "application/json",
+                    gson.toJson(mapOf(
+                        "status" to "error",
+                        "error" to "Invalid API key"
+                    ))
+                )
+            }
+
+            // Authentication successful
+            return null
+        }
+
+        /**
+         * Get API key status
+         */
+        private fun handleGetApiKeyStatus(): Response {
+            return newFixedLengthResponse(
+                Response.Status.OK,
+                "application/json",
+                gson.toJson(mapOf(
+                    "status" to "success",
+                    "data" to mapOf(
+                        "enabled" to apiKeyEnabled,
+                        "key" to if (apiKeyEnabled) apiKey else null
+                    )
+                ))
+            )
+        }
+
+        /**
+         * Enable/disable API key authentication
+         */
+        private fun handleEnableApiKey(session: IHTTPSession): Response {
+            val requestData = parseRequestBody(session)
+                ?: return badRequestResponse("Invalid JSON")
+
+            val enabled = requestData["enabled"] as? Boolean
+                ?: return badRequestResponse("Missing 'enabled' parameter")
+
+            setApiKeyEnabled(enabled)
+
+            return newFixedLengthResponse(
+                Response.Status.OK,
+                "application/json",
+                gson.toJson(mapOf(
+                    "status" to "success",
+                    "message" to "API key authentication ${if (enabled) "enabled" else "disabled"}",
+                    "data" to mapOf(
+                        "enabled" to apiKeyEnabled,
+                        "key" to if (apiKeyEnabled) apiKey else null
+                    )
+                ))
+            )
+        }
+
+        /**
+         * Regenerate API key
+         */
+        private fun handleRegenerateApiKey(): Response {
+            val newKey = regenerateApiKey()
+
+            return newFixedLengthResponse(
+                Response.Status.OK,
+                "application/json",
+                gson.toJson(mapOf(
+                    "status" to "success",
+                    "message" to "API key regenerated",
+                    "data" to mapOf(
+                        "key" to newKey
+                    )
+                ))
+            )
         }
 
         private fun handlePing(): Response {
@@ -760,16 +977,16 @@ class HttpServerService : Service() {
         // ====================================================================
 
         private fun handleStartRecording(session: IHTTPSession): Response {
-            val success = RecordingManager.startRecording()
+            val result = RecordingManager.startRecording()
 
-            return if (success) {
+            return if (result.success) {
                 val status = RecordingManager.getStatus()
                 newFixedLengthResponse(
                     Response.Status.OK,
                     "application/json",
                     gson.toJson(mapOf(
                         "status" to "success",
-                        "message" to "Recording started",
+                        "message" to result.message,
                         "data" to status.toMap()
                     ))
                 )
@@ -779,16 +996,16 @@ class HttpServerService : Service() {
                     "application/json",
                     gson.toJson(mapOf(
                         "status" to "error",
-                        "error" to "Recording already in progress"
+                        "error" to result.message
                     ))
                 )
             }
         }
 
         private fun handleStopRecording(session: IHTTPSession): Response {
-            val success = RecordingManager.stopRecording()
+            val result = RecordingManager.stopRecording()
 
-            return if (success) {
+            return if (result.success) {
                 val events = RecordingManager.getEvents()
                 val status = RecordingManager.getStatus()
                 newFixedLengthResponse(
@@ -796,9 +1013,10 @@ class HttpServerService : Service() {
                     "application/json",
                     gson.toJson(mapOf(
                         "status" to "success",
-                        "message" to "Recording stopped",
+                        "message" to result.message,
                         "data" to mapOf(
-                            "event_count" to events.size,
+                            "event_count" to result.eventCount,
+                            "duration_ms" to result.duration,
                             "events" to events.map { it.toMap() },
                             "recording_status" to status.toMap()
                         )
@@ -810,7 +1028,7 @@ class HttpServerService : Service() {
                     "application/json",
                     gson.toJson(mapOf(
                         "status" to "error",
-                        "error" to "No recording in progress"
+                        "error" to result.message
                     ))
                 )
             }
@@ -920,6 +1138,88 @@ class HttpServerService : Service() {
                 gson.toJson(mapOf(
                     "status" to "success",
                     "data" to status.toMap()
+                ))
+            )
+        }
+
+        /**
+         * Configure real-time upload settings
+         * POST /recording/config/realtime
+         * Body: { "enabled": true/false, "backend_url": "http://..." }
+         */
+        private fun handleConfigRealTimeUpload(session: IHTTPSession): Response {
+            val body = mutableMapOf<String, String>()
+            session.parseBody(body)
+            val json = body["postData"] ?: return newFixedLengthResponse(
+                Response.Status.BAD_REQUEST,
+                "application/json",
+                gson.toJson(mapOf("status" to "error", "error" to "Missing body"))
+            )
+
+            val data = try {
+                gson.fromJson(json, Map::class.java) as Map<*, *>
+            } catch (e: Exception) {
+                return newFixedLengthResponse(
+                    Response.Status.BAD_REQUEST,
+                    "application/json",
+                    gson.toJson(mapOf("status" to "error", "error" to "Invalid JSON"))
+                )
+            }
+
+            val enabled = data["enabled"] as? Boolean ?: false
+            val backendUrl = data["backend_url"] as? String
+
+            return if (enabled && backendUrl != null) {
+                RecordingManager.setRealTimeUploadEnabled(true, backendUrl)
+                newFixedLengthResponse(
+                    Response.Status.OK,
+                    "application/json",
+                    gson.toJson(mapOf(
+                        "status" to "success",
+                        "message" to "Real-time upload enabled",
+                        "data" to mapOf(
+                            "enabled" to true,
+                            "backend_url" to backendUrl
+                        )
+                    ))
+                )
+            } else if (!enabled) {
+                RecordingManager.setRealTimeUploadEnabled(false)
+                newFixedLengthResponse(
+                    Response.Status.OK,
+                    "application/json",
+                    gson.toJson(mapOf(
+                        "status" to "success",
+                        "message" to "Real-time upload disabled",
+                        "data" to mapOf("enabled" to false)
+                    ))
+                )
+            } else {
+                newFixedLengthResponse(
+                    Response.Status.BAD_REQUEST,
+                    "application/json",
+                    gson.toJson(mapOf(
+                        "status" to "error",
+                        "error" to "backend_url is required when enabled=true"
+                    ))
+                )
+            }
+        }
+
+        /**
+         * Get real-time upload status
+         * GET /recording/config/realtime
+         */
+        private fun handleGetRealTimeUploadStatus(): Response {
+            return newFixedLengthResponse(
+                Response.Status.OK,
+                "application/json",
+                gson.toJson(mapOf(
+                    "status" to "success",
+                    "data" to mapOf(
+                        "enabled" to RecordingManager.isRealTimeUploadEnabled(),
+                        "pending_uploads" to RealTimeUploader.getPendingCount()
+                    )
                 ))
             )
         }

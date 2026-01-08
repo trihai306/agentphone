@@ -107,7 +107,7 @@ class ViewToggle(ft.Container):
             height=32,
             border_radius=RADIUS["sm"],
             bgcolor=colors["primary"] if is_active else "transparent",
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             on_click=lambda e, m=mode: self._on_toggle_click(m),
             on_hover=lambda e, m=mode: self._on_toggle_hover(e, m),
             tooltip=tooltip,
@@ -265,7 +265,7 @@ class ViewToggleCompact(ft.Container):
             content=self._icon,
             width=28,
             height=28,
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             tooltip=tooltip,
         )
 

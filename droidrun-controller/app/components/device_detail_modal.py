@@ -7,8 +7,19 @@ Uses the stat card pattern from devices.py for info sections.
 
 import flet as ft
 from typing import Optional, Callable, Dict, Any
-from ..theme import COLORS, ANIMATION, RADIUS, get_shadow
+from ..theme import get_colors, ANIMATION, RADIUS, get_shadow
 
+
+
+# Dynamic color proxy - acts like a dict but always gets current theme colors
+class _DynamicColors:
+    def get(self, key, default=None):
+        return get_colors().get(key, default)
+    
+    def __getitem__(self, key):
+        return get_colors()[key]
+
+COLORS = _DynamicColors()
 
 class DeviceDetailModal(ft.AlertDialog):
     """A polished modal dialog for displaying full device details.
@@ -77,13 +88,7 @@ class DeviceDetailModal(ft.AlertDialog):
                         width=8,
                         height=8,
                         border_radius=4,
-                        bgcolor=COLORS["success"] if is_online else COLORS["text_muted"],
-                        shadow=ft.BoxShadow(
-                            spread_radius=0,
-                            blur_radius=6,
-                            color=COLORS["success_glow"] if is_online else "transparent",
-                            offset=ft.Offset(0, 0),
-                        ) if is_online else None,
+                        bgcolor=COLORS["success"] if is_online else COLORS["text_muted"] if is_online else None,
                     ),
                     ft.Container(width=6),
                     ft.Text(
@@ -115,13 +120,7 @@ class DeviceDetailModal(ft.AlertDialog):
                         border_radius=RADIUS["lg"],
                         bgcolor=f"{COLORS['primary']}12",
                         border=ft.border.all(1, f"{COLORS['primary']}20"),
-                        alignment=ft.alignment.center,
-                        shadow=ft.BoxShadow(
-                            spread_radius=0,
-                            blur_radius=8,
-                            color=f"{COLORS['primary']}10",
-                            offset=ft.Offset(0, 2),
-                        ),
+                        alignment=ft.Alignment(0, 0)
                     ),
                     ft.Container(width=16),
                     ft.Column(
@@ -147,7 +146,7 @@ class DeviceDetailModal(ft.AlertDialog):
                         width=36,
                         height=36,
                         border_radius=RADIUS["md"],
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                         bgcolor=COLORS["bg_tertiary"],
                         border=ft.border.all(1, COLORS["border_subtle"]),
                         on_click=self._handle_close,
@@ -169,8 +168,8 @@ class DeviceDetailModal(ft.AlertDialog):
             content=ft.Container(
                 height=1,
                 gradient=ft.LinearGradient(
-                    begin=ft.alignment.center_left,
-                    end=ft.alignment.center_right,
+                    begin=ft.Alignment(-1, 0),
+                    end=ft.Alignment(1, 0),
                     colors=[
                         "transparent",
                         COLORS["border_light"],
@@ -226,7 +225,7 @@ class DeviceDetailModal(ft.AlertDialog):
                         height=32,
                         border_radius=RADIUS["md"],
                         bgcolor=f"{COLORS['accent_indigo']}12",
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                         border=ft.border.all(1, f"{COLORS['accent_indigo']}20"),
                     ),
                     ft.Container(width=10),
@@ -317,7 +316,7 @@ class DeviceDetailModal(ft.AlertDialog):
                         height=28,
                         border_radius=RADIUS["sm"],
                         bgcolor=COLORS["bg_card"],
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                         border=ft.border.all(1, COLORS["border"]),
                     ),
                     ft.Container(width=10),
@@ -410,14 +409,8 @@ class DeviceDetailModal(ft.AlertDialog):
                                 height=36,
                                 border_radius=RADIUS["md"],
                                 bgcolor=f"{color}12",
-                                alignment=ft.alignment.center,
-                                border=ft.border.all(1, f"{color}20"),
-                                shadow=ft.BoxShadow(
-                                    spread_radius=0,
-                                    blur_radius=8,
-                                    color=f"{color}15",
-                                    offset=ft.Offset(0, 2),
-                                ),
+                                alignment=ft.Alignment(0, 0),
+                                border=ft.border.all(1, f"{color}20")
                             ),
                         ],
                         vertical_alignment=ft.CrossAxisAlignment.START,
@@ -452,12 +445,7 @@ class DeviceDetailModal(ft.AlertDialog):
         """Handle metric card hover effect."""
         if e.data == "true":
             e.control.border = ft.border.all(1, f"{color}40")
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=16,
-                color=f"{color}15",
-                offset=ft.Offset(0, 4),
-            )
+            
         else:
             e.control.border = ft.border.all(1, COLORS["border"])
             e.control.shadow = get_shadow("xs")
@@ -513,7 +501,7 @@ class DeviceDetailModal(ft.AlertDialog):
                         height=28,
                         border_radius=RADIUS["sm"],
                         bgcolor=f"{item['color']}12",
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                         border=ft.border.all(1, f"{item['color']}20"),
                     ),
                     ft.Container(width=10),
@@ -620,12 +608,6 @@ class DeviceDetailModal(ft.AlertDialog):
                 border_radius=RADIUS["md"],
                 bgcolor=color,
                 border=ft.border.all(1, f"{COLORS['primary_dark']}80"),
-                shadow=ft.BoxShadow(
-                    spread_radius=0,
-                    blur_radius=8,
-                    color=COLORS["primary_glow"],
-                    offset=ft.Offset(0, 4),
-                ),
                 on_click=lambda e: on_click(self.device) if on_click else None,
                 ink=True,
                 ink_color=f"{COLORS['text_inverse']}20",
@@ -663,20 +645,10 @@ class DeviceDetailModal(ft.AlertDialog):
         """Handle primary button hover."""
         if e.data == "true":
             e.control.bgcolor = COLORS["primary_dark"]
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=12,
-                color=f"{COLORS['primary']}40",
-                offset=ft.Offset(0, 6),
-            )
+            
         else:
             e.control.bgcolor = color
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=8,
-                color=COLORS["primary_glow"],
-                offset=ft.Offset(0, 4),
-            )
+            
         e.control.update()
 
     def _on_secondary_button_hover(self, e, color: str):

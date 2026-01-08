@@ -4,7 +4,7 @@ Polished with improved form styling, better section organization, and enhanced t
 """
 
 import flet as ft
-from ..theme import COLORS, RADIUS, get_shadow, ANIMATION
+from ..theme import get_colors, RADIUS, get_shadow, ANIMATION
 from ..components.card import Card
 from ..components.action_button import ActionButton, IconButton
 from ..services.ai_service import get_ai_service
@@ -13,6 +13,17 @@ from ..services.ai_service import get_ai_service
 # Animation curve for smooth transitions
 EASE_OUT = ft.AnimationCurve.EASE_OUT
 
+
+
+# Dynamic color proxy - acts like a dict but always gets current theme colors
+class _DynamicColors:
+    def get(self, key, default=None):
+        return get_colors().get(key, default)
+    
+    def __getitem__(self, key):
+        return get_colors()[key]
+
+COLORS = _DynamicColors()
 
 class SettingsView(ft.Container):
     """Professional view for application settings with polished UI."""
@@ -81,14 +92,8 @@ class SettingsView(ft.Container):
                                         height=44,
                                         bgcolor=f"{COLORS['accent_cyan']}12",
                                         border_radius=RADIUS["lg"],
-                                        alignment=ft.alignment.center,
-                                        border=ft.border.all(1, f"{COLORS['accent_cyan']}20"),
-                                        shadow=ft.BoxShadow(
-                                            spread_radius=0,
-                                            blur_radius=16,
-                                            color=f"{COLORS['accent_cyan']}25",
-                                            offset=ft.Offset(0, 4),
-                                        ),
+                                        alignment=ft.Alignment(0, 0),
+                                        border=ft.border.all(1, f"{COLORS['accent_cyan']}20")
                                     ),
                                 ],
                                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
@@ -120,7 +125,7 @@ class SettingsView(ft.Container):
                                             height=32,
                                             bgcolor=COLORS["bg_tertiary"],
                                             border_radius=RADIUS["sm"],
-                                            alignment=ft.alignment.center,
+                                            alignment=ft.Alignment(0, 0),
                                         ),
                                         ft.Container(width=10),
                                         ft.Text(
@@ -154,7 +159,7 @@ class SettingsView(ft.Container):
                                             height=32,
                                             bgcolor=f"{COLORS['primary_dark']}40",
                                             border_radius=RADIUS["sm"],
-                                            alignment=ft.alignment.center,
+                                            alignment=ft.Alignment(0, 0),
                                         ),
                                         ft.Container(width=10),
                                         ft.Text(
@@ -168,12 +173,6 @@ class SettingsView(ft.Container):
                                 bgcolor=COLORS["primary"],
                                 padding=ft.padding.only(left=8, right=18, top=10, bottom=10),
                                 border_radius=RADIUS["lg"],
-                                shadow=ft.BoxShadow(
-                                    spread_radius=0,
-                                    blur_radius=20,
-                                    color=f"{COLORS['primary']}40",
-                                    offset=ft.Offset(0, 6),
-                                ),
                                 animate=ft.Animation(ANIMATION["normal"], EASE_OUT),
                                 animate_scale=ft.Animation(ANIMATION["normal"], EASE_OUT),
                                 on_click=self._on_save,
@@ -202,14 +201,8 @@ class SettingsView(ft.Container):
                     height=44,
                     border_radius=RADIUS["lg"],
                     bgcolor=f"{color}12",
-                    alignment=ft.alignment.center,
-                    border=ft.border.all(1, f"{color}20"),
-                    shadow=ft.BoxShadow(
-                        spread_radius=0,
-                        blur_radius=12,
-                        color=f"{color}20",
-                        offset=ft.Offset(0, 4),
-                    ),
+                    alignment=ft.Alignment(0, 0),
+                    border=ft.border.all(1, f"{color}20")
                 ),
                 ft.Container(width=16),
                 ft.Column(
@@ -365,8 +358,8 @@ class SettingsView(ft.Container):
             content_padding=ft.padding.symmetric(horizontal=16, vertical=10),
             width=300,
             text_size=14,
-            on_change=lambda e: self._on_config_change("default_model", e.control.value),
         )
+        self.model_dropdown.on_change = lambda e: self._on_config_change("default_model", e.control.value)
 
         return ft.Container(
             content=ft.Column(
@@ -603,23 +596,7 @@ class SettingsView(ft.Container):
                         "Quality of captured screenshots",
                         ft.Icons.HIGH_QUALITY_ROUNDED,
                         COLORS["accent_blue"],
-                        ft.Dropdown(
-                            value=self.app_state.get("screenshot_quality", "high"),
-                            options=[
-                                ft.dropdown.Option("low", "Low (Fast)"),
-                                ft.dropdown.Option("medium", "Medium"),
-                                ft.dropdown.Option("high", "High (Best)"),
-                            ],
-                            border_color=COLORS["border"],
-                            focused_border_color=COLORS["accent_blue"],
-                            bgcolor=COLORS["bg_input"],
-                            color=COLORS["text_primary"],
-                            border_radius=RADIUS["md"],
-                            content_padding=ft.padding.symmetric(horizontal=16, vertical=10),
-                            width=180,
-                            text_size=14,
-                            on_change=lambda e: self._on_config_change("screenshot_quality", e.control.value),
-                        ),
+                        self._build_screenshot_dropdown(),
                     ),
                     self._build_polished_divider(),
                     self._build_polished_field(
@@ -685,23 +662,7 @@ class SettingsView(ft.Container):
                         "Application color theme",
                         ft.Icons.DARK_MODE_ROUNDED,
                         COLORS["accent_indigo"],
-                        ft.Dropdown(
-                            value=self.app_state.get("theme", "dark"),
-                            options=[
-                                ft.dropdown.Option("dark", "Dark"),
-                                ft.dropdown.Option("light", "Light"),
-                                ft.dropdown.Option("system", "System"),
-                            ],
-                            border_color=COLORS["border"],
-                            focused_border_color=COLORS["accent_indigo"],
-                            bgcolor=COLORS["bg_input"],
-                            color=COLORS["text_primary"],
-                            border_radius=RADIUS["md"],
-                            content_padding=ft.padding.symmetric(horizontal=16, vertical=10),
-                            width=160,
-                            text_size=14,
-                            on_change=lambda e: self._on_config_change("theme", e.control.value),
-                        ),
+                        self._build_theme_dropdown(),
                     ),
                     self._build_polished_divider(),
                     self._build_polished_field(
@@ -764,14 +725,8 @@ class SettingsView(ft.Container):
                                     height=88,
                                     border_radius=RADIUS["xl"],
                                     bgcolor=f"{COLORS['primary']}12",
-                                    alignment=ft.alignment.center,
-                                    border=ft.border.all(1, f"{COLORS['primary']}20"),
-                                    shadow=ft.BoxShadow(
-                                        spread_radius=0,
-                                        blur_radius=24,
-                                        color=f"{COLORS['primary']}30",
-                                        offset=ft.Offset(0, 8),
-                                    ),
+                                    alignment=ft.Alignment(0, 0),
+                                    border=ft.border.all(1, f"{COLORS['primary']}20")
                                 ),
                                 ft.Container(width=24),
                                 # App info
@@ -864,7 +819,7 @@ class SettingsView(ft.Container):
                         height=32,
                         border_radius=RADIUS["sm"],
                         bgcolor=f"{color}12",
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                     ),
                     ft.Container(width=10),
                     ft.Text(
@@ -916,7 +871,7 @@ class SettingsView(ft.Container):
                     height=44,
                     border_radius=RADIUS["md"],
                     bgcolor=f"{color}10",
-                    alignment=ft.alignment.center,
+                    alignment=ft.Alignment(0, 0),
                     border=ft.border.all(1, f"{color}15"),
                 ),
                 ft.Container(width=16),
@@ -957,25 +912,57 @@ class SettingsView(ft.Container):
             padding=ft.padding.only(left=8),
         )
 
+    def _build_screenshot_dropdown(self):
+        """Build screenshot quality dropdown."""
+        dropdown = ft.Dropdown(
+            value=self.app_state.get("screenshot_quality", "high"),
+            options=[
+                ft.dropdown.Option("low", "Low (Fast)"),
+                ft.dropdown.Option("medium", "Medium"),
+                ft.dropdown.Option("high", "High (Best)"),
+            ],
+            border_color=COLORS["border"],
+            focused_border_color=COLORS["accent_blue"],
+            bgcolor=COLORS["bg_input"],
+            color=COLORS["text_primary"],
+            border_radius=RADIUS["md"],
+            content_padding=ft.padding.symmetric(horizontal=16, vertical=10),
+            width=180,
+            text_size=14,
+        )
+        dropdown.on_change = lambda e: self._on_config_change("screenshot_quality", e.control.value)
+        return dropdown
+
+    def _build_theme_dropdown(self):
+        """Build theme dropdown."""
+        dropdown = ft.Dropdown(
+            value=self.app_state.get("theme", "dark"),
+            options=[
+                ft.dropdown.Option("dark", "Dark"),
+                ft.dropdown.Option("light", "Light"),
+                ft.dropdown.Option("system", "System"),
+            ],
+            border_color=COLORS["border"],
+            focused_border_color=COLORS["accent_indigo"],
+            bgcolor=COLORS["bg_input"],
+            color=COLORS["text_primary"],
+            border_radius=RADIUS["md"],
+            content_padding=ft.padding.symmetric(horizontal=16, vertical=10),
+            width=160,
+            text_size=14,
+        )
+        dropdown.on_change = lambda e: self._on_config_change("theme", e.control.value)
+        return dropdown
+
     # Event handlers
     def _on_primary_button_hover(self, e):
         """Handle primary button hover effect."""
         if e.data == "true":
             e.control.scale = 1.02
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=28,
-                color=f"{COLORS['primary']}50",
-                offset=ft.Offset(0, 10),
-            )
+            
         else:
             e.control.scale = 1.0
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=20,
-                color=f"{COLORS['primary']}40",
-                offset=ft.Offset(0, 6),
-            )
+            
         e.control.update()
 
     def _on_ghost_button_hover(self, e):

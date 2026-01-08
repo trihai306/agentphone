@@ -6,9 +6,20 @@ and refined filtering with enhanced styling.
 
 import flet as ft
 from datetime import datetime
-from ..theme import COLORS, RADIUS, get_shadow, ANIMATION
+from ..theme import get_colors, RADIUS, get_shadow, ANIMATION
 from ..components.card import Card
 
+
+
+# Dynamic color proxy - acts like a dict but always gets current theme colors
+class _DynamicColors:
+    def get(self, key, default=None):
+        return get_colors().get(key, default)
+    
+    def __getitem__(self, key):
+        return get_colors()[key]
+
+COLORS = _DynamicColors()
 
 class ExecutionsView(ft.Container):
     """Professional view for monitoring workflow executions."""
@@ -69,14 +80,8 @@ class ExecutionsView(ft.Container):
                                         height=44,
                                         bgcolor=f"{COLORS['accent_cyan']}12",
                                         border_radius=RADIUS["lg"],
-                                        alignment=ft.alignment.center,
-                                        border=ft.border.all(1, f"{COLORS['accent_cyan']}20"),
-                                        shadow=ft.BoxShadow(
-                                            spread_radius=0,
-                                            blur_radius=16,
-                                            color=f"{COLORS['accent_cyan']}25",
-                                            offset=ft.Offset(0, 4),
-                                        ),
+                                        alignment=ft.Alignment(0, 0),
+                                        border=ft.border.all(1, f"{COLORS['accent_cyan']}20")
                                     ),
                                     ft.Container(width=12),
                                     ft.Container(
@@ -120,7 +125,7 @@ class ExecutionsView(ft.Container):
                                             height=32,
                                             bgcolor=COLORS["bg_tertiary"],
                                             border_radius=RADIUS["sm"],
-                                            alignment=ft.alignment.center,
+                                            alignment=ft.Alignment(0, 0),
                                         ),
                                         ft.Container(width=10),
                                         ft.Text(
@@ -152,7 +157,7 @@ class ExecutionsView(ft.Container):
                                             height=32,
                                             bgcolor=f"{COLORS['primary_dark']}40",
                                             border_radius=RADIUS["sm"],
-                                            alignment=ft.alignment.center,
+                                            alignment=ft.Alignment(0, 0),
                                         ),
                                         ft.Container(width=10),
                                         ft.Text(
@@ -166,12 +171,6 @@ class ExecutionsView(ft.Container):
                                 bgcolor=COLORS["primary"],
                                 padding=ft.padding.only(left=8, right=18, top=10, bottom=10),
                                 border_radius=RADIUS["lg"],
-                                shadow=ft.BoxShadow(
-                                    spread_radius=0,
-                                    blur_radius=20,
-                                    color=f"{COLORS['primary']}40",
-                                    offset=ft.Offset(0, 6),
-                                ),
                                 animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
                                 animate_scale=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
                                 on_click=self._on_refresh,
@@ -254,7 +253,7 @@ class ExecutionsView(ft.Container):
                 height=24,
                 border_radius=6,
                 bgcolor=f"{trend_color}15",
-                alignment=ft.alignment.center,
+                alignment=ft.Alignment(0, 0),
             )
 
         return ft.Container(
@@ -279,14 +278,8 @@ class ExecutionsView(ft.Container):
                                 height=52,
                                 border_radius=RADIUS["lg"],
                                 bgcolor=f"{color}12",
-                                alignment=ft.alignment.center,
-                                border=ft.border.all(1, f"{color}20"),
-                                shadow=ft.BoxShadow(
-                                    spread_radius=0,
-                                    blur_radius=16,
-                                    color=f"{color}25",
-                                    offset=ft.Offset(0, 4),
-                                ),
+                                alignment=ft.Alignment(0, 0),
+                                border=ft.border.all(1, f"{color}20")
                             ),
                         ],
                         vertical_alignment=ft.CrossAxisAlignment.START,
@@ -337,12 +330,7 @@ class ExecutionsView(ft.Container):
         """Handle stat card hover effect."""
         if e.data == "true":
             e.control.border = ft.border.all(1, f"{color}40")
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=28,
-                color=f"{color}20",
-                offset=ft.Offset(0, 10),
-            )
+            
             e.control.scale = 1.02
         else:
             e.control.border = ft.border.all(1, COLORS["border"])
@@ -428,13 +416,7 @@ class ExecutionsView(ft.Container):
             padding=ft.padding.symmetric(horizontal=14, vertical=10),
             border_radius=RADIUS["md"],
             bgcolor=color if is_active else COLORS["bg_tertiary"],
-            border=ft.border.all(1, f"{color}30" if is_active else COLORS["border_subtle"]),
-            shadow=ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=12,
-                color=f"{color}30",
-                offset=ft.Offset(0, 4),
-            ) if is_active else None,
+            border=ft.border.all(1, f"{color}30" if is_active else COLORS["border_subtle"]) if is_active else None,
             animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
             on_click=lambda e, key=filter_data["key"]: self._on_filter_click(key),
             on_hover=lambda e, c=color, active=is_active: self._on_filter_hover(e, c, active),
@@ -494,7 +476,7 @@ class ExecutionsView(ft.Container):
                                 height=40,
                                 border_radius=RADIUS["md"],
                                 bgcolor=f"{COLORS['accent_cyan']}12",
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, f"{COLORS['accent_cyan']}20"),
                             ),
                             ft.Container(width=14),
@@ -574,13 +556,7 @@ class ExecutionsView(ft.Container):
             height=12,
             border_radius=6,
             bgcolor=status_color,
-            border=ft.border.all(2, COLORS["bg_card"]),
-            shadow=ft.BoxShadow(
-                spread_radius=1,
-                blur_radius=8,
-                color=f"{status_color}60",
-                offset=ft.Offset(0, 0),
-            ) if is_running else None,
+            border=ft.border.all(2, COLORS["bg_card"]) if is_running else None,
         )
 
         return ft.Container(
@@ -599,7 +575,7 @@ class ExecutionsView(ft.Container):
                                 height=56,
                                 border_radius=RADIUS["lg"],
                                 bgcolor=f"{COLORS['accent_purple']}12" if is_success else f"{status_color}12",
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, f"{COLORS['accent_purple']}20" if is_success else f"{status_color}20"),
                             ),
                             ft.Container(
@@ -723,7 +699,7 @@ class ExecutionsView(ft.Container):
                                 height=38,
                                 border_radius=RADIUS["md"],
                                 bgcolor=COLORS["bg_tertiary"],
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, COLORS["border_subtle"]),
                                 animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
                                 tooltip="View Details",
@@ -741,7 +717,7 @@ class ExecutionsView(ft.Container):
                                 height=38,
                                 border_radius=RADIUS["md"],
                                 bgcolor=f"{COLORS['error']}10" if is_running else f"{COLORS['primary']}10",
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, f"{COLORS['error']}20" if is_running else f"{COLORS['primary']}20"),
                                 animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
                                 tooltip="Stop" if is_running else "Retry",
@@ -759,7 +735,7 @@ class ExecutionsView(ft.Container):
                                 height=38,
                                 border_radius=RADIUS["md"],
                                 bgcolor=f"{COLORS['error']}08",
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, f"{COLORS['error']}15"),
                                 animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
                                 tooltip="Delete",
@@ -786,12 +762,7 @@ class ExecutionsView(ft.Container):
         if e.data == "true":
             e.control.bgcolor = f"{color}15"
             e.control.border = ft.border.all(1, f"{color}30")
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=8,
-                color=f"{color}20",
-                offset=ft.Offset(0, 2),
-            )
+            
         else:
             if color == COLORS["error"]:
                 e.control.bgcolor = f"{color}08"
@@ -802,7 +773,7 @@ class ExecutionsView(ft.Container):
             else:
                 e.control.bgcolor = COLORS["bg_tertiary"]
                 e.control.border = ft.border.all(1, COLORS["border_subtle"])
-            e.control.shadow = None
+            pass  # shadow removed
         e.control.update()
 
     def _build_empty_state(self):
@@ -822,7 +793,7 @@ class ExecutionsView(ft.Container):
                                 height=40,
                                 border_radius=RADIUS["md"],
                                 bgcolor=f"{COLORS['accent_cyan']}12",
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, f"{COLORS['accent_cyan']}20"),
                             ),
                             ft.Container(width=14),
@@ -859,7 +830,7 @@ class ExecutionsView(ft.Container):
                                     height=88,
                                     border_radius=RADIUS["xl"],
                                     bgcolor=COLORS["bg_tertiary"],
-                                    alignment=ft.alignment.center,
+                                    alignment=ft.Alignment(0, 0),
                                     border=ft.border.all(1, COLORS["border_subtle"]),
                                 ),
                                 ft.Container(height=24),
@@ -897,12 +868,6 @@ class ExecutionsView(ft.Container):
                                             bgcolor=COLORS["primary"],
                                             border_radius=RADIUS["md"],
                                             padding=ft.padding.symmetric(horizontal=20, vertical=12),
-                                            shadow=ft.BoxShadow(
-                                                spread_radius=0,
-                                                blur_radius=16,
-                                                color=f"{COLORS['primary']}35",
-                                                offset=ft.Offset(0, 4),
-                                            ),
                                             animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
                                             on_click=self._on_view_workflows,
                                             on_hover=self._on_primary_hover,
@@ -914,7 +879,7 @@ class ExecutionsView(ft.Container):
                             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
                         padding=ft.padding.symmetric(vertical=40),
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                     ),
                 ],
             ),
@@ -942,7 +907,7 @@ class ExecutionsView(ft.Container):
                                 height=40,
                                 border_radius=RADIUS["md"],
                                 bgcolor=f"{COLORS['accent_cyan']}12",
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, f"{COLORS['accent_cyan']}20"),
                             ),
                             ft.Container(width=14),
@@ -978,7 +943,7 @@ class ExecutionsView(ft.Container):
                                     height=72,
                                     border_radius=RADIUS["xl"],
                                     bgcolor=COLORS["bg_tertiary"],
-                                    alignment=ft.alignment.center,
+                                    alignment=ft.Alignment(0, 0),
                                     border=ft.border.all(1, COLORS["border_subtle"]),
                                 ),
                                 ft.Container(height=16),
@@ -1012,7 +977,7 @@ class ExecutionsView(ft.Container):
                             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
                         padding=ft.padding.symmetric(vertical=32),
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                     ),
                 ],
             ),
@@ -1040,7 +1005,7 @@ class ExecutionsView(ft.Container):
                                 height=40,
                                 border_radius=RADIUS["md"],
                                 bgcolor=f"{COLORS['accent_cyan']}12",
-                                alignment=ft.alignment.center,
+                                alignment=ft.Alignment(0, 0),
                                 border=ft.border.all(1, f"{COLORS['accent_cyan']}20"),
                             ),
                             ft.Container(width=14),
@@ -1077,7 +1042,7 @@ class ExecutionsView(ft.Container):
                                     height=72,
                                     border_radius=RADIUS["xl"],
                                     bgcolor=COLORS["bg_tertiary"],
-                                    alignment=ft.alignment.center,
+                                    alignment=ft.Alignment(0, 0),
                                     border=ft.border.all(1, COLORS["border_subtle"]),
                                 ),
                                 ft.Container(height=16),
@@ -1091,7 +1056,7 @@ class ExecutionsView(ft.Container):
                             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
                         padding=ft.padding.symmetric(vertical=40),
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment(0, 0),
                     ),
                 ],
             ),
@@ -1105,20 +1070,10 @@ class ExecutionsView(ft.Container):
     def _on_primary_hover(self, e):
         """Handle primary button hover effect."""
         if e.data == "true":
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=28,
-                color=f"{COLORS['primary']}55",
-                offset=ft.Offset(0, 10),
-            )
+            
             e.control.scale = 1.02
         else:
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=20,
-                color=f"{COLORS['primary']}40",
-                offset=ft.Offset(0, 6),
-            )
+            
             e.control.scale = 1.0
         e.control.update()
 
@@ -1137,17 +1092,12 @@ class ExecutionsView(ft.Container):
         if e.data == "true":
             e.control.bgcolor = COLORS["bg_hover"]
             e.control.border = ft.border.all(1, COLORS["border_light"])
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=20,
-                color="#00000020",
-                offset=ft.Offset(0, 6),
-            )
+            
             e.control.scale = 1.01
         else:
             e.control.bgcolor = COLORS["bg_tertiary"]
             e.control.border = ft.border.all(1, COLORS["border_subtle"])
-            e.control.shadow = None
+            pass  # shadow removed
             e.control.scale = 1.0
         e.control.update()
 

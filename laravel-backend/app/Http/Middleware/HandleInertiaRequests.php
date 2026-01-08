@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -32,12 +33,64 @@ class HandleInertiaRequests extends Middleware
         return array_merge(parent::share($request), [
             'auth' => [
                 'user' => $request->user(),
+                'wallet' => fn () => $this->getWalletData($request),
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
             'appName' => config('app.name'),
+
+            // Notifications data shared with all Inertia pages
+            'notifications' => fn () => $this->getNotificationsData($request),
         ]);
+    }
+
+    /**
+     * Get notifications data for the authenticated user
+     */
+    protected function getNotificationsData(Request $request): ?array
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return null;
+        }
+
+        $notificationService = app(NotificationService::class);
+
+        return [
+            'items' => $notificationService->getNotificationsForUser($user, 20, false),
+            'unread_count' => $notificationService->getUnreadCountForUser($user),
+        ];
+    }
+
+    /**
+     * Get wallet data for the authenticated user
+     */
+    protected function getWalletData(Request $request): ?array
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return null;
+        }
+
+        // Get the user's primary wallet (first active wallet)
+        $wallet = $user->wallets()->where('is_active', true)->first();
+
+        if (!$wallet) {
+            return [
+                'balance' => 0,
+                'currency' => 'VND',
+                'formatted_balance' => '0 ₫',
+            ];
+        }
+
+        return [
+            'balance' => (float) $wallet->balance,
+            'currency' => $wallet->currency ?? 'VND',
+            'formatted_balance' => number_format($wallet->balance, 0, ',', '.') . ' ₫',
+        ];
     }
 }

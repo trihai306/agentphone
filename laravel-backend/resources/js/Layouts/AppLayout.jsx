@@ -24,12 +24,11 @@ export default function AppLayout({ children, title, breadcrumbs }) {
     }, [collapsed]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 transition-colors duration-200">
-            {/* Animated Background Blobs */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 dark:bg-purple-900 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 animate-blob"></div>
-                <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 dark:bg-blue-900 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
-                <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-pink-300 dark:bg-pink-900 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-200">
+            {/* Subtle Background Pattern */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-50">
+                <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-100 dark:bg-blue-900/20 rounded-full filter blur-3xl"></div>
+                <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-100 dark:bg-purple-900/20 rounded-full filter blur-3xl"></div>
             </div>
 
             {/* Command Palette (Cmd+K) */}
@@ -38,7 +37,7 @@ export default function AppLayout({ children, title, breadcrumbs }) {
             {/* Mobile Sidebar Overlay */}
             {sidebarOpen && (
                 <div
-                    className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden transition-opacity"
+                    className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden transition-opacity"
                     onClick={() => setSidebarOpen(false)}
                 />
             )}
@@ -54,7 +53,7 @@ export default function AppLayout({ children, title, breadcrumbs }) {
             />
 
             {/* Main Content */}
-            <div className={`relative transition-all duration-300 ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
+            <div className={`relative transition-all duration-300 ${collapsed ? 'lg:pl-[72px]' : 'lg:pl-64'}`}>
                 {/* Header */}
                 <Header
                     title={title}
@@ -62,39 +61,35 @@ export default function AppLayout({ children, title, breadcrumbs }) {
                     setSidebarOpen={setSidebarOpen}
                 />
 
-                {/* Flash Messages with Animation */}
+                {/* Flash Messages */}
                 {flash?.success && (
-                    <div className="mx-4 sm:mx-6 lg:mx-8 mt-6 animate-slide-down">
-                        <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 rounded-xl shadow-lg">
+                    <div className="mx-4 sm:mx-5 lg:mx-6 mt-4 animate-slide-down">
+                        <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/50 rounded-xl">
                             <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <svg className="w-6 h-6 text-green-500 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                    </svg>
-                                </div>
-                                <p className="ml-3 text-sm font-medium text-green-800 dark:text-green-200">{flash.success}</p>
+                                <svg className="w-5 h-5 text-green-500 dark:text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                </svg>
+                                <p className="ml-2.5 text-sm font-medium text-green-800 dark:text-green-200">{flash.success}</p>
                             </div>
                         </div>
                     </div>
                 )}
 
                 {flash?.error && (
-                    <div className="mx-4 sm:mx-6 lg:mx-8 mt-6 animate-slide-down">
-                        <div className="p-4 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 border border-red-200 dark:border-red-800 rounded-xl shadow-lg">
+                    <div className="mx-4 sm:mx-5 lg:mx-6 mt-4 animate-slide-down">
+                        <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-xl">
                             <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <svg className="w-6 h-6 text-red-500 dark:text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                                    </svg>
-                                </div>
-                                <p className="ml-3 text-sm font-medium text-red-800 dark:text-red-200">{flash.error}</p>
+                                <svg className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                </svg>
+                                <p className="ml-2.5 text-sm font-medium text-red-800 dark:text-red-200">{flash.error}</p>
                             </div>
                         </div>
                     </div>
                 )}
 
                 {/* Page Content */}
-                <main className="p-4 sm:p-6 lg:p-8">
+                <main className="p-4 sm:p-5 lg:p-6">
                     {/* Breadcrumbs */}
                     {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
 
@@ -104,12 +99,12 @@ export default function AppLayout({ children, title, breadcrumbs }) {
 
                 {/* Keyboard Shortcuts Hint */}
                 <div className="fixed bottom-4 left-4 hidden lg:block z-10">
-                    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl px-3 py-2 rounded-lg border border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+                    <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm px-2.5 py-2 rounded-xl border border-gray-200/50 dark:border-gray-800/50 shadow-sm">
                         <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
-                            <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600 font-semibold">
+                            <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg text-[10px] border border-gray-200 dark:border-gray-700 font-semibold">
                                 ⌘K
                             </kbd>
-                            <span>for quick search</span>
+                            <span>tìm kiếm</span>
                         </div>
                     </div>
                 </div>

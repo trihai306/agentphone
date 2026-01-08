@@ -41,13 +41,7 @@ class Card(ft.Container):
                         height=44,
                         border_radius=RADIUS["lg"],
                         bgcolor=f"{icon_color or colors['primary']}15",
-                        alignment=ft.alignment.center,
-                        shadow=ft.BoxShadow(
-                            spread_radius=0,
-                            blur_radius=4,
-                            color=f"{icon_color or colors['primary']}10",
-                            offset=ft.Offset(0, 2),
-                        ),
+                        alignment=ft.Alignment(0, 0),
                         animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
                     )
                 )
@@ -114,16 +108,9 @@ class Card(ft.Container):
         colors = get_colors()
         if e.data == "true":
             self.border = ft.border.all(1, colors["border_light"])
-            self.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=10,
-                color="#00000015",
-                offset=ft.Offset(0, 4),
-            )
             self.scale = 1.002
         else:
             self.border = ft.border.all(1, colors["border"])
-            self.shadow = get_shadow("sm") if self._elevated else None
             self.scale = 1.0
         self.update()
 
@@ -145,21 +132,15 @@ class StatsCard(ft.Container):
         colors = get_colors()
         self._color = color or colors["primary"]
 
-        # Icon container with subtle shadow
+        # Icon container - clean without shadow
         icon_container = ft.Container(
             content=ft.Icon(icon, size=24, color=self._color),
             width=56,
             height=56,
             border_radius=RADIUS["lg"],
             bgcolor=f"{self._color}12",
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             border=ft.border.all(1, f"{self._color}20"),
-            shadow=ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=6,
-                color=f"{self._color}12",
-                offset=ft.Offset(0, 2),
-            ),
             animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
         )
 
@@ -221,7 +202,6 @@ class StatsCard(ft.Container):
             border_radius=RADIUS["xl"],
             padding=28,
             border=ft.border.all(1, colors["border"]),
-            shadow=get_shadow("xs"),
             expand=True,
             animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
             animate_scale=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
@@ -230,20 +210,13 @@ class StatsCard(ft.Container):
         )
 
     def _on_hover(self, e):
-        """Handle hover effect with subtle elevation."""
+        """Handle hover effect with subtle border change."""
         colors = get_colors()
         if e.data == "true":
             self.border = ft.border.all(1, f"{self._color}40")
-            self.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=10,
-                color=f"{self._color}15",
-                offset=ft.Offset(0, 4),
-            )
-            self.scale = 1.01
+            self.scale = 1.005
         else:
             self.border = ft.border.all(1, colors["border"])
-            self.shadow = get_shadow("xs")
             self.scale = 1.0
         self.update()
 
@@ -266,12 +239,6 @@ class GlassCard(ft.Container):
             padding=24,
             border=ft.border.all(1, f"{colors['border_light']}50"),
             blur=blur_radius,
-            shadow=ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=4,
-                color="#00000008",
-                offset=ft.Offset(0, 2),
-            ),
             animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
             animate_scale=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
             on_hover=lambda e: self._on_hover(e),
@@ -283,21 +250,9 @@ class GlassCard(ft.Container):
         colors = get_colors()
         if e.data == "true":
             self.border = ft.border.all(1, f"{colors['border_light']}80")
-            self.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=8,
-                color="#0000000D",
-                offset=ft.Offset(0, 4),
-            )
             self.scale = 1.005
         else:
             self.border = ft.border.all(1, f"{colors['border_light']}50")
-            self.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=4,
-                color="#00000008",
-                offset=ft.Offset(0, 2),
-            )
             self.scale = 1.0
         self.update()
 
@@ -325,7 +280,6 @@ class ListCard(ft.Container):
             border_radius=RADIUS["lg"],
             padding=ft.padding.symmetric(horizontal=20, vertical=18),
             border=initial_border,
-            shadow=get_shadow("xs") if selected else None,
             on_click=on_click,
             on_hover=lambda e: self._on_hover(e),
             animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
@@ -334,27 +288,19 @@ class ListCard(ft.Container):
         )
 
     def _on_hover(self, e):
-        """Handle hover effect with subtle elevation."""
+        """Handle hover effect."""
         colors = get_colors()
         if e.data == "true":
             self.bgcolor = colors["bg_hover"]
             self.border = ft.border.all(1, colors["border_light"])
-            self.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=8,
-                color="#00000012",
-                offset=ft.Offset(0, 3),
-            )
             self.scale = 1.003
         else:
             if self._selected:
                 self.bgcolor = colors["bg_hover"]
                 self.border = ft.border.all(1, colors["primary"])
-                self.shadow = get_shadow("xs")
             else:
                 self.bgcolor = colors["bg_tertiary"]
                 self.border = ft.border.all(1, colors["border_subtle"])
-                self.shadow = None
             self.scale = 1.0
         self.update()
 
@@ -365,9 +311,7 @@ class ListCard(ft.Container):
         if selected:
             self.bgcolor = colors["bg_hover"]
             self.border = ft.border.all(1, colors["primary"])
-            self.shadow = get_shadow("xs")
         else:
             self.bgcolor = colors["bg_tertiary"]
             self.border = ft.border.all(1, colors["border_subtle"])
-            self.shadow = None
         self.update()

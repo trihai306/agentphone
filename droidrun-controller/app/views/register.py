@@ -5,11 +5,8 @@ Polished registration page with form validation, email/password fields, and enha
 
 import re
 import flet as ft
-from ..theme import COLORS, RADIUS, get_shadow, ANIMATION
+from ..theme import get_colors, RADIUS, get_shadow, ANIMATION, Typography, Easing
 
-
-# Animation curve for smooth transitions
-EASE_OUT = ft.AnimationCurve.EASE_OUT
 
 # Validation patterns
 EMAIL_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
@@ -43,29 +40,31 @@ class RegisterView(ft.Container):
         super().__init__(
             content=self._build_content(),
             expand=True,
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             **kwargs
         )
 
     def _build_content(self):
         """Build the registration form content."""
+        colors = get_colors()
+
         # Initialize error text controls
         self.email_error = ft.Text(
             "",
-            size=12,
-            color=COLORS["error"],
+            size=Typography.LABEL_SM,
+            color=colors["error"],
             visible=False,
         )
         self.password_error = ft.Text(
             "",
-            size=12,
-            color=COLORS["error"],
+            size=Typography.LABEL_SM,
+            color=colors["error"],
             visible=False,
         )
         self.confirm_password_error = ft.Text(
             "",
-            size=12,
-            color=COLORS["error"],
+            size=Typography.LABEL_SM,
+            color=colors["error"],
             visible=False,
         )
         self.general_error = ft.Container(
@@ -74,13 +73,13 @@ class RegisterView(ft.Container):
                     ft.Icon(
                         ft.Icons.ERROR_OUTLINE,
                         size=16,
-                        color=COLORS["error"],
+                        color=colors["error"],
                     ),
                     ft.Container(width=8),
                     ft.Text(
                         "",
-                        size=13,
-                        color=COLORS["error"],
+                        size=Typography.BODY_SM,
+                        color=colors["error"],
                         weight=ft.FontWeight.W_500,
                         ref=ft.Ref[ft.Text](),
                     ),
@@ -88,98 +87,93 @@ class RegisterView(ft.Container):
             ),
             padding=ft.padding.symmetric(horizontal=16, vertical=12),
             border_radius=RADIUS["md"],
-            bgcolor=f"{COLORS['error']}12",
-            border=ft.border.all(1, f"{COLORS['error']}30"),
+            bgcolor=f"{colors['error']}12",
+            border=ft.border.all(1, f"{colors['error']}30"),
             visible=False,
         )
 
-        # Email field
+        # Email field with polished styling
         self.email_field = ft.TextField(
             label="Email",
             hint_text="Enter your email address",
             prefix_icon=ft.Icons.EMAIL_OUTLINED,
             keyboard_type=ft.KeyboardType.EMAIL,
-            border_color=COLORS["border"],
-            focused_border_color=COLORS["primary"],
-            bgcolor=COLORS["bg_input"],
-            color=COLORS["text_primary"],
-            label_style=ft.TextStyle(color=COLORS["text_secondary"], size=14),
-            hint_style=ft.TextStyle(color=COLORS["text_muted"], size=13),
-            cursor_color=COLORS["primary"],
+            autofocus=True,
+            border_color=colors["border"],
+            focused_border_color=colors["primary"],
+            bgcolor=colors["bg_input"],
+            color=colors["text_primary"],
+            label_style=ft.TextStyle(color=colors["text_secondary"], size=Typography.BODY_MD),
+            hint_style=ft.TextStyle(color=colors["text_muted"], size=Typography.BODY_SM),
+            cursor_color=colors["primary"],
             border_radius=RADIUS["md"],
             content_padding=ft.padding.symmetric(horizontal=16, vertical=16),
-            text_size=14,
+            text_size=Typography.BODY_MD,
             on_change=self._on_email_change,
             on_submit=self._on_submit,
         )
 
-        # Password field
+        # Password field with polished styling
         self.password_field = ft.TextField(
             label="Password",
             hint_text="Create a password (min 8 characters)",
             prefix_icon=ft.Icons.LOCK_OUTLINED,
             password=True,
             can_reveal_password=True,
-            border_color=COLORS["border"],
-            focused_border_color=COLORS["primary"],
-            bgcolor=COLORS["bg_input"],
-            color=COLORS["text_primary"],
-            label_style=ft.TextStyle(color=COLORS["text_secondary"], size=14),
-            hint_style=ft.TextStyle(color=COLORS["text_muted"], size=13),
-            cursor_color=COLORS["primary"],
+            border_color=colors["border"],
+            focused_border_color=colors["primary"],
+            bgcolor=colors["bg_input"],
+            color=colors["text_primary"],
+            label_style=ft.TextStyle(color=colors["text_secondary"], size=Typography.BODY_MD),
+            hint_style=ft.TextStyle(color=colors["text_muted"], size=Typography.BODY_SM),
+            cursor_color=colors["primary"],
             border_radius=RADIUS["md"],
             content_padding=ft.padding.symmetric(horizontal=16, vertical=16),
-            text_size=14,
+            text_size=Typography.BODY_MD,
             on_change=self._on_password_change,
             on_submit=self._on_submit,
         )
 
-        # Confirm password field
+        # Confirm password field with polished styling
         self.confirm_password_field = ft.TextField(
             label="Confirm Password",
             hint_text="Re-enter your password",
             prefix_icon=ft.Icons.LOCK_OUTLINED,
             password=True,
             can_reveal_password=True,
-            border_color=COLORS["border"],
-            focused_border_color=COLORS["primary"],
-            bgcolor=COLORS["bg_input"],
-            color=COLORS["text_primary"],
-            label_style=ft.TextStyle(color=COLORS["text_secondary"], size=14),
-            hint_style=ft.TextStyle(color=COLORS["text_muted"], size=13),
-            cursor_color=COLORS["primary"],
+            border_color=colors["border"],
+            focused_border_color=colors["primary"],
+            bgcolor=colors["bg_input"],
+            color=colors["text_primary"],
+            label_style=ft.TextStyle(color=colors["text_secondary"], size=Typography.BODY_MD),
+            hint_style=ft.TextStyle(color=colors["text_muted"], size=Typography.BODY_SM),
+            cursor_color=colors["primary"],
             border_radius=RADIUS["md"],
             content_padding=ft.padding.symmetric(horizontal=16, vertical=16),
-            text_size=14,
+            text_size=Typography.BODY_MD,
             on_change=self._on_confirm_password_change,
             on_submit=self._on_submit,
         )
 
-        # Register button
+        # Register button with enhanced hover effects
         self.register_button = ft.Container(
             content=ft.Row(
                 [
                     ft.Text(
                         "Create Account",
-                        size=15,
+                        size=Typography.BODY_LG,
                         weight=ft.FontWeight.W_600,
-                        color=COLORS["text_inverse"],
+                        color=colors["text_inverse"],
                     ),
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
             height=52,
-            bgcolor=COLORS["primary"],
+            bgcolor=colors["primary"],
             border_radius=RADIUS["md"],
-            alignment=ft.alignment.center,
-            shadow=ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=16,
-                color=f"{COLORS['primary']}40",
-                offset=ft.Offset(0, 4),
-            ),
-            animate=ft.Animation(ANIMATION["normal"], EASE_OUT),
-            animate_scale=ft.Animation(ANIMATION["normal"], EASE_OUT),
+            alignment=ft.Alignment(0, 0),
+            animate=ft.Animation(ANIMATION["normal"], Easing.EASE_OUT),
+            animate_scale=ft.Animation(ANIMATION["normal"], Easing.EASE_OUT),
             on_click=self._on_register_click,
             on_hover=self._on_button_hover,
         )
@@ -192,26 +186,26 @@ class RegisterView(ft.Container):
                         width=20,
                         height=20,
                         stroke_width=2,
-                        color=COLORS["text_inverse"],
+                        color=colors["text_inverse"],
                     ),
                     ft.Container(width=12),
                     ft.Text(
                         "Creating account...",
-                        size=15,
+                        size=Typography.BODY_LG,
                         weight=ft.FontWeight.W_600,
-                        color=COLORS["text_inverse"],
+                        color=colors["text_inverse"],
                     ),
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
             height=52,
-            bgcolor=COLORS["primary_dark"],
+            bgcolor=colors["primary_dark"],
             border_radius=RADIUS["md"],
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             visible=False,
         )
 
-        # Password requirements helper
+        # Password requirements helper with enhanced styling
         password_requirements = ft.Container(
             content=ft.Column(
                 [
@@ -220,80 +214,54 @@ class RegisterView(ft.Container):
                             ft.Icon(
                                 ft.Icons.INFO_OUTLINE,
                                 size=14,
-                                color=COLORS["text_muted"],
+                                color=colors["text_muted"],
                             ),
                             ft.Container(width=6),
                             ft.Text(
                                 "Password must contain:",
-                                size=12,
-                                color=COLORS["text_muted"],
+                                size=Typography.LABEL_SM,
+                                color=colors["text_muted"],
                             ),
                         ],
                     ),
-                    ft.Container(height=4),
-                    ft.Row(
-                        [
-                            ft.Container(width=20),
-                            ft.Text(
-                                "• At least 8 characters",
-                                size=11,
-                                color=COLORS["text_muted"],
-                            ),
-                        ],
-                    ),
-                    ft.Row(
-                        [
-                            ft.Container(width=20),
-                            ft.Text(
-                                "• At least one letter",
-                                size=11,
-                                color=COLORS["text_muted"],
-                            ),
-                        ],
-                    ),
-                    ft.Row(
-                        [
-                            ft.Container(width=20),
-                            ft.Text(
-                                "• At least one number",
-                                size=11,
-                                color=COLORS["text_muted"],
-                            ),
-                        ],
-                    ),
+                    ft.Container(height=6),
+                    self._build_requirement_item("At least 8 characters", colors),
+                    self._build_requirement_item("At least one letter", colors),
+                    self._build_requirement_item("At least one number", colors),
                 ],
-                spacing=2,
+                spacing=4,
             ),
-            padding=ft.padding.symmetric(horizontal=12, vertical=10),
-            border_radius=RADIUS["sm"],
-            bgcolor=COLORS["bg_tertiary"],
+            padding=ft.padding.symmetric(horizontal=14, vertical=12),
+            border_radius=RADIUS["md"],
+            bgcolor=colors["bg_tertiary"],
+            border=ft.border.all(1, colors["border_light"]),
         )
 
-        # Login link
+        # Login link with subtle hover
         login_link = ft.Container(
             content=ft.Row(
                 [
                     ft.Text(
                         "Already have an account?",
-                        size=14,
-                        color=COLORS["text_secondary"],
+                        size=Typography.BODY_MD,
+                        color=colors["text_secondary"],
                     ),
-                    ft.Container(width=4),
+                    ft.Container(width=6),
                     ft.Text(
                         "Sign in",
-                        size=14,
+                        size=Typography.BODY_MD,
                         weight=ft.FontWeight.W_600,
-                        color=COLORS["primary"],
+                        color=colors["primary"],
                     ),
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
             on_click=self._on_login_click,
-            animate=ft.Animation(ANIMATION["fast"], EASE_OUT),
+            animate=ft.Animation(ANIMATION["fast"], Easing.EASE_OUT),
             on_hover=self._on_link_hover,
         )
 
-        # Main form card
+        # Main form card with glass morphism effect
         form_card = ft.Container(
             content=ft.Column(
                 [
@@ -319,20 +287,26 @@ class RegisterView(ft.Container):
                     # Register button
                     self.register_button,
                     self.loading_indicator,
-                    ft.Container(height=24),
+                    ft.Container(height=28),
+                    # Divider
+                    self._build_divider("or continue with"),
+                    ft.Container(height=20),
+                    # Social buttons
+                    self._build_social_buttons(),
+                    ft.Container(height=28),
                     # Login link
                     login_link,
                 ],
                 spacing=0,
                 horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
             ),
-            width=420,
-            bgcolor=COLORS["bg_card"],
+            width=440,
+            bgcolor=colors["bg_card"],
             border_radius=RADIUS["xl"],
-            padding=40,
-            border=ft.border.all(1, COLORS["border"]),
+            padding=44,
+            border=ft.border.all(1, colors["border"]),
             shadow=get_shadow("lg"),
-            animate=ft.Animation(ANIMATION["normal"], EASE_OUT),
+            animate=ft.Animation(ANIMATION["normal"], Easing.EASE_OUT),
         )
 
         # Wrap in scrollable column for smaller screens
@@ -347,50 +321,131 @@ class RegisterView(ft.Container):
             expand=True,
         )
 
+    def _build_requirement_item(self, text: str, colors: dict):
+        """Build a single password requirement item."""
+        return ft.Row(
+            [
+                ft.Container(width=20),
+                ft.Container(
+                    width=4,
+                    height=4,
+                    border_radius=2,
+                    bgcolor=colors["text_muted"],
+                ),
+                ft.Container(width=8),
+                ft.Text(
+                    text,
+                    size=Typography.LABEL_XS,
+                    color=colors["text_muted"],
+                ),
+            ],
+        )
+
     def _build_header(self):
         """Build the header section with logo and title."""
+        colors = get_colors()
         return ft.Column(
             [
-                # Logo
+                # Logo with glow effect
                 ft.Container(
                     content=ft.Icon(
                         ft.Icons.ANDROID,
-                        size=40,
-                        color=COLORS["primary"],
+                        size=44,
+                        color=colors["primary"],
                     ),
-                    width=72,
-                    height=72,
+                    width=80,
+                    height=80,
                     border_radius=RADIUS["lg"],
-                    bgcolor=f"{COLORS['primary']}15",
-                    alignment=ft.alignment.center,
-                    border=ft.border.all(1, f"{COLORS['primary']}25"),
-                    shadow=ft.BoxShadow(
-                        spread_radius=0,
-                        blur_radius=20,
-                        color=f"{COLORS['primary']}25",
-                        offset=ft.Offset(0, 6),
-                    ),
+                    bgcolor=f"{colors['primary']}12",
+                    alignment=ft.Alignment(0, 0),
+                    border=ft.border.all(1, f"{colors['primary']}20")
                 ),
-                ft.Container(height=24),
+                ft.Container(height=28),
                 # Title
                 ft.Text(
                     "Create Account",
-                    size=28,
+                    size=Typography.H2,
                     weight=ft.FontWeight.W_800,
-                    color=COLORS["text_primary"],
+                    color=colors["text_primary"],
                     text_align=ft.TextAlign.CENTER,
                 ),
                 ft.Container(height=8),
                 # Subtitle
                 ft.Text(
                     "Sign up to get started with Droidrun Controller",
-                    size=14,
-                    color=COLORS["text_secondary"],
+                    size=Typography.BODY_MD,
+                    color=colors["text_secondary"],
                     text_align=ft.TextAlign.CENTER,
                 ),
             ],
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=0,
+        )
+
+    def _build_divider(self, text: str):
+        """Build a divider with centered text."""
+        colors = get_colors()
+        return ft.Row(
+            [
+                ft.Container(
+                    height=1,
+                    bgcolor=colors["border"],
+                    expand=True,
+                ),
+                ft.Container(
+                    content=ft.Text(
+                        text,
+                        size=Typography.LABEL_SM,
+                        color=colors["text_muted"],
+                        weight=ft.FontWeight.W_500,
+                    ),
+                    padding=ft.padding.symmetric(horizontal=16),
+                ),
+                ft.Container(
+                    height=1,
+                    bgcolor=colors["border"],
+                    expand=True,
+                ),
+            ],
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        )
+
+    def _build_social_buttons(self):
+        """Build social login buttons."""
+        colors = get_colors()
+
+        def build_social_button(icon: str, label: str, on_click=None):
+            return ft.Container(
+                content=ft.Row(
+                    [
+                        ft.Icon(icon, size=20, color=colors["text_secondary"]),
+                        ft.Container(width=8),
+                        ft.Text(
+                            label,
+                            size=Typography.BODY_SM,
+                            weight=ft.FontWeight.W_500,
+                            color=colors["text_primary"],
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                ),
+                height=46,
+                expand=True,
+                border_radius=RADIUS["md"],
+                bgcolor=colors["bg_tertiary"],
+                border=ft.border.all(1, colors["border"]),
+                alignment=ft.Alignment(0, 0),
+                animate=ft.Animation(ANIMATION["fast"], Easing.EASE_OUT),
+                on_click=on_click,
+                on_hover=self._on_social_hover,
+            )
+
+        return ft.Row(
+            [
+                build_social_button(ft.Icons.LANGUAGE, "Google"),
+                ft.Container(width=12),
+                build_social_button(ft.Icons.APPLE, "Apple"),
+            ],
         )
 
     def _validate_email(self, email: str) -> tuple[bool, str]:
@@ -423,34 +478,38 @@ class RegisterView(ft.Container):
 
     def _on_email_change(self, e):
         """Handle email field change."""
+        colors = get_colors()
         # Clear error when user starts typing
         self.email_error.visible = False
-        self.email_field.border_color = COLORS["border"]
+        self.email_field.border_color = colors["border"]
         if self.email_error.page:
             self.email_error.update()
             self.email_field.update()
 
     def _on_password_change(self, e):
         """Handle password field change."""
+        colors = get_colors()
         # Clear error when user starts typing
         self.password_error.visible = False
-        self.password_field.border_color = COLORS["border"]
+        self.password_field.border_color = colors["border"]
         if self.password_error.page:
             self.password_error.update()
             self.password_field.update()
 
     def _on_confirm_password_change(self, e):
         """Handle confirm password field change."""
+        colors = get_colors()
         # Clear error when user starts typing
         self.confirm_password_error.visible = False
-        self.confirm_password_field.border_color = COLORS["border"]
+        self.confirm_password_field.border_color = colors["border"]
         if self.confirm_password_error.page:
             self.confirm_password_error.update()
             self.confirm_password_field.update()
 
     def _show_field_error(self, field: ft.TextField, error_text: ft.Text, message: str):
         """Show validation error for a field."""
-        field.border_color = COLORS["error"]
+        colors = get_colors()
+        field.border_color = colors["error"]
         error_text.value = message
         error_text.visible = True
         if field.page:
@@ -546,24 +605,15 @@ class RegisterView(ft.Container):
 
     def _on_button_hover(self, e):
         """Handle button hover effect."""
+        colors = get_colors()
         if self._is_loading:
             return
         if e.data == "true":
             e.control.scale = 1.02
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=24,
-                color=f"{COLORS['primary']}50",
-                offset=ft.Offset(0, 8),
-            )
+            
         else:
             e.control.scale = 1.0
-            e.control.shadow = ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=16,
-                color=f"{COLORS['primary']}40",
-                offset=ft.Offset(0, 4),
-            )
+            
         e.control.update()
 
     def _on_link_hover(self, e):
@@ -574,12 +624,24 @@ class RegisterView(ft.Container):
             e.control.opacity = 1.0
         e.control.update()
 
+    def _on_social_hover(self, e):
+        """Handle social button hover effect."""
+        colors = get_colors()
+        if e.data == "true":
+            e.control.bgcolor = colors["bg_hover"]
+            e.control.border = ft.border.all(1, colors["border_hover"])
+        else:
+            e.control.bgcolor = colors["bg_tertiary"]
+            e.control.border = ft.border.all(1, colors["border"])
+        e.control.update()
+
     def show_error(self, message: str):
         """Show an error message (can be called from outside)."""
         self._show_general_error(message)
 
     def clear_form(self):
         """Clear the form fields."""
+        colors = get_colors()
         self.email_field.value = ""
         self.password_field.value = ""
         self.confirm_password_field.value = ""
@@ -587,9 +649,9 @@ class RegisterView(ft.Container):
         self.email_error.visible = False
         self.password_error.visible = False
         self.confirm_password_error.visible = False
-        self.email_field.border_color = COLORS["border"]
-        self.password_field.border_color = COLORS["border"]
-        self.confirm_password_field.border_color = COLORS["border"]
+        self.email_field.border_color = colors["border"]
+        self.password_field.border_color = colors["border"]
+        self.confirm_password_field.border_color = colors["border"]
         if self.page:
             self.update()
 

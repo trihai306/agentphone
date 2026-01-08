@@ -5,8 +5,19 @@ semantic variants, and smooth entrance animations.
 """
 
 import flet as ft
-from ..theme import COLORS, RADIUS, SPACING, ANIMATION, get_shadow
+from ..theme import get_colors, RADIUS, SPACING, ANIMATION, get_shadow
 
+
+
+# Dynamic color proxy - acts like a dict but always gets current theme colors
+class _DynamicColors:
+    def get(self, key, default=None):
+        return get_colors().get(key, default)
+    
+    def __getitem__(self, key):
+        return get_colors()[key]
+
+COLORS = _DynamicColors()
 
 class EmptyState(ft.Container):
     """An empty state placeholder with enhanced visual styling.
@@ -129,13 +140,7 @@ class EmptyState(ft.Container):
             border_radius=config["icon_container_size"] // 2,
             bgcolor=resolved_icon_bg,
             border=ft.border.all(1, resolved_icon_border),
-            alignment=ft.alignment.center,
-            shadow=ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=24,
-                color=resolved_shadow_color,
-                offset=ft.Offset(0, 8),
-            ),
+            alignment=ft.Alignment(0, 0),
             animate=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),
         )
 
@@ -178,12 +183,6 @@ class EmptyState(ft.Container):
                     border_radius=RADIUS["md"],
                     bgcolor=COLORS["primary"],
                     border=ft.border.all(1, f"{COLORS['primary_dark']}80"),
-                    shadow=ft.BoxShadow(
-                        spread_radius=0,
-                        blur_radius=20,
-                        color=COLORS.get("primary_glow", f"{COLORS['primary']}25"),
-                        offset=ft.Offset(0, 6),
-                    ),
                     on_click=on_action,
                     ink=True,
                     ink_color=f"{COLORS['text_inverse']}20",
@@ -198,7 +197,7 @@ class EmptyState(ft.Container):
                 spacing=0,
             ),
             padding=config["outer_padding"],
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment(0, 0),
             expand=True,
             animate=ft.Animation(ANIMATION["slow"], ft.AnimationCurve.EASE_OUT),
             animate_opacity=ft.Animation(ANIMATION["normal"], ft.AnimationCurve.EASE_OUT),

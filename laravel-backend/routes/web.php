@@ -7,10 +7,14 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FlowController;
 use App\Http\Controllers\FeaturesController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\PackageController;
 use App\Http\Controllers\PricingController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TopupController;
 use App\Http\Controllers\UserDeviceController;
 use Illuminate\Support\Facades\Route;
 
@@ -48,4 +52,37 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
     Route::resource('devices', UserDeviceController::class);
+
+    // Package Routes
+    Route::get('/packages', [PackageController::class, 'index'])->name('packages.index');
+    Route::get('/packages/{package}', [PackageController::class, 'show'])->name('packages.show');
+    Route::get('/packages/{package}/subscribe', [PackageController::class, 'subscribe'])->name('packages.subscribe');
+    Route::post('/packages/{package}/subscribe', [PackageController::class, 'processSubscription'])->name('packages.processSubscription');
+    Route::get('/my-packages/{userPackage}/payment', [PackageController::class, 'payment'])->name('packages.payment');
+    Route::get('/my-packages/{userPackage}/manage', [PackageController::class, 'manage'])->name('packages.manage');
+    Route::post('/my-packages/{userPackage}/cancel', [PackageController::class, 'cancel'])->name('packages.cancel');
+
+    // Topup Routes
+    Route::get('/topup', [TopupController::class, 'index'])->name('topup.index');
+    Route::post('/topup/checkout', [TopupController::class, 'checkout'])->name('topup.checkout');
+    Route::post('/topup/process', [TopupController::class, 'process'])->name('topup.process');
+    Route::get('/topup/{topup}/payment', [TopupController::class, 'payment'])->name('topup.payment');
+    Route::get('/topup/history', [TopupController::class, 'history'])->name('topup.history');
+
+    // Notification Routes
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/{id}', [NotificationController::class, 'show'])->name('notifications.show');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.readAll');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::post('/notifications/refresh', [NotificationController::class, 'refresh'])->name('notifications.refresh');
+
+    // Flow Builder Routes
+    Route::get('/flows', [FlowController::class, 'index'])->name('flows.index');
+    Route::post('/flows', [FlowController::class, 'store'])->name('flows.store');
+    Route::get('/flows/{flow}/edit', [FlowController::class, 'edit'])->name('flows.edit');
+    Route::put('/flows/{flow}', [FlowController::class, 'update'])->name('flows.update');
+    Route::post('/flows/{flow}/save-state', [FlowController::class, 'saveState'])->name('flows.saveState');
+    Route::post('/flows/{flow}/duplicate', [FlowController::class, 'duplicate'])->name('flows.duplicate');
+    Route::delete('/flows/{flow}', [FlowController::class, 'destroy'])->name('flows.destroy');
 });

@@ -1,12 +1,23 @@
 """Status badge component with refined styling and pulse animation."""
 
 import flet as ft
-from ..theme import COLORS, status_color, ANIMATION, RADIUS
+from ..theme import get_colors, status_color, ANIMATION, RADIUS
 
 
 # Active statuses that should pulse by default
 ACTIVE_STATUSES = {"running", "active", "online", "busy", "queued", "pending"}
 
+
+
+# Dynamic color proxy - acts like a dict but always gets current theme colors
+class _DynamicColors:
+    def get(self, key, default=None):
+        return get_colors().get(key, default)
+    
+    def __getitem__(self, key):
+        return get_colors()[key]
+
+COLORS = _DynamicColors()
 
 class StatusBadge(ft.Container):
     """A status indicator badge with enhanced visual effects and pulse animation.
@@ -155,13 +166,7 @@ class StatusBadge(ft.Container):
                 width=dot_size + 8,
                 height=dot_size + 8,
                 border_radius=(dot_size + 8) // 2,
-                alignment=ft.alignment.center,
-                shadow=ft.BoxShadow(
-                    spread_radius=1,
-                    blur_radius=6,
-                    color=f"{self._color}35",
-                    offset=ft.Offset(0, 0),
-                ),
+                alignment=ft.Alignment(0, 0),
                 animate=ft.Animation(1000, ft.AnimationCurve.EASE_IN_OUT),
             )
             return pulse_ring
@@ -171,13 +176,7 @@ class StatusBadge(ft.Container):
                 content=inner_dot,
                 width=dot_size + 4,
                 height=dot_size + 4,
-                alignment=ft.alignment.center,
-                shadow=ft.BoxShadow(
-                    spread_radius=0,
-                    blur_radius=3,
-                    color=f"{self._color}20",
-                    offset=ft.Offset(0, 1),
-                ) if self._variant != "subtle" else None,
+                alignment=ft.Alignment(0, 0) if self._variant != "subtle" else None,
             )
 
     def _on_hover(self, e):
@@ -254,13 +253,7 @@ class StatusDot(ft.Container):
                 width=size + 6,
                 height=size + 6,
                 border_radius=(size + 6) // 2,
-                alignment=ft.alignment.center,
-                shadow=ft.BoxShadow(
-                    spread_radius=0,
-                    blur_radius=4,
-                    color=f"{self._color}40",
-                    offset=ft.Offset(0, 0),
-                ),
+                alignment=ft.Alignment(0, 0)
             )
         else:
             content = inner_dot

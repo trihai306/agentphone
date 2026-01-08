@@ -78,4 +78,15 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasMany(Transaction::class);
     }
+
+    public function servicePackages()
+    {
+        return $this->hasMany(UserServicePackage::class);
+    }
+
+    public function activeServicePackages()
+    {
+        return $this->hasMany(UserServicePackage::class)
+            ->where('status', UserServicePackage::STATUS_ACTIVE);
+    }
 }

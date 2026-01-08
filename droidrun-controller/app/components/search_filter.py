@@ -257,10 +257,10 @@ class SearchFilter(ft.Container):
             border_color=colors["border"],
             focused_border_color=colors["primary"],
             bgcolor=colors["bg_input"],
-            alignment=ft.alignment.center_left,
-            on_change=on_change,
             width=width,
         )
+        # Set on_change after initialization to avoid constructor error
+        dropdown.on_change = on_change
 
         # Icon on the left
         dropdown_icon = ft.Container(

@@ -275,6 +275,35 @@ class TransactionResource extends Resource
                     ->requiresConfirmation()
                     ->visible(fn (Transaction $record): bool => $record->status === 'pending')
                     ->action(function (Transaction $record) {
+                        // Get or create wallet for the user
+                        $wallet = $record->wallet;
+
+                        if (!$wallet) {
+                            // If no wallet specified, get or create default wallet
+                            $wallet = Wallet::firstOrCreate(
+                                ['user_id' => $record->user_id, 'is_active' => true],
+                                ['balance' => 0, 'locked_balance' => 0, 'currency' => 'VND']
+                            );
+                            $record->wallet_id = $wallet->id;
+                        }
+
+                        // Update wallet balance based on transaction type
+                        if ($record->type === Transaction::TYPE_DEPOSIT) {
+                            // Deposit: Add money to wallet
+                            $wallet->deposit($record->final_amount);
+                        } elseif ($record->type === Transaction::TYPE_WITHDRAWAL) {
+                            // Withdrawal: Subtract money from wallet
+                            if (!$wallet->withdraw($record->final_amount)) {
+                                Notification::make()
+                                    ->danger()
+                                    ->title('Không đủ số dư')
+                                    ->body('Số dư trong ví không đủ để thực hiện giao dịch rút tiền này.')
+                                    ->send();
+                                return;
+                            }
+                        }
+
+                        // Update transaction status
                         $record->update([
                             'status' => 'completed',
                             'approved_by' => auth()->id(),
@@ -285,6 +314,7 @@ class TransactionResource extends Resource
                         Notification::make()
                             ->success()
                             ->title('Đã duyệt giao dịch')
+                            ->body('Số dư ví đã được cập nhật: ' . number_format($wallet->balance, 0, ',', '.') . ' ₫')
                             ->send();
                     }),
 

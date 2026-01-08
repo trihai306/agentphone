@@ -11,11 +11,13 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -42,6 +44,7 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 // Widgets sẽ được khai báo trong từng page, không cần discover
             ])
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->navigationGroups([
                 NavigationGroup::make()
                     ->label('Phân Tích')
@@ -55,6 +58,10 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make()
                     ->label('Finance Management')
                     ->icon('heroicon-o-banknotes')
+                    ->collapsible(),
+                NavigationGroup::make()
+                    ->label('Service Management')
+                    ->icon('heroicon-o-cube')
                     ->collapsible(),
             ])
             ->middleware([
@@ -73,8 +80,13 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authGuard('web')
             ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
             ->sidebarCollapsibleOnDesktop()
             ->maxContentWidth('full')
-            ->globalSearchKeyBindings(['command+k', 'ctrl+k']);
+            ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn () => Blade::render('@include("filament.scripts.echo")')
+            );
     }
 }

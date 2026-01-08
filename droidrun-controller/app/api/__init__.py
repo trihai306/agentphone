@@ -1,8 +1,8 @@
-"""Authentication API module for Droidrun Controller.
+"""API module for Droidrun Controller.
 
-This module provides HTTP API endpoints for user authentication:
-- POST /api/auth/register - Create new user account
-- POST /api/auth/login - Authenticate and get JWT token
+This module provides HTTP API endpoints for:
+- User authentication (register, login)
+- Interaction history (save, query, stats)
 
 Usage:
     from app.api import create_api_app, start_api_server
@@ -18,10 +18,12 @@ from .auth import (
     stop_api_server,
     register_handler,
 )
+from .interactions import add_interaction_routes
 
 __all__ = [
     "create_api_app",
     "start_api_server",
     "stop_api_server",
     "register_handler",
+    "add_interaction_routes",
 ]

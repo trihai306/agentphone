@@ -12,12 +12,18 @@ class DatabaseSeeder extends Seeder
      * Seeders are called in the following order:
      * 1. RolesAndPermissionsSeeder - Creates roles and permissions (required for admin user)
      * 2. AdminUserSeeder - Creates default admin user with admin role
+     * 3. BankSeeder - Creates bank data
+     * 4. ServicePackageSeeder - Creates service packages
+     * 5. UserServicePackageSeeder - Creates sample user orders
      */
     public function run(): void
     {
         $this->call([
             RolesAndPermissionsSeeder::class,
             AdminUserSeeder::class,
+            BankSeeder::class,
+            ServicePackageSeeder::class,
+            UserServicePackageSeeder::class,
         ]);
     }
 }

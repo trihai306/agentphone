@@ -5,8 +5,19 @@ Enhanced with subtle glow effects, refined borders, and smooth animations.
 """
 
 import flet as ft
-from ..theme import COLORS, ANIMATION, RADIUS, get_shadow, get_colored_shadow
+from ..theme import get_colors, ANIMATION, RADIUS, get_shadow, get_colored_shadow
 
+
+
+# Dynamic color proxy - acts like a dict but always gets current theme colors
+class _DynamicColors:
+    def get(self, key, default=None):
+        return get_colors().get(key, default)
+    
+    def __getitem__(self, key):
+        return get_colors()[key]
+
+COLORS = _DynamicColors()
 
 class Modal(ft.AlertDialog):
     """A polished modal dialog with refined styling and improved backdrop.
@@ -52,7 +63,7 @@ class Modal(ft.AlertDialog):
                     width=32,
                     height=32,
                     border_radius=RADIUS["md"],
-                    alignment=ft.alignment.center,
+                    alignment=ft.Alignment(0, 0),
                     on_click=on_close,
                     ink=True,
                     animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
@@ -77,8 +88,8 @@ class Modal(ft.AlertDialog):
                     content=ft.Container(
                         height=1,
                         gradient=ft.LinearGradient(
-                            begin=ft.alignment.center_left,
-                            end=ft.alignment.center_right,
+                            begin=ft.Alignment(-1, 0),
+                            end=ft.Alignment(1, 0),
                             colors=[
                                 "transparent",
                                 COLORS["border_light"],
@@ -188,13 +199,7 @@ class ConfirmDialog(ft.AlertDialog):
                     border_radius=RADIUS["lg"],
                     bgcolor=f"{variant_config['color']}12",
                     border=ft.border.all(1, f"{variant_config['color']}20"),
-                    alignment=ft.alignment.center,
-                    shadow=ft.BoxShadow(
-                        spread_radius=0,
-                        blur_radius=8,
-                        color=f"{variant_config['color']}10",
-                        offset=ft.Offset(0, 2),
-                    ),
+                    alignment=ft.Alignment(0, 0)
                 ),
                 ft.Container(width=16),
                 ft.Column(
@@ -254,12 +259,6 @@ class ConfirmDialog(ft.AlertDialog):
             border_radius=RADIUS["md"],
             bgcolor=variant_config["color"],
             border=ft.border.all(1, f"{variant_config['hover']}80"),
-            shadow=ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=8,
-                color=variant_config["glow"],
-                offset=ft.Offset(0, 4),
-            ),
             on_click=on_confirm,
             ink=True,
             ink_color=f"{COLORS['text_inverse']}20",
@@ -350,13 +349,7 @@ class InfoDialog(ft.AlertDialog):
                     border_radius=RADIUS["lg"],
                     bgcolor=f"{variant_config['color']}12",
                     border=ft.border.all(1, f"{variant_config['color']}20"),
-                    alignment=ft.alignment.center,
-                    shadow=ft.BoxShadow(
-                        spread_radius=0,
-                        blur_radius=8,
-                        color=f"{variant_config['color']}10",
-                        offset=ft.Offset(0, 2),
-                    ),
+                    alignment=ft.Alignment(0, 0)
                 ),
                 ft.Container(width=16),
                 ft.Text(
@@ -393,12 +386,6 @@ class InfoDialog(ft.AlertDialog):
             border_radius=RADIUS["md"],
             bgcolor=variant_config["color"],
             border=ft.border.all(1, f"{variant_config['dark']}80"),
-            shadow=ft.BoxShadow(
-                spread_radius=0,
-                blur_radius=8,
-                color=variant_config["glow"],
-                offset=ft.Offset(0, 4),
-            ),
             on_click=on_close,
             ink=True,
             ink_color=f"{COLORS['text_inverse']}20",
