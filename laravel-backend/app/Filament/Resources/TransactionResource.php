@@ -48,7 +48,7 @@ class TransactionResource extends Resource
                             ->searchable()
                             ->required()
                             ->reactive()
-                            ->afterStateUpdated(fn ($set) => $set('wallet_id', null)),
+                            ->afterStateUpdated(fn($set) => $set('wallet_id', null)),
 
                         Forms\Components\Select::make('wallet_id')
                             ->label('Ví')
@@ -165,7 +165,7 @@ class TransactionResource extends Resource
 
                 Tables\Columns\BadgeColumn::make('type')
                     ->label('Loại')
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
                         'deposit' => 'Nạp tiền',
                         'withdrawal' => 'Rút tiền',
                         default => $state,
@@ -195,7 +195,7 @@ class TransactionResource extends Resource
 
                 Tables\Columns\BadgeColumn::make('status')
                     ->label('Trạng thái')
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
                         'pending' => 'Chờ xử lý',
                         'processing' => 'Đang xử lý',
                         'completed' => 'Hoàn thành',
@@ -256,11 +256,11 @@ class TransactionResource extends Resource
                         return $query
                             ->when(
                                 $data['created_from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
                             )
                             ->when(
                                 $data['created_until'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
                             );
                     }),
             ])
@@ -272,9 +272,51 @@ class TransactionResource extends Resource
                     ->label('Duyệt')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->requiresConfirmation()
-                    ->visible(fn (Transaction $record): bool => $record->status === 'pending')
-                    ->action(function (Transaction $record) {
+                    ->button()
+                    ->modalHeading(fn(Transaction $record) => '✅ Xác nhận duyệt giao dịch')
+                    ->modalDescription(fn(Transaction $record) => new \Illuminate\Support\HtmlString(
+                        '<div class="space-y-3 text-left">' .
+                        '<div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-800">' .
+                        '<p class="text-sm text-gray-500 dark:text-gray-400">Mã giao dịch</p>' .
+                        '<p class="font-mono font-semibold">' . $record->transaction_code . '</p>' .
+                        '</div>' .
+                        '<div class="grid grid-cols-2 gap-4">' .
+                        '<div class="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20">' .
+                        '<p class="text-sm text-gray-500 dark:text-gray-400">Khách hàng</p>' .
+                        '<p class="font-semibold text-blue-700 dark:text-blue-300">' . $record->user->name . '</p>' .
+                        '</div>' .
+                        '<div class="p-3 rounded-lg ' . ($record->type === 'deposit' ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20') . '">' .
+                        '<p class="text-sm text-gray-500 dark:text-gray-400">Loại giao dịch</p>' .
+                        '<p class="font-semibold ' . ($record->type === 'deposit' ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300') . '">' .
+                        ($record->type === 'deposit' ? '💰 Nạp tiền' : '💸 Rút tiền') . '</p>' .
+                        '</div>' .
+                        '</div>' .
+                        '<div class="p-4 rounded-lg border-2 ' . ($record->type === 'deposit' ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-red-500 bg-red-50 dark:bg-red-900/20') . '">' .
+                        '<p class="text-sm text-gray-500 dark:text-gray-400">Số tiền sẽ ' . ($record->type === 'deposit' ? 'CỘNG vào' : 'TRỪ từ') . ' ví</p>' .
+                        '<p class="text-2xl font-bold ' . ($record->type === 'deposit' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400') . '">' .
+                        ($record->type === 'deposit' ? '+' : '-') . number_format($record->final_amount, 0, ',', '.') . ' ₫</p>' .
+                        '</div>' .
+                        '<p class="text-xs text-center text-gray-400 dark:text-gray-500">⚠️ Hành động này không thể hoàn tác</p>' .
+                        '</div>'
+                    ))
+                    ->modalSubmitActionLabel('Xác nhận duyệt')
+                    ->modalIcon('heroicon-o-check-circle')
+                    ->modalIconColor('success')
+                    ->form([
+                        Forms\Components\Checkbox::make('confirmed')
+                            ->label('Tôi đã kiểm tra chứng từ và xác nhận thông tin giao dịch chính xác')
+                            ->required()
+                            ->accepted()
+                            ->validationMessages([
+                                'accepted' => 'Bạn phải xác nhận đã kiểm tra chứng từ trước khi duyệt.',
+                            ]),
+                        Forms\Components\Textarea::make('admin_note')
+                            ->label('Ghi chú admin (tùy chọn)')
+                            ->placeholder('Nhập ghi chú nếu cần...')
+                            ->rows(2),
+                    ])
+                    ->visible(fn(Transaction $record): bool => $record->status === 'pending')
+                    ->action(function (Transaction $record, array $data) {
                         // Get or create wallet for the user
                         $wallet = $record->wallet;
 
@@ -286,6 +328,8 @@ class TransactionResource extends Resource
                             );
                             $record->wallet_id = $wallet->id;
                         }
+
+                        $previousBalance = $wallet->balance;
 
                         // Update wallet balance based on transaction type
                         if ($record->type === Transaction::TYPE_DEPOSIT) {
@@ -309,12 +353,21 @@ class TransactionResource extends Resource
                             'approved_by' => auth()->id(),
                             'approved_at' => now(),
                             'completed_at' => now(),
+                            'admin_note' => $data['admin_note'] ?? null,
                         ]);
+
+                        $actionText = $record->type === Transaction::TYPE_DEPOSIT ? 'cộng' : 'trừ';
+                        $amountFormatted = number_format($record->final_amount, 0, ',', '.');
+                        $newBalanceFormatted = number_format($wallet->balance, 0, ',', '.');
 
                         Notification::make()
                             ->success()
-                            ->title('Đã duyệt giao dịch')
-                            ->body('Số dư ví đã được cập nhật: ' . number_format($wallet->balance, 0, ',', '.') . ' ₫')
+                            ->title('✅ Duyệt giao dịch thành công!')
+                            ->body(
+                                "Đã {$actionText} {$amountFormatted} ₫ vào ví của {$record->user->name}.\n" .
+                                "Số dư mới: {$newBalanceFormatted} ₫"
+                            )
+                            ->duration(5000)
                             ->send();
                     }),
 
@@ -323,7 +376,7 @@ class TransactionResource extends Resource
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->requiresConfirmation()
-                    ->visible(fn (Transaction $record): bool => $record->status === 'pending')
+                    ->visible(fn(Transaction $record): bool => $record->status === 'pending')
                     ->form([
                         Forms\Components\Textarea::make('reject_reason')
                             ->label('Lý do từ chối')

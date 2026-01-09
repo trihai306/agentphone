@@ -6,7 +6,8 @@ import CommandPalette from '../Components/Layout/CommandPalette';
 import Breadcrumbs from '../Components/Layout/Breadcrumbs';
 
 export default function AppLayout({ children, title, breadcrumbs }) {
-    const { auth, flash, url } = usePage().props;
+    const { auth, flash } = usePage().props;
+    const currentUrl = usePage().url; // Lấy current URL từ Inertia page object
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [collapsed, setCollapsed] = useState(false);
 
@@ -45,7 +46,7 @@ export default function AppLayout({ children, title, breadcrumbs }) {
             {/* Sidebar */}
             <Sidebar
                 user={auth.user}
-                url={url}
+                url={currentUrl}
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}
                 collapsed={collapsed}

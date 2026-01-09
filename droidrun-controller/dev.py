@@ -34,7 +34,7 @@ if __name__ == "__main__":
         "flet", "run",
         "-d",  # Watch directory
         "-r",  # Recursive
-        "--ignore-dirs", ".venv,venv,__pycache__,.git,workflows.db,portal-apk",  # Ignore these
+        "--ignore-dirs", ".venv,venv,__pycache__,.git,workflows.db,portal-apk,storage",  # Ignore these
         "run_app.py"
     ]
 

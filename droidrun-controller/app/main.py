@@ -2,13 +2,15 @@
 
 import flet as ft
 from .theme import get_theme, get_colors, set_theme_mode, get_theme_mode, SPACING, RADIUS, ANIMATION, get_shadow
-from .views import DevicesView, WorkflowsView, ExecutionsView, SettingsView, AgentRunnerView, LoginView, RegisterView
+from .views import DevicesView, WorkflowsView, ExecutionsView, SettingsView, AgentRunnerView, LoginView, RegisterView, FileManagerView
 from .views.phone_viewer import PhoneViewerView
 from .components.toast import ToastManager
 from .components.notification_panel import NotificationPanel
 from .backend import backend
 from .services.auth_service import get_auth_service, AuthResult
 from .services.notification_service import get_notification_service
+from .services.bundled_setup import bundled_setup
+from .services.soketi_service import get_soketi_service
 
 
 # Storage keys for session persistence
@@ -54,10 +56,12 @@ class DroidrunApp:
         self._current_auth_view = "login"  # "login" or "register"
         self._auth_service = get_auth_service()
         self._notification_service = get_notification_service()
+        self._soketi_service = None  # Initialized after login
         self._unread_notifications_count = 0
         self._notification_panel_visible = False
         self._notification_panel = None
         self._session_restore_completed = False  # Prevent multiple restore attempts
+        self._setup_completed = False  # Track if setup wizard has been completed
 
         self._setup_page()
         # Start with auth UI, then check for stored session
@@ -208,9 +212,21 @@ class DroidrunApp:
             self._build_app()
 
     def _build_app(self):
-        """Build the application - routes to auth or main UI based on authentication state."""
+        """Build the application - routes to setup, auth or main UI based on state."""
         print(f"[DEBUG] _build_app called: authenticated={self._is_authenticated}")
         self.page.controls.clear()
+
+        # Check if setup is required (only once per session)
+        if not self._setup_completed:
+            if bundled_setup.is_setup_required:
+                print("[DEBUG] Setup required, showing Auto Setup Splash...")
+                self._build_setup_wizard()
+                self.page.update()
+                return
+            else:
+                print("[DEBUG] All dependencies installed, setting up environment...")
+                bundled_setup.setup_environment()
+                self._setup_completed = True
 
         if self._is_authenticated:
             # Show main application UI
@@ -231,6 +247,27 @@ class DroidrunApp:
         print("[DEBUG] Updating page...")
         self.page.update()
         print("[DEBUG] Page updated")
+
+    def _build_setup_wizard(self):
+        """Build the Auto Setup Splash UI for silent first-run installation.
+        
+        This automatically downloads and installs all required dependencies
+        without requiring any user interaction.
+        """
+        from .components.auto_setup_splash import AutoSetupSplash
+
+        def on_setup_complete():
+            print("[DEBUG] Silent setup complete, proceeding to app...")
+            self._setup_completed = True
+            self._build_app()
+
+        # Use AutoSetupSplash for fully automatic, silent installation
+        splash = AutoSetupSplash(
+            on_complete=on_setup_complete,
+        )
+
+        self.page.add(splash)
+        self.page.update()
 
     def _build_auth_ui(self):
         """Build the authentication UI (login or register page)."""
@@ -277,6 +314,15 @@ class DroidrunApp:
             # Set token in auth service for future requests
             self._auth_service.token = result.token
             self._notification_service.token = result.token
+
+            # Initialize Soketi WebSocket connection
+            try:
+                self._soketi_service = get_soketi_service(result.token)
+                self._soketi_service.connect()
+                self._setup_soketi_subscriptions()
+                print("[DEBUG] Soketi WebSocket initialized")
+            except Exception as e:
+                print(f"[DEBUG] Failed to initialize Soketi: {e}")
 
             # Store session in client storage for persistence
             self._store_session(result.token, result.email, result.user_id)
@@ -346,6 +392,15 @@ class DroidrunApp:
         self._auth_service.token = None
         self._notification_service.token = None
         self._unread_notifications_count = 0
+
+        # Disconnect Soketi WebSocket
+        if self._soketi_service:
+            try:
+                self._soketi_service.disconnect()
+                self._soketi_service = None
+                print("[DEBUG] Soketi disconnected")
+            except Exception as e:
+                print(f"[DEBUG] Error disconnecting Soketi: {e}")
 
         # Clear stored session
         self._clear_stored_session()
@@ -438,6 +493,7 @@ class DroidrunApp:
                     on_settings_click=lambda _: self._on_nav_click("settings"),
                 ),
                 "phone_viewer": PhoneViewerView(self.app_state, self.toast),
+                "file_manager": FileManagerView(self.app_state, self.toast),
                 "agent_runner": AgentRunnerView(self.app_state, self.toast),
                 "workflows": WorkflowsView(self.app_state, self.toast),
                 "executions": ExecutionsView(self.app_state, self.toast),
@@ -599,6 +655,7 @@ class DroidrunApp:
             main_nav_items = [
                 ("dashboard", ft.Icons.DASHBOARD_OUTLINED, ft.Icons.DASHBOARD),
                 ("phone_viewer", ft.Icons.SMARTPHONE_OUTLINED, ft.Icons.SMARTPHONE),
+                ("file_manager", ft.Icons.FOLDER_OUTLINED, ft.Icons.FOLDER),
                 ("agent_runner", ft.Icons.SMART_TOY_OUTLINED, ft.Icons.SMART_TOY),
                 ("workflows", ft.Icons.ACCOUNT_TREE_OUTLINED, ft.Icons.ACCOUNT_TREE),
                 ("executions", ft.Icons.HISTORY_OUTLINED, ft.Icons.HISTORY),
@@ -714,6 +771,7 @@ class DroidrunApp:
         main_nav_items = [
             ("dashboard", "Dashboard", ft.Icons.DASHBOARD_OUTLINED, ft.Icons.DASHBOARD),
             ("phone_viewer", "Phone Viewer", ft.Icons.SMARTPHONE_OUTLINED, ft.Icons.SMARTPHONE),
+            ("file_manager", "Files", ft.Icons.FOLDER_OUTLINED, ft.Icons.FOLDER),
             ("agent_runner", "Agent Runner", ft.Icons.SMART_TOY_OUTLINED, ft.Icons.SMART_TOY),
             ("workflows", "Workflows", ft.Icons.ACCOUNT_TREE_OUTLINED, ft.Icons.ACCOUNT_TREE),
             ("executions", "History", ft.Icons.HISTORY_OUTLINED, ft.Icons.HISTORY),
@@ -1142,49 +1200,99 @@ class DroidrunApp:
         print(f"[DEBUG] Changing view from {self.current_view} to {key}")
         
         # Start async navigation with loading effect
-        self.page.run_task(self._navigate_with_loading, key)
+        async def navigate():
+            await self._navigate_with_loading(key)
+        self.page.run_task(navigate)
 
     async def _navigate_with_loading(self, key: str):
-        """Navigate to view with smooth loading animation."""
+        """Navigate to view with premium loading animation."""
         import asyncio
         colors = get_colors()
         
-        # Create loading overlay
-        loading_overlay = ft.Container(
+        # Premium loading overlay with glassmorphism effect
+        loading_content = ft.Container(
             content=ft.Column(
                 [
-                    ft.ProgressRing(
-                        width=32,
-                        height=32,
-                        stroke_width=3,
-                        color=colors["primary"],
+                    # Spinner with glow effect
+                    ft.Container(
+                        content=ft.Stack(
+                            [
+                                # Glow background
+                                ft.Container(
+                                    width=56,
+                                    height=56,
+                                    border_radius=28,
+                                    bgcolor=f"{colors['primary']}20",
+                                    blur=ft.Blur(10, 10),
+                                ),
+                                # Main spinner
+                                ft.Container(
+                                    content=ft.ProgressRing(
+                                        width=40,
+                                        height=40,
+                                        stroke_width=3,
+                                        color=colors["primary"],
+                                    ),
+                                    width=56,
+                                    height=56,
+                                    alignment=ft.Alignment(0, 0),
+                                ),
+                            ],
+                        ),
                     ),
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             ),
-            bgcolor=f"{colors['bg_primary']}E6",  # Semi-transparent
             expand=True,
             alignment=ft.Alignment(0, 0),
-            animate_opacity=ft.Animation(150, ft.AnimationCurve.EASE_OUT),
         )
         
-        # Fade out current content
-        self.content_container.opacity = 0.3
+        # Wrap current content with loading overlay using Stack
+        original_content = self.content_container.content
+        
+        # Create overlay with blur backdrop
+        loading_overlay = ft.Stack(
+            [
+                # Dimmed content
+                ft.Container(
+                    content=original_content,
+                    opacity=0.4,
+                    expand=True,
+                ),
+                # Loading indicator centered
+                ft.Container(
+                    content=loading_content,
+                    expand=True,
+                ),
+            ],
+            expand=True,
+        )
+        
+        # Show loading state
+        self.content_container.content = loading_overlay
         self.content_container.update()
         
-        # Brief delay for visual feedback
-        await asyncio.sleep(0.1)
+        # Small delay for smooth visual transition
+        await asyncio.sleep(0.15)
         
         # Update view
         self.current_view = key
         
-        # Rebuild UI
+        # Rebuild UI with new view
         self._build_app()
         
-        # Fade in new content
-        self.content_container.opacity = 1.0
-        self.content_container.animate_opacity = ft.Animation(200, ft.AnimationCurve.EASE_OUT)
+        # Apply fade-in with subtle slide effect
+        self.content_container.opacity = 0
+        self.content_container.offset = ft.Offset(0, 0.02)
+        self.page.update()
+        
+        await asyncio.sleep(0.02)
+        
+        self.content_container.opacity = 1
+        self.content_container.offset = ft.Offset(0, 0)
+        self.content_container.animate_opacity = ft.Animation(250, ft.AnimationCurve.EASE_OUT)
+        self.content_container.animate_offset = ft.Animation(300, ft.AnimationCurve.EASE_OUT)
         self.content_container.update()
         
         # Load view data
@@ -1486,7 +1594,111 @@ class DroidrunApp:
                 self._build_auth_ui()
             self.page.update()
 
+    # ==================== Soketi WebSocket Methods ====================
+
+    def _setup_soketi_subscriptions(self):
+        """Setup Soketi channel subscriptions after authentication."""
+        if not self._soketi_service:
+            print("[Soketi] Service not initialized, skipping subscriptions")
+            return
+        
+        try:
+            # Subscribe to device updates (public channel)
+            self._soketi_service.subscribe_channel(
+                "device-updates",
+                event_handlers={
+                    "device.connected": self._on_device_connected,
+                    "device.disconnected": self._on_device_disconnected,
+                    "device.status": self._on_device_status_update,
+                }
+            )
+            
+            # Subscribe to user-specific notifications (private channel)
+            if self._current_user_id:
+                user_channel = f"private-controller-{self._current_user_id}"
+                self._soketi_service.subscribe_channel(
+                    user_channel,
+                    event_handlers={
+                        "notification.created": self._on_notification_received,
+                        "workflow.progress": self._on_workflow_progress,
+                    }
+                )
+            
+            print(f"[Soketi] Subscriptions setup complete")
+        except Exception as e:
+            print(f"[Soketi] Error setting up subscriptions: {e}")
+    
+    def _on_device_connected(self, data):
+        """Handle device connected event from Soketi."""
+        print(f"[Soketi] Device connected: {data}")
+        device_id = data.get("device_id", "unknown")
+        self.toast.success(f"Device {device_id} connected!")
+        if hasattr(self, "views") and "dashboard" in self.views:
+            self.page.run_task(self._refresh_devices_view)
+    
+    def _on_device_disconnected(self, data):
+        """Handle device disconnected event from Soketi."""
+        print(f"[Soketi] Device disconnected: {data}")
+        device_id = data.get("device_id", "unknown")
+        self.toast.warning(f"Device {device_id} disconnected")
+        if hasattr(self, "views") and "dashboard" in self.views:
+            self.page.run_task(self._refresh_devices_view)
+    
+    def _on_device_status_update(self, data):
+        """Handle device status update event from Soketi."""
+        print(f"[Soketi] Device status update: {data}")
+        if hasattr(self, "views") and "dashboard" in self.views:
+            self.page.run_task(self._refresh_devices_view)
+    
+    def _on_notification_received(self, data):
+        """Handle new notification event from Soketi."""
+        print(f"[Soketi] Notification received: {data}")
+        self._unread_notifications_count += 1
+        title = data.get("title", "New notification")
+        notif_type = data.get("type", "info")
+        if notif_type == "success":
+            self.toast.success(title)
+        elif notif_type == "warning":
+            self.toast.warning(title)
+        elif notif_type == "error":
+            self.toast.error(title)
+        else:
+            self.toast.info(title)
+        self.page.update()
+    
+    def _on_workflow_progress(self, data):
+        """Handle workflow execution progress event from Soketi."""
+        print(f"[Soketi] Workflow progress: {data}")
+        workflow_id = data.get("workflow_id")
+        status = data.get("status")
+        progress = data.get("progress", 0)
+        if hasattr(self, "views") and "workflows" in self.views:
+            self.page.run_task(self._update_workflow_status, workflow_id, status, progress)
+    
+    async def _refresh_devices_view(self):
+        """Refresh the devices view with latest data."""
+        try:
+            if hasattr(self, "views") and "dashboard" in self.views:
+                dashboard = self.views["dashboard"]
+                if hasattr(dashboard, "refresh_devices"):
+                    await dashboard.refresh_devices()
+                    self.page.update()
+        except Exception as e:
+            print(f"[Soketi] Error refreshing devices view: {e}")
+    
+    async def _update_workflow_status(self, workflow_id, status, progress):
+        """Update workflow execution status in real-time."""
+        try:
+            if hasattr(self, "views") and "workflows" in self.views:
+                workflows_view = self.views["workflows"]
+                if hasattr(workflows_view, "update_workflow_status"):
+                    await workflows_view.update_workflow_status(workflow_id, status, progress)
+                    self.page.update()
+        except Exception as e:
+            print(f"[Soketi] Error updating workflow status: {e}")
+
     async def _initialize(self):
+
         """Initialize backend and load initial data."""
         try:
             await self.backend.initialize()

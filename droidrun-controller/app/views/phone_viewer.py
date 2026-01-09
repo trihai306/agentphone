@@ -5,6 +5,9 @@ import asyncio
 from typing import List, Dict, Set
 from ..theme import get_colors, RADIUS, SPACING, SHADOWS, get_shadow, ANIMATION, get_colors
 from ..components.device_card import DeviceCard, DeviceGridToolbar
+from ..components.device_manager_panel import DeviceManagerPanel
+from ..components.live_phone_panel import LivePhonePanel
+from ..services.ws_scrcpy_service import ws_scrcpy_server, DeviceStreamCard
 from ..components.empty_state import EmptyState
 from ..components.search_filter import SearchFilter, SearchFilterCompact
 from ..components.view_toggle import ViewToggle, ViewToggleCompact
@@ -613,11 +616,22 @@ class PhoneViewerView(ft.Container):
 
     def _build_icon_action_button(self, icon: str, color: str, tooltip: str, on_click):
         """Build an icon-only action button for mobile."""
+        # Wrapper for async callbacks
+        def handle_click(e):
+            import inspect
+            if inspect.iscoroutinefunction(on_click):
+                async def run_async():
+                    await on_click(e)
+                if self.page:
+                    self.page.run_task(run_async)
+            else:
+                on_click(e)
+        
         return ft.Container(
             content=ft.Icon(icon, size=20, color=color),
             padding=SPACING["sm"],
             border_radius=RADIUS["md"],
-            on_click=on_click,
+            on_click=handle_click,
             on_hover=self._on_button_hover,
             tooltip=tooltip,
             animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
@@ -627,6 +641,17 @@ class PhoneViewerView(ft.Container):
         """Build a polished toolbar action button with dropdown indicator."""
         text_color = COLORS["text_inverse"] if primary else COLORS["text_secondary"]
         bg_color = COLORS["primary"] if primary else "transparent"
+        
+        # Create wrapper for async callbacks
+        def handle_click(e):
+            import inspect
+            if inspect.iscoroutinefunction(on_click):
+                async def run_async():
+                    await on_click(e)
+                if self.page:
+                    self.page.run_task(run_async)
+            else:
+                on_click(e)
 
         return ft.Container(
             content=ft.Row(
@@ -652,13 +677,24 @@ class PhoneViewerView(ft.Container):
             border_radius=RADIUS["md"],
             bgcolor=bg_color,
             border=None if primary else ft.border.all(1, COLORS["border"]),
-            on_click=on_click,
+            on_click=handle_click,
             on_hover=self._on_primary_hover if primary else self._on_button_hover,
             animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
         )
 
     def _build_refresh_button(self):
         """Build an enhanced refresh button."""
+        # Wrapper for async callback
+        def handle_click(e):
+            import inspect
+            if inspect.iscoroutinefunction(self._on_refresh):
+                async def run_async():
+                    await self._on_refresh(e)
+                if self.page:
+                    self.page.run_task(run_async)
+            else:
+                self._on_refresh(e)
+        
         return ft.Container(
             content=ft.Row(
                 [
@@ -675,7 +711,7 @@ class PhoneViewerView(ft.Container):
             padding=ft.padding.symmetric(horizontal=12, vertical=8),
             border_radius=RADIUS["md"],
             border=ft.border.all(1, COLORS["border"]),
-            on_click=self._on_refresh,
+            on_click=handle_click,
             on_hover=self._on_button_hover,
             tooltip="Refresh devices",
             animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
@@ -782,7 +818,7 @@ class PhoneViewerView(ft.Container):
         )
 
     def _build_device_grid(self):
-        """Build the device grid section with enhanced styling."""
+        """Build the device grid section with large professional device panels."""
         if self.loading:
             return self._build_loading()
 
@@ -796,31 +832,41 @@ class PhoneViewerView(ft.Container):
         if not filtered_devices:
             return self._build_no_results_state()
 
-        # Build device cards with enhanced phone frames
+        colors = get_colors()
+
+        # Build large device panels - professional cloud console style
         cards = []
         for idx, device in enumerate(filtered_devices):
             serial = device.get("adb_serial", str(idx))
-            # Use original device index for device_id to maintain consistency
             original_idx = self.devices.index(device) if device in self.devices else idx
-            cards.append(
-                self._build_phone_frame(
-                    device_id=str(400 + original_idx),
-                    device=device,
-                    serial=serial,
-                    idx=original_idx,
-                )
+            
+            # Use DeviceManagerPanel for large phone view with scrcpy button
+            panel = DeviceManagerPanel(
+                device_id=str(400 + original_idx),
+                device_name=device.get("name", serial),
+                device_model=device.get("model", device.get("device", "Unknown")),
+                status=device.get("status", "offline"),
+                android_version=device.get("version", "?"),
+                screenshot_url=device.get("screenshot_url"),
+                battery_level=device.get("battery_level"),
+                ram_usage=device.get("ram_usage"),
+                selected=serial in self.selected_devices,
+                on_click=lambda s=serial: self._on_device_click(s),
+                on_open_scrcpy=lambda s=serial: self._open_scrcpy(s),
+                on_screenshot=lambda s=serial: self._take_screenshot(s),
+                on_restart=lambda s=serial: self._restart_device(s),
             )
+            cards.append(panel)
 
-        # Wrap in scrollable grid with modern padding
+        # Wrap in scrollable horizontal grid
         return ft.Container(
             content=ft.Column(
                 [
                     ft.Container(
                         content=ft.Row(
                             cards,
-                            wrap=True,
-                            spacing=SPACING["xl"],
-                            run_spacing=SPACING["xl"],
+                            scroll=ft.ScrollMode.AUTO,
+                            spacing=SPACING["xxl"],
                         ),
                         padding=ft.padding.all(SPACING["xxl"]),
                     ),
@@ -831,6 +877,32 @@ class PhoneViewerView(ft.Container):
             expand=True,
             bgcolor=COLORS["bg_primary"],
         )
+    
+    def _open_ws_scrcpy_browser(self):
+        """Open ws-scrcpy in browser."""
+        import webbrowser
+        webbrowser.open(ws_scrcpy_server.web_url)
+    
+    def _start_ws_scrcpy_server(self):
+        """Start ws-scrcpy server using bundled setup."""
+        from ..services.bundled_setup import bundled_setup
+        
+        # Check if ws-scrcpy is installed
+        if not bundled_setup.has_ws_scrcpy():
+            if self.toast:
+                self.toast.show("ws-scrcpy not installed. Please restart app to run setup.", "error")
+            return
+        
+        # Start the server
+        proc = bundled_setup.start_ws_scrcpy_server(port=8000)
+        if proc:
+            if self.toast:
+                self.toast.show("Video streaming server started!", "success")
+            # Rebuild the grid to show updated status
+            self._refresh_devices()
+        else:
+            if self.toast:
+                self.toast.show("Failed to start video server", "error")
 
     def _build_device_list(self):
         """Build the device list view with row layout."""

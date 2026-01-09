@@ -29,6 +29,9 @@ aiohttp>=3.9.0
 # UI
 flet>=0.28.0
 
+# WebSocket / Real-time
+pysher>=1.0.8  # Pusher/Soketi WebSocket client
+
 # Development
 pytest>=9.0.0
 pytest-asyncio>=1.3.0

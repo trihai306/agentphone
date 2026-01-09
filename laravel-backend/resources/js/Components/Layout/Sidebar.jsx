@@ -9,9 +9,8 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
 
     return (
         <aside
-            className={`fixed top-0 left-0 z-50 h-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-gray-200/60 dark:border-gray-800/60 transform transition-all duration-300 lg:translate-x-0 shadow-xl shadow-gray-900/5 dark:shadow-black/20 ${
-                collapsed ? 'w-[72px]' : 'w-64'
-            } ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+            className={`fixed top-0 left-0 z-50 h-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-gray-200/60 dark:border-gray-800/60 transform transition-all duration-300 lg:translate-x-0 shadow-xl shadow-gray-900/5 dark:shadow-black/20 ${collapsed ? 'w-[72px]' : 'w-64'
+                } ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
         >
             <div className="flex flex-col h-full">
                 {/* Logo Section */}
@@ -95,7 +94,10 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
                         <NavLink href="/flows" icon="flow" active={url?.startsWith('/flows')} collapsed={collapsed}>
                             Flow Builder
                         </NavLink>
-                        <NavLink href="/topup" icon="wallet" active={url?.startsWith('/topup')} collapsed={collapsed}>
+                        <NavLink href="/media" icon="media" active={url?.startsWith('/media')} collapsed={collapsed}>
+                            Thư viện Media
+                        </NavLink>
+                        <NavLink href="/topup" icon="wallet" active={url?.startsWith('/topup') && url !== '/topup/history'} collapsed={collapsed}>
                             Nạp tiền
                         </NavLink>
                         <NavLink href="/topup/history" icon="history" active={url === '/topup/history'} collapsed={collapsed}>

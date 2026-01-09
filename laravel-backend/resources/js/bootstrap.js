@@ -14,17 +14,25 @@ if (csrfToken) {
 // Make Pusher available globally for Laravel Echo
 window.Pusher = Pusher;
 
+// Enable Pusher logging for debugging (disable in production)
+Pusher.logToConsole = import.meta.env.DEV;
+
+// Determine if we should use TLS based on scheme
+const pusherScheme = import.meta.env.VITE_PUSHER_SCHEME || 'https';
+const useTLS = pusherScheme === 'https';
+
 // Initialize Laravel Echo with Soketi configuration
 window.Echo = new Echo({
     broadcaster: 'pusher',
     key: import.meta.env.VITE_PUSHER_APP_KEY || 'app-key',
-    wsHost: import.meta.env.VITE_PUSHER_HOST || window.location.hostname,
+    wsHost: import.meta.env.VITE_PUSHER_HOST || 'laravel-backend.test',
     wsPort: import.meta.env.VITE_PUSHER_PORT || 6001,
     wssPort: import.meta.env.VITE_PUSHER_PORT || 6001,
     cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER || 'mt1',
-    forceTLS: (import.meta.env.VITE_PUSHER_SCHEME || 'http') === 'https',
+    forceTLS: useTLS,
+    encrypted: useTLS,
     disableStats: true,
-    enabledTransports: ['ws', 'wss'],
+    enabledTransports: useTLS ? ['wss'] : ['ws'],
     authEndpoint: '/broadcasting/auth',
     auth: {
         headers: {
@@ -32,3 +40,15 @@ window.Echo = new Echo({
         },
     },
 });
+
+// Log connection status
+window.Echo.connector.pusher.connection.bind('connected', () => {
+    console.log('✅ Soketi WebSocket connected!');
+});
+window.Echo.connector.pusher.connection.bind('error', (err) => {
+    console.error('❌ Soketi WebSocket error:', err);
+});
+window.Echo.connector.pusher.connection.bind('disconnected', () => {
+    console.warn('⚠️ Soketi WebSocket disconnected');
+});
+

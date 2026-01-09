@@ -82,6 +82,9 @@ class Button(ft.Container):
         self.disabled = disabled
         self.full_width = full_width
         self._on_click = on_click
+        
+        # Initialize size config BEFORE _build_content() is called
+        self._init_size_config()
 
         super().__init__(
             content=self._build_content(),
@@ -91,6 +94,27 @@ class Button(ft.Container):
             animate=ft.Animation(ANIMATION["fast"], ft.AnimationCurve.EASE_OUT),
             **kwargs
         )
+    
+    def _init_size_config(self):
+        """Initialize size configuration."""
+        size_config = {
+            ButtonSize.SMALL: {
+                "padding": ft.Padding(left=12, right=12, top=6, bottom=6),
+                "text_size": 13,
+                "icon_size": 16,
+            },
+            ButtonSize.MEDIUM: {
+                "padding": ft.Padding(left=16, right=16, top=10, bottom=10),
+                "text_size": 14,
+                "icon_size": 18,
+            },
+            ButtonSize.LARGE: {
+                "padding": ft.Padding(left=20, right=20, top=12, bottom=12),
+                "text_size": 16,
+                "icon_size": 20,
+            },
+        }
+        self._size_config = size_config[self.button_size]
 
     def _get_container_style(self):
         """Get container styling based on variant and size."""
@@ -244,9 +268,19 @@ class Button(ft.Container):
         )
 
     def _handle_click(self, e):
-        """Handle button click."""
+        """Handle button click - supports both sync and async callbacks."""
         if self._on_click:
-            self._on_click(e)
+            import inspect
+            import asyncio
+            if inspect.iscoroutinefunction(self._on_click):
+                # Async callback - create wrapper coroutine
+                async def run_async():
+                    await self._on_click(e)
+                if self.page:
+                    self.page.run_task(run_async)
+            else:
+                # Sync callback
+                self._on_click(e)
 
     def _handle_hover(self, e):
         """Handle hover state changes."""

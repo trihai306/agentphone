@@ -27,6 +27,12 @@ class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
+    protected static ?string $navigationLabel = 'Người dùng';
+
+    protected static ?string $modelLabel = 'Người dùng';
+
+    protected static ?string $pluralModelLabel = 'Người dùng';
+
     protected static ?string $navigationGroup = 'User Management';
 
     protected static ?int $navigationSort = 1;
@@ -37,14 +43,16 @@ class UserResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('User Information')
-                    ->description('Basic user account information')
+                Forms\Components\Section::make('Thông tin người dùng')
+                    ->description('Thông tin tài khoản cơ bản')
                     ->schema([
                         Forms\Components\TextInput::make('name')
+                            ->label('Họ tên')
                             ->required()
                             ->maxLength(255),
 
                         Forms\Components\TextInput::make('email')
+                            ->label('Email')
                             ->email()
                             ->required()
                             ->unique(ignoreRecord: true)
@@ -52,43 +60,44 @@ class UserResource extends Resource
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Password')
-                    ->description('Set the user password')
+                Forms\Components\Section::make('Mật khẩu')
+                    ->description('Đặt mật khẩu người dùng')
                     ->schema([
                         Forms\Components\TextInput::make('password')
                             ->password()
-                            ->dehydrateStateUsing(fn (string $state): string => Hash::make($state))
-                            ->dehydrated(fn (?string $state): bool => filled($state))
-                            ->required(fn (string $operation): bool => $operation === 'create')
+                            ->dehydrateStateUsing(fn(string $state): string => Hash::make($state))
+                            ->dehydrated(fn(?string $state): bool => filled($state))
+                            ->required(fn(string $operation): bool => $operation === 'create')
                             ->rule(Password::default())
                             ->same('password_confirmation')
-                            ->label(fn (string $operation): string => $operation === 'create' ? 'Password' : 'New Password')
-                            ->helperText(fn (string $operation): ?string => $operation === 'edit' ? 'Leave empty to keep the current password.' : null),
+                            ->label(fn(string $operation): string => $operation === 'create' ? 'Mật khẩu' : 'Mật khẩu mới')
+                            ->helperText(fn(string $operation): ?string => $operation === 'edit' ? 'Để trống nếu không muốn thay đổi mật khẩu.' : null),
 
                         Forms\Components\TextInput::make('password_confirmation')
                             ->password()
                             ->dehydrated(false)
-                            ->required(fn (string $operation): bool => $operation === 'create')
-                            ->label('Confirm Password'),
+                            ->required(fn(string $operation): bool => $operation === 'create')
+                            ->label('Xác nhận mật khẩu'),
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Roles & Status')
-                    ->description('Assign roles and manage workflow state')
+                Forms\Components\Section::make('Vai trò & Trạng thái')
+                    ->description('Phân quyền và quản lý trạng thái workflow')
                     ->schema([
                         Forms\Components\Select::make('roles')
+                            ->label('Vai trò')
                             ->relationship('roles', 'name')
                             ->multiple()
                             ->preload()
                             ->searchable(),
 
                         Forms\Components\Select::make('workflow_state')
-                            ->label('Workflow State')
-                            ->options(fn () => self::getAvailableWorkflowStates())
+                            ->label('Trạng thái')
+                            ->options(fn() => self::getAvailableWorkflowStates())
                             ->default(Pending::class)
                             ->required()
                             ->native(false)
-                            ->helperText('Select the user workflow state'),
+                            ->helperText('Chọn trạng thái workflow của người dùng'),
                     ])
                     ->columns(2),
             ]);
@@ -120,8 +129,8 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('workflow_state')
                     ->label('Status')
                     ->badge()
-                    ->formatStateUsing(fn ($state): string => $state instanceof UserWorkflowState ? $state->label() : (string) $state)
-                    ->color(fn ($state): string => $state instanceof UserWorkflowState ? $state->color() : 'gray')
+                    ->formatStateUsing(fn($state): string => $state instanceof UserWorkflowState ? $state->label() : (string) $state)
+                    ->color(fn($state): string => $state instanceof UserWorkflowState ? $state->color() : 'gray')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('credits_balance')
@@ -139,7 +148,7 @@ class UserResource extends Resource
                                 $q->where('status', 'active');
                             }
                         ], 'credits_remaining')
-                        ->orderBy('credits_total', $direction);
+                            ->orderBy('credits_total', $direction);
                     }),
 
                 Tables\Columns\TextColumn::make('wallet_balance')
@@ -179,8 +188,8 @@ class UserResource extends Resource
                     ->trueLabel('Verified')
                     ->falseLabel('Unverified')
                     ->queries(
-                        true: fn ($query) => $query->whereNotNull('email_verified_at'),
-                        false: fn ($query) => $query->whereNull('email_verified_at'),
+                        true: fn($query) => $query->whereNotNull('email_verified_at'),
+                        false: fn($query) => $query->whereNull('email_verified_at'),
                     ),
 
                 Tables\Filters\SelectFilter::make('workflow_state')
@@ -203,7 +212,7 @@ class UserResource extends Resource
                         ->form([
                             Forms\Components\Select::make('workflow_state')
                                 ->label('New Status')
-                                ->options(fn (User $record): array => self::getValidTransitions($record))
+                                ->options(fn(User $record): array => self::getValidTransitions($record))
                                 ->required()
                                 ->native(false),
                         ])
@@ -225,7 +234,7 @@ class UserResource extends Resource
                                     ->send();
                             }
                         })
-                        ->visible(fn (User $record): bool => !empty(self::getValidTransitions($record))),
+                        ->visible(fn(User $record): bool => !empty(self::getValidTransitions($record))),
 
                     Tables\Actions\Action::make('resetPassword')
                         ->label('Reset Password')
@@ -310,7 +319,7 @@ class UserResource extends Resource
                             $adminRole = 'admin';
                             $remainingAdmins = User::role($adminRole)->whereNotIn('id', $idsToDelete)->count();
 
-                            if ($remainingAdmins === 0 && $records->contains(fn (User $user) => $user->hasRole($adminRole))) {
+                            if ($remainingAdmins === 0 && $records->contains(fn(User $user) => $user->hasRole($adminRole))) {
                                 Notification::make()
                                     ->title('Cannot delete all admin users')
                                     ->body('This action would remove all admin users from the system.')

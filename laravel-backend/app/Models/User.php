@@ -27,6 +27,7 @@ class User extends Authenticatable implements FilamentUser
         'email',
         'password',
         'workflow_state',
+        'storage_plan_id',
     ];
 
     /**
@@ -88,5 +89,37 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasMany(UserServicePackage::class)
             ->where('status', UserServicePackage::STATUS_ACTIVE);
+    }
+
+    /**
+     * Get the user's storage plan
+     */
+    public function storagePlan()
+    {
+        return $this->belongsTo(MediaStoragePlan::class, 'storage_plan_id');
+    }
+
+    /**
+     * Get user's media files
+     */
+    public function mediaFiles()
+    {
+        return $this->hasMany(UserMedia::class);
+    }
+
+    /**
+     * Get or create default storage plan for user
+     */
+    public function getOrCreateStoragePlan()
+    {
+        if (!$this->storage_plan_id) {
+            $defaultPlan = MediaStoragePlan::getDefault();
+            if ($defaultPlan) {
+                $this->update(['storage_plan_id' => $defaultPlan->id]);
+                return $defaultPlan;
+            }
+        }
+
+        return $this->storagePlan;
     }
 }

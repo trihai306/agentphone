@@ -10,6 +10,8 @@ from .register import RegisterView
 from .login import LoginView
 from .packages import PackagesView
 from .interaction_history import InteractionHistoryView
+from .media_library import MediaLibraryView
+from .file_manager import FileManagerView
 
 __all__ = [
     "DevicesView",
@@ -22,4 +24,6 @@ __all__ = [
     "LoginView",
     "PackagesView",
     "InteractionHistoryView",
+    "MediaLibraryView",
+    "FileManagerView",
 ]

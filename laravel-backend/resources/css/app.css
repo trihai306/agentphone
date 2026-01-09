@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* ================================================
-   ReactFlow Professional Dark Theme
+   ReactFlow Theme-Aware Styles
    ================================================ */
 
 .react-flow {
@@ -42,6 +42,7 @@
     from {
         stroke-dashoffset: 10;
     }
+
     to {
         stroke-dashoffset: 0;
     }
@@ -50,42 +51,69 @@
 /* Handle Styling */
 .react-flow__handle {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none !important;
+    outline: none !important;
+}
+
+.react-flow__handle.react-flow__handle-top,
+.react-flow__handle.react-flow__handle-bottom {
+    border: none !important;
+    outline: none !important;
+    box-shadow: 0 0 6px currentColor;
 }
 
 .react-flow__handle:hover {
-    transform: scale(1.4);
-    filter: brightness(1.2);
-}
-
-.react-flow__handle.connecting {
-    animation: handlePulse 1s ease-in-out infinite;
+    transform: scale(1.3);
+    filter: brightness(1.1);
 }
 
 @keyframes handlePulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1);
         box-shadow: 0 0 0 0 currentColor;
     }
+
     50% {
         transform: scale(1.2);
-        box-shadow: 0 0 0 6px transparent;
+        box-shadow: 0 0 0 4px transparent;
     }
 }
 
-/* MiniMap Styling */
-.react-flow__minimap {
+/* MiniMap - Dark Mode */
+.dark .react-flow__minimap {
     background-color: #0a0a0a !important;
     border-radius: 12px !important;
     border: 1px solid #1e1e1e !important;
     overflow: hidden;
 }
 
-.react-flow__minimap-mask {
+/* MiniMap - Light Mode */
+:not(.dark) .react-flow__minimap {
+    background-color: #f9fafb !important;
+    border-radius: 12px !important;
+    border: 1px solid #e5e7eb !important;
+    overflow: hidden;
+}
+
+.dark .react-flow__minimap-mask {
     fill: rgba(99, 102, 241, 0.08);
 }
 
-.react-flow__minimap-node {
+:not(.dark) .react-flow__minimap-mask {
+    fill: rgba(99, 102, 241, 0.1);
+}
+
+.dark .react-flow__minimap-node {
     fill: #3a3a3a;
+    stroke: none;
+    rx: 4;
+    ry: 4;
+}
+
+:not(.dark) .react-flow__minimap-node {
+    fill: #d1d5db;
     stroke: none;
     rx: 4;
     ry: 4;
@@ -127,28 +155,54 @@
    Custom Scrollbar for Flow Editor
    ================================================ */
 
-.flow-editor-sidebar {
+/* Dark Mode Scrollbar */
+.dark .flow-editor-sidebar {
     scrollbar-width: thin;
     scrollbar-color: #2a2a2a #0f0f0f;
 }
 
-.flow-editor-sidebar::-webkit-scrollbar {
+.dark .flow-editor-sidebar::-webkit-scrollbar {
     width: 6px;
 }
 
-.flow-editor-sidebar::-webkit-scrollbar-track {
+.dark .flow-editor-sidebar::-webkit-scrollbar-track {
     background: #0f0f0f;
     border-radius: 3px;
 }
 
-.flow-editor-sidebar::-webkit-scrollbar-thumb {
+.dark .flow-editor-sidebar::-webkit-scrollbar-thumb {
     background: #2a2a2a;
     border-radius: 3px;
     transition: background 0.2s ease;
 }
 
-.flow-editor-sidebar::-webkit-scrollbar-thumb:hover {
+.dark .flow-editor-sidebar::-webkit-scrollbar-thumb:hover {
     background: #3a3a3a;
+}
+
+/* Light Mode Scrollbar */
+:not(.dark) .flow-editor-sidebar {
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db #f9fafb;
+}
+
+:not(.dark) .flow-editor-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+:not(.dark) .flow-editor-sidebar::-webkit-scrollbar-track {
+    background: #f9fafb;
+    border-radius: 3px;
+}
+
+:not(.dark) .flow-editor-sidebar::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+    transition: background 0.2s ease;
+}
+
+:not(.dark) .flow-editor-sidebar::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
 }
 
 /* ================================================
@@ -173,4 +227,390 @@
 /* Canvas drop zone feedback */
 .react-flow__renderer {
     transition: background-color 0.2s ease;
+}
+
+/* ================================================
+   Theme Transition
+   ================================================ */
+.transition-colors {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 200ms;
+}
+
+/* ================================================
+   Execution Animation Effects
+   ================================================ */
+
+/* Node pulse animation for running state */
+@keyframes nodePulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 0 8px rgba(99, 102, 241, 0);
+    }
+}
+
+.animate-pulse {
+    animation: nodePulse 1.5s ease-in-out infinite;
+}
+
+/* Node shake animation for error state */
+@keyframes nodeShake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: translateX(-4px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: translateX(4px);
+    }
+}
+
+.animate-shake {
+    animation: nodeShake 0.5s ease-in-out;
+}
+
+/* Success pop animation */
+@keyframes successPop {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.animate-success-pop {
+    animation: successPop 0.3s ease-out;
+}
+
+/* Spinning loader */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* ================================================
+   Progress Bar Styles
+   ================================================ */
+
+.progress-bar {
+    background: linear-gradient(90deg,
+            rgba(99, 102, 241, 0.8) 0%,
+            rgba(139, 92, 246, 0.8) 50%,
+            rgba(99, 102, 241, 0.8) 100%);
+    background-size: 200% 100%;
+    animation: progressShimmer 2s linear infinite;
+}
+
+@keyframes progressShimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* ================================================
+   Execution Log Panel Styles
+   ================================================ */
+
+.execution-log-entry {
+    transition: all 0.2s ease;
+}
+
+.execution-log-entry:hover {
+    background-color: rgba(99, 102, 241, 0.05);
+}
+
+.dark .execution-log-entry:hover {
+    background-color: rgba(99, 102, 241, 0.1);
+}
+
+/* Log entry type colors */
+.log-info {
+    color: #6366f1;
+}
+
+.log-success {
+    color: #10b981;
+}
+
+.log-warning {
+    color: #f59e0b;
+}
+
+.log-error {
+    color: #ef4444;
+}
+
+/* ================================================
+   Flowing Edge Particle Animation
+   ================================================ */
+
+@keyframes flowParticle {
+    0% {
+        offset-distance: 0%;
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        offset-distance: 100%;
+        opacity: 0;
+    }
+}
+
+.flow-particle {
+    offset-path: attr(d path);
+    animation: flowParticle 1.5s linear infinite;
+}
+
+.flow-particle-delayed {
+    animation-delay: 0.5s;
+}
+
+/* ================================================
+   Premium UI Animations for GlassCard & WelcomeBanner
+   ================================================ */
+
+/* Gradient animation for welcome banner */
+@keyframes gradient-x {
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+.animate-gradient-x {
+    background-size: 200% 200%;
+    animation: gradient-x 15s ease infinite;
+}
+
+/* Floating particles animation */
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0px) translateX(0px);
+        opacity: 0.3;
+    }
+
+    25% {
+        transform: translateY(-10px) translateX(5px);
+        opacity: 0.6;
+    }
+
+    50% {
+        transform: translateY(-20px) translateX(-5px);
+        opacity: 0.4;
+    }
+
+    75% {
+        transform: translateY(-10px) translateX(8px);
+        opacity: 0.7;
+    }
+}
+
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+/* Shimmer effect for loading states */
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.animate-shimmer {
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+}
+
+/* Glow pulse effect */
+@keyframes glowPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+    }
+
+    50% {
+        box-shadow: 0 0 40px rgba(99, 102, 241, 0.4);
+    }
+}
+
+.animate-glow-pulse {
+    animation: glowPulse 3s ease-in-out infinite;
+}
+
+/* Scale up on hover */
+.hover-lift {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.3);
+}
+
+/* Glassmorphism utilities */
+.glass-light {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.dark .glass-dark {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Gradient text */
+.gradient-text {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Smooth scrollbar for modern UI */
+.scrollbar-thin {
+    scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+    border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.7);
+}
+
+/* ================================================
+   Media Library Premium Animations
+   ================================================ */
+
+/* Fade in animation for preview modal */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Staggered fade in up for grid items */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Bounce animation for buttons */
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+.animate-bounce-subtle {
+    animation: bounce 2s ease-in-out infinite;
+}
+
+/* Slide down animation */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-down {
+    animation: slideDown 0.3s ease-out;
 }

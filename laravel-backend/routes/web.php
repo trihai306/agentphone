@@ -9,6 +9,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FlowController;
 use App\Http\Controllers\FeaturesController;
+use App\Http\Controllers\MediaController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\PackageController;
@@ -85,4 +86,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/flows/{flow}/save-state', [FlowController::class, 'saveState'])->name('flows.saveState');
     Route::post('/flows/{flow}/duplicate', [FlowController::class, 'duplicate'])->name('flows.duplicate');
     Route::delete('/flows/{flow}', [FlowController::class, 'destroy'])->name('flows.destroy');
+
+    // Media Library Routes
+    Route::resource('media', MediaController::class)->except(['create', 'edit']);
+    Route::post('/media/bulk-delete', [MediaController::class, 'bulkDelete'])->name('media.bulkDelete');
+    Route::post('/media/{medium}/move', [MediaController::class, 'move'])->name('media.move');
+    Route::post('/media/create-folder', [MediaController::class, 'createFolder'])->name('media.createFolder');
 });
+

@@ -41,6 +41,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Device management
     Route::post('/devices', [DeviceController::class, 'store']);
     Route::get('/devices', [DeviceController::class, 'index']);
+    Route::get('/devices/{id}', [DeviceController::class, 'show']);
+    Route::post('/devices/{id}/ping', [DeviceController::class, 'ping']);
     Route::delete('/devices/{id}', [DeviceController::class, 'destroy']);
     Route::post('/devices/logout-all', [DeviceController::class, 'logoutAll']);
 

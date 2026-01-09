@@ -72,10 +72,15 @@ class PackageController extends Controller
             ->where('status', 'active')
             ->first();
 
+        // Get user's wallet balance
+        $wallet = $user->wallets()->where('currency', 'VND')->first();
+        $balance = $wallet ? $wallet->balance : 0;
+
         return Inertia::render('Packages/Subscribe', [
             'package' => $this->formatPackage($package),
             'existingPackage' => $existingPackage ? $this->formatUserPackage($existingPackage) : null,
-            'paymentMethods' => $this->getPaymentMethods(),
+            'paymentMethods' => $this->getPaymentMethods($balance, $package->price),
+            'walletBalance' => $balance,
         ]);
     }
 
@@ -89,20 +94,64 @@ class PackageController extends Controller
         ]);
 
         $user = Auth::user();
+        $paymentMethod = $request->input('payment_method');
 
-        // Tạo user service package
+        // Handle wallet payment
+        if ($paymentMethod === 'wallet') {
+            $wallet = $user->wallets()->where('currency', 'VND')->first();
+
+            if (!$wallet || $wallet->balance < $package->price) {
+                return back()->withErrors([
+                    'payment_method' => 'Số dư ví không đủ. Vui lòng nạp thêm tiền hoặc chọn phương thức thanh toán khác.'
+                ]);
+            }
+
+            // Deduct from wallet
+            $wallet->balance -= $package->price;
+            $wallet->save();
+
+            // Create transaction record
+            \App\Models\Transaction::create([
+                'user_id' => $user->id,
+                'wallet_id' => $wallet->id,
+                'type' => \App\Models\Transaction::TYPE_WITHDRAWAL,
+                'amount' => $package->price,
+                'final_amount' => $package->price,
+                'status' => \App\Models\Transaction::STATUS_COMPLETED,
+                'payment_method' => 'wallet',
+                'user_note' => "Thanh toán gói {$package->name}",
+                'completed_at' => now(),
+            ]);
+
+            // Create and activate user package immediately
+            $userPackage = UserServicePackage::create([
+                'user_id' => $user->id,
+                'service_package_id' => $package->id,
+                'status' => UserServicePackage::STATUS_ACTIVE,
+                'payment_status' => UserServicePackage::PAYMENT_STATUS_PAID,
+                'payment_method' => 'wallet',
+                'price_paid' => $package->price,
+                'currency' => $package->currency ?? 'VND',
+                'credits_remaining' => $package->credits,
+                'activated_at' => now(),
+                'expires_at' => $package->duration_days ? now()->addDays($package->duration_days) : null,
+            ]);
+
+            return redirect()->route('packages.index')
+                ->with('success', 'Đã kích hoạt gói dịch vụ thành công!');
+        }
+
+        // For other payment methods, create pending package
         $userPackage = UserServicePackage::create([
             'user_id' => $user->id,
             'service_package_id' => $package->id,
             'status' => UserServicePackage::STATUS_PENDING,
             'payment_status' => UserServicePackage::PAYMENT_STATUS_PENDING,
-            'payment_method' => $request->input('payment_method'),
+            'payment_method' => $paymentMethod,
             'price_paid' => $package->price,
             'currency' => $package->currency ?? 'VND',
             'credits_remaining' => $package->credits,
         ]);
-
-        // TODO: Redirect to payment gateway based on payment_method
 
         return redirect()->route('packages.payment', $userPackage->id);
     }
@@ -155,10 +204,15 @@ class PackageController extends Controller
             abort(403);
         }
 
+        // Get user's main wallet
+        $wallet = $user->wallets()->where('currency', 'VND')->first();
+        $balance = $wallet ? $wallet->balance : 0;
+
         return Inertia::render('Packages/Payment', [
             'userPackage' => $this->formatUserPackage($userPackage),
-            'paymentMethods' => $this->getPaymentMethods(),
+            'paymentMethods' => $this->getPaymentMethods($balance, $userPackage->price_paid),
             'bankInfo' => $this->getBankInfo(),
+            'walletBalance' => $balance,
         ]);
     }
 
@@ -274,9 +328,17 @@ class PackageController extends Controller
     /**
      * Lấy danh sách phương thức thanh toán
      */
-    private function getPaymentMethods(): array
+    private function getPaymentMethods($walletBalance = 0, $packagePrice = 0): array
     {
-        return [
+        $methods = [
+            [
+                'id' => 'wallet',
+                'name' => 'Số dư ví',
+                'icon' => 'wallet',
+                'description' => 'Thanh toán bằng số dư trong ví',
+                'balance' => $walletBalance,
+                'sufficient' => $walletBalance >= $packagePrice,
+            ],
             [
                 'id' => 'bank_transfer',
                 'name' => 'Chuyển khoản ngân hàng',
@@ -302,5 +364,7 @@ class PackageController extends Controller
                 'description' => 'Thanh toán qua ví ZaloPay',
             ],
         ];
+
+        return $methods;
     }
 }

@@ -22,24 +22,13 @@ export default function Index({ devices }) {
         <AppLayout title="My Devices">
             <div className="space-y-6">
                 {/* Header Section */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                            Device Management
-                        </h2>
-                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                            Manage your connected devices
-                        </p>
-                    </div>
-                    <Link
-                        href="/devices/create"
-                        className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
-                    >
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        Add Device
-                    </Link>
+                <div>
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                        Device Management
+                    </h2>
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        Devices are automatically added when your Portal app connects
+                    </p>
                 </div>
 
                 {/* Search and View Toggle */}
@@ -66,11 +55,10 @@ export default function Index({ devices }) {
                     <div className="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-1">
                         <button
                             onClick={() => setViewMode('grid')}
-                            className={`px-3 py-1.5 rounded ${
-                                viewMode === 'grid'
-                                    ? 'bg-blue-500 text-white'
-                                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                            }`}
+                            className={`px-3 py-1.5 rounded ${viewMode === 'grid'
+                                ? 'bg-blue-500 text-white'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                }`}
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -78,11 +66,10 @@ export default function Index({ devices }) {
                         </button>
                         <button
                             onClick={() => setViewMode('list')}
-                            className={`px-3 py-1.5 rounded ${
-                                viewMode === 'list'
-                                    ? 'bg-blue-500 text-white'
-                                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                            }`}
+                            className={`px-3 py-1.5 rounded ${viewMode === 'list'
+                                ? 'bg-blue-500 text-white'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                }`}
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -99,21 +86,10 @@ export default function Index({ devices }) {
                         </svg>
                         <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No devices found</h3>
                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            {searchQuery ? 'Try a different search term' : 'Get started by adding a new device'}
+                            {searchQuery
+                                ? 'Try a different search term'
+                                : 'Devices will appear here automatically when your Portal app connects'}
                         </p>
-                        {!searchQuery && (
-                            <div className="mt-6">
-                                <Link
-                                    href="/devices/create"
-                                    className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg"
-                                >
-                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                    </svg>
-                                    Add Device
-                                </Link>
-                            </div>
-                        )}
                     </div>
                 ) : viewMode === 'grid' ? (
                     <GridView devices={filteredDevices} onDelete={handleDelete} />
@@ -129,13 +105,12 @@ export default function Index({ devices }) {
                                 key={index}
                                 href={link.url || '#'}
                                 disabled={!link.url}
-                                className={`px-3 py-2 text-sm font-medium rounded-lg ${
-                                    link.active
-                                        ? 'bg-blue-600 text-white'
-                                        : link.url
+                                className={`px-3 py-2 text-sm font-medium rounded-lg ${link.active
+                                    ? 'bg-blue-600 text-white'
+                                    : link.url
                                         ? 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
                                         : 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'
-                                }`}
+                                    }`}
                                 dangerouslySetInnerHTML={{ __html: link.label }}
                             />
                         ))}
@@ -159,20 +134,18 @@ function GridView({ devices, onDelete }) {
                     <div className="p-6 pb-4">
                         <div className="flex items-start justify-between">
                             <div className="flex items-center space-x-3">
-                                <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                                    device.status === 'active'
-                                        ? 'bg-green-100 dark:bg-green-900/20'
-                                        : device.status === 'inactive'
+                                <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${device.status === 'active'
+                                    ? 'bg-green-100 dark:bg-green-900/20'
+                                    : device.status === 'inactive'
                                         ? 'bg-gray-100 dark:bg-gray-700'
                                         : 'bg-yellow-100 dark:bg-yellow-900/20'
-                                }`}>
-                                    <svg className={`w-6 h-6 ${
-                                        device.status === 'active'
-                                            ? 'text-green-600 dark:text-green-400'
-                                            : device.status === 'inactive'
+                                    }`}>
+                                    <svg className={`w-6 h-6 ${device.status === 'active'
+                                        ? 'text-green-600 dark:text-green-400'
+                                        : device.status === 'inactive'
                                             ? 'text-gray-500'
                                             : 'text-yellow-600 dark:text-yellow-400'
-                                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                     </svg>
                                 </div>
@@ -180,13 +153,12 @@ function GridView({ devices, onDelete }) {
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                                         {device.name || 'Unnamed Device'}
                                     </h3>
-                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                                        device.status === 'active'
-                                            ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
-                                            : device.status === 'inactive'
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${device.status === 'active'
+                                        ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
+                                        : device.status === 'inactive'
                                             ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-400'
                                             : 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400'
-                                    }`}>
+                                        }`}>
                                         {device.status}
                                     </span>
                                 </div>
@@ -282,20 +254,18 @@ function ListView({ devices, onDelete }) {
                             <tr key={device.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center">
-                                        <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
-                                            device.status === 'active'
-                                                ? 'bg-green-100 dark:bg-green-900/20'
-                                                : device.status === 'inactive'
+                                        <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${device.status === 'active'
+                                            ? 'bg-green-100 dark:bg-green-900/20'
+                                            : device.status === 'inactive'
                                                 ? 'bg-gray-100 dark:bg-gray-700'
                                                 : 'bg-yellow-100 dark:bg-yellow-900/20'
-                                        }`}>
-                                            <svg className={`w-5 h-5 ${
-                                                device.status === 'active'
-                                                    ? 'text-green-600 dark:text-green-400'
-                                                    : device.status === 'inactive'
+                                            }`}>
+                                            <svg className={`w-5 h-5 ${device.status === 'active'
+                                                ? 'text-green-600 dark:text-green-400'
+                                                : device.status === 'inactive'
                                                     ? 'text-gray-500'
                                                     : 'text-yellow-600 dark:text-yellow-400'
-                                            }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                             </svg>
                                         </div>
@@ -316,13 +286,12 @@ function ListView({ devices, onDelete }) {
                                     {device.android_version || 'N/A'}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                        device.status === 'active'
-                                            ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
-                                            : device.status === 'inactive'
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${device.status === 'active'
+                                        ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
+                                        : device.status === 'inactive'
                                             ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-400'
                                             : 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400'
-                                    }`}>
+                                        }`}>
                                         {device.status}
                                     </span>
                                 </td>

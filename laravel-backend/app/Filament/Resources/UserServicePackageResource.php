@@ -199,7 +199,7 @@ class UserServicePackageResource extends Resource
 
                 Tables\Columns\BadgeColumn::make('payment_status')
                     ->label('Thanh toán')
-                    ->formatStateUsing(fn (string $state): string => UserServicePackage::getPaymentStatuses()[$state] ?? $state)
+                    ->formatStateUsing(fn(string $state): string => UserServicePackage::getPaymentStatuses()[$state] ?? $state)
                     ->colors([
                         'warning' => 'pending',
                         'success' => 'paid',
@@ -209,7 +209,7 @@ class UserServicePackageResource extends Resource
 
                 Tables\Columns\BadgeColumn::make('status')
                     ->label('Trạng thái')
-                    ->formatStateUsing(fn (string $state): string => UserServicePackage::getStatuses()[$state] ?? $state)
+                    ->formatStateUsing(fn(string $state): string => UserServicePackage::getStatuses()[$state] ?? $state)
                     ->colors([
                         'warning' => 'pending',
                         'success' => 'active',
@@ -229,11 +229,11 @@ class UserServicePackageResource extends Resource
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->placeholder('Vô thời hạn')
-                    ->color(fn ($record) => $record->expires_at && $record->expires_at->isPast() ? 'danger' : null),
+                    ->color(fn($record) => $record->expires_at && $record->expires_at->isPast() ? 'danger' : null),
 
                 Tables\Columns\TextColumn::make('credits_remaining')
                     ->label('Credits')
-                    ->formatStateUsing(fn ($record) => $record->credits_remaining !== null
+                    ->formatStateUsing(fn($record) => $record->credits_remaining !== null
                         ? "{$record->credits_remaining}/{$record->credits_used}"
                         : '-')
                     ->placeholder('-'),
@@ -265,14 +265,14 @@ class UserServicePackageResource extends Resource
 
                 Tables\Filters\Filter::make('expiring_soon')
                     ->label('Sắp hết hạn (7 ngày)')
-                    ->query(fn (Builder $query): Builder => $query
+                    ->query(fn(Builder $query): Builder => $query
                         ->where('status', 'active')
                         ->whereNotNull('expires_at')
                         ->whereBetween('expires_at', [now(), now()->addDays(7)])),
 
                 Tables\Filters\Filter::make('expired')
                     ->label('Đã hết hạn')
-                    ->query(fn (Builder $query): Builder => $query
+                    ->query(fn(Builder $query): Builder => $query
                         ->where('status', 'active')
                         ->whereNotNull('expires_at')
                         ->where('expires_at', '<', now())),
@@ -288,11 +288,11 @@ class UserServicePackageResource extends Resource
                         return $query
                             ->when(
                                 $data['created_from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
                             )
                             ->when(
                                 $data['created_until'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
                             );
                     }),
             ])
@@ -304,34 +304,114 @@ class UserServicePackageResource extends Resource
                     ->label('Kích hoạt')
                     ->icon('heroicon-o-play')
                     ->color('success')
-                    ->requiresConfirmation()
-                    ->visible(fn (UserServicePackage $record): bool =>
+                    ->button()
+                    ->modalHeading('🚀 Kích hoạt gói dịch vụ')
+                    ->modalDescription(fn(UserServicePackage $record) => new \Illuminate\Support\HtmlString(
+                        '<div class="space-y-3 text-left">' .
+                        '<div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-800">' .
+                        '<p class="text-sm text-gray-500 dark:text-gray-400">Đơn hàng</p>' .
+                        '<p class="font-mono font-semibold">' . $record->order_code . '</p>' .
+                        '</div>' .
+                        '<div class="grid grid-cols-2 gap-4">' .
+                        '<div class="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20">' .
+                        '<p class="text-sm text-gray-500 dark:text-gray-400">Khách hàng</p>' .
+                        '<p class="font-semibold text-blue-700 dark:text-blue-300">' . $record->user->name . '</p>' .
+                        '</div>' .
+                        '<div class="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20">' .
+                        '<p class="text-sm text-gray-500 dark:text-gray-400">Gói dịch vụ</p>' .
+                        '<p class="font-semibold text-purple-700 dark:text-purple-300">' . $record->servicePackage->name . '</p>' .
+                        '</div>' .
+                        '</div>' .
+                        '<div class="grid grid-cols-2 gap-4">' .
+                        '<div class="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20">' .
+                        '<p class="text-sm text-gray-500 dark:text-gray-400">Credits sẽ cấp</p>' .
+                        '<p class="font-semibold text-amber-700 dark:text-amber-300">' . number_format($record->servicePackage->credits ?? 0, 0, ',', '.') . ' credits</p>' .
+                        '</div>' .
+                        '<div class="p-3 rounded-lg bg-cyan-50 dark:bg-cyan-900/20">' .
+                        '<p class="text-sm text-gray-500 dark:text-gray-400">Thời hạn</p>' .
+                        '<p class="font-semibold text-cyan-700 dark:text-cyan-300">' . ($record->servicePackage->duration_days ?? 30) . ' ngày</p>' .
+                        '</div>' .
+                        '</div>' .
+                        '<p class="text-xs text-center text-gray-400 dark:text-gray-500">⚠️ Gói sẽ được kích hoạt ngay lập tức</p>' .
+                        '</div>'
+                    ))
+                    ->modalSubmitActionLabel('Kích hoạt ngay')
+                    ->modalIcon('heroicon-o-rocket-launch')
+                    ->modalIconColor('success')
+                    ->visible(fn(UserServicePackage $record): bool =>
                         $record->status === 'pending' && $record->payment_status === 'paid')
                     ->action(function (UserServicePackage $record) {
                         $record->activate();
 
+                        $expiresAt = $record->expires_at ? $record->expires_at->format('d/m/Y H:i') : 'Vô thời hạn';
+
                         Notification::make()
                             ->success()
-                            ->title('Đã kích hoạt gói dịch vụ')
+                            ->title('🚀 Kích hoạt thành công!')
+                            ->body("Gói {$record->servicePackage->name} đã được kích hoạt cho {$record->user->name}.\nHết hạn: {$expiresAt}")
+                            ->duration(5000)
                             ->send();
                     }),
 
                 Tables\Actions\Action::make('approve_payment')
-                    ->label('Xác nhận thanh toán')
+                    ->label('Xác nhận TT')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->requiresConfirmation()
-                    ->visible(fn (UserServicePackage $record): bool => $record->payment_status === 'pending')
-                    ->action(function (UserServicePackage $record) {
+                    ->button()
+                    ->modalHeading('💳 Xác nhận thanh toán đơn hàng')
+                    ->modalDescription(fn(UserServicePackage $record) => new \Illuminate\Support\HtmlString(
+                        '<div class="space-y-3 text-left">' .
+                        '<div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-800">' .
+                        '<p class="text-sm text-gray-500 dark:text-gray-400">Mã đơn hàng</p>' .
+                        '<p class="font-mono font-semibold">' . $record->order_code . '</p>' .
+                        '</div>' .
+                        '<div class="grid grid-cols-2 gap-4">' .
+                        '<div class="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20">' .
+                        '<p class="text-sm text-gray-500 dark:text-gray-400">Khách hàng</p>' .
+                        '<p class="font-semibold text-blue-700 dark:text-blue-300">' . $record->user->name . '</p>' .
+                        '</div>' .
+                        '<div class="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20">' .
+                        '<p class="text-sm text-gray-500 dark:text-gray-400">Gói dịch vụ</p>' .
+                        '<p class="font-semibold text-purple-700 dark:text-purple-300">' . $record->servicePackage->name . '</p>' .
+                        '</div>' .
+                        '</div>' .
+                        '<div class="p-4 rounded-lg border-2 border-green-500 bg-green-50 dark:bg-green-900/20">' .
+                        '<p class="text-sm text-gray-500 dark:text-gray-400">Số tiền thanh toán</p>' .
+                        '<p class="text-2xl font-bold text-green-600 dark:text-green-400">' . number_format($record->price_paid, 0, ',', '.') . ' ₫</p>' .
+                        '</div>' .
+                        '<p class="text-xs text-center text-gray-400 dark:text-gray-500">⚠️ Hành động này sẽ đánh dấu đơn hàng đã thanh toán</p>' .
+                        '</div>'
+                    ))
+                    ->modalSubmitActionLabel('Xác nhận đã thanh toán')
+                    ->modalIcon('heroicon-o-banknotes')
+                    ->modalIconColor('success')
+                    ->form([
+                        Forms\Components\Checkbox::make('confirmed')
+                            ->label('Tôi xác nhận đã nhận được thanh toán từ khách hàng')
+                            ->required()
+                            ->accepted()
+                            ->validationMessages([
+                                'accepted' => 'Bạn phải xác nhận đã nhận thanh toán trước khi tiếp tục.',
+                            ]),
+                        Forms\Components\Textarea::make('admin_note')
+                            ->label('Ghi chú (tùy chọn)')
+                            ->placeholder('Nhập ghi chú nếu cần...')
+                            ->rows(2),
+                    ])
+                    ->visible(fn(UserServicePackage $record): bool => $record->payment_status === 'pending')
+                    ->action(function (UserServicePackage $record, array $data) {
                         $record->update([
                             'payment_status' => 'paid',
                             'approved_by' => auth()->id(),
                             'approved_at' => now(),
+                            'admin_note' => $data['admin_note'] ?? $record->admin_note,
                         ]);
 
                         Notification::make()
                             ->success()
-                            ->title('Đã xác nhận thanh toán')
+                            ->title('✅ Xác nhận thanh toán thành công!')
+                            ->body("Đã xác nhận thanh toán cho đơn hàng {$record->order_code} của {$record->user->name}.")
+                            ->duration(5000)
                             ->send();
                     }),
 
@@ -340,7 +420,7 @@ class UserServicePackageResource extends Resource
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->requiresConfirmation()
-                    ->visible(fn (UserServicePackage $record): bool =>
+                    ->visible(fn(UserServicePackage $record): bool =>
                         in_array($record->status, ['pending', 'active']))
                     ->form([
                         Forms\Components\Textarea::make('cancel_reason')
@@ -360,7 +440,7 @@ class UserServicePackageResource extends Resource
                     ->label('Gia hạn')
                     ->icon('heroicon-o-arrow-path')
                     ->color('info')
-                    ->visible(fn (UserServicePackage $record): bool =>
+                    ->visible(fn(UserServicePackage $record): bool =>
                         in_array($record->status, ['active', 'expired']))
                     ->form([
                         Forms\Components\TextInput::make('days')
