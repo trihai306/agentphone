@@ -27,8 +27,12 @@ class DeviceController extends Controller
         $user = $request->user();
         $ipAddress = $request->ip();
 
+        // Normalize field names (support both 'name' and 'device_name')
+        $deviceName = $request->input('name') ?? $request->input('device_name') ?? 'Unknown Device';
+        $deviceId = $request->input('device_id');
+
         // Check if device already exists
-        $existingDevice = Device::where('device_id', $request->device_id)->first();
+        $existingDevice = Device::where('device_id', $deviceId)->first();
 
         if (!$existingDevice) {
             // Check device limit for new devices
@@ -36,6 +40,7 @@ class DeviceController extends Controller
 
             if ($deviceCount >= self::MAX_DEVICES_PER_USER) {
                 return response()->json([
+                    'success' => false,
                     'message' => 'Bạn đã đạt giới hạn tối đa ' . self::MAX_DEVICES_PER_USER . ' thiết bị.',
                     'error' => 'device_limit_exceeded',
                 ], 422);
@@ -45,12 +50,12 @@ class DeviceController extends Controller
         DB::beginTransaction();
         try {
             $device = Device::updateOrCreate(
-                ['device_id' => $request->device_id],
+                ['device_id' => $deviceId],
                 [
                     'user_id' => $user->id,
-                    'name' => $request->name,
-                    'model' => $request->model,
-                    'android_version' => $request->android_version,
+                    'name' => $deviceName,
+                    'model' => $request->input('model'),
+                    'android_version' => $request->input('android_version'),
                     'status' => Device::STATUS_ACTIVE,
                     'last_active_at' => now(),
                 ]
@@ -60,14 +65,15 @@ class DeviceController extends Controller
             $event = $existingDevice ? 'device_updated' : 'device_registered';
             $device->logActivity($event, $ipAddress, [
                 'user_agent' => $request->userAgent(),
-                'name' => $request->name,
-                'model' => $request->model,
-                'android_version' => $request->android_version,
+                'name' => $deviceName,
+                'model' => $request->input('model'),
+                'android_version' => $request->input('android_version'),
             ]);
 
             DB::commit();
 
             return response()->json([
+                'success' => true,
                 'message' => $existingDevice
                     ? 'Thiết bị đã được cập nhật thành công'
                     : 'Thiết bị đã được đăng ký thành công',
@@ -78,6 +84,7 @@ class DeviceController extends Controller
             DB::rollBack();
 
             return response()->json([
+                'success' => false,
                 'message' => 'Đã xảy ra lỗi khi đăng ký thiết bị',
                 'error' => $e->getMessage(),
             ], 500);
@@ -214,4 +221,59 @@ class DeviceController extends Controller
             'message' => 'Đã đăng xuất khỏi tất cả các thiết bị khác',
         ]);
     }
+
+    /**
+     * Update device socket connection status (online/offline)
+     * Called by Android app when socket connects/disconnects
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function updateStatus(Request $request): JsonResponse
+    {
+        $request->validate([
+            'device_id' => 'required|string',
+            'status' => 'required|string|in:online,offline',
+            'socket_connected' => 'required|boolean',
+        ]);
+
+        $user = $request->user();
+        $deviceId = $request->input('device_id');
+
+        $device = Device::where('user_id', $user->id)
+            ->where('device_id', $deviceId)
+            ->first();
+
+        if (!$device) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Device not found',
+            ], 404);
+        }
+
+        $device->update([
+            'socket_connected' => $request->input('socket_connected'),
+            'last_active_at' => now(),
+        ]);
+
+        // Broadcast status change to frontend
+        broadcast(new \App\Events\DeviceStatusChanged(
+            $device,
+            $request->input('status')
+        ))->toOthers();
+
+        \Log::info("Device status updated via socket: {$device->name} -> {$request->input('status')}");
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Device status updated',
+            'device' => [
+                'id' => $device->id,
+                'name' => $device->name,
+                'status' => $request->input('status'),
+                'socket_connected' => $device->socket_connected,
+            ],
+        ]);
+    }
 }
+

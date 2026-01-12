@@ -2,42 +2,52 @@ package com.agent.portal.socket
 
 import android.content.Context
 import android.util.Log
-import com.agent.portal.recording.RecordingManager
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
-import io.socket.client.IO
-import io.socket.client.Socket
-import io.socket.emitter.Emitter
+import com.pusher.client.Pusher
+import com.pusher.client.PusherOptions
+import com.pusher.client.channel.Channel
+import com.pusher.client.channel.PresenceChannel
+import com.pusher.client.channel.PresenceChannelEventListener
+import com.pusher.client.channel.PusherEvent
+import com.pusher.client.channel.SubscriptionEventListener
+import com.pusher.client.channel.User
+import com.pusher.client.util.HttpChannelAuthorizer
+import com.pusher.client.connection.ConnectionEventListener
+import com.pusher.client.connection.ConnectionState
+import com.pusher.client.connection.ConnectionStateChange
 import kotlinx.coroutines.*
-import org.json.JSONObject
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import java.lang.ref.WeakReference
-import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * WebSocket Manager for receiving and executing jobs from server
+ * WebSocket Manager using Pusher for receiving and executing jobs from server
  *
  * Architecture:
- * Server → Socket → JobQueue → JobExecutor → ActionAPI → Device Actions
+ * Soketi (Pusher Protocol) → Pusher Client → JobQueue → JobExecutor → Device Actions
  *
  * Features:
- * - Real-time job receiving via WebSocket
+ * - Real-time job receiving via Pusher WebSocket
  * - Job queue management with priorities
- * - Action configuration from API
  * - Job execution with status reporting
  * - Auto-reconnect on disconnect
- * - Concurrent job handling
+ * - Channel-based pub/sub model
  */
 object SocketJobManager {
 
     private const val TAG = "SocketJobManager"
 
-    // Socket connection
-    private var socket: Socket? = null
-    private var serverUrl: String? = null
+    // Pusher connection
+    private var pusher: Pusher? = null
+    private var deviceChannel: Channel? = null
+    private var presenceChannel: PresenceChannel? = null
+    private var appKey: String? = null
+    private var host: String? = null
+    private var port: Int = 6001
+    private var encrypted: Boolean = false
     private val isConnected = AtomicBoolean(false)
-    private val isConnecting = AtomicBoolean(false)
 
     // Job management
     private val jobQueue = ConcurrentHashMap<String, Job>()
@@ -55,80 +65,245 @@ object SocketJobManager {
     // Gson for JSON parsing
     private val gson = Gson()
 
+    // Device ID for channel subscription
+    private var deviceId: String? = null
+    private var userId: String? = null
+    private var deviceDbId: Int? = null
+    private var authToken: String? = null
+
     /**
-     * Initialize socket manager
+     * Initialize Pusher manager
      */
-    fun init(context: Context, socketUrl: String) {
+    fun init(context: Context, appKey: String, host: String, port: Int = 6001, encrypted: Boolean = false) {
         contextRef = WeakReference(context.applicationContext)
-        serverUrl = socketUrl
-        Log.i(TAG, "SocketJobManager initialized with URL: $socketUrl")
+        this.appKey = appKey
+        this.host = host
+        this.port = port
+        this.encrypted = encrypted
+        
+        // Get device ID for channel subscription
+        this.deviceId = android.provider.Settings.Secure.getString(
+            context.contentResolver,
+            android.provider.Settings.Secure.ANDROID_ID
+        )
+        
+        // Load user session for presence auth
+        val sessionManager = com.agent.portal.auth.SessionManager(context)
+        val session = sessionManager.getSession()
+        this.userId = session?.userId?.toString()
+        this.authToken = session?.token
+        
+        Log.i(TAG, "SocketJobManager initialized - Host: $host:$port, Device: $deviceId, User: $userId")
     }
 
     /**
-     * Connect to WebSocket server
+     * Connect to Pusher server
      */
     fun connect() {
-        if (serverUrl == null) {
-            Log.e(TAG, "Server URL not set. Call init() first.")
+        if (appKey == null || host == null) {
+            Log.e(TAG, "AppKey or Host not set. Call init() first.")
             return
         }
 
-        if (isConnected.get() || isConnecting.get()) {
-            Log.w(TAG, "Already connected or connecting")
+        if (isConnected.get()) {
+            Log.w(TAG, "Already connected")
             return
         }
-
-        isConnecting.set(true)
 
         scope.launch {
             try {
-                Log.i(TAG, "Connecting to WebSocket: $serverUrl")
+                Log.i(TAG, "Connecting to Pusher: $host:$port")
 
-                val opts = IO.Options().apply {
-                    reconnection = true
-                    reconnectionDelay = 1000
-                    reconnectionDelayMax = 5000
-                    timeout = 10000
+                // Configure auth endpoint for presence channels
+                val authUrl = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
+                    "http://10.0.2.2:8000/api/pusher/auth"
+                } else {
+                    "https://laravel-backend.test/api/pusher/auth"
+                }
+                
+                val authorizer = HttpChannelAuthorizer(authUrl)
+                // Add auth headers
+                authToken?.let { token ->
+                    authorizer.setHeaders(mapOf(
+                        "Authorization" to "Bearer $token",
+                        "Accept" to "application/json",
+                        "Content-Type" to "application/x-www-form-urlencoded"
+                    ))
                 }
 
-                socket = IO.socket(URI.create(serverUrl), opts).apply {
-                    // Connection events
-                    on(Socket.EVENT_CONNECT, onConnect)
-                    on(Socket.EVENT_DISCONNECT, onDisconnect)
-                    on(Socket.EVENT_CONNECT_ERROR, onConnectError)
-
-                    // Job events
-                    on("job:new", onNewJob)
-                    on("job:cancel", onCancelJob)
-                    on("job:pause", onPauseJob)
-                    on("job:resume", onResumeJob)
-
-                    // Config events
-                    on("config:update", onConfigUpdate)
+                val options = PusherOptions().apply {
+                    setCluster("") // Empty for self-hosted
+                    setHost(host)
+                    setWsPort(port)
+                    setWssPort(port)
+                    isEncrypted = this@SocketJobManager.encrypted
+                    setChannelAuthorizer(authorizer)
                 }
 
-                socket?.connect()
+                pusher = Pusher(appKey, options)
 
+                // Set connection event listener
+                pusher?.connection?.bind(ConnectionState.ALL, object : ConnectionEventListener {
+                    override fun onConnectionStateChange(change: ConnectionStateChange) {
+                        Log.d(TAG, "Connection state: ${change.previousState} → ${change.currentState}")
+                        
+                        when (change.currentState) {
+                            ConnectionState.CONNECTED -> {
+                                isConnected.set(true)
+                                onConnected()
+                            }
+                            ConnectionState.DISCONNECTED -> {
+                                isConnected.set(false)
+                                onDisconnected()
+                            }
+                            else -> {}
+                        }
+                    }
+
+                    override fun onError(message: String, code: String?, e: Exception?) {
+                        Log.e(TAG, "Connection error: $message (code: $code)", e)
+                        onConnectionError(message)
+                    }
+                })
+
+                // Connect
+                pusher?.connect()
+
+                // Subscribe to device channel
+                subscribeToDeviceChannel()
+
+                Log.i(TAG, "✅ Pusher connection initiated")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to connect", e)
-                isConnecting.set(false)
                 notifyConnectionError(e.message ?: "Unknown error")
             }
         }
     }
 
     /**
-     * Disconnect from WebSocket server
+     * Subscribe to presence channel for device tracking
+     * This enables real-time online/offline status via Soketi webhooks
+     */
+    private fun subscribeToDeviceChannel() {
+        if (deviceId == null || userId == null) {
+            Log.w(TAG, "Device ID or User ID not set, cannot subscribe to presence channel")
+            // Fall back to private channel
+            subscribeToPrivateChannel()
+            return
+        }
+
+        // Subscribe to presence channel: presence-devices.{user_id}
+        val presenceChannelName = "presence-devices.$userId"
+        Log.i(TAG, "Subscribing to presence channel: $presenceChannelName")
+
+        try {
+            presenceChannel = pusher?.subscribePresence(presenceChannelName, object : PresenceChannelEventListener {
+                override fun onSubscriptionSucceeded(channelName: String) {
+                    Log.i(TAG, "✅ Subscribed to presence channel: $channelName")
+                }
+
+                override fun onAuthenticationFailure(message: String, e: Exception?) {
+                    Log.e(TAG, "❌ Presence auth failed: $message", e)
+                    // Fall back to private channel
+                    subscribeToPrivateChannel()
+                }
+
+                override fun onUsersInformationReceived(channelName: String, users: MutableSet<User>?) {
+                    Log.i(TAG, "Users in channel $channelName: ${users?.size ?: 0}")
+                }
+
+                override fun userSubscribed(channelName: String, user: User) {
+                    Log.i(TAG, "User joined: ${user.id} in $channelName")
+                }
+
+                override fun userUnsubscribed(channelName: String, user: User) {
+                    Log.i(TAG, "User left: ${user.id} from $channelName")
+                }
+
+                override fun onEvent(event: PusherEvent) {
+                    // Handle events on presence channel
+                    when (event.eventName) {
+                        "job:new" -> handleNewJob(event.data)
+                        "job:cancel" -> handleCancelJob(event.data)
+                        "job:pause" -> handlePauseJob(event.data)
+                        "job:resume" -> handleResumeJob(event.data)
+                        "config:update" -> handleConfigUpdate(event.data)
+                    }
+                }
+            })
+
+            Log.i(TAG, "Presence channel subscription initiated")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to subscribe to presence channel", e)
+            subscribeToPrivateChannel()
+        }
+
+        // Also subscribe to device-specific private channel for direct commands
+        subscribeToPrivateChannel()
+    }
+
+    /**
+     * Subscribe to private device channel for direct commands
+     */
+    private fun subscribeToPrivateChannel() {
+        if (deviceId == null) return
+
+        val channelName = "device-$deviceId"
+        Log.i(TAG, "Subscribing to private channel: $channelName")
+
+        deviceChannel = pusher?.subscribe(channelName)
+
+        // Bind to job events
+        deviceChannel?.bind("job:new", object : SubscriptionEventListener {
+            override fun onEvent(event: PusherEvent) {
+                handleNewJob(event.data)
+            }
+        })
+
+        deviceChannel?.bind("job:cancel", object : SubscriptionEventListener {
+            override fun onEvent(event: PusherEvent) {
+                handleCancelJob(event.data)
+            }
+        })
+
+        deviceChannel?.bind("job:pause", object : SubscriptionEventListener {
+            override fun onEvent(event: PusherEvent) {
+                handlePauseJob(event.data)
+            }
+        })
+
+        deviceChannel?.bind("job:resume", object : SubscriptionEventListener {
+            override fun onEvent(event: PusherEvent) {
+                handleResumeJob(event.data)
+            }
+        })
+
+        deviceChannel?.bind("config:update", object : SubscriptionEventListener {
+            override fun onEvent(event: PusherEvent) {
+                handleConfigUpdate(event.data)
+            }
+        })
+
+        Log.i(TAG, "Private channel subscription complete")
+    }
+
+    /**
+     * Disconnect from Pusher server
      */
     fun disconnect() {
         scope.launch {
             try {
-                socket?.disconnect()
-                socket?.off()
-                socket = null
+                // Unsubscribe from channel (automatically unbinds all events)
+                if (deviceId != null) {
+                    pusher?.unsubscribe("device-$deviceId")
+                }
+                deviceChannel = null
+                
+                // Disconnect from Pusher
+                pusher?.disconnect()
+                pusher = null
                 isConnected.set(false)
-                isConnecting.set(false)
-                Log.i(TAG, "Disconnected from WebSocket")
+                Log.i(TAG, "Disconnected from Pusher")
             } catch (e: Exception) {
                 Log.e(TAG, "Error disconnecting", e)
             }
@@ -154,36 +329,103 @@ object SocketJobManager {
         jobListeners.remove(listener)
     }
 
+    /**
+     * Publish custom event to Laravel backend via HTTP API
+     * 
+     * @param eventName Event name (e.g., "recording:started")
+     * @param data Event data as Map
+     */
+    fun publishEvent(eventName: String, data: Map<String, Any>) {
+        scope.launch {
+            try {
+                val context = contextRef?.get() ?: run {
+                    Log.w(TAG, "Context not available, cannot publish event")
+                    return@launch
+                }
+                
+                // Add device context to event data
+                val enrichedData = data.toMutableMap().apply {
+                    put("device_id", deviceId ?: "unknown")
+                    put("event", eventName)
+                    put("timestamp", System.currentTimeMillis())
+                }
+
+                // Get auth token
+                val sessionManager = com.agent.portal.auth.SessionManager(context)
+                val session = sessionManager.getSession()
+                val token = session?.token
+                
+                if (token == null) {
+                    Log.w(TAG, "No auth token, cannot publish event")
+                    return@launch
+                }
+
+                // Determine API URL
+                val apiUrl = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
+                    "http://10.0.2.2:8000/api"
+                } else {
+                    "https://laravel-backend.test/api"
+                }
+
+                // Send HTTP POST request
+                val client = okhttp3.OkHttpClient()
+                val json = gson.toJson(enrichedData)
+                val requestBody = okhttp3.RequestBody.create(
+                    "application/json".toMediaTypeOrNull(),
+                    json
+                )
+
+                val request = okhttp3.Request.Builder()
+                    .url("$apiUrl/recording-events")
+                    .post(requestBody)
+                    .addHeader("Authorization", "Bearer $token")
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Accept", "application/json")
+                    .build()
+
+                val response = client.newCall(request).execute()
+                
+                if (response.isSuccessful) {
+                    Log.i(TAG, "📤 Published event: $eventName")
+                } else {
+                    Log.w(TAG, "Failed to publish event: ${response.code}")
+                }
+                
+                response.close()
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to publish event '$eventName'", e)
+            }
+        }
+    }
+
     // ================================================================================
-    // Socket Event Handlers
+    // Event Handlers
     // ================================================================================
 
-    private val onConnect = Emitter.Listener {
-        Log.i(TAG, "✓ Connected to WebSocket server")
-        isConnected.set(true)
-        isConnecting.set(false)
+    private fun onConnected() {
+        Log.i(TAG, "✓ Connected to Pusher server")
+
+        // Notify backend that device is online
+        notifyDeviceStatus("online")
 
         scope.launch(Dispatchers.Main) {
             jobListeners.forEach { it.onConnected() }
         }
-
-        // Send device info to server
-        sendDeviceInfo()
     }
 
-    private val onDisconnect = Emitter.Listener {
-        Log.w(TAG, "✗ Disconnected from WebSocket server")
-        isConnected.set(false)
+    private fun onDisconnected() {
+        Log.w(TAG, "✗ Disconnected from Pusher server")
+
+        // Notify backend that device is offline
+        notifyDeviceStatus("offline")
 
         scope.launch(Dispatchers.Main) {
             jobListeners.forEach { it.onDisconnected() }
         }
     }
 
-    private val onConnectError = Emitter.Listener { args ->
-        val error = args.getOrNull(0)?.toString() ?: "Unknown error"
+    private fun onConnectionError(error: String) {
         Log.e(TAG, "Connection error: $error")
-        isConnecting.set(false)
 
         scope.launch(Dispatchers.Main) {
             jobListeners.forEach { it.onConnectionError(error) }
@@ -191,12 +433,66 @@ object SocketJobManager {
     }
 
     /**
+     * Notify Laravel backend about device online/offline status
+     */
+    private fun notifyDeviceStatus(status: String) {
+        scope.launch {
+            try {
+                val context = contextRef?.get() ?: return@launch
+                
+                val sessionManager = com.agent.portal.auth.SessionManager(context)
+                val session = sessionManager.getSession()
+                val token = session?.token ?: return@launch
+
+                val apiUrl = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
+                    "http://10.0.2.2:8000/api"
+                } else {
+                    "https://laravel-backend.test/api"
+                }
+
+                val payload = mapOf(
+                    "device_id" to (deviceId ?: "unknown"),
+                    "status" to status,
+                    "socket_connected" to (status == "online"),
+                    "timestamp" to System.currentTimeMillis()
+                )
+
+                val client = okhttp3.OkHttpClient()
+                val json = gson.toJson(payload)
+                val requestBody = okhttp3.RequestBody.create(
+                    "application/json".toMediaTypeOrNull(),
+                    json
+                )
+
+                val request = okhttp3.Request.Builder()
+                    .url("$apiUrl/devices/status")
+                    .post(requestBody)
+                    .addHeader("Authorization", "Bearer $token")
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Accept", "application/json")
+                    .build()
+
+                val response = client.newCall(request).execute()
+                
+                if (response.isSuccessful) {
+                    Log.i(TAG, "📡 Device status updated: $status")
+                } else {
+                    Log.w(TAG, "Failed to update device status: ${response.code}")
+                }
+                
+                response.close()
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to notify device status", e)
+            }
+        }
+    }
+
+    /**
      * Handle new job received from server
      */
-    private val onNewJob = Emitter.Listener { args ->
+    private fun handleNewJob(data: String) {
         try {
-            val data = args[0] as JSONObject
-            val job = gson.fromJson(data.toString(), Job::class.java)
+            val job = gson.fromJson(data, Job::class.java)
 
             Log.i(TAG, "📥 Received new job: ${job.id} - ${job.type}")
 
@@ -217,17 +513,16 @@ object SocketJobManager {
 
         } catch (e: Exception) {
             Log.e(TAG, "Error processing new job", e)
-            sendJobError("unknown", "Failed to parse job: ${e.message}")
         }
     }
 
     /**
      * Handle job cancellation
      */
-    private val onCancelJob = Emitter.Listener { args ->
+    private fun handleCancelJob(data: String) {
         try {
-            val data = args[0] as JSONObject
-            val jobId = data.getString("job_id")
+            val json = gson.fromJson(data, Map::class.java)
+            val jobId = json["job_id"] as? String ?: return
 
             Log.i(TAG, "🚫 Cancel job: $jobId")
 
@@ -238,7 +533,6 @@ object SocketJobManager {
             executingJobs[jobId]?.let { job ->
                 job.status = JobStatus.CANCELLED
                 executingJobs.remove(jobId)
-                sendJobStatus(jobId, JobStatus.CANCELLED)
             }
 
             scope.launch(Dispatchers.Main) {
@@ -253,14 +547,13 @@ object SocketJobManager {
     /**
      * Handle job pause
      */
-    private val onPauseJob = Emitter.Listener { args ->
+    private fun handlePauseJob(data: String) {
         try {
-            val data = args[0] as JSONObject
-            val jobId = data.getString("job_id")
+            val json = gson.fromJson(data, Map::class.java)
+            val jobId = json["job_id"] as? String ?: return
 
             executingJobs[jobId]?.let { job ->
                 job.status = JobStatus.PAUSED
-                sendJobStatus(jobId, JobStatus.PAUSED)
                 Log.i(TAG, "⏸ Paused job: $jobId")
             }
 
@@ -272,14 +565,13 @@ object SocketJobManager {
     /**
      * Handle job resume
      */
-    private val onResumeJob = Emitter.Listener { args ->
+    private fun handleResumeJob(data: String) {
         try {
-            val data = args[0] as JSONObject
-            val jobId = data.getString("job_id")
+            val json = gson.fromJson(data, Map::class.java)
+            val jobId = json["job_id"] as? String ?: return
 
             executingJobs[jobId]?.let { job ->
                 job.status = JobStatus.EXECUTING
-                sendJobStatus(jobId, JobStatus.EXECUTING)
                 Log.i(TAG, "▶️ Resumed job: $jobId")
             }
 
@@ -291,13 +583,12 @@ object SocketJobManager {
     /**
      * Handle config update from server
      */
-    private val onConfigUpdate = Emitter.Listener { args ->
+    private fun handleConfigUpdate(data: String) {
         try {
-            val data = args[0] as JSONObject
             Log.i(TAG, "⚙️ Config update received")
 
             scope.launch(Dispatchers.Main) {
-                jobListeners.forEach { it.onConfigUpdate(data.toString()) }
+                jobListeners.forEach { it.onConfigUpdate(data) }
             }
 
         } catch (e: Exception) {
@@ -306,70 +597,50 @@ object SocketJobManager {
     }
 
     // ================================================================================
-    // Job Execution
+    // Job Execution (same as before)
     // ================================================================================
 
-    /**
-     * Execute job immediately (high priority)
-     */
     private fun executeJobImmediately(job: Job) {
         scope.launch {
             executeJob(job)
         }
     }
 
-    /**
-     * Enqueue job for execution
-     */
     private fun enqueueJob(job: Job) {
         scope.launch {
-            // Wait for current jobs to finish if needed
             delay(100)
             executeJob(job)
         }
     }
 
-    /**
-     * Execute a job
-     */
     private suspend fun executeJob(job: Job) {
         val context = contextRef?.get() ?: return
 
         try {
             Log.i(TAG, "🚀 Executing job: ${job.id}")
 
-            // Mark as executing
             job.status = JobStatus.EXECUTING
             executingJobs[job.id] = job
-            sendJobStatus(job.id, JobStatus.EXECUTING)
 
-            // Notify listeners
             withContext(Dispatchers.Main) {
                 jobListeners.forEach { it.onJobStarted(job) }
             }
 
-            // Fetch action configuration from API
             val actionConfig = JobActionAPI.fetchActionConfig(context, job.actionConfigUrl)
 
             if (actionConfig == null) {
                 throw Exception("Failed to fetch action configuration")
             }
 
-            // Execute actions
             val executor = JobExecutor(context)
             val result = executor.execute(job, actionConfig)
 
-            // Update status
             job.status = if (result.success) JobStatus.COMPLETED else JobStatus.FAILED
             job.result = result
 
             executingJobs.remove(job.id)
             jobQueue.remove(job.id)
 
-            // Send result to server
-            sendJobResult(job)
-
-            // Notify listeners
             withContext(Dispatchers.Main) {
                 jobListeners.forEach { it.onJobCompleted(job, result) }
             }
@@ -389,127 +660,27 @@ object SocketJobManager {
             executingJobs.remove(job.id)
             jobQueue.remove(job.id)
 
-            sendJobError(job.id, e.message ?: "Unknown error")
-
             withContext(Dispatchers.Main) {
                 jobListeners.forEach { it.onJobFailed(job, e.message ?: "Unknown error") }
             }
         }
     }
 
-    // ================================================================================
-    // Socket Communication
-    // ================================================================================
-
-    /**
-     * Send device info to server
-     */
-    private fun sendDeviceInfo() {
-        val context = contextRef?.get() ?: return
-
-        try {
-            val deviceInfo = JSONObject().apply {
-                put("device_id", android.provider.Settings.Secure.getString(
-                    context.contentResolver,
-                    android.provider.Settings.Secure.ANDROID_ID
-                ))
-                put("model", android.os.Build.MODEL)
-                put("manufacturer", android.os.Build.MANUFACTURER)
-                put("android_version", android.os.Build.VERSION.RELEASE)
-                put("sdk_version", android.os.Build.VERSION.SDK_INT)
-                put("timestamp", System.currentTimeMillis())
-            }
-
-            socket?.emit("device:info", deviceInfo)
-            Log.d(TAG, "Device info sent")
-
-        } catch (e: Exception) {
-            Log.e(TAG, "Error sending device info", e)
-        }
-    }
-
-    /**
-     * Send job status update
-     */
-    private fun sendJobStatus(jobId: String, status: JobStatus) {
-        try {
-            val statusData = JSONObject().apply {
-                put("job_id", jobId)
-                put("status", status.value)
-                put("timestamp", System.currentTimeMillis())
-            }
-
-            socket?.emit("job:status", statusData)
-            Log.d(TAG, "Job status sent: $jobId -> $status")
-
-        } catch (e: Exception) {
-            Log.e(TAG, "Error sending job status", e)
-        }
-    }
-
-    /**
-     * Send job result
-     */
-    private fun sendJobResult(job: Job) {
-        try {
-            val resultData = JSONObject().apply {
-                put("job_id", job.id)
-                put("status", job.status.value)
-                put("result", gson.toJson(job.result))
-                put("timestamp", System.currentTimeMillis())
-            }
-
-            socket?.emit("job:result", resultData)
-            Log.d(TAG, "Job result sent: ${job.id}")
-
-        } catch (e: Exception) {
-            Log.e(TAG, "Error sending job result", e)
-        }
-    }
-
-    /**
-     * Send job error
-     */
-    private fun sendJobError(jobId: String, error: String) {
-        try {
-            val errorData = JSONObject().apply {
-                put("job_id", jobId)
-                put("error", error)
-                put("timestamp", System.currentTimeMillis())
-            }
-
-            socket?.emit("job:error", errorData)
-            Log.d(TAG, "Job error sent: $jobId")
-
-        } catch (e: Exception) {
-            Log.e(TAG, "Error sending job error", e)
-        }
-    }
-
-    /**
-     * Notify connection error
-     */
     private fun notifyConnectionError(error: String) {
         scope.launch(Dispatchers.Main) {
             jobListeners.forEach { it.onConnectionError(error) }
         }
     }
 
-    /**
-     * Get current status
-     */
     fun getStatus(): SocketStatus {
         return SocketStatus(
             connected = isConnected.get(),
-            serverUrl = serverUrl,
+            serverUrl = "$host:$port",
             queuedJobs = jobQueue.size,
             executingJobs = executingJobs.size
         )
     }
 
-    /**
-     * Shutdown manager
-     */
     fun shutdown() {
         disconnect()
         scope.cancel()
@@ -520,9 +691,7 @@ object SocketJobManager {
     }
 }
 
-/**
- * Job data model
- */
+// Data models remain the same
 data class Job(
     @SerializedName("id")
     val id: String,
@@ -552,9 +721,6 @@ data class Job(
     var result: JobResult? = null
 )
 
-/**
- * Job priority
- */
 enum class JobPriority(val value: String) {
     @SerializedName("immediate")
     IMMEDIATE("immediate"),
@@ -569,9 +735,6 @@ enum class JobPriority(val value: String) {
     LOW("low")
 }
 
-/**
- * Job status
- */
 enum class JobStatus(val value: String) {
     QUEUED("queued"),
     EXECUTING("executing"),
@@ -581,9 +744,6 @@ enum class JobStatus(val value: String) {
     CANCELLED("cancelled")
 }
 
-/**
- * Job result
- */
 data class JobResult(
     val success: Boolean,
     val message: String,
@@ -593,9 +753,6 @@ data class JobResult(
     val timestamp: Long = System.currentTimeMillis()
 )
 
-/**
- * Socket status
- */
 data class SocketStatus(
     val connected: Boolean,
     val serverUrl: String?,
@@ -603,9 +760,6 @@ data class SocketStatus(
     val executingJobs: Int
 )
 
-/**
- * Job listener interface
- */
 interface JobListener {
     fun onConnected()
     fun onDisconnected()

@@ -15,11 +15,14 @@ class Device extends Model
         'model',
         'android_version',
         'status',
+        'socket_url',
+        'socket_connected',
         'last_active_at',
     ];
 
     protected $casts = [
         'last_active_at' => 'datetime',
+        'socket_connected' => 'boolean',
     ];
 
     // Status constants
@@ -38,12 +41,23 @@ class Device extends Model
     }
 
     /**
-     * Scope for online devices (active in last 5 minutes)
+     * Scope for devices with active socket connection (real-time online)
+     */
+    public function scopeSocketOnline($query)
+    {
+        return $query->where('socket_connected', true);
+    }
+
+    /**
+     * Scope for online devices (active in last 5 minutes OR socket connected)
      */
     public function scopeOnline($query, int $minutes = 5)
     {
         return $query->where('status', self::STATUS_ACTIVE)
-            ->where('last_active_at', '>=', now()->subMinutes($minutes));
+            ->where(function ($q) use ($minutes) {
+                $q->where('socket_connected', true)
+                    ->orWhere('last_active_at', '>=', now()->subMinutes($minutes));
+            });
     }
 
     /**

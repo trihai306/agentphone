@@ -1,8 +1,10 @@
 import { Link, usePage } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import NavLink from './NavLink';
 import UserMenu from './UserMenu';
 
 export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collapsed, setCollapsed }) {
+    const { t } = useTranslation();
     const { notifications: notificationData, auth } = usePage().props;
     const unreadCount = notificationData?.unread_count || 0;
     const wallet = auth?.wallet;
@@ -55,7 +57,7 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
                         >
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-emerald-100 text-[10px] font-medium">Số dư ví</p>
+                                    <p className="text-emerald-100 text-[10px] font-medium">{t('dashboard.stats.wallet_balance')}</p>
                                     <p className="text-sm font-bold">{wallet?.formatted_balance || '0 ₫'}</p>
                                 </div>
                                 <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
@@ -73,49 +75,52 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
                     {/* Overview Section */}
                     {!collapsed && (
                         <div className="mb-2">
-                            <p className="px-3 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Tổng quan</p>
+                            <p className="px-3 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{t('navigation.overview', { defaultValue: 'Overview' })}</p>
                         </div>
                     )}
                     <NavLink href="/dashboard" icon="home" active={url === '/dashboard'} collapsed={collapsed}>
-                        Dashboard
+                        {t('navigation.dashboard')}
                     </NavLink>
                     <NavLink href="/devices" icon="device" active={url?.startsWith('/devices') || false} collapsed={collapsed}>
-                        Thiết bị
+                        {t('navigation.devices')}
                     </NavLink>
 
                     {/* Services Section */}
                     <div className="pt-3 mt-2">
                         {!collapsed && (
-                            <p className="px-3 mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Dịch vụ</p>
+                            <p className="px-3 mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{t('navigation.services', { defaultValue: 'Services' })}</p>
                         )}
                         <NavLink href="/packages" icon="package" active={url?.startsWith('/packages') || url?.startsWith('/my-packages')} collapsed={collapsed}>
-                            Gói dịch vụ
+                            {t('navigation.packages')}
                         </NavLink>
                         <NavLink href="/flows" icon="flow" active={url?.startsWith('/flows')} collapsed={collapsed}>
-                            Flow Builder
+                            {t('navigation.workflows')}
+                        </NavLink>
+                        <NavLink href="/data-collections" icon="database" active={url?.startsWith('/data-collections')} collapsed={collapsed}>
+                            {t('navigation.data_collections')}
                         </NavLink>
                         <NavLink href="/media" icon="media" active={url?.startsWith('/media')} collapsed={collapsed}>
-                            Thư viện Media
+                            {t('navigation.media')}
                         </NavLink>
                         <NavLink href="/topup" icon="wallet" active={url?.startsWith('/topup') && url !== '/topup/history'} collapsed={collapsed}>
-                            Nạp tiền
+                            {t('navigation.topup')}
                         </NavLink>
                         <NavLink href="/topup/history" icon="history" active={url === '/topup/history'} collapsed={collapsed}>
-                            Lịch sử GD
+                            {t('topup.history')}
                         </NavLink>
                     </div>
 
                     {/* Account Section */}
                     <div className="pt-3 mt-2">
                         {!collapsed && (
-                            <p className="px-3 mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Tài khoản</p>
+                            <p className="px-3 mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{t('navigation.account', { defaultValue: 'Account' })}</p>
                         )}
                         <NavLink href="/profile" icon="user" active={url === '/profile'} collapsed={collapsed}>
-                            Hồ sơ
+                            {t('navigation.profile')}
                         </NavLink>
                         <div className="relative">
                             <NavLink href="/notifications" icon="bell" active={url?.startsWith('/notifications')} collapsed={collapsed}>
-                                Thông báo
+                                {t('navigation.notifications')}
                             </NavLink>
                             {unreadCount > 0 && (
                                 <span className={`absolute ${collapsed ? 'top-1 right-1' : 'top-1.5 right-2'} inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold leading-none text-white bg-red-500 rounded-full min-w-[16px]`}>
@@ -124,20 +129,20 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
                             )}
                         </div>
                         <NavLink href="/profile" icon="settings" active={url === '/settings'} collapsed={collapsed}>
-                            Cài đặt
+                            {t('navigation.settings')}
                         </NavLink>
                     </div>
 
                     {/* Support Section */}
                     <div className="pt-3 mt-2 border-t border-gray-100 dark:border-gray-800">
                         {!collapsed && (
-                            <p className="px-3 mb-2 mt-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Hỗ trợ</p>
+                            <p className="px-3 mb-2 mt-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{t('navigation.support', { defaultValue: 'Support' })}</p>
                         )}
                         <NavLink href="/pricing" icon="upgrade" collapsed={collapsed}>
-                            Nâng cấp
+                            {t('pricing.title')}
                         </NavLink>
                         <NavLink href="/contact" icon="support" collapsed={collapsed}>
-                            Liên hệ
+                            {t('contact.title')}
                         </NavLink>
                     </div>
                 </nav>
@@ -147,7 +152,7 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
                     <button
                         onClick={() => setCollapsed(!collapsed)}
                         className="w-full flex items-center justify-center p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
-                        title={collapsed ? 'Mở rộng menu' : 'Thu gọn menu'}
+                        title={collapsed ? t('navigation.expand', { defaultValue: 'Expand menu' }) : t('navigation.collapse', { defaultValue: 'Collapse menu' })}
                     >
                         <svg className={`w-4 h-4 transition-transform ${collapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />

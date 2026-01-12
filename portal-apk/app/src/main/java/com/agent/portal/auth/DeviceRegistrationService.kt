@@ -86,10 +86,23 @@ class DeviceRegistrationService(private val context: Context) {
     
     /**
      * Get API base URL from preferences
+     * Automatically uses HTTPS for Laravel Herd on emulator
      */
     private fun getApiBaseUrl(): String {
         val prefs = context.getSharedPreferences("portal_settings", Context.MODE_PRIVATE)
-        return prefs.getString("api_base_url", DEFAULT_API_BASE_URL) ?: DEFAULT_API_BASE_URL
+        val savedUrl = prefs.getString("api_base_url", null)
+        
+        // If URL is saved, use it
+        if (!savedUrl.isNullOrEmpty()) {
+            return savedUrl
+        }
+        
+        // Auto-detect emulator and use appropriate URL
+        return if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
+            "http://10.0.2.2:8000/api" // Laravel artisan serve
+        } else {
+            DEFAULT_API_BASE_URL
+        }
     }
     
     /**

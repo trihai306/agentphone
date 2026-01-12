@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useForm, Link, usePage } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AuthLayout from '../../Layouts/AuthLayout';
 
 export default function ForgotPassword() {
+    const { t } = useTranslation();
     const { flash } = usePage().props;
     const [emailSent, setEmailSent] = useState(false);
 
@@ -30,10 +32,10 @@ export default function ForgotPassword() {
                                 </svg>
                             </div>
                             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                                Forgot Password?
+                                {t('auth.forgot_password.title')}
                             </h1>
                             <p className="text-gray-600 dark:text-gray-400">
-                                No worries! Enter your email and we'll send you reset instructions.
+                                {t('auth.forgot_password.description')}
                             </p>
                         </div>
 
@@ -49,7 +51,7 @@ export default function ForgotPassword() {
                             {/* Email */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Email Address
+                                    {t('auth.forgot_password.email')}
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -62,9 +64,8 @@ export default function ForgotPassword() {
                                         type="email"
                                         value={data.email}
                                         onChange={e => setData('email', e.target.value)}
-                                        className={`w-full pl-10 pr-4 py-3 border ${
-                                            errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                                        } rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+                                        className={`w-full pl-10 pr-4 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                                            } rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
                                         placeholder="you@example.com"
                                         autoComplete="email"
                                         autoFocus
@@ -89,7 +90,7 @@ export default function ForgotPassword() {
                                     </>
                                 ) : (
                                     <>
-                                        <span>Send Reset Link</span>
+                                        <span>{t('auth.forgot_password.submit')}</span>
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                         </svg>
@@ -107,7 +108,7 @@ export default function ForgotPassword() {
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                                 </svg>
-                                <span>Back to login</span>
+                                <span>{t('common.back')}</span>
                             </Link>
                         </div>
                     </>

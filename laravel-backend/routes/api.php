@@ -40,11 +40,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Device management
     Route::post('/devices', [DeviceController::class, 'store']);
+    Route::post('/devices/register', [DeviceController::class, 'store']); // Alias for compatibility
     Route::get('/devices', [DeviceController::class, 'index']);
     Route::get('/devices/{id}', [DeviceController::class, 'show']);
     Route::post('/devices/{id}/ping', [DeviceController::class, 'ping']);
     Route::delete('/devices/{id}', [DeviceController::class, 'destroy']);
     Route::post('/devices/logout-all', [DeviceController::class, 'logoutAll']);
+    Route::post('/devices/status', [DeviceController::class, 'updateStatus']); // Socket status update
 
     // Subscription management
     Route::prefix('subscriptions')->group(function () {
@@ -77,5 +79,33 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/test/filament', [NotificationController::class, 'testFilamentNotification']);
         Route::post('/test/filament-admin', [NotificationController::class, 'testFilamentAdminNotification']);
         Route::post('/test/announcement', [NotificationController::class, 'testAnnouncement']);
+
+        // Recording events from Android app
+        Route::post('/recording-events', [\App\Http\Controllers\Api\RecordingEventController::class, 'store']);
+
+        // Recording session management for workflow automation
+        Route::post('/recording-sessions/start', [\App\Http\Controllers\Api\RecordingEventController::class, 'startSession']);
+        Route::post('/recording-sessions/{sessionId}/stop', [\App\Http\Controllers\Api\RecordingEventController::class, 'stopSession']);
+        Route::post('/recording-actions', [\App\Http\Controllers\Api\RecordingEventController::class, 'storeAction']);
+
+        // Device heartbeat for online status tracking
+        Route::post('/heartbeat', [\App\Http\Controllers\Api\HeartbeatController::class, 'store']);
+    });
+
+    // Recording API for real-time workflow sync
+    Route::prefix('recording')->group(function () {
+        Route::post('/start', [\App\Http\Controllers\Api\RecordingController::class, 'start']);
+        Route::post('/event', [\App\Http\Controllers\Api\RecordingController::class, 'event']);
+        Route::post('/stop', [\App\Http\Controllers\Api\RecordingController::class, 'stop']);
+        Route::get('/sessions', [\App\Http\Controllers\Api\RecordingController::class, 'index']);
+        Route::get('/sessions/{sessionId}', [\App\Http\Controllers\Api\RecordingController::class, 'show']);
+        Route::post('/convert-to-nodes', [\App\Http\Controllers\Api\RecordingController::class, 'convertToNodes']);
     });
 });
+
+// Pusher/Soketi auth endpoint for presence channels (requires auth)
+Route::middleware('auth:sanctum')->post('/pusher/auth', [\App\Http\Controllers\Api\SocketAuthController::class, 'auth']);
+
+// Pusher/Soketi webhook for presence events (no auth - verified by webhook secret)
+Route::post('/pusher/webhook', [\App\Http\Controllers\Api\PresenceWebhookController::class, 'handle']);
+

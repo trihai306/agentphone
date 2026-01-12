@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import LandingLayout from '../../Layouts/LandingLayout';
 
 export default function Index({ features }) {
+    const { t } = useTranslation();
     const [activeFeature, setActiveFeature] = useState(0);
 
     return (
@@ -13,17 +15,17 @@ export default function Index({ features }) {
                         <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                         </svg>
-                        <span className="text-sm font-medium text-blue-900 dark:text-blue-300">Powerful Features</span>
+                        <span className="text-sm font-medium text-blue-900 dark:text-blue-300">{t('features.powerful_features')}</span>
                     </div>
 
                     <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 dark:text-white mb-6">
-                        Everything You Need,
+                        {t('features.hero_title')}
                         <span className="block bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
-                            All in One Place
+                            {t('features.hero_subtitle')}
                         </span>
                     </h1>
                     <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-                        Comprehensive device management tools designed to streamline your workflow and boost productivity.
+                        {t('features.hero_description')}
                     </p>
                 </div>
             </section>
@@ -62,16 +64,16 @@ export default function Index({ features }) {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                            Explore All Features
+                            {t('features.explore_all')}
                         </h2>
                         <p className="text-xl text-gray-600 dark:text-gray-300">
-                            Discover how DeviceHub can transform your device management workflow.
+                            {t('features.explore_description')}
                         </p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {features.map((feature, index) => (
-                            <FeatureCard key={index} feature={feature} index={index} />
+                            <FeatureCard key={index} feature={feature} index={index} t={t} />
                         ))}
                     </div>
                 </div>
@@ -82,28 +84,40 @@ export default function Index({ features }) {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                            Built for Every Team
+                            {t('features.built_for_every_team')}
                         </h2>
                         <p className="text-xl text-gray-600 dark:text-gray-300">
-                            From startups to enterprises, DeviceHub scales with your needs.
+                            {t('features.built_description')}
                         </p>
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-8">
                         <UseCaseCard
-                            title="Startups"
-                            description="Get up and running quickly with our intuitive interface and free tier."
-                            benefits={["Quick setup", "Free forever plan", "Scalable pricing"]}
+                            title={t('features.startups')}
+                            description={t('features.startups_description')}
+                            benefits={[
+                                t('features.quick_setup'),
+                                t('features.free_plan'),
+                                t('features.scalable_pricing')
+                            ]}
                         />
                         <UseCaseCard
-                            title="Enterprises"
-                            description="Enterprise-grade security and compliance with dedicated support."
-                            benefits={["SSO integration", "Custom SLA", "Priority support"]}
+                            title={t('features.enterprises')}
+                            description={t('features.enterprises_description')}
+                            benefits={[
+                                t('features.sso_integration'),
+                                t('features.custom_sla'),
+                                t('features.priority_support')
+                            ]}
                         />
                         <UseCaseCard
-                            title="Developers"
-                            description="Powerful API and webhooks for seamless integration with your tools."
-                            benefits={["REST API", "Webhooks", "SDK libraries"]}
+                            title={t('features.developers')}
+                            description={t('features.developers_description')}
+                            benefits={[
+                                t('features.rest_api'),
+                                t('features.webhooks'),
+                                t('features.sdk_libraries')
+                            ]}
                         />
                     </div>
                 </div>
@@ -113,16 +127,16 @@ export default function Index({ features }) {
             <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-900 dark:to-purple-900">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <h2 className="text-4xl font-bold text-white mb-6">
-                        Ready to Experience These Features?
+                        {t('features.cta_title')}
                     </h2>
                     <p className="text-xl text-blue-100 mb-10">
-                        Start your free trial today and see how DeviceHub can transform your workflow.
+                        {t('features.cta_description')}
                     </p>
                     <a
                         href="/register"
                         className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-blue-600 bg-white hover:bg-gray-50 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
                     >
-                        Get Started Free
+                        {t('features.get_started_free')}
                         <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                         </svg>
@@ -146,16 +160,14 @@ function FeatureTab({ feature, index, isActive, onClick }) {
     return (
         <button
             onClick={onClick}
-            className={`w-full text-left p-6 rounded-xl transition-all ${
-                isActive
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105'
-                    : 'bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
-            }`}
+            className={`w-full text-left p-6 rounded-xl transition-all ${isActive
+                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105'
+                : 'bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
+                }`}
         >
             <div className="flex items-start space-x-4">
-                <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${
-                    isActive ? 'bg-white/20' : 'bg-gradient-to-br from-blue-500 to-purple-600'
-                }`}>
+                <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${isActive ? 'bg-white/20' : 'bg-gradient-to-br from-blue-500 to-purple-600'
+                    }`}>
                     <svg className={`w-6 h-6 ${isActive ? 'text-white' : 'text-white'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={icons[feature.icon]} />
                     </svg>
@@ -206,7 +218,7 @@ function FeatureVisualization({ feature }) {
     );
 }
 
-function FeatureCard({ feature, index }) {
+function FeatureCard({ feature, index, t }) {
     const icons = {
         device: "M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z",
         analytics: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
@@ -240,7 +252,7 @@ function FeatureCard({ feature, index }) {
 
             {/* Learn More Link */}
             <div className="flex items-center text-blue-600 dark:text-blue-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                <span>Learn more</span>
+                <span>{t('features.learn_more')}</span>
                 <svg className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>

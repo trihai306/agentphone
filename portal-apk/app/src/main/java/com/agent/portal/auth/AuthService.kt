@@ -36,10 +36,34 @@ class AuthService(private val context: Context) {
     
     /**
      * Get API base URL from preferences or use default
+     * Automatically uses appropriate URL for emulator (supports Laravel Herd HTTPS)
      */
     private fun getApiBaseUrl(): String {
         val prefs = context.getSharedPreferences("portal_settings", Context.MODE_PRIVATE)
-        return prefs.getString("api_base_url", DEFAULT_API_BASE_URL) ?: DEFAULT_API_BASE_URL
+        val savedUrl = prefs.getString("api_base_url", null)
+        
+        // Always check if we're on emulator first
+        val isEmulator = com.agent.portal.utils.NetworkUtils.isEmulator()
+        Log.d(TAG, "Device type: ${if (isEmulator) "Emulator" else "Physical Device"}")
+        
+        // If URL is saved in settings, use it (user override)
+        if (!savedUrl.isNullOrEmpty()) {
+            Log.d(TAG, "Using saved API URL: $savedUrl")
+            return savedUrl
+        }
+        
+        // Auto-configure based on device type
+        return if (isEmulator) {
+            // Emulator: use 10.0.2.2 to access host machine
+            // Using HTTP port 8000 for php artisan serve
+            val url = "http://10.0.2.2:8000/api"
+            Log.d(TAG, "Auto-configured for emulator: $url")
+            url
+        } else {
+            // Physical device: use actual server URL
+            Log.d(TAG, "Using default URL for physical device: $DEFAULT_API_BASE_URL")
+            DEFAULT_API_BASE_URL
+        }
     }
     
     /**
@@ -82,14 +106,15 @@ class AuthService(private val context: Context) {
                 if (response.isSuccessful) {
                     val loginResponse = gson.fromJson(responseBody, LoginResponse::class.java)
                     
-                    if (loginResponse.success && loginResponse.token != null) {
-                        Log.i(TAG, "✅ Login successful for user: ${loginResponse.user?.email}")
+                    // Check if token is present (Laravel doesn't send 'success' field)
+                    if (!loginResponse.token.isNullOrEmpty() && loginResponse.user != null) {
+                        Log.i(TAG, "✅ Login successful for user: ${loginResponse.user.email}")
                         return@withContext loginResponse
                     } else {
-                        Log.w(TAG, "⚠️ Login failed: ${loginResponse.message}")
+                        Log.w(TAG, "⚠️ Login failed: ${loginResponse.message ?: "No token received"}")
                         return@withContext LoginResponse(
                             success = false,
-                            message = loginResponse.message ?: "Login failed",
+                            message = loginResponse.message ?: "Login failed - no token",
                             token = null,
                             user = null
                         )

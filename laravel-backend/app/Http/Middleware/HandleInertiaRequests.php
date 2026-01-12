@@ -33,16 +33,21 @@ class HandleInertiaRequests extends Middleware
         return array_merge(parent::share($request), [
             'auth' => [
                 'user' => $request->user(),
-                'wallet' => fn () => $this->getWalletData($request),
+                'wallet' => fn() => $this->getWalletData($request),
             ],
             'flash' => [
-                'success' => fn () => $request->session()->get('success'),
-                'error' => fn () => $request->session()->get('error'),
+                'success' => fn() => $request->session()->get('success'),
+                'error' => fn() => $request->session()->get('error'),
             ],
             'appName' => config('app.name'),
 
             // Notifications data shared with all Inertia pages
-            'notifications' => fn () => $this->getNotificationsData($request),
+            'notifications' => fn() => $this->getNotificationsData($request),
+
+            // Localization data
+            'locale' => app()->getLocale(),
+            'availableLocales' => ['vi', 'en'],
+            'translations' => fn() => $this->getTranslations(app()->getLocale()),
         ]);
     }
 
@@ -92,5 +97,21 @@ class HandleInertiaRequests extends Middleware
             'currency' => $wallet->currency ?? 'VND',
             'formatted_balance' => number_format($wallet->balance, 0, ',', '.') . ' ₫',
         ];
+    }
+
+    /**
+     * Get translations for the current locale
+     */
+    protected function getTranslations(string $locale): array
+    {
+        $translationPath = resource_path("lang/{$locale}.json");
+
+        if (!file_exists($translationPath)) {
+            return [];
+        }
+
+        $translations = json_decode(file_get_contents($translationPath), true);
+
+        return $translations ?? [];
     }
 }

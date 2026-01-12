@@ -24,6 +24,9 @@ class DeviceActivityLog extends Model
     public const EVENT_HEARTBEAT = 'heartbeat';
     public const EVENT_APP_OPENED = 'app_opened';
     public const EVENT_APP_CLOSED = 'app_closed';
+    public const EVENT_DEVICE_REGISTERED = 'device_registered';
+    public const EVENT_DEVICE_UPDATED = 'device_updated';
+    public const EVENT_DEVICE_DELETED = 'device_deleted';
 
     public function device(): BelongsTo
     {

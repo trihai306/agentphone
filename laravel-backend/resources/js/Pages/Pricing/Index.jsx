@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import LandingLayout from '../../Layouts/LandingLayout';
 
 export default function Index({ packages = [], auth }) {
+    const { t } = useTranslation();
     const [billingPeriod, setBillingPeriod] = useState('monthly');
     const [selectedType, setSelectedType] = useState('all');
 
     const packageTypes = [
-        { key: 'all', label: 'Tất cả', icon: 'grid' },
-        { key: 'subscription', label: 'Thuê bao', icon: 'refresh' },
-        { key: 'one_time', label: 'Mua một lần', icon: 'shopping-bag' },
-        { key: 'credits', label: 'Gói Credits', icon: 'zap' },
+        { key: 'all', label: t('pricing.all', { defaultValue: 'Tất cả' }), icon: 'grid' },
+        { key: 'subscription', label: t('pricing.subscription', { defaultValue: 'Thuê bao' }), icon: 'refresh' },
+        { key: 'one_time', label: t('pricing.one_time', { defaultValue: 'Mua một lần' }), icon: 'shopping-bag' },
+        { key: 'credits', label: t('pricing.credits', { defaultValue: 'Gói Credits' }), icon: 'zap' },
     ];
 
     const filteredPackages = (packages || []).filter(pkg =>
@@ -42,42 +44,39 @@ export default function Index({ packages = [], auth }) {
                             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            Giá cả minh bạch - Không phí ẩn
+                            {t('pricing.transparent', { defaultValue: 'Giá cả minh bạch - Không phí ẩn' })}
                         </span>
 
                         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-6 tracking-tight">
-                            Chọn gói phù hợp với
+                            {t('pricing.hero_title_1', { defaultValue: 'Chọn gói phù hợp với' })}
                             <span className="block bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
-                                nhu cầu của bạn
+                                {t('pricing.hero_title_2', { defaultValue: 'nhu cầu của bạn' })}
                             </span>
                         </h1>
 
                         <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-10">
-                            Quản lý thiết bị thông minh, tự động hóa workflow, tiết kiệm thời gian.
-                            Bắt đầu miễn phí - nâng cấp bất cứ lúc nào.
+                            {t('pricing.hero_desc', { defaultValue: 'Quản lý thiết bị thông minh, tự động hóa workflow, tiết kiệm thời gian. Bắt đầu miễn phí - nâng cấp bất cứ lúc nào.' })}
                         </p>
 
                         {/* Billing Toggle */}
                         <div className="inline-flex items-center p-1.5 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20">
                             <button
                                 onClick={() => setBillingPeriod('monthly')}
-                                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
-                                    billingPeriod === 'monthly'
+                                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${billingPeriod === 'monthly'
                                         ? 'bg-white text-gray-900 shadow-lg'
                                         : 'text-gray-300 hover:text-white'
-                                }`}
+                                    }`}
                             >
-                                Hàng tháng
+                                {t('pricing.monthly', { defaultValue: 'Hàng tháng' })}
                             </button>
                             <button
                                 onClick={() => setBillingPeriod('yearly')}
-                                className={`relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
-                                    billingPeriod === 'yearly'
+                                className={`relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${billingPeriod === 'yearly'
                                         ? 'bg-white text-gray-900 shadow-lg'
                                         : 'text-gray-300 hover:text-white'
-                                }`}
+                                    }`}
                             >
-                                Hàng năm
+                                {t('pricing.yearly', { defaultValue: 'Hàng năm' })}
                                 <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-xs font-bold rounded-full shadow-lg">
                                     -20%
                                 </span>
@@ -95,11 +94,10 @@ export default function Index({ packages = [], auth }) {
                             <button
                                 key={type.key}
                                 onClick={() => setSelectedType(type.key)}
-                                className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl font-medium transition-all duration-300 whitespace-nowrap ${
-                                    selectedType === type.key
+                                className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl font-medium transition-all duration-300 whitespace-nowrap ${selectedType === type.key
                                         ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30'
                                         : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
-                                }`}
+                                    }`}
                             >
                                 <TypeIcon type={type.icon} />
                                 <span>{type.label}</span>
@@ -271,11 +269,10 @@ function PricingCard({ package: pkg, billingPeriod, onSelect, index }) {
 
     return (
         <div
-            className={`group relative flex flex-col rounded-3xl transition-all duration-500 hover:-translate-y-2 ${
-                pkg.is_featured
+            className={`group relative flex flex-col rounded-3xl transition-all duration-500 hover:-translate-y-2 ${pkg.is_featured
                     ? 'bg-gradient-to-br from-purple-600 via-pink-600 to-blue-600 p-[2px] shadow-2xl shadow-purple-500/30'
                     : 'bg-white dark:bg-gray-800 shadow-xl hover:shadow-2xl border border-gray-200 dark:border-gray-700'
-            }`}
+                }`}
             style={{ animationDelay: `${index * 100}ms` }}
         >
             {/* Inner container for featured cards */}
@@ -304,11 +301,10 @@ function PricingCard({ package: pkg, billingPeriod, onSelect, index }) {
                             </h3>
                         </div>
                         {pkg.icon && (
-                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
-                                pkg.is_featured
+                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${pkg.is_featured
                                     ? 'bg-gradient-to-br from-purple-500 to-pink-500'
                                     : 'bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600'
-                            }`}>
+                                }`}>
                                 <PackageIcon icon={pkg.icon} className={pkg.is_featured ? 'text-white' : 'text-gray-600 dark:text-gray-300'} />
                             </div>
                         )}
@@ -440,11 +436,10 @@ function PricingCard({ package: pkg, billingPeriod, onSelect, index }) {
                 <div className="p-8 pt-0">
                     <button
                         onClick={onSelect}
-                        className={`w-full py-4 px-6 rounded-2xl font-bold text-center transition-all duration-300 ${
-                            pkg.is_featured
+                        className={`w-full py-4 px-6 rounded-2xl font-bold text-center transition-all duration-300 ${pkg.is_featured
                                 ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 hover:-translate-y-0.5'
                                 : 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100'
-                        }`}
+                            }`}
                     >
                         {pkg.is_trial ? 'Bắt đầu dùng thử' : pkg.price === 0 ? 'Bắt đầu miễn phí' : 'Chọn gói này'}
                     </button>
@@ -572,9 +567,8 @@ function FAQItem({ question, answer }) {
             >
                 <span className="font-semibold text-gray-900 dark:text-white pr-4">{question}</span>
                 <svg
-                    className={`w-5 h-5 text-gray-500 flex-shrink-0 transition-transform duration-300 ${
-                        isOpen ? 'rotate-180' : ''
-                    }`}
+                    className={`w-5 h-5 text-gray-500 flex-shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''
+                        }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"

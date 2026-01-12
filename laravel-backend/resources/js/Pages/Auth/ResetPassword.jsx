@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useForm, usePage } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AuthLayout from '../../Layouts/AuthLayout';
 
 export default function ResetPassword({ token, email }) {
+    const { t } = useTranslation();
     const { flash } = usePage().props;
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
@@ -30,10 +32,10 @@ export default function ResetPassword({ token, email }) {
                         </svg>
                     </div>
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                        Reset Password
+                        {t('auth.reset_password.title')}
                     </h1>
                     <p className="text-gray-600 dark:text-gray-400">
-                        Enter your new password below
+                        {t('auth.reset_password.description', { defaultValue: 'Enter your new password below' })}
                     </p>
                 </div>
 
@@ -70,7 +72,7 @@ export default function ResetPassword({ token, email }) {
                     {/* New Password */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            New Password
+                            {t('auth.reset_password.password')}
                         </label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -82,9 +84,8 @@ export default function ResetPassword({ token, email }) {
                                 type={showPassword ? 'text' : 'password'}
                                 value={data.password}
                                 onChange={e => setData('password', e.target.value)}
-                                className={`w-full pl-10 pr-12 py-3 border ${
-                                    errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                                } rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+                                className={`w-full pl-10 pr-12 py-3 border ${errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                                    } rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
                                 placeholder="••••••••"
                                 autoFocus
                             />
@@ -111,7 +112,7 @@ export default function ResetPassword({ token, email }) {
                     {/* Confirm Password */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Confirm Password
+                            {t('auth.reset_password.password_confirmation')}
                         </label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -123,9 +124,8 @@ export default function ResetPassword({ token, email }) {
                                 type={showPasswordConfirmation ? 'text' : 'password'}
                                 value={data.password_confirmation}
                                 onChange={e => setData('password_confirmation', e.target.value)}
-                                className={`w-full pl-10 pr-12 py-3 border ${
-                                    errors.password_confirmation ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                                } rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+                                className={`w-full pl-10 pr-12 py-3 border ${errors.password_confirmation ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                                    } rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
                                 placeholder="••••••••"
                             />
                             <button
@@ -164,7 +164,7 @@ export default function ResetPassword({ token, email }) {
                             </>
                         ) : (
                             <>
-                                <span>Reset Password</span>
+                                <span>{t('auth.reset_password.submit')}</span>
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>

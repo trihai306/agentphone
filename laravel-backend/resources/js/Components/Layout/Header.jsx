@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { usePage, router, Link } from '@inertiajs/react';
 import { useTheme } from '../../Contexts/ThemeContext';
+import LanguageSwitcher from '../LanguageSwitcher';
 
 const notificationStyles = {
     info: {
@@ -104,6 +105,9 @@ export default function Header({ title, userName, setSidebarOpen }) {
                         </kbd>
                     </button>
 
+                    {/* Language Switcher */}
+                    <LanguageSwitcher />
+
                     {/* Theme Toggle */}
                     <button
                         onClick={toggleTheme}
@@ -180,9 +184,8 @@ export default function Header({ title, userName, setSidebarOpen }) {
                                                     return (
                                                         <div
                                                             key={notification.id}
-                                                            className={`px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer ${
-                                                                !isRead ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''
-                                                            }`}
+                                                            className={`px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer ${!isRead ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''
+                                                                }`}
                                                             onClick={() => !isRead && handleMarkAsRead(notification.id)}
                                                         >
                                                             <div className="flex items-start space-x-3">

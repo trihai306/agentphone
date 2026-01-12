@@ -52,6 +52,12 @@ object RealTimeUploader {
     // Backend URL - set via init()
     private var backendBaseUrl: String? = null
     private var isEnabled = false
+    
+    // Laravel backend for workflow automation
+    private var laravelBackendUrl: String? = null
+    private var workflowSessionId: String? = null
+    private var workflowFlowId: Int? = null
+    private var workflowEnabled = false
 
     // Context for network checks and file storage
     private var contextRef: Context? = null

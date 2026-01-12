@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useForm, usePage } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import LandingLayout from '../../Layouts/LandingLayout';
 
 export default function Index() {
+    const { t } = useTranslation();
     const { flash } = usePage().props;
     const [showSuccess, setShowSuccess] = useState(!!flash.success);
 
@@ -42,17 +44,17 @@ export default function Index() {
                             <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                             <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                         </svg>
-                        <span className="text-sm font-medium text-blue-900 dark:text-blue-300">Contact Us</span>
+                        <span className="text-sm font-medium text-blue-900 dark:text-blue-300">{t('contact.title')}</span>
                     </div>
 
                     <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 dark:text-white mb-6">
-                        Let's Start a
+                        {t('contact.hero_title')}
                         <span className="block bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
-                            Conversation
+                            {t('contact.hero_subtitle')}
                         </span>
                     </h1>
                     <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-                        Have questions about DeviceHub? Our team is here to help you get started or find answers.
+                        {t('contact.hero_description')}
                     </p>
                 </div>
             </section>
@@ -65,8 +67,8 @@ export default function Index() {
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
                         <div>
-                            <h3 className="font-semibold text-green-900 dark:text-green-100">Message sent successfully!</h3>
-                            <p className="text-sm text-green-700 dark:text-green-300 mt-1">Thank you for contacting us. We'll get back to you soon.</p>
+                            <h3 className="font-semibold text-green-900 dark:text-green-100">{t('contact.success_title')}</h3>
+                            <p className="text-sm text-green-700 dark:text-green-300 mt-1">{t('contact.success_message')}</p>
                         </div>
                         <button
                             onClick={() => setShowSuccess(false)}
@@ -87,28 +89,28 @@ export default function Index() {
                         {/* Contact Info */}
                         <div className="lg:col-span-2">
                             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
-                                Get in Touch
+                                {t('contact.get_in_touch')}
                             </h2>
                             <p className="text-gray-600 dark:text-gray-400 mb-8">
-                                Fill out the form and our team will get back to you within 24 hours.
+                                {t('contact.form_description')}
                             </p>
 
                             <div className="space-y-6">
                                 <ContactInfoCard
                                     icon="email"
-                                    title="Email"
+                                    title={t('contact.email')}
                                     value="support@devicehub.com"
-                                    description="We're here to help"
+                                    description={t('contact.email_description')}
                                 />
                                 <ContactInfoCard
                                     icon="phone"
-                                    title="Phone"
+                                    title={t('contact.phone')}
                                     value="+1 (555) 123-4567"
-                                    description="Mon-Fri 9am-6pm PST"
+                                    description={t('contact.phone_description')}
                                 />
                                 <ContactInfoCard
                                     icon="location"
-                                    title="Office"
+                                    title={t('contact.address')}
                                     value="123 Tech Street"
                                     description="San Francisco, CA 94105"
                                 />
@@ -117,7 +119,7 @@ export default function Index() {
                             {/* Social Links */}
                             <div className="mt-10">
                                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-4">
-                                    Follow Us
+                                    {t('contact.follow_us')}
                                 </h3>
                                 <div className="flex space-x-4">
                                     <SocialButton icon="twitter" href="#" />
@@ -133,7 +135,7 @@ export default function Index() {
                                 <form onSubmit={handleSubmit} className="space-y-6">
                                     <div className="grid md:grid-cols-2 gap-6">
                                         <FormField
-                                            label="Name"
+                                            label={t('contact.name')}
                                             type="text"
                                             value={data.name}
                                             onChange={(e) => setData('name', e.target.value)}
@@ -142,7 +144,7 @@ export default function Index() {
                                             icon="user"
                                         />
                                         <FormField
-                                            label="Email"
+                                            label={t('contact.email')}
                                             type="email"
                                             value={data.email}
                                             onChange={(e) => setData('email', e.target.value)}
@@ -153,18 +155,18 @@ export default function Index() {
                                     </div>
 
                                     <FormField
-                                        label="Subject"
+                                        label={t('contact.subject')}
                                         type="text"
                                         value={data.subject}
                                         onChange={(e) => setData('subject', e.target.value)}
                                         error={errors.subject}
-                                        placeholder="How can we help you?"
+                                        placeholder={t('contact.subject_placeholder')}
                                         icon="subject"
                                     />
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Message *
+                                            {t('contact.message')} *
                                         </label>
                                         <div className="relative">
                                             <textarea
@@ -172,7 +174,7 @@ export default function Index() {
                                                 onChange={(e) => setData('message', e.target.value)}
                                                 rows={6}
                                                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
-                                                placeholder="Tell us more about your inquiry..."
+                                                placeholder={t('contact.message_placeholder')}
                                                 required
                                             />
                                             <div className="absolute bottom-3 right-3 text-xs text-gray-400">
@@ -193,11 +195,11 @@ export default function Index() {
                                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                 </svg>
-                                                <span>Sending...</span>
+                                                <span>{t('contact.sending')}</span>
                                             </>
                                         ) : (
                                             <>
-                                                <span>Send Message</span>
+                                                <span>{t('contact.send')}</span>
                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                                                 </svg>
@@ -216,25 +218,25 @@ export default function Index() {
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
                         <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                            Frequently Asked Questions
+                            {t('contact.faq_title')}
                         </h2>
                         <p className="text-xl text-gray-600 dark:text-gray-300">
-                            Quick answers to common questions
+                            {t('contact.faq_subtitle')}
                         </p>
                     </div>
 
                     <div className="space-y-4">
                         <FAQItem
-                            question="How quickly will I get a response?"
-                            answer="We typically respond to all inquiries within 24 hours during business days. For urgent matters, please call our support line."
+                            question={t('contact.faq_q1')}
+                            answer={t('contact.faq_a1')}
                         />
                         <FAQItem
-                            question="Do you offer demos?"
-                            answer="Yes! We'd be happy to schedule a personalized demo. Just mention it in your message and we'll reach out to set up a time."
+                            question={t('contact.faq_q2')}
+                            answer={t('contact.faq_a2')}
                         />
                         <FAQItem
-                            question="What support options are available?"
-                            answer="We offer email support for all plans, live chat for Professional and Enterprise plans, and dedicated support for Enterprise customers."
+                            question={t('contact.faq_q3')}
+                            answer={t('contact.faq_a3')}
                         />
                     </div>
                 </div>

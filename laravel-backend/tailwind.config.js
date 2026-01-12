@@ -14,7 +14,7 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Inter', ...defaultTheme.fontFamily.sans],
             },
             animation: {
                 'blob': 'blob 7s infinite',
@@ -30,6 +30,32 @@ export default {
             },
             scale: {
                 '102': '1.02',
+            },
+            colors: {
+                // CLICKAI Brand Colors
+                'brand': {
+                    primary: '#7C3AED',
+                    'primary-light': '#9D5BFF',
+                    'primary-dark': '#5B21B6',
+                    secondary: '#3B82F6',
+                    'secondary-light': '#60A5FA',
+                    'secondary-dark': '#2563EB',
+                    accent: '#22D3EE',
+                    'accent-dark': '#06B6D4',
+                },
+                // Premium Dark Surfaces
+                'surface': {
+                    dark: '#0A0A0F',
+                    DEFAULT: '#12121A',
+                    elevated: '#1A1A24',
+                    container: '#1E1E28',
+                    'container-high': '#252530',
+                },
+                // Glass Effects
+                'glass': {
+                    bg: 'rgba(255, 255, 255, 0.1)',
+                    border: 'rgba(255, 255, 255, 0.15)',
+                },
             },
             keyframes: {
                 blob: {

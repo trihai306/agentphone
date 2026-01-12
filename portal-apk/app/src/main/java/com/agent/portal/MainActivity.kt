@@ -37,6 +37,9 @@ import com.agent.portal.overlay.OverlayService
 import com.agent.portal.recording.RecordingManager
 import com.agent.portal.recording.RecordedEvent
 import com.agent.portal.server.HttpServerService
+import androidx.work.*
+import com.agent.portal.worker.HeartbeatWorker
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
@@ -112,6 +115,9 @@ class MainActivity : AppCompatActivity() {
 
         // Initialize RecordingManager with context for screenshot capture
         RecordingManager.init(this)
+        
+        // Initialize Socket connection
+        initializeSocket()
 
         // Register broadcast receiver for recording stopped events
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -128,9 +134,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         setupStatusIndicators()
+        setupUserInfo()
         setupUI()
         setupMicroAnimations()
         updateStatus()
+        
+        // Schedule periodic heartbeat for online status tracking
+        com.agent.portal.utils.HeartbeatScheduler.schedule(this)
     }
 
     /**
@@ -145,7 +155,163 @@ class MainActivity : AppCompatActivity() {
         binding.indicatorKeyboard.setBackgroundResource(R.drawable.status_indicator_animated)
         binding.indicatorOverlay.setBackgroundResource(R.drawable.status_indicator_animated)
     }
+    
+    /**
+     * Initialize socket connection if not already connected
+     */
+    private fun initializeSocket() {
+        // Check if socket is already connected
+        if (com.agent.portal.socket.SocketJobManager.isConnected()) {
+            Log.d("MainActivity", "Socket already connected")
+            return
+        }
+        
+        try {
+            // Pusher/Soketi credentials
+            val appKey = "app-key"
+            val host = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
+                "10.0.2.2" // Host machine for emulator
+            } else {
+                "laravel-backend.test" // Production
+            }
+            val port = 6001
+            val encrypted = false // HTTP for emulator, set true for production WSS
+            
+            Log.i("MainActivity", "Initializing Pusher connection: $host:$port")
+            
+            // Initialize and connect
+            com.agent.portal.socket.SocketJobManager.init(
+                context = this,
+                appKey = appKey,
+                host = host,
+                port = port,
+                encrypted = encrypted
+            )
+            com.agent.portal.socket.SocketJobManager.connect()
+            
+            Log.i("MainActivity", "✅ Pusher connection initiated")
+        } catch (e: Exception) {
+            Log.e("MainActivity", "❌ Socket initialization error: ${e.message}", e)
+            // Don't crash app if socket fails
+        }
+    }
+    
+    /**
+ * Display logged-in user information
+ */
+private fun setupUserInfo() {
+    val sessionManager = com.agent.portal.auth.SessionManager(this)
+    val session = sessionManager.getSession()
+    
+    session?.let {
+        // Display user name
+        binding.tvUserName.text = it.userName ?: "User"
+        
+        // Display user email
+        binding.tvUserEmail.text = it.userEmail
+        
+        // Display user initials (first letter of name or email)
+        val initials = (it.userName ?: it.userEmail).firstOrNull()?.uppercase() ?: "U"
+        binding.tvUserInitials.text = initials
+        
+        Log.d("MainActivity", "Displaying user info: ${it.userName} (${it.userEmail})")
+    } ?: run {
+        // Fallback if session is null (shouldn't happen due to auth check)
+        binding.tvUserName.text = "Guest"
+        binding.tvUserEmail.text = "Not logged in"
+        binding.tvUserInitials.text = "G"
+    }
+    
+    // Display Device ID
+    val deviceId = android.provider.Settings.Secure.getString(
+        contentResolver,
+        android.provider.Settings.Secure.ANDROID_ID
+    ) ?: "unknown"
+    binding.tvDeviceId.text = "ID: $deviceId"
+    
+    // Setup copy button
+    binding.btnCopyDeviceId.setOnClickListener {
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        val clip = android.content.ClipData.newPlainText("Device ID", deviceId)
+        clipboard.setPrimaryClip(clip)
+        
+        // Show toast confirmation
+        android.widget.Toast.makeText(this, "✓ Device ID copied", android.widget.Toast.LENGTH_SHORT).show()
+        
+        // Animate the icon
+        it.animate()
+            .scaleX(0.8f)
+            .scaleY(0.8f)
+            .setDuration(100)
+            .withEndAction {
+                it.animate()
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(100)
+                    .start()
+            }
+            .start()
+    }
+    
+    // Setup socket status monitoring
+    setupSocketStatus()
+}
 
+/**
+ * Monitor and display socket connection status
+ */
+private fun setupSocketStatus() {
+    // Add socket listener
+    val socketListener = object : com.agent.portal.socket.JobListener {
+        override fun onConnected() {
+            runOnUiThread {
+                binding.indicatorSocket.setBackgroundResource(R.drawable.status_indicator_on)
+                binding.tvSocketStatus.text = "Socket: Connected"
+                binding.tvSocketStatus.setTextColor(getColor(R.color.status_on))
+                Log.d("MainActivity", "✓ Socket connected")
+            }
+        }
+
+        override fun onDisconnected() {
+            runOnUiThread {
+                binding.indicatorSocket.setBackgroundResource(R.drawable.status_indicator_off)
+                binding.tvSocketStatus.text = "Socket: Disconnected"
+                binding.tvSocketStatus.setTextColor(getColor(R.color.text_tertiary))
+                Log.d("MainActivity", "✗ Socket disconnected")
+            }
+        }
+
+        override fun onConnectionError(error: String) {
+            runOnUiThread {
+                binding.indicatorSocket.setBackgroundResource(R.drawable.status_indicator_off)
+                binding.tvSocketStatus.text = "Socket: Error"
+                binding.tvSocketStatus.setTextColor(getColor(R.color.status_off))
+                Log.e("MainActivity", "Socket error: $error")
+            }
+        }
+
+        override fun onJobReceived(job: com.agent.portal.socket.Job) {}
+        override fun onJobStarted(job: com.agent.portal.socket.Job) {}
+        override fun onJobCompleted(job: com.agent.portal.socket.Job, result: com.agent.portal.socket.JobResult) {}
+        override fun onJobFailed(job: com.agent.portal.socket.Job, error: String) {}
+        override fun onJobCancelled(jobId: String) {}
+        override fun onConfigUpdate(config: String) {}
+    }
+    
+    com.agent.portal.socket.SocketJobManager.addJobListener(socketListener)
+    
+    // Check current status
+    val status = com.agent.portal.socket.SocketJobManager.getStatus()
+    if (status.connected) {
+        binding.indicatorSocket.setBackgroundResource(R.drawable.status_indicator_on)
+        binding.tvSocketStatus.text = "Socket: Connected"
+        binding.tvSocketStatus.setTextColor(getColor(R.color.status_on))
+    } else {
+        binding.indicatorSocket.setBackgroundResource(R.drawable.status_indicator_off)
+        binding.tvSocketStatus.text = "Socket: Disconnected"
+        binding.tvSocketStatus.setTextColor(getColor(R.color.text_tertiary))
+    }
+}
     override fun onResume() {
         super.onResume()
         updateStatus()
@@ -164,6 +330,10 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.action_settings -> {
                 startActivity(Intent(this, SettingsActivity::class.java))
+                true
+            }
+            R.id.action_device_info -> {
+                startActivity(Intent(this, DeviceInfoActivity::class.java))
                 true
             }
             R.id.action_logout -> {

@@ -254,6 +254,22 @@ object RecordingManager {
             val duration = System.currentTimeMillis() - startTime
             Log.i(TAG, "[${formatTimestamp()}] Recording started successfully: $recordingId (took ${duration}ms)")
             
+            // Publish recording:started event to Pusher
+            try {
+                com.agent.portal.socket.SocketJobManager.publishEvent(
+                    "recording:started",
+                    mapOf(
+                        "session_id" to recordingId!!,
+                        "started_at" to recordingStartTime.get(),
+                        "target_app" to (appPackage ?: "manual"),
+                        "screenshot_enabled" to screenshotEnabled
+                    )
+                )
+                Log.i(TAG, "📤 Published recording:started event")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to publish recording:started event", e)
+            }
+            
             // Notify listeners
             notifyRecordingStarted(recordingId!!, appPackage)
 
@@ -362,6 +378,23 @@ object RecordingManager {
             )
 
             Log.i(TAG, "[${formatTimestamp()}] === stopRecording() completed successfully ===")
+            
+            // Publish recording:stopped event to Pusher
+            try {
+                com.agent.portal.socket.SocketJobManager.publishEvent(
+                    "recording:stopped",
+                    mapOf(
+                        "session_id" to currentRecordingId,
+                        "stopped_at" to stopTime,
+                        "duration" to duration,
+                        "event_count" to eventCount,
+                        "target_app" to (targetAppPackage ?: "unknown")
+                    )
+                )
+                Log.i(TAG, "📤 Published recording:stopped event")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to publish recording:stopped event", e)
+            }
             
             // Notify listeners
             notifyRecordingStopped(result)

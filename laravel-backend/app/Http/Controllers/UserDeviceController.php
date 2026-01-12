@@ -46,7 +46,7 @@ class UserDeviceController extends Controller
 
     public function edit(Device $device)
     {
-        $this->authorize('update', $device);
+        abort_if($device->user_id !== auth()->id(), 403, 'Unauthorized');
 
         return Inertia::render('Devices/Edit', [
             'device' => $device,
@@ -55,7 +55,7 @@ class UserDeviceController extends Controller
 
     public function update(Request $request, Device $device)
     {
-        $this->authorize('update', $device);
+        abort_if($device->user_id !== auth()->id(), 403, 'Unauthorized');
 
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
@@ -72,7 +72,7 @@ class UserDeviceController extends Controller
 
     public function destroy(Device $device)
     {
-        $this->authorize('delete', $device);
+        abort_if($device->user_id !== auth()->id(), 403, 'Unauthorized');
 
         $device->delete();
 

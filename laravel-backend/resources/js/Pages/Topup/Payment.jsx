@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, router } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AppLayout from '../../Layouts/AppLayout';
 
 export default function Payment({ topup = {}, package: pkg = {}, paymentMethods = [], bankInfo = {} }) {
+    const { t } = useTranslation();
     const [copied, setCopied] = useState(null);
     const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes
 
@@ -40,25 +42,24 @@ export default function Payment({ topup = {}, package: pkg = {}, paymentMethods 
     };
 
     return (
-        <AppLayout title="Thanh toán nạp tiền">
+        <AppLayout title={t('topup.payment_title', { defaultValue: 'Thanh toán nạp tiền' })}>
             <div className="max-w-4xl mx-auto">
                 {/* Breadcrumb */}
                 <nav className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-8">
                     <Link href="/topup" className="hover:text-emerald-600 dark:hover:text-emerald-400">
-                        Nạp tiền
+                        {t('topup.topup', { defaultValue: 'Nạp tiền' })}
                     </Link>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                    <span className="text-gray-900 dark:text-white font-medium">Thanh toán</span>
+                    <span className="text-gray-900 dark:text-white font-medium">{t('topup.payment', { defaultValue: 'Thanh toán' })}</span>
                 </nav>
 
                 {/* Timer Warning */}
-                <div className={`mb-6 p-4 rounded-2xl border ${
-                    timeLeft < 300
+                <div className={`mb-6 p-4 rounded-2xl border ${timeLeft < 300
                         ? 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700'
                         : 'bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-700'
-                }`}>
+                    }`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                             <svg className={`w-6 h-6 ${timeLeft < 300 ? 'text-red-500' : 'text-amber-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,10 +67,10 @@ export default function Payment({ topup = {}, package: pkg = {}, paymentMethods 
                             </svg>
                             <div>
                                 <h3 className={`font-semibold ${timeLeft < 300 ? 'text-red-800 dark:text-red-200' : 'text-amber-800 dark:text-amber-200'}`}>
-                                    Thời gian thanh toán
+                                    {t('topup.payment_time', { defaultValue: 'Thời gian thanh toán' })}
                                 </h3>
                                 <p className={`text-sm ${timeLeft < 300 ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'}`}>
-                                    Vui lòng hoàn tất thanh toán trong thời gian quy định
+                                    {t('topup.payment_time_desc', { defaultValue: 'Vui lòng hoàn tất thanh toán trong thời gian quy định' })}
                                 </p>
                             </div>
                         </div>
@@ -117,14 +118,14 @@ export default function Payment({ topup = {}, package: pkg = {}, paymentMethods 
                                     </div>
                                 )}
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Trạng thái</span>
+                                    <span className="text-gray-600 dark:text-gray-400">{t('topup.status', { defaultValue: 'Trạng thái' })}</span>
                                     <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-sm font-semibold rounded-full">
-                                        Chờ thanh toán
+                                        {t('topup.pending_payment', { defaultValue: 'Chờ thanh toán' })}
                                     </span>
                                 </div>
                                 <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                                     <div className="flex justify-between items-baseline">
-                                        <span className="text-lg font-bold text-gray-900 dark:text-white">Tổng cộng</span>
+                                        <span className="text-lg font-bold text-gray-900 dark:text-white">{t('topup.total', { defaultValue: 'Tổng cộng' })}</span>
                                         <span className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
                                             {formatCurrency(topup.price)}
                                         </span>
@@ -135,7 +136,7 @@ export default function Payment({ topup = {}, package: pkg = {}, paymentMethods 
                             {/* Total Amount Summary */}
                             <div className="mx-6 mb-6 p-4 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl border border-emerald-200 dark:border-emerald-800">
                                 <div className="text-center">
-                                    <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium mb-1">Tổng nhận vào ví</p>
+                                    <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium mb-1">{t('topup.total_receive', { defaultValue: 'Tổng nhận vào ví' })}</p>
                                     <p className="text-3xl font-extrabold text-emerald-700 dark:text-emerald-300">
                                         {formatCurrency((topup.price || 0) + (topup.bonus_credits || 0))}
                                     </p>
@@ -174,7 +175,7 @@ export default function Payment({ topup = {}, package: pkg = {}, paymentMethods 
                                                 onClick={() => copyToClipboard(bankInfo.account_number, 'account')}
                                                 className="px-3 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
                                             >
-                                                {copied === 'account' ? 'Đã sao chép!' : 'Sao chép'}
+                                                {copied === 'account' ? t('topup.copied', { defaultValue: 'Đã sao chép!' }) : t('topup.copy', { defaultValue: 'Sao chép' })}
                                             </button>
                                         </div>
                                         <div className="flex justify-between items-center">
@@ -203,7 +204,7 @@ export default function Payment({ topup = {}, package: pkg = {}, paymentMethods 
                                                 onClick={() => copyToClipboard(topup.order_code, 'content')}
                                                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                                             >
-                                                {copied === 'content' ? 'Đã sao chép!' : 'Sao chép'}
+                                                {copied === 'content' ? t('topup.copied', { defaultValue: 'Đã sao chép!' }) : t('topup.copy', { defaultValue: 'Sao chép' })}
                                             </button>
                                         </div>
                                     </div>
@@ -221,7 +222,7 @@ export default function Payment({ topup = {}, package: pkg = {}, paymentMethods 
                                                 onClick={() => copyToClipboard(topup.price?.toString(), 'amount')}
                                                 className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
                                             >
-                                                {copied === 'amount' ? 'Đã sao chép!' : 'Sao chép'}
+                                                {copied === 'amount' ? t('topup.copied', { defaultValue: 'Đã sao chép!' }) : t('topup.copy', { defaultValue: 'Sao chép' })}
                                             </button>
                                         </div>
                                     </div>
@@ -267,13 +268,13 @@ export default function Payment({ topup = {}, package: pkg = {}, paymentMethods 
                                 href="/topup"
                                 className="px-6 py-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-semibold"
                             >
-                                Quay lại
+                                {t('topup.back', { defaultValue: 'Quay lại' })}
                             </Link>
                             <button
                                 onClick={handleConfirmPayment}
                                 className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold rounded-2xl shadow-lg transition-all"
                             >
-                                Tôi đã thanh toán
+                                {t('topup.i_paid', { defaultValue: 'Tôi đã thanh toán' })}
                             </button>
                         </div>
                     </div>

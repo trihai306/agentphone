@@ -37,3 +37,28 @@ Broadcast::channel('admins', function ($user) {
 Broadcast::channel('announcements', function () {
     return true;
 });
+
+// Presence channel for tracking online devices per user
+Broadcast::channel('presence-devices.{userId}', function ($user, $userId) {
+    if ((int) $user->id === (int) $userId) {
+        // Get device info from request headers
+        $deviceId = request()->header('X-Device-ID') ?? request()->input('device_id');
+        $device = $user->devices()->where('device_id', $deviceId)->first();
+
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'device_id' => $deviceId,
+            'device_name' => $device?->name ?? 'Unknown Device',
+            'device_model' => $device?->model,
+            'device_db_id' => $device?->id,
+        ];
+    }
+    return false;
+});
+
+// Private channel for recording session events (workflow sync)
+Broadcast::channel('recording.{userId}', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
+});
+

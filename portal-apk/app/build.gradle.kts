@@ -52,11 +52,14 @@ dependencies {
     // OkHttp for HTTP client (upload to Python backend)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
-    // Socket.IO for real-time job receiving
-    implementation("io.socket:socket.io-client:2.1.0")
+    // Pusher for real-time WebSocket communication with Soketi
+    implementation("com.pusher:pusher-java-client:2.4.4")
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    
+    // WorkManager for background tasks
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 
     // JSON
     implementation("com.google.code.gson:gson:2.10.1")

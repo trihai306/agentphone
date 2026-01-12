@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import LandingLayout from '../../Layouts/LandingLayout';
 
 export default function Index({ stats, team }) {
+    const { t } = useTranslation();
     const [isVisible, setIsVisible] = useState({});
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
@@ -55,20 +57,19 @@ export default function Index({ stats, team }) {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
                         </span>
-                        <span className="text-sm font-medium text-purple-200">Về Chúng Tôi</span>
+                        <span className="text-sm font-medium text-purple-200">{t('about.about_us', { defaultValue: 'Về Chúng Tôi' })}</span>
                     </div>
 
                     {/* Main Heading */}
                     <h1 className="text-5xl sm:text-7xl lg:text-8xl font-bold text-white mb-6 tracking-tight">
-                        <span className="block">Kiến Tạo</span>
+                        <span className="block">{t('about.hero_title_1', { defaultValue: 'Kiến Tạo' })}</span>
                         <span className="block mt-2 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent animate-gradient-x bg-[length:200%_auto]">
-                            Tương Lai Số
+                            {t('about.hero_title_2', { defaultValue: 'Tương Lai Số' })}
                         </span>
                     </h1>
 
                     <p className="text-xl sm:text-2xl text-gray-300/90 max-w-3xl mx-auto leading-relaxed mb-12">
-                        Chúng tôi xây dựng nền tảng quản lý thiết bị thông minh,
-                        giúp doanh nghiệp tối ưu hóa hiệu suất và vận hành trơn tru.
+                        {t('about.hero_desc', { defaultValue: 'Chúng tôi xây dựng nền tảng quản lý thiết bị thông minh, giúp doanh nghiệp tối ưu hóa hiệu suất và vận hành trơn tru.' })}
                     </p>
 
                     {/* CTA Buttons */}
@@ -80,7 +81,7 @@ export default function Index({ stats, team }) {
                             <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 transition-all duration-300 group-hover:scale-105" />
                             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500" />
                             <span className="relative flex items-center gap-2">
-                                Bắt Đầu Ngay
+                                {t('about.get_started', { defaultValue: 'Bắt Đầu Ngay' })}
                                 <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                 </svg>
@@ -90,7 +91,7 @@ export default function Index({ stats, team }) {
                             href="/contact"
                             className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:bg-white/10 hover:border-white/20 transition-all duration-300"
                         >
-                            Liên Hệ Tư Vấn
+                            {t('about.contact_us', { defaultValue: 'Liên Hệ Tư Vấn' })}
                         </a>
                     </div>
                 </div>
@@ -114,10 +115,10 @@ export default function Index({ stats, team }) {
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-sm font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-3">
-                            Thành Tựu
+                            {t('about.achievements', { defaultValue: 'Thành Tựu' })}
                         </h2>
                         <h3 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white">
-                            Con Số Ấn Tượng
+                            {t('about.impressive_numbers', { defaultValue: 'Con Số Ấn Tượng' })}
                         </h3>
                     </div>
 
@@ -139,12 +140,12 @@ export default function Index({ stats, team }) {
                                 <svg className="w-4 h-4 text-purple-600 dark:text-purple-400" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" />
                                 </svg>
-                                <span className="text-sm font-medium text-purple-700 dark:text-purple-300">Sứ Mệnh</span>
+                                <span className="text-sm font-medium text-purple-700 dark:text-purple-300">{t('about.mission', { defaultValue: 'Sứ Mệnh' })}</span>
                             </div>
 
                             <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
-                                Đơn Giản Hóa
-                                <span className="text-purple-600 dark:text-purple-400"> Quản Lý Thiết Bị</span>
+                                {t('about.simplify', { defaultValue: 'Đơn Giản Hóa' })}
+                                <span className="text-purple-600 dark:text-purple-400"> {t('about.device_management', { defaultValue: 'Quản Lý Thiết Bị' })}</span>
                             </h2>
 
                             <div className="space-y-6 text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
@@ -328,7 +329,7 @@ export default function Index({ stats, team }) {
                 {/* Content */}
                 <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
-                        Sẵn Sàng Bắt Đầu?
+                        {t('about.ready_to_start', { defaultValue: 'Sẵn Sàng Bắt Đầu?' })}
                     </h2>
                     <p className="text-xl text-purple-200 mb-12 max-w-2xl mx-auto">
                         Tham gia cùng hàng nghìn doanh nghiệp đã tin tưởng DeviceHub
@@ -340,7 +341,7 @@ export default function Index({ stats, team }) {
                             href="/register"
                             className="group inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-purple-900 bg-white rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
                         >
-                            Dùng Thử Miễn Phí
+                            {t('about.try_free', { defaultValue: 'Dùng Thử Miễn Phí' })}
                             <svg className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                             </svg>
@@ -349,7 +350,7 @@ export default function Index({ stats, team }) {
                             href="/contact"
                             className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl hover:bg-white/20 transition-all duration-300"
                         >
-                            Đặt Lịch Demo
+                            {t('about.book_demo', { defaultValue: 'Đặt Lịch Demo' })}
                         </a>
                     </div>
                 </div>

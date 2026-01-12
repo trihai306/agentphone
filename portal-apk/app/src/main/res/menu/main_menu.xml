@@ -8,6 +8,11 @@
         android:icon="@drawable/ic_settings_quick"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_device_info"
+        android:title="Device Info"
+        android:icon="@drawable/ic_info"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_logout"
         android:title="Logout"
         android:icon="@drawable/ic_logout"

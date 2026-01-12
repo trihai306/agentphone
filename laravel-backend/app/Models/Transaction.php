@@ -12,6 +12,7 @@ class Transaction extends Model
         'transaction_code',
         'user_id',
         'wallet_id',
+        'ai_generation_id',
         'type',
         'amount',
         'fee',
@@ -44,6 +45,7 @@ class Transaction extends Model
 
     const TYPE_DEPOSIT = 'deposit';
     const TYPE_WITHDRAWAL = 'withdrawal';
+    const TYPE_AI_GENERATION = 'ai_generation';
 
     const STATUS_PENDING = 'pending';
     const STATUS_PROCESSING = 'processing';
@@ -91,6 +93,11 @@ class Transaction extends Model
         return $this->belongsTo(User::class, 'approved_by');
     }
 
+    public function aiGeneration(): BelongsTo
+    {
+        return $this->belongsTo(AiGeneration::class);
+    }
+
     public function scopeDeposit($query)
     {
         return $query->where('type', self::TYPE_DEPOSIT);
@@ -99,6 +106,11 @@ class Transaction extends Model
     public function scopeWithdrawal($query)
     {
         return $query->where('type', self::TYPE_WITHDRAWAL);
+    }
+
+    public function scopeAiGeneration($query)
+    {
+        return $query->where('type', self::TYPE_AI_GENERATION);
     }
 
     public function scopePending($query)
@@ -118,7 +130,7 @@ class Transaction extends Model
 
     public function getStatusColorAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_PENDING => 'warning',
             self::STATUS_PROCESSING => 'info',
             self::STATUS_COMPLETED => 'success',
@@ -130,9 +142,10 @@ class Transaction extends Model
 
     public function getTypeColorAttribute(): string
     {
-        return match($this->type) {
+        return match ($this->type) {
             self::TYPE_DEPOSIT => 'success',
             self::TYPE_WITHDRAWAL => 'danger',
+            self::TYPE_AI_GENERATION => 'info',
             default => 'secondary',
         };
     }

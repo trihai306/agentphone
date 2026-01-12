@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AppLayout from '../../Layouts/AppLayout';
 
 export default function Manage({ userPackage = {} }) {
+    const { t } = useTranslation();
     const { auth } = usePage().props;
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelReason, setCancelReason] = useState('');
@@ -46,10 +48,10 @@ export default function Manage({ userPackage = {} }) {
             cancelled: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
         };
         const labels = {
-            active: 'Đang hoạt động',
-            pending: 'Chờ xử lý',
-            expired: 'Hết hạn',
-            cancelled: 'Đã hủy',
+            active: t('packages.active'),
+            pending: t('packages.pending'),
+            expired: t('packages.expired'),
+            cancelled: t('packages.cancelled'),
         };
         return (
             <span className={`px-3 py-1 text-sm font-semibold rounded-full ${styles[status] || styles.pending}`}>
@@ -63,17 +65,17 @@ export default function Manage({ userPackage = {} }) {
         : null;
 
     return (
-        <AppLayout title={`Quản lý gói - ${pkg.name || 'Gói dịch vụ'}`}>
+        <AppLayout title={`${t('packages.manage_package')} - ${pkg.name || t('packages.title')}`}>
             <div className="max-w-4xl mx-auto">
                 {/* Breadcrumb */}
                 <nav className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-8">
                     <Link href="/packages" className="hover:text-purple-600 dark:hover:text-purple-400">
-                        Gói dịch vụ
+                        {t('packages.breadcrumb.packages')}
                     </Link>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                    <span className="text-gray-900 dark:text-white font-medium">Quản lý gói</span>
+                    <span className="text-gray-900 dark:text-white font-medium">{t('packages.breadcrumb.manage')}</span>
                 </nav>
 
                 {/* Package Header */}
@@ -92,7 +94,7 @@ export default function Manage({ userPackage = {} }) {
                             <p className="text-white/80">{pkg.description}</p>
                         </div>
                         <div className="text-right">
-                            <p className="text-white/60 text-sm">Mã đơn hàng</p>
+                            <p className="text-white/60 text-sm">{t('packages.order_code')}</p>
                             <p className="font-mono font-bold text-lg">{userPackage.order_code}</p>
                         </div>
                     </div>
@@ -110,7 +112,7 @@ export default function Manage({ userPackage = {} }) {
                                     </svg>
                                 </div>
                                 <div>
-                                    <p className="text-gray-500 dark:text-gray-400 text-sm">Ngày còn lại</p>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm">{t('packages.days_remaining')}</p>
                                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
                                         {userPackage.days_remaining ?? 'N/A'}
                                     </p>
@@ -127,7 +129,7 @@ export default function Manage({ userPackage = {} }) {
                                     </svg>
                                 </div>
                                 <div>
-                                    <p className="text-gray-500 dark:text-gray-400 text-sm">Credits còn lại</p>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm">{t('packages.credits_remaining')}</p>
                                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
                                         {userPackage.remaining_credits?.toLocaleString() ?? 'N/A'}
                                     </p>
@@ -144,7 +146,7 @@ export default function Manage({ userPackage = {} }) {
                                     </svg>
                                 </div>
                                 <div>
-                                    <p className="text-gray-500 dark:text-gray-400 text-sm">Thiết bị đang dùng</p>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm">{t('packages.devices_used')}</p>
                                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
                                         {userPackage.used_devices ?? 0}/{pkg.max_devices === -1 ? '∞' : pkg.max_devices ?? 0}
                                     </p>
@@ -157,45 +159,43 @@ export default function Manage({ userPackage = {} }) {
                     <div className="lg:col-span-2">
                         <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Chi tiết gói</h3>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('packages.package_details')}</h3>
                             </div>
                             <div className="p-6 space-y-4">
                                 <div className="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
-                                    <span className="text-gray-600 dark:text-gray-400">Ngày kích hoạt</span>
+                                    <span className="text-gray-600 dark:text-gray-400">{t('packages.activation_date')}</span>
                                     <span className="font-semibold text-gray-900 dark:text-white">
                                         {formatDate(userPackage.activated_at)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
-                                    <span className="text-gray-600 dark:text-gray-400">Ngày hết hạn</span>
+                                    <span className="text-gray-600 dark:text-gray-400">{t('packages.expiry_date')}</span>
                                     <span className="font-semibold text-gray-900 dark:text-white">
                                         {formatDate(userPackage.expires_at)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
-                                    <span className="text-gray-600 dark:text-gray-400">Giá đã thanh toán</span>
+                                    <span className="text-gray-600 dark:text-gray-400">{t('packages.price_paid')}</span>
                                     <span className="font-semibold text-gray-900 dark:text-white">
                                         {formatPrice(userPackage.price_paid)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
-                                    <span className="text-gray-600 dark:text-gray-400">Trạng thái thanh toán</span>
-                                    <span className={`px-3 py-1 text-sm font-semibold rounded-full ${
-                                        userPackage.payment_status === 'paid'
+                                    <span className="text-gray-600 dark:text-gray-400">{t('packages.payment_status')}</span>
+                                    <span className={`px-3 py-1 text-sm font-semibold rounded-full ${userPackage.payment_status === 'paid'
                                             ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                                             : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                                    }`}>
-                                        {userPackage.payment_status === 'paid' ? 'Đã thanh toán' : 'Chờ thanh toán'}
+                                        }`}>
+                                        {userPackage.payment_status === 'paid' ? t('packages.paid') : t('packages.awaiting_payment')}
                                     </span>
                                 </div>
                                 <div className="flex justify-between py-3">
-                                    <span className="text-gray-600 dark:text-gray-400">Tự động gia hạn</span>
-                                    <span className={`px-3 py-1 text-sm font-semibold rounded-full ${
-                                        userPackage.auto_renew
+                                    <span className="text-gray-600 dark:text-gray-400">{t('packages.auto_renew')}</span>
+                                    <span className={`px-3 py-1 text-sm font-semibold rounded-full ${userPackage.auto_renew
                                             ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                                             : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
-                                    }`}>
-                                        {userPackage.auto_renew ? 'Bật' : 'Tắt'}
+                                        }`}>
+                                        {userPackage.auto_renew ? t('packages.on') : t('packages.off')}
                                     </span>
                                 </div>
 
@@ -203,7 +203,7 @@ export default function Manage({ userPackage = {} }) {
                                 {creditsPercent !== null && (
                                     <div className="pt-4">
                                         <div className="flex justify-between text-sm mb-2">
-                                            <span className="text-gray-600 dark:text-gray-400">Sử dụng credits</span>
+                                            <span className="text-gray-600 dark:text-gray-400">{t('packages.credits_usage')}</span>
                                             <span className="font-semibold text-gray-900 dark:text-white">
                                                 {userPackage.credits_used?.toLocaleString() || 0} / {pkg.credits?.toLocaleString()}
                                             </span>
@@ -223,7 +223,7 @@ export default function Manage({ userPackage = {} }) {
                     {/* Actions */}
                     <div className="lg:col-span-1">
                         <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 space-y-4">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Hành động</h3>
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('packages.actions_section')}</h3>
 
                             {userPackage.status === 'active' && (
                                 <>
@@ -234,7 +234,7 @@ export default function Manage({ userPackage = {} }) {
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                         </svg>
-                                        <span>Gia hạn gói</span>
+                                        <span>{t('packages.renew')}</span>
                                     </Link>
 
                                     <button
@@ -244,7 +244,7 @@ export default function Manage({ userPackage = {} }) {
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                         </svg>
-                                        <span>Hủy gói</span>
+                                        <span>{t('packages.cancel_package')}</span>
                                     </button>
                                 </>
                             )}
@@ -257,7 +257,7 @@ export default function Manage({ userPackage = {} }) {
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                                     </svg>
-                                    <span>Thanh toán ngay</span>
+                                    <span>{t('packages.pay_now')}</span>
                                 </Link>
                             )}
 
@@ -269,7 +269,7 @@ export default function Manage({ userPackage = {} }) {
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                     </svg>
-                                    <span>Đăng ký lại</span>
+                                    <span>{t('packages.resubscribe')}</span>
                                 </Link>
                             )}
 
@@ -280,21 +280,21 @@ export default function Manage({ userPackage = {} }) {
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                                 </svg>
-                                <span>Quay lại</span>
+                                <span>{t('common.back')}</span>
                             </Link>
                         </div>
 
                         {/* Help */}
                         <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-700">
-                            <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">Cần hỗ trợ?</h4>
+                            <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">{t('packages.need_help')}</h4>
                             <p className="text-blue-700 dark:text-blue-300 text-sm mb-4">
-                                Liên hệ với chúng tôi nếu bạn có bất kỳ câu hỏi nào về gói dịch vụ.
+                                {t('packages.help_description')}
                             </p>
                             <Link
                                 href="/contact"
                                 className="text-blue-600 dark:text-blue-400 font-semibold hover:underline text-sm"
                             >
-                                Liên hệ hỗ trợ →
+                                {t('packages.contact_support')} →
                             </Link>
                         </div>
                     </div>
@@ -311,22 +311,22 @@ export default function Manage({ userPackage = {} }) {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                 </svg>
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white">Xác nhận hủy gói</h3>
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('packages.confirm_cancel')}</h3>
                             <p className="text-gray-600 dark:text-gray-400 mt-2">
-                                Bạn có chắc chắn muốn hủy gói <strong>{pkg.name}</strong>? Hành động này không thể hoàn tác.
+                                {t('packages.confirm_cancel_message', { name: pkg.name })}
                             </p>
                         </div>
 
                         <div className="mb-6">
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Lý do hủy (tùy chọn)
+                                {t('packages.cancel_reason')}
                             </label>
                             <textarea
                                 value={cancelReason}
                                 onChange={(e) => setCancelReason(e.target.value)}
                                 rows={3}
                                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                                placeholder="Cho chúng tôi biết lý do bạn hủy gói..."
+                                placeholder={t('packages.cancel_reason_placeholder')}
                             />
                         </div>
 
@@ -335,14 +335,14 @@ export default function Manage({ userPackage = {} }) {
                                 onClick={() => setShowCancelModal(false)}
                                 className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-semibold rounded-xl transition-all"
                             >
-                                Không, giữ lại
+                                {t('packages.no_keep')}
                             </button>
                             <button
                                 onClick={handleCancel}
                                 disabled={processing}
                                 className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-all disabled:opacity-50"
                             >
-                                {processing ? 'Đang xử lý...' : 'Có, hủy gói'}
+                                {processing ? t('packages.processing') : t('packages.yes_cancel')}
                             </button>
                         </div>
                     </div>

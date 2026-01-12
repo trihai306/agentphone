@@ -2,25 +2,25 @@
 <resources>
 
     <style name="Theme.AgentPortal" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Primary colors -->
-        <item name="colorPrimary">@color/accent_blue</item>
-        <item name="colorPrimaryContainer">@color/accent_blue_container</item>
-        <item name="colorOnPrimary">@color/background_dark</item>
-        <item name="colorOnPrimaryContainer">@color/accent_blue</item>
+        <!-- Primary colors - CLICKAI Brand Violet -->
+        <item name="colorPrimary">@color/brand_primary</item>
+        <item name="colorPrimaryContainer">@color/brand_primary_container</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorOnPrimaryContainer">@color/brand_primary</item>
 
-        <!-- Secondary colors -->
-        <item name="colorSecondary">@color/accent_cyan</item>
-        <item name="colorSecondaryContainer">@color/accent_cyan_container</item>
-        <item name="colorOnSecondary">@color/background_dark</item>
-        <item name="colorOnSecondaryContainer">@color/accent_cyan</item>
+        <!-- Secondary colors - CLICKAI Blue -->
+        <item name="colorSecondary">@color/brand_secondary</item>
+        <item name="colorSecondaryContainer">@color/brand_secondary_container</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorOnSecondaryContainer">@color/brand_secondary</item>
 
-        <!-- Tertiary colors -->
-        <item name="colorTertiary">@color/accent_purple</item>
-        <item name="colorTertiaryContainer">@color/accent_purple_container</item>
+        <!-- Tertiary colors - Cyan Accent -->
+        <item name="colorTertiary">@color/brand_accent</item>
+        <item name="colorTertiaryContainer">@color/accent_cyan_container</item>
         <item name="colorOnTertiary">@color/background_dark</item>
-        <item name="colorOnTertiaryContainer">@color/accent_purple</item>
+        <item name="colorOnTertiaryContainer">@color/brand_accent</item>
 
-        <!-- Background and surface -->
+        <!-- Background and surface - Premium Dark -->
         <item name="android:colorBackground">@color/background_dark</item>
         <item name="colorSurface">@color/surface_dark</item>
         <item name="colorSurfaceVariant">@color/surface_elevated</item>
@@ -31,18 +31,18 @@
         <!-- Error -->
         <item name="colorError">@color/accent_red</item>
         <item name="colorErrorContainer">@color/accent_red_container</item>
-        <item name="colorOnError">@color/background_dark</item>
+        <item name="colorOnError">@color/white</item>
         <item name="colorOnErrorContainer">@color/accent_red</item>
 
         <!-- Outline -->
         <item name="colorOutline">@color/border_default</item>
         <item name="colorOutlineVariant">@color/divider</item>
 
-        <!-- Status bar (Light mode - dark icons) -->
+        <!-- Status bar (Dark mode - light icons) -->
         <item name="android:statusBarColor">@color/background_dark</item>
         <item name="android:navigationBarColor">@color/background_dark</item>
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
 
         <!-- Shape -->
         <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Portal.Small</item>
@@ -51,8 +51,9 @@
 
         <!-- Switch colors -->
         <item name="colorSwitchThumbNormal">@color/surface_container</item>
-        <item name="android:colorControlActivated">@color/accent_blue</item>
+        <item name="android:colorControlActivated">@color/brand_primary</item>
     </style>
+
 
     <!-- Shape appearances -->
     <style name="ShapeAppearance.Portal.Small" parent="ShapeAppearance.Material3.SmallComponent">

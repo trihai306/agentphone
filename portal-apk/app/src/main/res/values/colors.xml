@@ -9,80 +9,137 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- Light Theme Background Colors -->
-    <color name="background_dark">#FFF8FAFC</color>
-    <color name="surface_dark">#FFFFFFFF</color>
-    <color name="surface_elevated">#FFFFFFFF</color>
-    <color name="surface_container">#FFF1F5F9</color>
-    <color name="surface_container_high">#FFE2E8F0</color>
-    <color name="surface_container_highest">#FFCBD5E1</color>
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- CLICKAI BRAND COLORS                                            -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    
+    <!-- Primary Brand Colors -->
+    <color name="brand_primary">#FF7C3AED</color>
+    <color name="brand_primary_light">#FF9D5BFF</color>
+    <color name="brand_primary_dark">#FF5B21B6</color>
+    <color name="brand_secondary">#FF3B82F6</color>
+    <color name="brand_secondary_light">#FF60A5FA</color>
+    <color name="brand_secondary_dark">#FF2563EB</color>
+    <color name="brand_accent">#FF22D3EE</color>
+    <color name="brand_accent_dark">#FF06B6D4</color>
+    
+    <!-- Brand Gradient -->
+    <color name="gradient_brand_start">#FF7C3AED</color>
+    <color name="gradient_brand_end">#FF3B82F6</color>
+    <color name="gradient_brand_accent">#FF22D3EE</color>
+    
+    <!-- Brand Container Colors -->
+    <color name="brand_primary_container">#1A7C3AED</color>
+    <color name="brand_primary_container_high">#337C3AED</color>
+    <color name="brand_secondary_container">#1A3B82F6</color>
+    <color name="brand_secondary_container_high">#333B82F6</color>
+    
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- DARK MODE SURFACES (Premium AI Theme)                           -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    
+    <color name="background_dark">#FF0A0A0F</color>
+    <color name="surface_dark">#FF12121A</color>
+    <color name="surface_elevated">#FF1A1A24</color>
+    <color name="surface_container">#FF1E1E28</color>
+    <color name="surface_container_high">#FF252530</color>
+    <color name="surface_container_highest">#FF2E2E3A</color>
+    
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- LIGHT MODE SURFACES                                              -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    
+    <color name="background_light">#FFFAFBFF</color>
+    <color name="surface_light">#FFFFFFFF</color>
+    <color name="surface_elevated_light">#FFF8F9FF</color>
+    <color name="surface_container_light">#FFF1F3FF</color>
 
-    <!-- Text Colors (Light Mode) -->
-    <color name="text_primary">#FF0F172A</color>
-    <color name="text_secondary">#FF475569</color>
-    <color name="text_tertiary">#FF94A3B8</color>
-    <color name="text_disabled">#FFCBD5E1</color>
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- TEXT COLORS                                                      -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    
+    <!-- Dark Mode Text -->
+    <color name="text_primary">#FFFFFFFF</color>
+    <color name="text_secondary">#FFB4B4C0</color>
+    <color name="text_tertiary">#FF6B6B80</color>
+    <color name="text_disabled">#FF404050</color>
+    
+    <!-- Light Mode Text -->
+    <color name="text_primary_light">#FF0F172A</color>
+    <color name="text_secondary_light">#FF475569</color>
+    <color name="text_tertiary_light">#FF94A3B8</color>
 
-    <!-- Accent Colors - Same vibrant colors work for both modes -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- ACCENT COLORS                                                    -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    
+    <!-- Blue -->
     <color name="accent_blue">#FF3B82F6</color>
     <color name="accent_blue_light">#FF60A5FA</color>
     <color name="accent_blue_dark">#FF2563EB</color>
     <color name="accent_blue_container">#1A3B82F6</color>
     <color name="accent_blue_container_high">#333B82F6</color>
-    <color name="accent_green">#FF22C55E</color>
-    <color name="accent_green_light">#FF4ADE80</color>
-    <color name="accent_green_dark">#FF16A34A</color>
-    <color name="accent_green_container">#1A22C55E</color>
-    <color name="accent_green_container_high">#3322C55E</color>
+    
+    <!-- Green (Success) -->
+    <color name="accent_green">#FF10B981</color>
+    <color name="accent_green_light">#FF34D399</color>
+    <color name="accent_green_dark">#FF059669</color>
+    <color name="accent_green_container">#1A10B981</color>
+    <color name="accent_green_container_high">#3310B981</color>
+    
+    <!-- Red (Error) -->
     <color name="accent_red">#FFEF4444</color>
     <color name="accent_red_light">#FFFCA5A5</color>
     <color name="accent_red_dark">#FFDC2626</color>
     <color name="accent_red_container">#1AEF4444</color>
     <color name="accent_red_container_high">#33EF4444</color>
+    
+    <!-- Orange (Warning) -->
     <color name="accent_orange">#FFF59E0B</color>
     <color name="accent_orange_light">#FFFBBF24</color>
     <color name="accent_orange_dark">#FFD97706</color>
     <color name="accent_orange_container">#1AF59E0B</color>
     <color name="accent_orange_container_high">#33F59E0B</color>
+    
+    <!-- Purple -->
     <color name="accent_purple">#FF8B5CF6</color>
     <color name="accent_purple_light">#FFA78BFA</color>
     <color name="accent_purple_dark">#FF7C3AED</color>
     <color name="accent_purple_container">#1A8B5CF6</color>
     <color name="accent_purple_container_high">#338B5CF6</color>
-    <color name="accent_cyan">#FF06B6D4</color>
-    <color name="accent_cyan_light">#FF22D3EE</color>
-    <color name="accent_cyan_dark">#FF0891B2</color>
-    <color name="accent_cyan_container">#1A06B6D4</color>
-    <color name="accent_cyan_container_high">#3306B6D4</color>
+    
+    <!-- Cyan -->
+    <color name="accent_cyan">#FF22D3EE</color>
+    <color name="accent_cyan_light">#FF67E8F9</color>
+    <color name="accent_cyan_dark">#FF06B6D4</color>
+    <color name="accent_cyan_container">#1A22D3EE</color>
+    <color name="accent_cyan_container_high">#3322D3EE</color>
+    
+    <!-- Pink -->
     <color name="accent_pink">#FFEC4899</color>
     <color name="accent_pink_light">#FFF472B6</color>
     <color name="accent_pink_dark">#FFDB2777</color>
     <color name="accent_pink_container">#1AEC4899</color>
     <color name="accent_pink_container_high">#33EC4899</color>
 
-    <!-- Gradient Colors -->
-    <color name="gradient_blue_start">#FF3B82F6</color>
-    <color name="gradient_blue_end">#FF8B5CF6</color>
-    <color name="gradient_green_start">#FF22C55E</color>
-    <color name="gradient_green_end">#FF14B8A6</color>
-    <color name="gradient_purple_start">#FF8B5CF6</color>
-    <color name="gradient_purple_end">#FFEC4899</color>
-    <color name="gradient_cyan_start">#FF06B6D4</color>
-    <color name="gradient_cyan_end">#FF3B82F6</color>
-    <color name="gradient_sunset_start">#FFFBBF24</color>
-    <color name="gradient_sunset_end">#FFEF4444</color>
-
-    <!-- Glow Colors -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- GLOW EFFECTS                                                     -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    
+    <color name="glow_brand">#4D7C3AED</color>
     <color name="glow_blue">#4D3B82F6</color>
-    <color name="glow_green">#4D22C55E</color>
+    <color name="glow_green">#4D10B981</color>
     <color name="glow_red">#4DEF4444</color>
     <color name="glow_purple">#4D8B5CF6</color>
-    <color name="glow_cyan">#4D06B6D4</color>
+    <color name="glow_cyan">#4D22D3EE</color>
     <color name="glow_orange">#4DF59E0B</color>
 
-    <!-- Status Colors -->
-    <color name="status_on">#FF22C55E</color>
-    <color name="status_on_glow">#4D22C55E</color>
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- STATUS INDICATORS                                                -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    
+    <color name="status_on">#FF10B981</color>
+    <color name="status_on_glow">#4D10B981</color>
     <color name="status_off">#FFEF4444</color>
     <color name="status_off_glow">#4DEF4444</color>
     <color name="status_warning">#FFF59E0B</color>
@@ -90,84 +147,103 @@
     <color name="status_pending">#FF3B82F6</color>
     <color name="status_pending_glow">#4D3B82F6</color>
 
-    <!-- Border Colors (Light Mode) -->
-    <color name="border_default">#1A0F172A</color>
-    <color name="border_subtle">#0D0F172A</color>
-    <color name="border_interactive">#FF3B82F6</color>
-    <color name="border_focused">#FF2563EB</color>
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- BORDERS                                                          -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    
+    <color name="border_default">#1AFFFFFF</color>
+    <color name="border_subtle">#0DFFFFFF</color>
+    <color name="border_interactive">#FF7C3AED</color>
+    <color name="border_focused">#FF3B82F6</color>
+    <color name="border_glass">#26FFFFFF</color>
 
-    <!-- Overlay Bounds Colors -->
-    <color name="bounds_clickable">#FF3B82F6</color>
-    <color name="bounds_editable">#FF22C55E</color>
-    <color name="bounds_scrollable">#FF8B5CF6</color>
-    <color name="bounds_focusable">#FFF59E0B</color>
-    <color name="bounds_default">#66475569</color>
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- GLASSMORPHISM                                                    -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    
+    <color name="glass_background">#1AFFFFFF</color>
+    <color name="glass_background_dark">#26000000</color>
+    <color name="glass_border">#26FFFFFF</color>
+    <color name="glass_surface">#0DFFFFFF</color>
 
-    <!-- Button Colors (Light Mode) -->
-    <color name="button_primary">#FF3B82F6</color>
-    <color name="button_primary_pressed">#FF2563EB</color>
-    <color name="button_primary_container">#1A3B82F6</color>
-    <color name="button_primary_container_pressed">#333B82F6</color>
-    <color name="button_secondary">#FFF1F5F9</color>
-    <color name="button_secondary_pressed">#FFE2E8F0</color>
-    <color name="button_secondary_container">#0D0F172A</color>
-    <color name="button_disabled">#FFCBD5E1</color>
-    <color name="button_disabled_container">#0D0F172A</color>
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- BUTTONS                                                          -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    
+    <color name="button_primary">#FF7C3AED</color>
+    <color name="button_primary_pressed">#FF5B21B6</color>
+    <color name="button_primary_container">#1A7C3AED</color>
+    <color name="button_primary_container_pressed">#337C3AED</color>
+    <color name="button_secondary">#FF1A1A24</color>
+    <color name="button_secondary_pressed">#FF252530</color>
+    <color name="button_disabled">#FF404050</color>
+    <color name="button_disabled_container">#0DFFFFFF</color>
 
-    <!-- Icon Colors (Light Mode) -->
-    <color name="icon_primary">#FF0F172A</color>
-    <color name="icon_secondary">#FF475569</color>
-    <color name="icon_accent">#FF3B82F6</color>
-    <color name="icon_disabled">#FFCBD5E1</color>
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- ICONS                                                            -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    
+    <color name="icon_primary">#FFFFFFFF</color>
+    <color name="icon_secondary">#FFB4B4C0</color>
+    <color name="icon_accent">#FF7C3AED</color>
+    <color name="icon_disabled">#FF404050</color>
 
-    <!-- Card Colors (Light Mode) -->
-    <color name="card_background">#FFFFFFFF</color>
-    <color name="card_background_elevated">#FFFFFFFF</color>
-    <color name="card_border">#1A0F172A</color>
-    <color name="card_ripple">#1A0F172A</color>
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- CARDS                                                            -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    
+    <color name="card_background">#FF1A1A24</color>
+    <color name="card_background_elevated">#FF1E1E28</color>
+    <color name="card_border">#1AFFFFFF</color>
+    <color name="card_ripple">#1AFFFFFF</color>
+    <color name="card_gradient_start">#FF1A1A24</color>
+    <color name="card_gradient_end">#FF12121A</color>
 
-    <!-- Shimmer/Loading Colors (Light Mode) -->
-    <color name="shimmer_base">#FFF1F5F9</color>
-    <color name="shimmer_highlight">#FFFFFFFF</color>
-
-    <!-- Divider (Light Mode) -->
-    <color name="divider">#0D0F172A</color>
-    <color name="divider_strong">#1A0F172A</color>
-
-    <!-- Scrim/Overlay -->
-    <color name="scrim">#80000000</color>
-    <color name="scrim_light">#4D000000</color>
-
-    <!-- Recording Colors -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- RECORDING                                                        -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    
     <color name="recording_active">#FFEF4444</color>
     <color name="recording_active_dark">#FFDC2626</color>
     <color name="recording_active_container">#33EF4444</color>
-    <color name="recording_idle">#FF8B5CF6</color>
-    <color name="recording_idle_container">#338B5CF6</color>
+    <color name="recording_idle">#FF7C3AED</color>
+    <color name="recording_idle_container">#337C3AED</color>
     <color name="recording_paused">#FFF59E0B</color>
     <color name="recording_paused_container">#33F59E0B</color>
-
-    <!-- Gradient Recording Badge -->
     <color name="gradient_recording_start">#FFEF4444</color>
     <color name="gradient_recording_end">#FFDC2626</color>
 
-    <!-- Timeline Colors -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- OVERLAY & BOUNDS                                                 -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    
+    <color name="bounds_clickable">#FF3B82F6</color>
+    <color name="bounds_editable">#FF10B981</color>
+    <color name="bounds_scrollable">#FF8B5CF6</color>
+    <color name="bounds_focusable">#FFF59E0B</color>
+    <color name="bounds_default">#66B4B4C0</color>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- TIMELINE                                                         -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    
     <color name="timeline_tap">#FF3B82F6</color>
-    <color name="timeline_scroll">#FF22C55E</color>
+    <color name="timeline_scroll">#FF10B981</color>
     <color name="timeline_input">#FF8B5CF6</color>
     <color name="timeline_focus">#FFF59E0B</color>
     <color name="timeline_long_tap">#FFEC4899</color>
-    <color name="timeline_gesture">#FF06B6D4</color>
+    <color name="timeline_gesture">#FF22D3EE</color>
 
-    <!-- Card Gradient Colors (Light Mode) -->
-    <color name="card_gradient_start">#FFFFFFFF</color>
-    <color name="card_gradient_end">#FFF8FAFC</color>
-
-    <!-- Glass Effect (Light Mode) -->
-    <color name="glass_background">#1A0F172A</color>
-    <color name="glass_border">#260F172A</color>
-
-    <!-- Bottom Nav Colors (Light Mode) -->
-    <color name="bottom_nav_background">#FFFFFFFF</color>
-    <color name="bottom_nav_indicator">#263B82F6</color>
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- MISC                                                             -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    
+    <color name="shimmer_base">#FF1A1A24</color>
+    <color name="shimmer_highlight">#FF252530</color>
+    <color name="divider">#0DFFFFFF</color>
+    <color name="divider_strong">#1AFFFFFF</color>
+    <color name="scrim">#80000000</color>
+    <color name="scrim_light">#4D000000</color>
+    <color name="bottom_nav_background">#FF12121A</color>
+    <color name="bottom_nav_indicator">#267C3AED</color>
 </resources>

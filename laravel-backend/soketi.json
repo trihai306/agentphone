@@ -10,6 +10,17 @@
             "id": "app-id",
             "key": "app-key",
             "secret": "app-secret",
+            "webhooks": [
+                {
+                    "url": "http://localhost:8000/api/pusher/webhook",
+                    "event_types": [
+                        "member_added",
+                        "member_removed",
+                        "channel_occupied",
+                        "channel_vacated"
+                    ]
+                }
+            ],
             "enableClientMessages": true,
             "enableStatistics": true,
             "maxConnections": -1,

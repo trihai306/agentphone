@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AppLayout from '../../Layouts/AppLayout';
 
 export default function Checkout({ package: pkg = {}, paymentMethods = [], bankInfo = {} }) {
+    const { t } = useTranslation();
     const [selectedMethod, setSelectedMethod] = useState('bank_transfer');
     const [processing, setProcessing] = useState(false);
 
@@ -46,17 +48,17 @@ export default function Checkout({ package: pkg = {}, paymentMethods = [], bankI
     };
 
     return (
-        <AppLayout title="Thanh toán">
+        <AppLayout title={t('topup.payment', { defaultValue: 'Thanh toán' })}>
             <div className="max-w-4xl mx-auto">
                 {/* Breadcrumb */}
                 <nav className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-8">
                     <Link href="/topup" className="hover:text-emerald-600 dark:hover:text-emerald-400">
-                        Nạp tiền
+                        {t('topup.topup', { defaultValue: 'Nạp tiền' })}
                     </Link>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                    <span className="text-gray-900 dark:text-white font-medium">Thanh toán</span>
+                    <span className="text-gray-900 dark:text-white font-medium">{t('topup.payment', { defaultValue: 'Thanh toán' })}</span>
                 </nav>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -64,13 +66,13 @@ export default function Checkout({ package: pkg = {}, paymentMethods = [], bankI
                     <div className="lg:col-span-1 lg:order-2">
                         <div className="sticky top-24 bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                             <div className="p-6 bg-gradient-to-br from-emerald-600 to-teal-600">
-                                <h2 className="text-xl font-bold text-white mb-1">Đơn hàng của bạn</h2>
+                                <h2 className="text-xl font-bold text-white mb-1">{t('topup.your_order', { defaultValue: 'Đơn hàng của bạn' })}</h2>
                                 <p className="text-emerald-200 text-sm">{pkg.name}</p>
                             </div>
 
                             <div className="p-6 space-y-4">
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Số tiền nạp</span>
+                                    <span className="text-gray-600 dark:text-gray-400">{t('topup.deposit_amount', { defaultValue: 'Số tiền nạp' })}</span>
                                     <span className="font-semibold text-gray-900 dark:text-white">
                                         {formatCurrency(pkg.price)}
                                     </span>
@@ -85,7 +87,7 @@ export default function Checkout({ package: pkg = {}, paymentMethods = [], bankI
                                 )}
                                 <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                                     <div className="flex justify-between items-baseline">
-                                        <span className="text-lg font-bold text-gray-900 dark:text-white">Nhận vào ví</span>
+                                        <span className="text-lg font-bold text-gray-900 dark:text-white">{t('topup.wallet_receive', { defaultValue: 'Nhận vào ví' })}</span>
                                         <span className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
                                             {formatCurrency((pkg.price || 0) + (pkg.bonus || 0))}
                                         </span>
@@ -101,7 +103,7 @@ export default function Checkout({ package: pkg = {}, paymentMethods = [], bankI
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                         </svg>
                                         <span className="text-sm text-green-600 dark:text-green-400 font-medium">
-                                            Thêm {pkg.bonus_percent}% bonus vào ví
+                                            {t('topup.bonus_info', { percent: pkg.bonus_percent, defaultValue: `Thêm ${pkg.bonus_percent}% bonus vào ví` })}
                                         </span>
                                     </div>
                                 </div>
@@ -113,18 +115,17 @@ export default function Checkout({ package: pkg = {}, paymentMethods = [], bankI
                     <div className="lg:col-span-2 lg:order-1">
                         <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                                Chọn phương thức thanh toán
+                                {t('topup.select_payment', { defaultValue: 'Chọn phương thức thanh toán' })}
                             </h3>
 
                             <div className="space-y-3">
                                 {paymentMethods.map((method) => (
                                     <label
                                         key={method.id}
-                                        className={`flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-                                            selectedMethod === method.id
+                                        className={`flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${selectedMethod === method.id
                                                 ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
                                                 : 'border-gray-200 dark:border-gray-700 hover:border-emerald-300 dark:hover:border-emerald-700'
-                                        }`}
+                                            }`}
                                     >
                                         <input
                                             type="radio"
@@ -134,11 +135,10 @@ export default function Checkout({ package: pkg = {}, paymentMethods = [], bankI
                                             onChange={() => setSelectedMethod(method.id)}
                                             className="w-5 h-5 text-emerald-600 border-gray-300 focus:ring-emerald-500"
                                         />
-                                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
-                                            selectedMethod === method.id
+                                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${selectedMethod === method.id
                                                 ? 'bg-emerald-600 text-white'
                                                 : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                                        }`}>
+                                            }`}>
                                             {methodIcons[method.id] || methodIcons.bank_transfer}
                                         </div>
                                         <div className="flex-1">
@@ -174,10 +174,10 @@ export default function Checkout({ package: pkg = {}, paymentMethods = [], bankI
                                 </div>
                                 <div>
                                     <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-1">
-                                        Thanh toán an toàn
+                                        {t('topup.secure_payment', { defaultValue: 'Thanh toán an toàn' })}
                                     </h4>
                                     <p className="text-sm text-blue-700 dark:text-blue-300">
-                                        Mọi giao dịch được bảo mật và mã hóa. Tiền sẽ được cộng vào ví ngay sau khi admin xác nhận thanh toán.
+                                        {t('topup.secure_desc', { defaultValue: 'Mọi giao dịch được bảo mật và mã hóa. Tiền sẽ được cộng vào ví ngay sau khi admin xác nhận thanh toán.' })}
                                     </p>
                                 </div>
                             </div>
@@ -192,14 +192,13 @@ export default function Checkout({ package: pkg = {}, paymentMethods = [], bankI
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                                 </svg>
-                                Quay lại
+                                {t('topup.back', { defaultValue: 'Quay lại' })}
                             </Link>
                             <button
                                 onClick={handleSubmit}
                                 disabled={processing}
-                                className={`px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center gap-2 ${
-                                    processing ? 'opacity-75 cursor-not-allowed' : ''
-                                }`}
+                                className={`px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-2xl shadow-lg transition-all flex items-center gap-2 ${processing ? 'opacity-75 cursor-not-allowed' : ''
+                                    }`}
                             >
                                 {processing ? (
                                     <>
@@ -207,11 +206,11 @@ export default function Checkout({ package: pkg = {}, paymentMethods = [], bankI
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
-                                        <span>Đang xử lý...</span>
+                                        <span>{t('topup.processing', { defaultValue: 'Đang xử lý...' })}</span>
                                     </>
                                 ) : (
                                     <>
-                                        <span>Tiếp tục thanh toán</span>
+                                        <span>{t('topup.continue_payment', { defaultValue: 'Tiếp tục thanh toán' })}</span>
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                         </svg>

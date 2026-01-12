@@ -1,7 +1,9 @@
 import { Link, router, usePage } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AppLayout from '../../Layouts/AppLayout';
 
 export default function Show({ package: pkg = {} }) {
+    const { t } = useTranslation();
     const { auth } = usePage().props;
 
     const formatPrice = (price) => {
@@ -11,17 +13,26 @@ export default function Show({ package: pkg = {} }) {
         }).format(price);
     };
 
+    const getPackageType = (type) => {
+        const types = {
+            subscription: t('packages.type.subscription'),
+            one_time: t('packages.type.one_time'),
+            credits: t('packages.type.credits')
+        };
+        return types[type] || type;
+    };
+
     const handleSubscribe = () => {
         router.visit(`/packages/${pkg.id}/subscribe`);
     };
 
     return (
-        <AppLayout title={pkg.name || 'Chi tiết gói'}>
+        <AppLayout title={pkg.name || t('packages.package_details')}>
             <div className="max-w-4xl mx-auto">
                 {/* Breadcrumb */}
                 <nav className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-8">
                     <Link href="/packages" className="hover:text-purple-600 dark:hover:text-purple-400">
-                        Gói dịch vụ
+                        {t('packages.breadcrumb.packages')}
                     </Link>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -47,7 +58,7 @@ export default function Show({ package: pkg = {} }) {
                                     </div>
                                     {pkg.type && (
                                         <span className="px-4 py-2 bg-white/10 text-white text-sm font-medium rounded-xl">
-                                            {pkg.type === 'subscription' ? 'Thuê bao' : pkg.type === 'one_time' ? 'Mua một lần' : 'Credits'}
+                                            {getPackageType(pkg.type)}
                                         </span>
                                     )}
                                 </div>
@@ -61,7 +72,7 @@ export default function Show({ package: pkg = {} }) {
                                     </span>
                                     {pkg.duration_days && (
                                         <span className="text-xl text-gray-500 dark:text-gray-400">
-                                            /{pkg.duration_days} ngày
+                                            /{pkg.duration_days} {t('packages.days')}
                                         </span>
                                     )}
                                 </div>
@@ -72,7 +83,7 @@ export default function Show({ package: pkg = {} }) {
                                             {formatPrice(pkg.original_price)}
                                         </span>
                                         <span className="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-bold rounded-full">
-                                            Tiết kiệm {pkg.discount_percent}%
+                                            {t('packages.save_percent', { percent: pkg.discount_percent })}
                                         </span>
                                     </div>
                                 )}
@@ -84,7 +95,7 @@ export default function Show({ package: pkg = {} }) {
                                             <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
                                                 {pkg.credits.toLocaleString()}
                                             </p>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">Credits</p>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">{t('packages.credits')}</p>
                                         </div>
                                     )}
                                     {pkg.max_devices && (
@@ -92,7 +103,7 @@ export default function Show({ package: pkg = {} }) {
                                             <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                                                 {pkg.max_devices === -1 ? '∞' : pkg.max_devices}
                                             </p>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">Thiết bị</p>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">{t('packages.devices')}</p>
                                         </div>
                                     )}
                                     {pkg.duration_days && (
@@ -100,7 +111,7 @@ export default function Show({ package: pkg = {} }) {
                                             <p className="text-3xl font-bold text-green-600 dark:text-green-400">
                                                 {pkg.duration_days}
                                             </p>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">Ngày</p>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">{t('packages.days')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -110,7 +121,7 @@ export default function Show({ package: pkg = {} }) {
                                     onClick={handleSubscribe}
                                     className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-lg font-bold rounded-2xl shadow-lg shadow-purple-500/30 hover:shadow-xl transition-all"
                                 >
-                                    Đăng ký ngay
+                                    {t('packages.subscribe_now')}
                                 </button>
                             </div>
                         </div>
@@ -119,7 +130,7 @@ export default function Show({ package: pkg = {} }) {
                         {pkg.features && pkg.features.length > 0 && (
                             <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 p-8">
                                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                                    Tính năng bao gồm
+                                    {t('packages.features_included')}
                                 </h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {pkg.features.map((feature, idx) => (
@@ -140,7 +151,7 @@ export default function Show({ package: pkg = {} }) {
                         {pkg.limits && Object.keys(pkg.limits).length > 0 && (
                             <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 p-8">
                                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                                    Giới hạn sử dụng
+                                    {t('packages.usage_limits')}
                                 </h2>
                                 <div className="space-y-4">
                                     {Object.entries(pkg.limits).map(([key, value]) => (
@@ -149,7 +160,7 @@ export default function Show({ package: pkg = {} }) {
                                                 {key.replace(/_/g, ' ')}
                                             </span>
                                             <span className="font-semibold text-gray-900 dark:text-white">
-                                                {value === -1 ? 'Không giới hạn' : value.toLocaleString()}
+                                                {value === -1 ? t('packages.unlimited') : value.toLocaleString()}
                                             </span>
                                         </div>
                                     ))}
@@ -162,21 +173,21 @@ export default function Show({ package: pkg = {} }) {
                     <div className="lg:col-span-1 space-y-6">
                         {/* Quick Info */}
                         <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Thông tin nhanh</h3>
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('packages.quick_info')}</h3>
                             <div className="space-y-4">
                                 <div className="flex justify-between">
-                                    <span className="text-gray-500 dark:text-gray-400">Mã gói</span>
+                                    <span className="text-gray-500 dark:text-gray-400">{t('packages.package_code')}</span>
                                     <span className="font-mono font-semibold text-gray-900 dark:text-white">{pkg.code}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-500 dark:text-gray-400">Loại</span>
+                                    <span className="text-gray-500 dark:text-gray-400">{t('packages.package_type')}</span>
                                     <span className="font-semibold text-gray-900 dark:text-white">
-                                        {pkg.type === 'subscription' ? 'Thuê bao' : pkg.type === 'one_time' ? 'Mua một lần' : 'Credits'}
+                                        {getPackageType(pkg.type)}
                                     </span>
                                 </div>
                                 {pkg.active_subscribers !== undefined && (
                                     <div className="flex justify-between">
-                                        <span className="text-gray-500 dark:text-gray-400">Người dùng</span>
+                                        <span className="text-gray-500 dark:text-gray-400">{t('packages.users')}</span>
                                         <span className="font-semibold text-gray-900 dark:text-white">
                                             {pkg.active_subscribers.toLocaleString()}+
                                         </span>
@@ -184,9 +195,9 @@ export default function Show({ package: pkg = {} }) {
                                 )}
                                 {pkg.is_trial && (
                                     <div className="flex justify-between">
-                                        <span className="text-gray-500 dark:text-gray-400">Dùng thử</span>
+                                        <span className="text-gray-500 dark:text-gray-400">{t('packages.trial')}</span>
                                         <span className="font-semibold text-green-600 dark:text-green-400">
-                                            {pkg.trial_days} ngày miễn phí
+                                            {t('packages.trial_days', { days: pkg.trial_days })}
                                         </span>
                                     </div>
                                 )}
@@ -202,19 +213,19 @@ export default function Show({ package: pkg = {} }) {
                                     </svg>
                                 </div>
                                 <h3 className="text-lg font-bold text-green-800 dark:text-green-200">
-                                    Đảm bảo hoàn tiền
+                                    {t('packages.money_back_guarantee')}
                                 </h3>
                             </div>
                             <p className="text-green-700 dark:text-green-300 text-sm">
-                                Hoàn tiền 100% trong 7 ngày đầu tiên nếu bạn không hài lòng với dịch vụ.
+                                {t('packages.money_back_description')}
                             </p>
                         </div>
 
                         {/* Support */}
                         <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Hỗ trợ 24/7</h3>
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('packages.support_247')}</h3>
                             <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-                                Đội ngũ hỗ trợ của chúng tôi luôn sẵn sàng giúp đỡ bạn.
+                                {t('packages.support_description')}
                             </p>
                             <div className="space-y-3">
                                 <a href="mailto:support@devicehub.vn" className="flex items-center space-x-3 text-purple-600 dark:text-purple-400 hover:underline">
@@ -240,7 +251,7 @@ export default function Show({ package: pkg = {} }) {
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                             </svg>
-                            <span>Quay lại danh sách</span>
+                            <span>{t('packages.back_to_list')}</span>
                         </Link>
                     </div>
                 </div>

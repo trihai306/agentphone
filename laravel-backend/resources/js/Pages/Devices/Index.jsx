@@ -1,13 +1,27 @@
 import { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AppLayout from '../../Layouts/AppLayout';
+import { useConfirm } from '@/Components/UI/ConfirmModal';
+import { useTheme } from '@/Contexts/ThemeContext';
 
 export default function Index({ devices }) {
-    const [viewMode, setViewMode] = useState('grid');
+    const { t } = useTranslation();
+    const { showConfirm } = useConfirm();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     const [searchQuery, setSearchQuery] = useState('');
 
-    const handleDelete = (deviceId) => {
-        if (confirm('Are you sure you want to delete this device?')) {
+    const handleDelete = async (deviceId) => {
+        const confirmed = await showConfirm({
+            title: 'Delete Device',
+            message: 'Are you sure you want to delete this device?',
+            type: 'danger',
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+        });
+
+        if (confirmed) {
             router.delete(`/devices/${deviceId}`);
         }
     };
@@ -18,311 +32,204 @@ export default function Index({ devices }) {
         device.device_id?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    return (
-        <AppLayout title="My Devices">
-            <div className="space-y-6">
-                {/* Header Section */}
-                <div>
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        Device Management
-                    </h2>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                        Devices are automatically added when your Portal app connects
-                    </p>
-                </div>
+    const stats = {
+        total: devices.data.length,
+        active: devices.data.filter(d => d.status === 'active').length,
+        inactive: devices.data.filter(d => d.status === 'inactive').length,
+    };
 
-                {/* Search and View Toggle */}
-                <div className="flex flex-col sm:flex-row gap-4">
-                    {/* Search */}
-                    <div className="flex-1">
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
+    return (
+        <AppLayout title="Devices">
+            <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
+                <div className="max-w-[1400px] mx-auto px-6 py-6">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h1 className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                Devices
+                            </h1>
+                            <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                                Manage your connected devices
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="grid grid-cols-3 gap-4 mb-6">
+                        {[
+                            { label: 'Total', value: stats.total },
+                            { label: 'Active', value: stats.active },
+                            { label: 'Inactive', value: stats.inactive },
+                        ].map((stat, i) => (
+                            <div
+                                key={i}
+                                className={`p-4 rounded-lg ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}
+                            >
+                                <p className={`text-xs font-medium ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                    {stat.label}
+                                </p>
+                                <p className={`text-2xl font-semibold mt-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                    {stat.value}
+                                </p>
                             </div>
+                        ))}
+                    </div>
+
+                    {/* Search */}
+                    <div className="mb-6">
+                        <div className="relative">
+                            <svg
+                                className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
                             <input
                                 type="text"
+                                placeholder="Search devices..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search devices..."
-                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className={`w-full pl-10 pr-4 py-2.5 rounded-lg text-sm ${isDark
+                                        ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-gray-600'
+                                        : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'
+                                    } border focus:outline-none`}
                             />
                         </div>
                     </div>
 
-                    {/* View Toggle */}
-                    <div className="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-1">
-                        <button
-                            onClick={() => setViewMode('grid')}
-                            className={`px-3 py-1.5 rounded ${viewMode === 'grid'
-                                ? 'bg-blue-500 text-white'
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                                }`}
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                            </svg>
-                        </button>
-                        <button
-                            onClick={() => setViewMode('list')}
-                            className={`px-3 py-1.5 rounded ${viewMode === 'list'
-                                ? 'bg-blue-500 text-white'
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                                }`}
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
+                    {/* Devices Table */}
+                    {filteredDevices.length > 0 ? (
+                        <div className={`rounded-lg overflow-hidden ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
+                            <table className="w-full">
+                                <thead>
+                                    <tr className={`border-b ${isDark ? 'border-[#2a2a2a]' : 'border-gray-100'}`}>
+                                        <th className={`text-left py-3 px-4 text-xs font-medium uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                            Device
+                                        </th>
+                                        <th className={`text-left py-3 px-4 text-xs font-medium uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                            Model
+                                        </th>
+                                        <th className={`text-left py-3 px-4 text-xs font-medium uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                            Status
+                                        </th>
+                                        <th className={`text-left py-3 px-4 text-xs font-medium uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                            Last Active
+                                        </th>
+                                        <th className={`text-right py-3 px-4 text-xs font-medium uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className={`divide-y ${isDark ? 'divide-[#2a2a2a]' : 'divide-gray-100'}`}>
+                                    {filteredDevices.map((device) => (
+                                        <tr key={device.id} className={isDark ? 'hover:bg-[#222]' : 'hover:bg-gray-50'}>
+                                            <td className="py-4 px-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-100'}`}>
+                                                        <svg className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                        </svg>
+                                                    </div>
+                                                    <div>
+                                                        <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                                            {device.name || 'Unnamed Device'}
+                                                        </p>
+                                                        <p className={`text-xs font-mono ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                            {device.device_id?.slice(0, 20)}...
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className={`py-4 px-4 text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                                                {device.model || 'Unknown'}
+                                            </td>
+                                            <td className="py-4 px-4">
+                                                <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${device.status === 'active'
+                                                        ? isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-50 text-emerald-600'
+                                                        : isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-500'
+                                                    }`}>
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${device.status === 'active' ? 'bg-emerald-500' : 'bg-gray-400'}`} />
+                                                    {device.status === 'active' ? 'Active' : 'Inactive'}
+                                                </span>
+                                            </td>
+                                            <td className={`py-4 px-4 text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                {device.last_active_at
+                                                    ? new Date(device.last_active_at).toLocaleDateString()
+                                                    : 'Never'
+                                                }
+                                            </td>
+                                            <td className="py-4 px-4">
+                                                <div className="flex items-center justify-end gap-1">
+                                                    <Link
+                                                        href={`/devices/${device.id}/edit`}
+                                                        className={`px-3 py-1.5 text-sm font-medium rounded-md ${isDark
+                                                                ? 'bg-white text-black hover:bg-gray-100'
+                                                                : 'bg-gray-900 text-white hover:bg-gray-800'
+                                                            }`}
+                                                    >
+                                                        Edit
+                                                    </Link>
+                                                    <button
+                                                        onClick={() => handleDelete(device.id)}
+                                                        className={`p-1.5 rounded-md ${isDark
+                                                                ? 'text-gray-500 hover:text-red-400 hover:bg-red-900/20'
+                                                                : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
+                                                            }`}
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className={`rounded-lg p-16 text-center ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
+                            <div className={`w-14 h-14 mx-auto rounded-lg flex items-center justify-center mb-4 ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-100'}`}>
+                                <svg className={`w-6 h-6 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <h3 className={`text-lg font-medium mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                {searchQuery ? 'No devices found' : 'No devices yet'}
+                            </h3>
+                            <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                {searchQuery
+                                    ? `No results for "${searchQuery}"`
+                                    : 'Devices will appear when your Portal app connects'
+                                }
+                            </p>
+                        </div>
+                    )}
 
-                {/* Devices Display */}
-                {filteredDevices.length === 0 ? (
-                    <div className="text-center py-12">
-                        <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                        <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No devices found</h3>
-                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            {searchQuery
-                                ? 'Try a different search term'
-                                : 'Devices will appear here automatically when your Portal app connects'}
-                        </p>
-                    </div>
-                ) : viewMode === 'grid' ? (
-                    <GridView devices={filteredDevices} onDelete={handleDelete} />
-                ) : (
-                    <ListView devices={filteredDevices} onDelete={handleDelete} />
-                )}
-
-                {/* Pagination */}
-                {devices.links && devices.links.length > 3 && (
-                    <div className="flex items-center justify-center gap-2 mt-6">
-                        {devices.links.map((link, index) => (
-                            <Link
-                                key={index}
-                                href={link.url || '#'}
-                                disabled={!link.url}
-                                className={`px-3 py-2 text-sm font-medium rounded-lg ${link.active
-                                    ? 'bg-blue-600 text-white'
-                                    : link.url
-                                        ? 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
-                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'
-                                    }`}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
-        </AppLayout>
-    );
-}
-
-// Grid View Component
-function GridView({ devices, onDelete }) {
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {devices.map((device) => (
-                <div
-                    key={device.id}
-                    className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow overflow-hidden"
-                >
-                    {/* Card Header */}
-                    <div className="p-6 pb-4">
-                        <div className="flex items-start justify-between">
-                            <div className="flex items-center space-x-3">
-                                <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${device.status === 'active'
-                                    ? 'bg-green-100 dark:bg-green-900/20'
-                                    : device.status === 'inactive'
-                                        ? 'bg-gray-100 dark:bg-gray-700'
-                                        : 'bg-yellow-100 dark:bg-yellow-900/20'
-                                    }`}>
-                                    <svg className={`w-6 h-6 ${device.status === 'active'
-                                        ? 'text-green-600 dark:text-green-400'
-                                        : device.status === 'inactive'
-                                            ? 'text-gray-500'
-                                            : 'text-yellow-600 dark:text-yellow-400'
-                                        }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                        {device.name || 'Unnamed Device'}
-                                    </h3>
-                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${device.status === 'active'
-                                        ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
-                                        : device.status === 'inactive'
-                                            ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-400'
-                                            : 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400'
-                                        }`}>
-                                        {device.status}
-                                    </span>
-                                </div>
+                    {/* Pagination */}
+                    {devices.last_page > 1 && (
+                        <div className="mt-6 flex items-center justify-between">
+                            <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                Page {devices.current_page} of {devices.last_page}
+                            </p>
+                            <div className="flex items-center gap-2">
+                                {devices.prev_page_url && (
+                                    <Link href={devices.prev_page_url} className={`px-3 py-1.5 text-sm ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>
+                                        Previous
+                                    </Link>
+                                )}
+                                {devices.next_page_url && (
+                                    <Link href={devices.next_page_url} className={`px-3 py-1.5 text-sm font-medium rounded-md ${isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'}`}>
+                                        Next
+                                    </Link>
+                                )}
                             </div>
                         </div>
-                    </div>
-
-                    {/* Card Body */}
-                    <div className="px-6 pb-4 space-y-3">
-                        <div className="flex items-center text-sm">
-                            <span className="text-gray-500 dark:text-gray-400 w-24">Model:</span>
-                            <span className="text-gray-900 dark:text-white font-medium">
-                                {device.model || 'N/A'}
-                            </span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                            <span className="text-gray-500 dark:text-gray-400 w-24">Android:</span>
-                            <span className="text-gray-900 dark:text-white font-medium">
-                                {device.android_version || 'N/A'}
-                            </span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                            <span className="text-gray-500 dark:text-gray-400 w-24">Device ID:</span>
-                            <span className="text-gray-900 dark:text-white font-mono text-xs truncate">
-                                {device.device_id}
-                            </span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                            <span className="text-gray-500 dark:text-gray-400 w-24">Last Active:</span>
-                            <span className="text-gray-900 dark:text-white">
-                                {device.last_active_at ? new Date(device.last_active_at).toLocaleDateString() : 'Never'}
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Card Footer */}
-                    <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-end space-x-2">
-                        <Link
-                            href={`/devices/${device.id}/edit`}
-                            className="inline-flex items-center px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                        >
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            Edit
-                        </Link>
-                        <button
-                            onClick={() => onDelete(device.id)}
-                            className="inline-flex items-center px-3 py-1.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
-                        >
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            Delete
-                        </button>
-                    </div>
+                    )}
                 </div>
-            ))}
-        </div>
-    );
-}
-
-// List View Component
-function ListView({ devices, onDelete }) {
-    return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead className="bg-gray-50 dark:bg-gray-900/50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Device
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Model
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Android
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Status
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Last Active
-                            </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Actions
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        {devices.map((device) => (
-                            <tr key={device.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="flex items-center">
-                                        <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${device.status === 'active'
-                                            ? 'bg-green-100 dark:bg-green-900/20'
-                                            : device.status === 'inactive'
-                                                ? 'bg-gray-100 dark:bg-gray-700'
-                                                : 'bg-yellow-100 dark:bg-yellow-900/20'
-                                            }`}>
-                                            <svg className={`w-5 h-5 ${device.status === 'active'
-                                                ? 'text-green-600 dark:text-green-400'
-                                                : device.status === 'inactive'
-                                                    ? 'text-gray-500'
-                                                    : 'text-yellow-600 dark:text-yellow-400'
-                                                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                            </svg>
-                                        </div>
-                                        <div className="ml-4">
-                                            <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                                {device.name || 'Unnamed Device'}
-                                            </div>
-                                            <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">
-                                                {device.device_id}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                    {device.model || 'N/A'}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                    {device.android_version || 'N/A'}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${device.status === 'active'
-                                        ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
-                                        : device.status === 'inactive'
-                                            ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-400'
-                                            : 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400'
-                                        }`}>
-                                        {device.status}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                    {device.last_active_at ? new Date(device.last_active_at).toLocaleString() : 'Never'}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                    <Link
-                                        href={`/devices/${device.id}/edit`}
-                                        className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
-                                    >
-                                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                        Edit
-                                    </Link>
-                                    <button
-                                        onClick={() => onDelete(device.id)}
-                                        className="inline-flex items-center text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
-                                    >
-                                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                        Delete
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
             </div>
-        </div>
+        </AppLayout>
     );
 }

@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AppLayout from '../../Layouts/AppLayout';
 
 export default function Subscribe({ package: pkg = {}, existingPackage = null, paymentMethods = [] }) {
+    const { t } = useTranslation();
     const { auth } = usePage().props;
     const [selectedPayment, setSelectedPayment] = useState('');
     const [processing, setProcessing] = useState(false);
@@ -45,17 +47,17 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
     };
 
     return (
-        <AppLayout title={`Đăng ký ${pkg.name || 'Gói dịch vụ'}`}>
+        <AppLayout title={`${t('packages.subscribe')} ${pkg.name || t('packages.title')}`}>
             <div className="max-w-4xl mx-auto">
                 {/* Breadcrumb */}
                 <nav className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-8">
                     <Link href="/packages" className="hover:text-purple-600 dark:hover:text-purple-400">
-                        Gói dịch vụ
+                        {t('packages.breadcrumb.packages')}
                     </Link>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                    <span className="text-gray-900 dark:text-white font-medium">Đăng ký gói</span>
+                    <span className="text-gray-900 dark:text-white font-medium">{t('packages.breadcrumb.subscribe')}</span>
                 </nav>
 
                 {/* Warning if already subscribed */}
@@ -66,9 +68,9 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>
                             <div>
-                                <h3 className="text-amber-800 dark:text-amber-200 font-semibold">Bạn đã có gói này</h3>
+                                <h3 className="text-amber-800 dark:text-amber-200 font-semibold">{t('packages.already_have')}</h3>
                                 <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
-                                    Bạn đang sử dụng gói này. Đăng ký mới sẽ gia hạn thêm thời gian sử dụng.
+                                    {t('packages.already_have_description')}
                                 </p>
                             </div>
                         </div>
@@ -98,7 +100,7 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                                     </span>
                                     {pkg.duration_days && (
                                         <span className="text-gray-500 dark:text-gray-400">
-                                            /{pkg.duration_days} ngày
+                                            /{pkg.duration_days} {t('packages.days')}
                                         </span>
                                     )}
                                 </div>
@@ -117,7 +119,7 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                             {/* Features */}
                             <div className="p-6">
                                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-4">
-                                    Bao gồm
+                                    {t('packages.includes')}
                                 </h3>
                                 <ul className="space-y-3">
                                     {pkg.credits && (
@@ -125,7 +127,7 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                                             <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                             </svg>
-                                            <span className="text-gray-700 dark:text-gray-300">{pkg.credits.toLocaleString()} credits</span>
+                                            <span className="text-gray-700 dark:text-gray-300">{pkg.credits.toLocaleString()} {t('packages.credits').toLowerCase()}</span>
                                         </li>
                                     )}
                                     {pkg.max_devices && (
@@ -134,7 +136,7 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                             </svg>
                                             <span className="text-gray-700 dark:text-gray-300">
-                                                {pkg.max_devices === -1 ? 'Không giới hạn' : pkg.max_devices} thiết bị
+                                                {pkg.max_devices === -1 ? t('packages.unlimited') : pkg.max_devices} {t('packages.devices').toLowerCase()}
                                             </span>
                                         </li>
                                     )}
@@ -157,17 +159,16 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                             {/* Payment Methods */}
                             <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
                                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                                    Chọn phương thức thanh toán
+                                    {t('packages.select_payment')}
                                 </h3>
                                 <div className="space-y-3">
                                     {paymentMethods.map((method) => (
                                         <label
                                             key={method.id}
-                                            className={`flex items-center p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-                                                selectedPayment === method.id
+                                            className={`flex items-center p-4 rounded-2xl border-2 cursor-pointer transition-all ${selectedPayment === method.id
                                                     ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
                                                     : 'border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-700'
-                                            }`}
+                                                }`}
                                         >
                                             <input
                                                 type="radio"
@@ -193,11 +194,10 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                                                         {method.description}
                                                     </div>
                                                 </div>
-                                                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                                                    selectedPayment === method.id
+                                                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${selectedPayment === method.id
                                                         ? 'border-purple-500 bg-purple-500'
                                                         : 'border-gray-300 dark:border-gray-600'
-                                                }`}>
+                                                    }`}>
                                                     {selectedPayment === method.id && (
                                                         <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -213,27 +213,27 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                             {/* Order Summary */}
                             <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
                                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                                    Tổng kết đơn hàng
+                                    {t('packages.order_summary')}
                                 </h3>
                                 <div className="space-y-4">
                                     <div className="flex justify-between">
-                                        <span className="text-gray-600 dark:text-gray-400">Gói dịch vụ</span>
+                                        <span className="text-gray-600 dark:text-gray-400">{t('packages.service_package')}</span>
                                         <span className="font-semibold text-gray-900 dark:text-white">{pkg.name}</span>
                                     </div>
                                     {pkg.original_price && pkg.original_price > pkg.price && (
                                         <>
                                             <div className="flex justify-between">
-                                                <span className="text-gray-600 dark:text-gray-400">Giá gốc</span>
+                                                <span className="text-gray-600 dark:text-gray-400">{t('packages.original_price')}</span>
                                                 <span className="text-gray-400 line-through">{formatPrice(pkg.original_price)}</span>
                                             </div>
                                             <div className="flex justify-between text-green-600 dark:text-green-400">
-                                                <span>Giảm giá</span>
+                                                <span>{t('packages.discount')}</span>
                                                 <span>-{formatPrice(pkg.original_price - pkg.price)}</span>
                                             </div>
                                         </>
                                     )}
                                     <div className="pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-between">
-                                        <span className="text-lg font-bold text-gray-900 dark:text-white">Tổng cộng</span>
+                                        <span className="text-lg font-bold text-gray-900 dark:text-white">{t('packages.total')}</span>
                                         <span className="text-2xl font-extrabold text-purple-600 dark:text-purple-400">
                                             {formatPrice(pkg.price)}
                                         </span>
@@ -251,15 +251,15 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                                         className="mt-1 w-5 h-5 text-purple-600 border-gray-300 dark:border-gray-600 rounded focus:ring-purple-500"
                                     />
                                     <span className="text-gray-700 dark:text-gray-300 text-sm">
-                                        Tôi đã đọc và đồng ý với{' '}
+                                        {t('packages.terms_agreement')}{' '}
                                         <a href="#" className="text-purple-600 dark:text-purple-400 hover:underline">
-                                            Điều khoản sử dụng
+                                            {t('packages.terms_of_service')}
                                         </a>{' '}
-                                        và{' '}
+                                        {t('common.and')}{' '}
                                         <a href="#" className="text-purple-600 dark:text-purple-400 hover:underline">
-                                            Chính sách bảo mật
+                                            {t('packages.privacy_policy')}
                                         </a>{' '}
-                                        của DeviceHub.
+                                        {t('packages.of_devicehub')}
                                     </span>
                                 </label>
                             </div>
@@ -270,16 +270,15 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                                     href="/packages"
                                     className="px-6 py-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-semibold"
                                 >
-                                    Quay lại
+                                    {t('common.back')}
                                 </Link>
                                 <button
                                     type="submit"
                                     disabled={!selectedPayment || !agreed || processing}
-                                    className={`px-8 py-4 rounded-2xl font-bold text-white shadow-lg transition-all ${
-                                        selectedPayment && agreed && !processing
+                                    className={`px-8 py-4 rounded-2xl font-bold text-white shadow-lg transition-all ${selectedPayment && agreed && !processing
                                             ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-purple-500/30 hover:shadow-xl'
                                             : 'bg-gray-400 cursor-not-allowed'
-                                    }`}
+                                        }`}
                                 >
                                     {processing ? (
                                         <span className="flex items-center space-x-2">
@@ -287,10 +286,10 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
-                                            <span>Đang xử lý...</span>
+                                            <span>{t('packages.processing')}</span>
                                         </span>
                                     ) : (
-                                        `Thanh toán ${formatPrice(pkg.price)}`
+                                        t('packages.pay_amount', { amount: formatPrice(pkg.price) })
                                     )}
                                 </button>
                             </div>

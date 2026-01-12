@@ -58,22 +58,8 @@ class LoginActivity : AppCompatActivity() {
     }
     
     private fun setupUI() {
-        // Password visibility toggle
-        binding.btnTogglePassword.setOnClickListener {
-            isPasswordVisible = !isPasswordVisible
-            
-            if (isPasswordVisible) {
-                binding.etPassword.inputType = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-                binding.btnTogglePassword.setImageResource(R.drawable.ic_visibility_off)
-            } else {
-                binding.etPassword.inputType = 
-                    InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-                binding.btnTogglePassword.setImageResource(R.drawable.ic_visibility)
-            }
-            
-            // Move cursor to end
-            binding.etPassword.setSelection(binding.etPassword.text?.length ?: 0)
-        }
+        // Password visibility is handled by TextInputLayout endIconMode="password_toggle"
+        // No manual toggle needed
         
         // Login button
         binding.btnLogin.setOnClickListener {
@@ -146,7 +132,8 @@ class LoginActivity : AppCompatActivity() {
                 // Step 1: Login
                 val response = authService.login(email, password)
                 
-                if (response.success && response.token != null && response.user != null) {
+                // Check if token is present (success indicator)
+                if (!response.token.isNullOrEmpty() && response.user != null) {
                     // Save session
                     val session = AuthSession(
                         token = response.token,
@@ -169,11 +156,12 @@ class LoginActivity : AppCompatActivity() {
                             deviceResponse.device?.socketUrl?.let { socketUrl ->
                                 connectToSocket(socketUrl, response.token)
                             } ?: run {
-                                // Use default socket URL from API base
-                                val apiBase = getSharedPreferences("portal_settings", MODE_PRIVATE)
-                                    .getString("api_base_url", "https://laravel-backend.test/api") 
-                                    ?: "https://laravel-backend.test/api"
-                                val socketUrl = apiBase.replace("/api", "")
+                                // Use appropriate socket URL based on environment
+                                val socketUrl = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
+                                    "http://10.0.2.2:6001" // Soketi default port on host machine
+                                } else {
+                                    "wss://laravel-backend.test" // Production WebSocket URL
+                                }
                                 connectToSocket(socketUrl, response.token)
                             }
                         } else {
@@ -216,17 +204,33 @@ class LoginActivity : AppCompatActivity() {
     }
     
     /**
-     * Connect to Socket.IO server
+     * Connect to Pusher server
      */
     private fun connectToSocket(socketUrl: String, authToken: String) {
         try {
-            Log.i(TAG, "Connecting to Socket.IO: $socketUrl")
+            // Pusher/Soketi credentials (socketUrl parameter ignored, kept for compatibility)
+            val appKey = "app-key"
+            val host = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
+                "10.0.2.2" // Host machine for emulator
+            } else {
+                "laravel-backend.test" // Production
+            }
+            val port = 6001
+            val encrypted = false // HTTP for emulator
             
-            // Initialize SocketJobManager with auth token
-            com.agent.portal.socket.SocketJobManager.init(this, socketUrl)
+            Log.i(TAG, "Connecting to Pusher: $host:$port")
+            
+            // Initialize SocketJobManager with Pusher credentials
+            com.agent.portal.socket.SocketJobManager.init(
+                context = this,
+                appKey = appKey,
+                host = host,
+                port = port,
+                encrypted = encrypted
+            )
             com.agent.portal.socket.SocketJobManager.connect()
             
-            Log.i(TAG, "✅ Socket.IO connection initiated")
+            Log.i(TAG, "✅ Pusher connection initiated")
         } catch (e: Exception) {
             Log.e(TAG, "❌ Socket connection error: ${e.message}", e)
             // Don't fail the login if socket connection fails
@@ -241,7 +245,6 @@ class LoginActivity : AppCompatActivity() {
         binding.btnLogin.isEnabled = !loading
         binding.etEmail.isEnabled = !loading
         binding.etPassword.isEnabled = !loading
-        binding.btnTogglePassword.isEnabled = !loading
         binding.btnSkipLogin.isEnabled = !loading
         
         if (loading) {

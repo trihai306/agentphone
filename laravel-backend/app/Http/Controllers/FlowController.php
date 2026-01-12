@@ -74,8 +74,63 @@ class FlowController extends Controller
             abort(403);
         }
 
+        // Get online devices for this user
+        // Extended timeout for development (24 hours instead of 5 minutes)
+        $onlineDevices = $user->devices()
+            ->online(1440) // 24 hours for dev, consider heartbeat not running frequently
+            ->orderBy('last_active_at', 'desc')
+            ->get()
+            ->map(fn($device) => [
+                'id' => $device->id,
+                'name' => $device->name,
+                'device_id' => $device->device_id,
+                'model' => $device->model,
+                'is_online' => true, // Already filtered by online scope
+                'last_active_at' => $device->last_active_at?->diffForHumans(),
+            ]);
+
+        \Log::info('FlowController edit():', [
+            'user_id' => $user->id,
+            'flow_id' => $flow->id,
+            'onlineDevices_count' => $onlineDevices->count(),
+            'onlineDevices' => $onlineDevices->values()->toArray(),
+        ]);
+
+        // Get user's media files for ResourceNodes
+        $mediaFiles = $user->media()
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn($media) => [
+                'id' => $media->id,
+                'original_name' => $media->original_name,
+                'url' => $media->url,
+                'thumbnail_url' => $media->thumbnail_url,
+                'type' => $media->type,
+                'formatted_size' => $media->formatted_size,
+                'created_at' => $media->created_at->toISOString(),
+            ]);
+
+        // Get user's data collections for DataSourceNode
+        $dataCollections = $user->dataCollections()
+            ->withCount('records')
+            ->orderBy('updated_at', 'desc')
+            ->get()
+            ->map(fn($collection) => [
+                'id' => $collection->id,
+                'name' => $collection->name,
+                'description' => $collection->description,
+                'icon' => $collection->icon,
+                'color' => $collection->color,
+                'schema' => $collection->schema,
+                'records_count' => $collection->records_count,
+                'updated_at' => $collection->updated_at->toISOString(),
+            ]);
+
         return Inertia::render('Flows/Editor', [
             'flow' => $flow->toReactFlowFormat(),
+            'onlineDevices' => $onlineDevices->values()->toArray(),
+            'mediaFiles' => $mediaFiles->toArray(),
+            'dataCollections' => $dataCollections->toArray(),
         ]);
     }
 
@@ -94,9 +149,10 @@ class FlowController extends Controller
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string|max:1000',
             'status' => 'sometimes|string|in:draft,active,archived',
+            'metadata' => 'sometimes|array',
         ]);
 
-        $flow->update($request->only(['name', 'description', 'status']));
+        $flow->update($request->only(['name', 'description', 'status', 'metadata']));
 
         return back()->with('success', 'Flow updated successfully');
     }

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AppLayout from '../../Layouts/AppLayout';
 
 export default function Payment({ userPackage = {}, paymentMethods = [], bankInfo = {} }) {
+    const { t } = useTranslation();
     const { auth } = usePage().props;
     const [copied, setCopied] = useState(null);
     const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes
@@ -38,25 +40,24 @@ export default function Payment({ userPackage = {}, paymentMethods = [], bankInf
     const selectedMethod = paymentMethods.find(m => m.id === userPackage.payment_method) || {};
 
     return (
-        <AppLayout title="Thanh toán">
+        <AppLayout title={t('packages.breadcrumb.payment')}>
             <div className="max-w-4xl mx-auto">
                 {/* Breadcrumb */}
                 <nav className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-8">
                     <Link href="/packages" className="hover:text-purple-600 dark:hover:text-purple-400">
-                        Gói dịch vụ
+                        {t('packages.breadcrumb.packages')}
                     </Link>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                    <span className="text-gray-900 dark:text-white font-medium">Thanh toán</span>
+                    <span className="text-gray-900 dark:text-white font-medium">{t('packages.breadcrumb.payment')}</span>
                 </nav>
 
                 {/* Timer Warning */}
-                <div className={`mb-6 p-4 rounded-2xl border ${
-                    timeLeft < 300
+                <div className={`mb-6 p-4 rounded-2xl border ${timeLeft < 300
                         ? 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700'
                         : 'bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-700'
-                }`}>
+                    }`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                             <svg className={`w-6 h-6 ${timeLeft < 300 ? 'text-red-500' : 'text-amber-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,10 +65,10 @@ export default function Payment({ userPackage = {}, paymentMethods = [], bankInf
                             </svg>
                             <div>
                                 <h3 className={`font-semibold ${timeLeft < 300 ? 'text-red-800 dark:text-red-200' : 'text-amber-800 dark:text-amber-200'}`}>
-                                    Thời gian thanh toán
+                                    {t('packages.payment_time')}
                                 </h3>
                                 <p className={`text-sm ${timeLeft < 300 ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'}`}>
-                                    Vui lòng hoàn tất thanh toán trong thời gian quy định
+                                    {t('packages.payment_time_warning')}
                                 </p>
                             </div>
                         </div>
@@ -82,7 +83,7 @@ export default function Payment({ userPackage = {}, paymentMethods = [], bankInf
                     <div className="lg:col-span-1">
                         <div className="sticky top-24 bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                             <div className="p-6 bg-gradient-to-br from-purple-600 to-indigo-600">
-                                <h2 className="text-xl font-bold text-white">Đơn hàng #{userPackage.order_code}</h2>
+                                <h2 className="text-xl font-bold text-white">{t('packages.order_number', { code: userPackage.order_code })}</h2>
                                 <p className="text-white/80 text-sm mt-1">
                                     {new Date(userPackage.created_at).toLocaleDateString('vi-VN')}
                                 </p>
@@ -90,18 +91,18 @@ export default function Payment({ userPackage = {}, paymentMethods = [], bankInf
 
                             <div className="p-6 space-y-4">
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Gói dịch vụ</span>
+                                    <span className="text-gray-600 dark:text-gray-400">{t('packages.service_package')}</span>
                                     <span className="font-semibold text-gray-900 dark:text-white">{pkg.name}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">Trạng thái</span>
+                                    <span className="text-gray-600 dark:text-gray-400">{t('common.status')}</span>
                                     <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-sm font-semibold rounded-full">
-                                        Chờ thanh toán
+                                        {t('packages.awaiting_payment')}
                                     </span>
                                 </div>
                                 <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                                     <div className="flex justify-between items-baseline">
-                                        <span className="text-lg font-bold text-gray-900 dark:text-white">Tổng cộng</span>
+                                        <span className="text-lg font-bold text-gray-900 dark:text-white">{t('packages.total')}</span>
                                         <span className="text-2xl font-extrabold text-purple-600 dark:text-purple-400">
                                             {formatPrice(userPackage.price_paid)}
                                         </span>
@@ -115,44 +116,44 @@ export default function Payment({ userPackage = {}, paymentMethods = [], bankInf
                     <div className="lg:col-span-2">
                         <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                                Hướng dẫn thanh toán - {selectedMethod.name}
+                                {t('packages.payment_instructions')} - {selectedMethod.name}
                             </h3>
 
                             {userPackage.payment_method === 'bank_transfer' && (
                                 <div className="space-y-4">
                                     <p className="text-gray-600 dark:text-gray-400">
-                                        Vui lòng chuyển khoản đến tài khoản sau và ghi nội dung chuyển khoản đúng format:
+                                        {t('packages.bank_transfer_note')}
                                     </p>
 
                                     {/* Bank Info */}
                                     <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-6 space-y-4">
                                         <div className="flex justify-between items-center">
                                             <div>
-                                                <span className="text-sm text-gray-500 dark:text-gray-400">Ngân hàng</span>
+                                                <span className="text-sm text-gray-500 dark:text-gray-400">{t('packages.bank_name')}</span>
                                                 <p className="font-semibold text-gray-900 dark:text-white">{bankInfo.bank_name}</p>
                                             </div>
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <div>
-                                                <span className="text-sm text-gray-500 dark:text-gray-400">Số tài khoản</span>
+                                                <span className="text-sm text-gray-500 dark:text-gray-400">{t('packages.account_number')}</span>
                                                 <p className="font-mono font-semibold text-gray-900 dark:text-white text-lg">{bankInfo.account_number}</p>
                                             </div>
                                             <button
                                                 onClick={() => copyToClipboard(bankInfo.account_number, 'account')}
                                                 className="px-3 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
                                             >
-                                                {copied === 'account' ? 'Đã sao chép!' : 'Sao chép'}
+                                                {copied === 'account' ? t('packages.copied') : t('packages.copy')}
                                             </button>
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <div>
-                                                <span className="text-sm text-gray-500 dark:text-gray-400">Tên tài khoản</span>
+                                                <span className="text-sm text-gray-500 dark:text-gray-400">{t('packages.account_name')}</span>
                                                 <p className="font-semibold text-gray-900 dark:text-white">{bankInfo.account_name}</p>
                                             </div>
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <div>
-                                                <span className="text-sm text-gray-500 dark:text-gray-400">Chi nhánh</span>
+                                                <span className="text-sm text-gray-500 dark:text-gray-400">{t('packages.branch')}</span>
                                                 <p className="font-semibold text-gray-900 dark:text-white">{bankInfo.branch}</p>
                                             </div>
                                         </div>
@@ -162,7 +163,7 @@ export default function Payment({ userPackage = {}, paymentMethods = [], bankInf
                                     <div className="bg-purple-50 dark:bg-purple-900/20 rounded-2xl p-6">
                                         <div className="flex justify-between items-center">
                                             <div>
-                                                <span className="text-sm text-purple-600 dark:text-purple-400 font-medium">Nội dung chuyển khoản</span>
+                                                <span className="text-sm text-purple-600 dark:text-purple-400 font-medium">{t('packages.transfer_content')}</span>
                                                 <p className="font-mono font-bold text-purple-800 dark:text-purple-200 text-xl mt-1">
                                                     {userPackage.order_code}
                                                 </p>
@@ -171,7 +172,7 @@ export default function Payment({ userPackage = {}, paymentMethods = [], bankInf
                                                 onClick={() => copyToClipboard(userPackage.order_code, 'content')}
                                                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                                             >
-                                                {copied === 'content' ? 'Đã sao chép!' : 'Sao chép'}
+                                                {copied === 'content' ? t('packages.copied') : t('packages.copy')}
                                             </button>
                                         </div>
                                     </div>
@@ -180,7 +181,7 @@ export default function Payment({ userPackage = {}, paymentMethods = [], bankInf
                                     <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-6">
                                         <div className="flex justify-between items-center">
                                             <div>
-                                                <span className="text-sm text-green-600 dark:text-green-400 font-medium">Số tiền thanh toán</span>
+                                                <span className="text-sm text-green-600 dark:text-green-400 font-medium">{t('packages.payment_amount')}</span>
                                                 <p className="font-bold text-green-800 dark:text-green-200 text-2xl mt-1">
                                                     {formatPrice(userPackage.price_paid)}
                                                 </p>
@@ -189,7 +190,7 @@ export default function Payment({ userPackage = {}, paymentMethods = [], bankInf
                                                 onClick={() => copyToClipboard(userPackage.price_paid.toString(), 'amount')}
                                                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                                             >
-                                                {copied === 'amount' ? 'Đã sao chép!' : 'Sao chép'}
+                                                {copied === 'amount' ? t('packages.copied') : t('packages.copy')}
                                             </button>
                                         </div>
                                     </div>
@@ -204,10 +205,10 @@ export default function Payment({ userPackage = {}, paymentMethods = [], bankInf
                                         </svg>
                                     </div>
                                     <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                                        Đang chuyển hướng đến cổng thanh toán...
+                                        {t('packages.redirecting')}
                                     </h4>
                                     <p className="text-gray-600 dark:text-gray-400">
-                                        Bạn sẽ được chuyển đến {selectedMethod.name} để hoàn tất thanh toán
+                                        {t('packages.redirect_message', { method: selectedMethod.name })}
                                     </p>
                                 </div>
                             )}
@@ -219,12 +220,12 @@ export default function Payment({ userPackage = {}, paymentMethods = [], bankInf
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                <span>Lưu ý quan trọng</span>
+                                <span>{t('packages.important_notes')}</span>
                             </h4>
                             <ul className="text-blue-700 dark:text-blue-300 text-sm space-y-2">
-                                <li>• Vui lòng ghi đúng nội dung chuyển khoản để hệ thống tự động xác nhận</li>
-                                <li>• Đơn hàng sẽ được kích hoạt trong vòng 5 phút sau khi thanh toán thành công</li>
-                                <li>• Nếu cần hỗ trợ, vui lòng liên hệ hotline: 1900 xxxx hoặc email: support@devicehub.vn</li>
+                                <li>• {t('packages.note_transfer')}</li>
+                                <li>• {t('packages.note_activation')}</li>
+                                <li>• {t('packages.note_support')}</li>
                             </ul>
                         </div>
 
@@ -234,13 +235,13 @@ export default function Payment({ userPackage = {}, paymentMethods = [], bankInf
                                 href="/packages"
                                 className="px-6 py-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-semibold"
                             >
-                                Quay lại
+                                {t('common.back')}
                             </Link>
                             <button
                                 onClick={() => window.location.reload()}
                                 className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-2xl transition-colors"
                             >
-                                Tôi đã thanh toán
+                                {t('packages.i_have_paid')}
                             </button>
                         </div>
                     </div>

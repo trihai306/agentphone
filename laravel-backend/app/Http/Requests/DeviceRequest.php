@@ -24,8 +24,12 @@ class DeviceRequest extends FormRequest
         return [
             'device_id' => 'required|string|max:255',
             'name' => 'nullable|string|max:255',
+            'device_name' => 'nullable|string|max:255', // Alias for 'name'
             'model' => 'nullable|string|max:255',
+            'manufacturer' => 'nullable|string|max:255',
             'android_version' => 'nullable|string|max:50',
+            'sdk_version' => 'nullable|integer',
+            'socket_url' => 'nullable|url|max:500',
         ];
     }
 

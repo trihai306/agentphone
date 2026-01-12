@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Agent Portal</string>
-    <string name="accessibility_service_description">Enables AI agent to read and interact with UI elements on screen for automation purposes.</string>
-    <string name="keyboard_label">Agent Portal Keyboard</string>
+    <string name="app_name">CLICKAI</string>
+    <string name="app_tagline">AI-Powered Automation</string>
+    <string name="accessibility_service_description">Enables CLICKAI to read and interact with UI elements on screen for automation purposes.</string>
+    <string name="keyboard_label">CLICKAI Keyboard</string>
 
     <!-- Status messages -->
     <string name="status_accessibility_enabled">Accessibility Service: ENABLED</string>
@@ -19,7 +20,31 @@
     <string name="btn_enable_keyboard">Enable Keyboard</string>
 
     <!-- Notifications -->
-    <string name="notification_channel_name">Agent Portal Service</string>
-    <string name="notification_title">Agent Portal Active</string>
-    <string name="notification_text">Listening for agent commands</string>
+    <string name="notification_channel_name">CLICKAI Service</string>
+    <string name="notification_title">CLICKAI Active</string>
+    <string name="notification_text">AI automation ready</string>
+    
+    <!-- Login -->
+    <string name="login_title">Welcome to CLICKAI</string>
+    <string name="login_subtitle">Sign in to continue</string>
+    <string name="login_email_hint">Email address</string>
+    <string name="login_password_hint">Password</string>
+    <string name="login_button">Sign In</string>
+    <string name="login_forgot_password">Forgot password?</string>
+    <string name="login_no_account">Don\'t have an account? Sign up</string>
+    
+    <!-- Dashboard -->
+    <string name="dashboard_account">Account</string>
+    <string name="dashboard_connected">Connected</string>
+    <string name="dashboard_disconnected">Disconnected</string>
+    <string name="dashboard_service_status">Service Status</string>
+    <string name="dashboard_recording">Interaction Recording</string>
+    <string name="dashboard_start_recording">Start Recording</string>
+    <string name="dashboard_stop_recording">Stop Recording</string>
+    <string name="dashboard_ready">Ready to capture</string>
+    
+    <!-- Recording -->
+    <string name="recording_events">Events</string>
+    <string name="recording_duration">Duration</string>
+    <string name="recording_actions">Actions</string>
 </resources>

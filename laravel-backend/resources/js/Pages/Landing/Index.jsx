@@ -1,7 +1,9 @@
 import { Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import LandingLayout from '../../Layouts/LandingLayout';
 
 export default function Index() {
+    const { t } = useTranslation();
     return (
         <LandingLayout>
             {/* Hero Section */}
@@ -21,20 +23,20 @@ export default function Index() {
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
                             </span>
-                            <span className="text-sm font-medium text-blue-900 dark:text-blue-300">Now Live - Start Managing Your Devices</span>
+                            <span className="text-sm font-medium text-blue-900 dark:text-blue-300">{t('landing.now_live', { defaultValue: 'Now Live - Start Managing Your Devices' })}</span>
                         </div>
 
                         {/* Hero Title */}
                         <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
-                            <span className="block text-gray-900 dark:text-white">Manage Your Devices</span>
+                            <span className="block text-gray-900 dark:text-white">{t('landing.hero_title_1', { defaultValue: 'Manage Your Devices' })}</span>
                             <span className="block bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent animate-gradient">
-                                Smarter Than Ever
+                                {t('landing.hero_title_2', { defaultValue: 'Smarter Than Ever' })}
                             </span>
                         </h1>
 
                         {/* Hero Description */}
                         <p className="mt-6 text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                            Take control of your device fleet with powerful monitoring, real-time analytics, and seamless management. Built for teams that demand excellence.
+                            {t('landing.hero_desc', { defaultValue: 'Take control of your device fleet with powerful monitoring, real-time analytics, and seamless management. Built for teams that demand excellence.' })}
                         </p>
 
                         {/* CTA Buttons */}
@@ -43,7 +45,7 @@ export default function Index() {
                                 href="/register"
                                 className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
                             >
-                                Get Started Free
+                                {t('landing.get_started', { defaultValue: 'Get Started Free' })}
                                 <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                 </svg>
@@ -52,7 +54,7 @@ export default function Index() {
                                 href="/features"
                                 className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all border border-gray-200 dark:border-gray-700"
                             >
-                                View Features
+                                {t('landing.view_features', { defaultValue: 'View Features' })}
                                 <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                                 </svg>
@@ -65,19 +67,19 @@ export default function Index() {
                                 <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                 </svg>
-                                <span>No credit card required</span>
+                                <span>{t('landing.no_credit_card', { defaultValue: 'No credit card required' })}</span>
                             </div>
                             <div className="flex items-center space-x-2">
                                 <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                 </svg>
-                                <span>Free forever plan</span>
+                                <span>{t('landing.free_forever', { defaultValue: 'Free forever plan' })}</span>
                             </div>
                             <div className="flex items-center space-x-2">
                                 <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                 </svg>
-                                <span>Cancel anytime</span>
+                                <span>{t('landing.cancel_anytime', { defaultValue: 'Cancel anytime' })}</span>
                             </div>
                         </div>
                     </div>
@@ -88,10 +90,10 @@ export default function Index() {
             <section className="py-16 bg-white dark:bg-gray-800 border-y border-gray-200 dark:border-gray-700">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-                        <StatCard number="50K+" label="Active Users" icon="users" />
-                        <StatCard number="500K+" label="Devices Managed" icon="devices" />
-                        <StatCard number="99.9%" label="Uptime SLA" icon="uptime" />
-                        <StatCard number="24/7" label="Expert Support" icon="support" />
+                        <StatCard number="50K+" label={t('landing.active_users', { defaultValue: 'Active Users' })} icon="users" />
+                        <StatCard number="500K+" label={t('landing.devices_managed', { defaultValue: 'Devices Managed' })} icon="devices" />
+                        <StatCard number="99.9%" label={t('landing.uptime_sla', { defaultValue: 'Uptime SLA' })} icon="uptime" />
+                        <StatCard number="24/7" label={t('landing.expert_support', { defaultValue: 'Expert Support' })} icon="support" />
                     </div>
                 </div>
             </section>
@@ -101,10 +103,10 @@ export default function Index() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                            Everything You Need
+                            {t('landing.everything_you_need', { defaultValue: 'Everything You Need' })}
                         </h2>
                         <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                            Powerful features designed to help you manage, monitor, and optimize your device fleet.
+                            {t('landing.features_desc', { defaultValue: 'Powerful features designed to help you manage, monitor, and optimize your device fleet.' })}
                         </p>
                     </div>
 
@@ -146,7 +148,7 @@ export default function Index() {
                             href="/features"
                             className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
                         >
-                            View All Features
+                            {t('landing.view_all_features', { defaultValue: 'View All Features' })}
                             <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                             </svg>
@@ -160,10 +162,10 @@ export default function Index() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                            Loved by Teams Worldwide
+                            {t('landing.testimonials_title', { defaultValue: 'Loved by Teams Worldwide' })}
                         </h2>
                         <p className="text-xl text-gray-600 dark:text-gray-300">
-                            See what our customers have to say about DeviceHub.
+                            {t('landing.testimonials_desc', { defaultValue: 'See what our customers have to say about DeviceHub.' })}
                         </p>
                     </div>
 
@@ -194,17 +196,17 @@ export default function Index() {
             <section className="py-20 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 dark:from-blue-900 dark:via-purple-900 dark:to-pink-900">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <h2 className="text-4xl font-bold text-white mb-6">
-                        Ready to Get Started?
+                        {t('landing.ready_to_start', { defaultValue: 'Ready to Get Started?' })}
                     </h2>
                     <p className="text-xl text-blue-100 mb-10">
-                        Join thousands of teams already managing their devices smarter with DeviceHub.
+                        {t('landing.cta_desc', { defaultValue: 'Join thousands of teams already managing their devices smarter with DeviceHub.' })}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link
                             href="/register"
                             className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-blue-600 bg-white hover:bg-gray-50 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
                         >
-                            Start Free Trial
+                            {t('landing.start_free_trial', { defaultValue: 'Start Free Trial' })}
                             <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                             </svg>
@@ -213,7 +215,7 @@ export default function Index() {
                             href="/contact"
                             className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all border border-white/20"
                         >
-                            Contact Sales
+                            {t('landing.contact_sales', { defaultValue: 'Contact Sales' })}
                         </Link>
                     </div>
                 </div>

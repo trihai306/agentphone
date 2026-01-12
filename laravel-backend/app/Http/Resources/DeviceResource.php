@@ -22,6 +22,7 @@ class DeviceResource extends JsonResource
             'model' => $this->model,
             'android_version' => $this->android_version,
             'status' => $this->status,
+            'socket_url' => $this->socket_url ?? null,
             'is_online' => $this->isOnline(),
             'last_active_at' => $this->last_active_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),

@@ -15,12 +15,14 @@ data class LoginRequest(
 
 /**
  * Login response from Laravel Backend
+ * Laravel returns: {"token": "...", "user": {...}}
+ * Success field may not be present, so check token instead
  */
 data class LoginResponse(
-    val success: Boolean,
-    val message: String?,
-    val token: String?,
-    val user: User?
+    val success: Boolean? = null,  // Optional field
+    val message: String? = null,
+    val token: String? = null,
+    val user: User? = null
 )
 
 /**

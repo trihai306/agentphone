@@ -28,6 +28,15 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'workflow_state',
         'storage_plan_id',
+        'avatar',
+        'phone',
+        'bio',
+        'location',
+        'timezone',
+        'language',
+        'social_links',
+        'preferences',
+        'ai_credits',
     ];
 
     /**
@@ -51,6 +60,8 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'workflow_state' => UserWorkflowState::class,
+            'social_links' => 'array',
+            'preferences' => 'array',
         ];
     }
 
@@ -108,6 +119,30 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Alias for mediaFiles() - backward compatibility
+     */
+    public function media()
+    {
+        return $this->mediaFiles();
+    }
+
+    /**
+     * Get user's data collections
+     */
+    public function dataCollections()
+    {
+        return $this->hasMany(DataCollection::class);
+    }
+
+    /**
+     * Get user's devices
+     */
+    public function devices()
+    {
+        return $this->hasMany(Device::class);
+    }
+
+    /**
      * Get or create default storage plan for user
      */
     public function getOrCreateStoragePlan()
@@ -121,5 +156,103 @@ class User extends Authenticatable implements FilamentUser
         }
 
         return $this->storagePlan;
+    }
+
+    /**
+     * Get user's custom fields
+     */
+    public function customFields()
+    {
+        return $this->hasMany(UserCustomField::class);
+    }
+
+    /**
+     * Get user's custom field values
+     */
+    public function customFieldValues()
+    {
+        return $this->hasMany(UserCustomFieldValue::class);
+    }
+
+    /**
+     * Get custom field value by key
+     */
+    public function getCustomFieldValue(string $key)
+    {
+        return $this->customFieldValues()
+            ->whereHas('customField', fn($q) => $q->where('key', $key))
+            ->first()?->value;
+    }
+
+    /**
+     * Set custom field value by key
+     */
+    public function setCustomFieldValue(string $key, $value)
+    {
+        $field = $this->customFields()->where('key', $key)->first();
+        if (!$field) {
+            throw new \Exception("Custom field '{$key}' not found");
+        }
+
+        return $this->customFieldValues()->updateOrCreate(
+            ['user_custom_field_id' => $field->id],
+            ['value' => $value]
+        );
+    }
+
+    /**
+     * Get avatar URL or default
+     */
+    public function getAvatarUrlAttribute()
+    {
+        return $this->avatar
+            ? asset('storage/' . $this->avatar)
+            : null;
+    }
+
+    /**
+     * Get user's AI generations
+     */
+    public function aiGenerations()
+    {
+        return $this->hasMany(AiGeneration::class);
+    }
+
+    /**
+     * Add AI credits to user account
+     */
+    public function addAiCredits(int $amount): void
+    {
+        $this->increment('ai_credits', $amount);
+    }
+
+    /**
+     * Deduct AI credits from user account
+     * 
+     * @throws \Exception if insufficient credits
+     */
+    public function deductAiCredits(int $amount): void
+    {
+        if (!$this->hasEnoughCredits($amount)) {
+            throw new \Exception("Insufficient AI credits. Required: {$amount}, Available: {$this->ai_credits}");
+        }
+
+        $this->decrement('ai_credits', $amount);
+    }
+
+    /**
+     * Check if user has enough AI credits
+     */
+    public function hasEnoughCredits(int $required): bool
+    {
+        return $this->ai_credits >= $required;
+    }
+
+    /**
+     * Get formatted AI credits
+     */
+    public function getFormattedAiCreditsAttribute(): string
+    {
+        return number_format($this->ai_credits, 0, ',', '.');
     }
 }
