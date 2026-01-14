@@ -43,10 +43,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/devices/register', [DeviceController::class, 'store']); // Alias for compatibility
     Route::get('/devices', [DeviceController::class, 'index']);
     Route::get('/devices/{id}', [DeviceController::class, 'show']);
-    Route::post('/devices/{id}/ping', [DeviceController::class, 'ping']);
+    // Note: ping and status routes removed - now using Soketi presence webhooks
     Route::delete('/devices/{id}', [DeviceController::class, 'destroy']);
     Route::post('/devices/logout-all', [DeviceController::class, 'logoutAll']);
-    Route::post('/devices/status', [DeviceController::class, 'updateStatus']); // Socket status update
 
     // Subscription management
     Route::prefix('subscriptions')->group(function () {
@@ -88,8 +87,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/recording-sessions/{sessionId}/stop', [\App\Http\Controllers\Api\RecordingEventController::class, 'stopSession']);
         Route::post('/recording-actions', [\App\Http\Controllers\Api\RecordingEventController::class, 'storeAction']);
 
-        // Device heartbeat for online status tracking
-        Route::post('/heartbeat', [\App\Http\Controllers\Api\HeartbeatController::class, 'store']);
+        // Note: heartbeat route removed - now using Soketi presence webhooks
     });
 
     // Recording API for real-time workflow sync
@@ -101,6 +99,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/sessions/{sessionId}', [\App\Http\Controllers\Api\RecordingController::class, 'show']);
         Route::post('/convert-to-nodes', [\App\Http\Controllers\Api\RecordingController::class, 'convertToNodes']);
     });
+
+    // Batch job creation
+    Route::post('/flows/{flow}/jobs/batch', [\App\Http\Controllers\WorkflowJobController::class, 'storeBatch']);
 });
 
 // Pusher/Soketi auth endpoint for presence channels (requires auth)
@@ -109,3 +110,17 @@ Route::middleware('auth:sanctum')->post('/pusher/auth', [\App\Http\Controllers\A
 // Pusher/Soketi webhook for presence events (no auth - verified by webhook secret)
 Route::post('/pusher/webhook', [\App\Http\Controllers\Api\PresenceWebhookController::class, 'handle']);
 
+// Job API endpoints for APK
+Route::prefix('jobs')->group(function () {
+    // Get job action config (APK calls this when receiving job:new)
+    Route::get('/{job}/config', [\App\Http\Controllers\Api\JobApiController::class, 'getConfig'])
+        ->name('api.jobs.config');
+
+    // APK reports job progress
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/{job}/started', [\App\Http\Controllers\Api\JobApiController::class, 'reportStarted']);
+        Route::post('/{job}/task-progress', [\App\Http\Controllers\Api\JobApiController::class, 'reportTaskProgress']);
+        Route::post('/{job}/completed', [\App\Http\Controllers\Api\JobApiController::class, 'reportCompleted']);
+        Route::post('/{job}/log', [\App\Http\Controllers\Api\JobApiController::class, 'addLog']);
+    });
+});

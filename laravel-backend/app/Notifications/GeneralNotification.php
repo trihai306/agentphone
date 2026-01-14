@@ -2,7 +2,6 @@
 
 namespace App\Notifications;
 
-use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -77,6 +76,7 @@ class GeneralNotification extends Notification implements ShouldBroadcast, Shoul
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
         return new BroadcastMessage([
+            'id' => $this->id,
             'title' => $this->title,
             'message' => $this->message,
             'type' => $this->type,
@@ -85,16 +85,6 @@ class GeneralNotification extends Notification implements ShouldBroadcast, Shoul
             'action_text' => $this->actionText,
             'timestamp' => now()->toISOString(),
         ]);
-    }
-
-    /**
-     * Get the channels the event should broadcast on.
-     */
-    public function broadcastOn(): array
-    {
-        return [
-            new PrivateChannel('App.Models.User.' . $this->id),
-        ];
     }
 
     /**

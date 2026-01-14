@@ -14,6 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Exclude 'locale' cookie from encryption so JavaScript can set it
+        // and Laravel can read it properly (fixes language switcher flickering)
+        $middleware->encryptCookies(except: ['locale']);
+
         $middleware->web(append: [
             SetLocale::class,
             HandleInertiaRequests::class,

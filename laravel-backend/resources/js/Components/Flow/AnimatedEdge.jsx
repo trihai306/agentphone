@@ -3,6 +3,7 @@ import { BaseEdge, getSmoothStepPath, EdgeLabelRenderer } from 'reactflow';
 
 /**
  * Animated edge component with flowing particle effect for execution visualization
+ * Supports branch types (true/false) for conditional coloring
  */
 function AnimatedEdge({
     id,
@@ -12,12 +13,14 @@ function AnimatedEdge({
     targetY,
     sourcePosition,
     targetPosition,
+    sourceHandleId,
     style = {},
     markerEnd,
     data,
 }) {
     const executionState = data?.executionState || 'idle';
     const isDark = data?.isDark ?? true;
+    const branchType = data?.branchType || sourceHandleId; // 'true', 'false', or default
 
     const [edgePath, labelX, labelY] = getSmoothStepPath({
         sourceX,
@@ -28,8 +31,9 @@ function AnimatedEdge({
         targetPosition,
     });
 
-    // Color based on execution state
+    // Color based on execution state AND branch type
     const getEdgeColor = () => {
+        // Priority 1: Execution state colors
         switch (executionState) {
             case 'running':
                 return '#6366f1'; // Indigo
@@ -39,6 +43,16 @@ function AnimatedEdge({
                 return '#ef4444'; // Red
             case 'pending':
                 return isDark ? '#4b5563' : '#9ca3af'; // Gray
+        }
+
+        // Priority 2: Branch type colors (for idle state)
+        switch (branchType) {
+            case 'true':
+            case 'success':
+                return '#22c55e'; // Green for TRUE path
+            case 'false':
+            case 'error':
+                return '#f87171'; // Red for FALSE path
             default:
                 return '#6366f1'; // Default indigo
         }
@@ -48,6 +62,8 @@ function AnimatedEdge({
     const isAnimating = executionState === 'running';
     const isSuccess = executionState === 'success';
     const isError = executionState === 'error';
+    const isBranchTrue = branchType === 'true' || branchType === 'success';
+    const isBranchFalse = branchType === 'false' || branchType === 'error';
 
     return (
         <>
@@ -114,14 +130,14 @@ function AnimatedEdge({
                     >
                         <div
                             className={`px-2 py-1 rounded-md text-xs font-medium transition-all ${isAnimating
-                                    ? 'bg-indigo-500/20 text-indigo-400 animate-pulse'
-                                    : isSuccess
-                                        ? 'bg-emerald-500/20 text-emerald-400'
-                                        : isError
-                                            ? 'bg-red-500/20 text-red-400'
-                                            : isDark
-                                                ? 'bg-gray-800/80 text-gray-400'
-                                                : 'bg-white/80 text-gray-500'
+                                ? 'bg-indigo-500/20 text-indigo-400 animate-pulse'
+                                : isSuccess
+                                    ? 'bg-emerald-500/20 text-emerald-400'
+                                    : isError
+                                        ? 'bg-red-500/20 text-red-400'
+                                        : isDark
+                                            ? 'bg-gray-800/80 text-gray-400'
+                                            : 'bg-white/80 text-gray-500'
                                 }`}
                         >
                             {isAnimating && '⏳ Flowing...'}

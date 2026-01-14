@@ -65,30 +65,44 @@ const QUICK_TEMPLATES = [
 const ICON_OPTIONS = ['📊', '👥', '💼', '🎯', '📝', '💡', '🚀', '⚡', '🎨', '🔧', '📦', '🛒', '💰', '📈', '🗂️', '📋'];
 const COLOR_OPTIONS = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4', '#ef4444', '#84cc16', '#6366f1', '#14b8a6'];
 
-export default function CreateCollectionModal({ isOpen, onClose }) {
+export default function CreateCollectionModal({ isOpen, onClose, initialTemplate = null }) {
     const { theme } = useTheme();
     const { addToast } = useToast();
     const isDark = theme === 'dark';
-    const [step, setStep] = useState(1);
+    const [step, setStep] = useState(initialTemplate ? 2 : 1);
     const [activeId, setActiveId] = useState(null);
     const [selectedFieldId, setSelectedFieldId] = useState(null);
-    const [showTemplates, setShowTemplates] = useState(true);
+    const [showTemplates, setShowTemplates] = useState(!initialTemplate);
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        name: '',
-        description: '',
+        name: initialTemplate ? initialTemplate.name : '',
+        description: initialTemplate ? initialTemplate.description || '' : '',
         icon: '📊',
         color: '#3b82f6',
         schema: [],
     });
 
-    const [fields, setFields] = useState([]);
+    // Initialize fields from template if provided
+    const [fields, setFields] = useState(() => {
+        if (initialTemplate && initialTemplate.fields) {
+            return initialTemplate.fields.map((f, i) => ({
+                id: `field-${Date.now()}-${i}`,
+                name: f.name,
+                type: f.type,
+                required: f.required || false,
+                default: '',
+                options: f.options || null,
+            }));
+        }
+        return [];
+    });
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: { distance: 8 }
         })
     );
+
 
     // Quick Add field - click to add
     const addField = (type) => {

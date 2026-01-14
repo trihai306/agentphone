@@ -1,166 +1,223 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '@/Contexts/ThemeContext';
+import { useWalletUpdates } from '@/hooks/useWalletUpdates';
 import NavLink from './NavLink';
 import UserMenu from './UserMenu';
 
 export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collapsed, setCollapsed }) {
     const { t } = useTranslation();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     const { notifications: notificationData, auth } = usePage().props;
     const unreadCount = notificationData?.unread_count || 0;
     const wallet = auth?.wallet;
+    const aiCredits = auth?.ai_credits || 0;
+
+    // Use real-time wallet updates hook
+    const { balance: realtimeBalance, lastUpdate } = useWalletUpdates();
+
+    const navSections = [
+        {
+            title: t('navigation.overview', { defaultValue: 'Overview' }),
+            items: [
+                { href: '/dashboard', icon: 'home', label: t('navigation.dashboard'), active: url === '/dashboard' },
+                { href: '/devices', icon: 'device', label: t('navigation.devices'), active: url?.startsWith('/devices') },
+            ]
+        },
+        {
+            title: t('navigation.automation', { defaultValue: 'Automation' }),
+            items: [
+                { href: '/flows', icon: 'flow', label: t('navigation.workflows'), active: url?.startsWith('/flows'), highlight: true },
+                { href: '/data-collections', icon: 'database', label: t('navigation.data_collections'), active: url?.startsWith('/data-collections') },
+            ]
+        },
+        {
+            title: t('navigation.ai_tools', { defaultValue: 'AI Studio' }),
+            items: [
+                { href: '/ai-studio', icon: 'ai', label: t('navigation.ai_studio', { defaultValue: 'Generate' }), active: url?.startsWith('/ai-studio') && !url?.includes('generations'), highlight: true },
+                { href: '/ai-studio/generations', icon: 'gallery', label: t('navigation.ai_gallery', { defaultValue: 'Gallery' }), active: url?.includes('generations') },
+                { href: '/ai-credits', icon: 'credits', label: t('navigation.ai_credits', { defaultValue: 'Credits' }), active: url?.startsWith('/ai-credits') },
+            ]
+        },
+        {
+            title: t('navigation.resources', { defaultValue: 'Resources' }),
+            items: [
+                { href: '/media', icon: 'media', label: t('navigation.media'), active: url?.startsWith('/media') },
+                { href: '/packages', icon: 'package', label: t('navigation.packages'), active: url?.startsWith('/packages') || url?.startsWith('/my-packages') },
+            ]
+        },
+        {
+            title: t('navigation.account', { defaultValue: 'Account' }),
+            items: [
+                { href: '/profile', icon: 'user', label: t('navigation.profile'), active: url === '/profile' },
+                {
+                    href: '/notifications',
+                    icon: 'bell',
+                    label: t('navigation.notifications'),
+                    active: url?.startsWith('/notifications'),
+                    badge: unreadCount > 0 ? (unreadCount > 99 ? '99+' : unreadCount) : null
+                },
+            ]
+        },
+    ];
 
     return (
         <aside
-            className={`fixed top-0 left-0 z-50 h-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-gray-200/60 dark:border-gray-800/60 transform transition-all duration-300 lg:translate-x-0 shadow-xl shadow-gray-900/5 dark:shadow-black/20 ${collapsed ? 'w-[72px]' : 'w-64'
-                } ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+            className={`fixed top-0 left-0 z-50 h-full transform transition-all duration-300 lg:translate-x-0 ${collapsed ? 'w-[72px]' : 'w-64'
+                } ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${isDark
+                    ? 'bg-[#0c0c0e]/95 backdrop-blur-2xl border-r border-white/5'
+                    : 'bg-white/80 backdrop-blur-2xl border-r border-gray-200/50 shadow-xl shadow-gray-200/20'
+                }`}
         >
             <div className="flex flex-col h-full">
                 {/* Logo Section */}
-                <div className="flex items-center justify-between h-14 px-4 border-b border-gray-100 dark:border-gray-800">
+                <div className={`flex items-center justify-between h-16 px-4 ${isDark ? 'border-b border-white/5' : 'border-b border-gray-100'
+                    }`}>
                     {!collapsed ? (
                         <>
-                            <Link href="/" className="flex items-center space-x-2.5 group">
-                                <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-sm shadow-blue-500/30">
-                                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                    </svg>
+                            <Link href="/" className="flex items-center gap-3 group">
+                                <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                                    <span className="text-lg font-bold text-white">C</span>
+                                    <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-white dark:border-[#0c0c0e]" />
                                 </div>
                                 <div>
-                                    <span className="text-sm font-bold text-gray-900 dark:text-white">DeviceHub</span>
-                                    <p className="text-[10px] text-gray-400 dark:text-gray-500 -mt-0.5">Management</p>
+                                    <span className={`text-base font-bold bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent`}>
+                                        CLICKAI
+                                    </span>
+                                    <p className={`text-[10px] -mt-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                        Automation Platform
+                                    </p>
                                 </div>
                             </Link>
                             <button
                                 onClick={() => setSidebarOpen(false)}
-                                className="lg:hidden p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all"
+                                className={`lg:hidden p-2 rounded-lg transition-all ${isDark ? 'text-gray-500 hover:bg-white/5 hover:text-white' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
+                                    }`}
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>
                         </>
                     ) : (
-                        <div className="w-9 h-9 mx-auto bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-sm shadow-blue-500/30">
-                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
+                        <div className="mx-auto w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                            <span className="text-lg font-bold text-white">C</span>
                         </div>
                     )}
                 </div>
 
-                {/* Wallet Balance Card */}
+                {/* Credits & Balance Card */}
                 {!collapsed && (
-                    <div className="px-3 py-3 border-b border-gray-100 dark:border-gray-800">
-                        <Link
-                            href="/topup"
-                            className="block p-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-white shadow-sm hover:shadow-md transition-all"
-                        >
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-emerald-100 text-[10px] font-medium">{t('dashboard.stats.wallet_balance')}</p>
-                                    <p className="text-sm font-bold">{wallet?.formatted_balance || '0 ₫'}</p>
-                                </div>
-                                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                    </svg>
-                                </div>
+                    <div className="px-3 py-4">
+                        <div className={`p-4 rounded-2xl ${isDark
+                            ? 'bg-gradient-to-br from-violet-500/10 to-purple-600/10 border border-violet-500/20'
+                            : 'bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-100'
+                            }`}>
+                            <div className="flex items-center justify-between mb-3">
+                                <span className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                    {t('dashboard.stats.wallet_balance')}
+                                </span>
+                                <Link href="/topup" className={`text-xs font-medium ${isDark ? 'text-violet-400 hover:text-violet-300' : 'text-violet-600 hover:text-violet-700'}`}>
+                                    + Top up
+                                </Link>
                             </div>
-                        </Link>
+                            <p className={`text-xl font-bold transition-all duration-300 ${lastUpdate ? 'text-emerald-500 scale-105' : ''} ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                {realtimeBalance > 0
+                                    ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(realtimeBalance)
+                                    : (wallet?.formatted_balance || '0 ₫')
+                                }
+                            </p>
+                            <div className={`flex items-center gap-2 mt-3 pt-3 border-t ${isDark ? 'border-white/10' : 'border-violet-200/50'}`}>
+                                <div className="flex items-center gap-1.5">
+                                    <svg className={`w-4 h-4 ${isDark ? 'text-amber-400' : 'text-amber-500'}`} fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                    <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                        {aiCredits.toLocaleString()}
+                                    </span>
+                                </div>
+                                <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>AI Credits</span>
+                            </div>
+                        </div>
                     </div>
                 )}
 
                 {/* Navigation */}
-                <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
-                    {/* Overview Section */}
-                    {!collapsed && (
-                        <div className="mb-2">
-                            <p className="px-3 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{t('navigation.overview', { defaultValue: 'Overview' })}</p>
-                        </div>
-                    )}
-                    <NavLink href="/dashboard" icon="home" active={url === '/dashboard'} collapsed={collapsed}>
-                        {t('navigation.dashboard')}
-                    </NavLink>
-                    <NavLink href="/devices" icon="device" active={url?.startsWith('/devices') || false} collapsed={collapsed}>
-                        {t('navigation.devices')}
-                    </NavLink>
-
-                    {/* Services Section */}
-                    <div className="pt-3 mt-2">
-                        {!collapsed && (
-                            <p className="px-3 mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{t('navigation.services', { defaultValue: 'Services' })}</p>
-                        )}
-                        <NavLink href="/packages" icon="package" active={url?.startsWith('/packages') || url?.startsWith('/my-packages')} collapsed={collapsed}>
-                            {t('navigation.packages')}
-                        </NavLink>
-                        <NavLink href="/flows" icon="flow" active={url?.startsWith('/flows')} collapsed={collapsed}>
-                            {t('navigation.workflows')}
-                        </NavLink>
-                        <NavLink href="/data-collections" icon="database" active={url?.startsWith('/data-collections')} collapsed={collapsed}>
-                            {t('navigation.data_collections')}
-                        </NavLink>
-                        <NavLink href="/media" icon="media" active={url?.startsWith('/media')} collapsed={collapsed}>
-                            {t('navigation.media')}
-                        </NavLink>
-                        <NavLink href="/topup" icon="wallet" active={url?.startsWith('/topup') && url !== '/topup/history'} collapsed={collapsed}>
-                            {t('navigation.topup')}
-                        </NavLink>
-                        <NavLink href="/topup/history" icon="history" active={url === '/topup/history'} collapsed={collapsed}>
-                            {t('topup.history')}
-                        </NavLink>
-                    </div>
-
-                    {/* Account Section */}
-                    <div className="pt-3 mt-2">
-                        {!collapsed && (
-                            <p className="px-3 mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{t('navigation.account', { defaultValue: 'Account' })}</p>
-                        )}
-                        <NavLink href="/profile" icon="user" active={url === '/profile'} collapsed={collapsed}>
-                            {t('navigation.profile')}
-                        </NavLink>
-                        <div className="relative">
-                            <NavLink href="/notifications" icon="bell" active={url?.startsWith('/notifications')} collapsed={collapsed}>
-                                {t('navigation.notifications')}
-                            </NavLink>
-                            {unreadCount > 0 && (
-                                <span className={`absolute ${collapsed ? 'top-1 right-1' : 'top-1.5 right-2'} inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold leading-none text-white bg-red-500 rounded-full min-w-[16px]`}>
-                                    {unreadCount > 99 ? '99+' : unreadCount}
-                                </span>
+                <nav className="flex-1 px-3 py-2 space-y-6 overflow-y-auto scrollbar-thin">
+                    {navSections.map((section, sectionIndex) => (
+                        <div key={sectionIndex}>
+                            {!collapsed && (
+                                <p className={`px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider ${isDark ? 'text-gray-600' : 'text-gray-400'
+                                    }`}>
+                                    {section.title}
+                                </p>
                             )}
+                            <div className="space-y-1">
+                                {section.items.map((item, itemIndex) => (
+                                    <div key={itemIndex} className="relative">
+                                        <NavLink
+                                            href={item.href}
+                                            icon={item.icon}
+                                            active={item.active}
+                                            collapsed={collapsed}
+                                            highlight={item.highlight}
+                                        >
+                                            {item.label}
+                                        </NavLink>
+                                        {item.badge && (
+                                            <span className={`absolute ${collapsed ? 'top-0.5 right-0.5' : 'top-1.5 right-2'} inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold leading-none text-white bg-gradient-to-r from-red-500 to-pink-500 rounded-full shadow-lg shadow-red-500/30`}>
+                                                {item.badge}
+                                            </span>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                        <NavLink href="/profile" icon="settings" active={url === '/settings'} collapsed={collapsed}>
-                            {t('navigation.settings')}
-                        </NavLink>
-                    </div>
+                    ))}
 
-                    {/* Support Section */}
-                    <div className="pt-3 mt-2 border-t border-gray-100 dark:border-gray-800">
+                    {/* Support Links */}
+                    <div className={`pt-4 border-t ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
                         {!collapsed && (
-                            <p className="px-3 mb-2 mt-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{t('navigation.support', { defaultValue: 'Support' })}</p>
+                            <p className={`px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider ${isDark ? 'text-gray-600' : 'text-gray-400'
+                                }`}>
+                                {t('navigation.support', { defaultValue: 'Support' })}
+                            </p>
                         )}
-                        <NavLink href="/pricing" icon="upgrade" collapsed={collapsed}>
-                            {t('pricing.title')}
-                        </NavLink>
-                        <NavLink href="/contact" icon="support" collapsed={collapsed}>
-                            {t('contact.title')}
-                        </NavLink>
+                        <div className="space-y-1">
+                            <NavLink href="/topup" icon="wallet" collapsed={collapsed}>
+                                {t('navigation.topup')}
+                            </NavLink>
+                            <NavLink href="/topup/history" icon="history" collapsed={collapsed} active={url === '/topup/history'}>
+                                {t('topup.history')}
+                            </NavLink>
+                            <NavLink href="/pricing" icon="upgrade" collapsed={collapsed}>
+                                {t('pricing.title')}
+                            </NavLink>
+                            <NavLink href="/contact" icon="support" collapsed={collapsed}>
+                                {t('contact.title')}
+                            </NavLink>
+                        </div>
                     </div>
                 </nav>
 
-                {/* Collapse Toggle Button */}
-                <div className="hidden lg:block px-3 py-2 border-t border-gray-100 dark:border-gray-800">
+                {/* Collapse Toggle */}
+                <div className={`hidden lg:block px-3 py-2 border-t ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
                     <button
                         onClick={() => setCollapsed(!collapsed)}
-                        className="w-full flex items-center justify-center p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
-                        title={collapsed ? t('navigation.expand', { defaultValue: 'Expand menu' }) : t('navigation.collapse', { defaultValue: 'Collapse menu' })}
+                        className={`w-full flex items-center justify-center p-2.5 rounded-xl transition-all ${isDark
+                            ? 'text-gray-500 hover:text-white hover:bg-white/5'
+                            : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'
+                            }`}
+                        title={collapsed ? 'Expand' : 'Collapse'}
                     >
-                        <svg className={`w-4 h-4 transition-transform ${collapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                        <svg className={`w-5 h-5 transition-transform ${collapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                         </svg>
                     </button>
                 </div>
 
-                {/* User Info with Dropdown */}
+                {/* User Menu */}
                 <UserMenu user={user} collapsed={collapsed} />
             </div>
         </aside>

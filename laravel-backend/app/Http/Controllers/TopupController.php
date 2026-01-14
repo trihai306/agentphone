@@ -56,7 +56,7 @@ class TopupController extends Controller
         ]);
 
         $user = Auth::user();
-        $packages = collect($this->getCreditPackages());
+        $packages = collect($this->getTopupPackages());
         $selectedPackage = $packages->firstWhere('id', $request->package_id);
 
         if (!$selectedPackage) {
@@ -81,7 +81,7 @@ class TopupController extends Controller
         ]);
 
         $user = Auth::user();
-        $packages = collect($this->getCreditPackages());
+        $packages = collect($this->getTopupPackages());
         $selectedPackage = $packages->firstWhere('id', $request->package_id);
 
         if (!$selectedPackage) {
@@ -105,19 +105,19 @@ class TopupController extends Controller
                 'type' => Transaction::TYPE_DEPOSIT,
                 'amount' => $selectedPackage['price'],
                 'fee' => 0,
-                'final_amount' => $selectedPackage['price'],
+                'final_amount' => $selectedPackage['price'] + ($selectedPackage['bonus'] ?? 0),
                 'status' => Transaction::STATUS_PENDING,
                 'payment_method' => $request->payment_method,
                 'payment_details' => [
                     'package_id' => $selectedPackage['id'],
                     'package_name' => $selectedPackage['name'],
-                    'credits' => $selectedPackage['credits'],
-                    'bonus_credits' => $selectedPackage['bonus'] ?? 0,
+                    'base_amount' => $selectedPackage['price'],
+                    'bonus_amount' => $selectedPackage['bonus'] ?? 0,
                 ],
                 'user_note' => 'Nạp ' . $selectedPackage['name'] . ' - ' . number_format($selectedPackage['price'], 0, ',', '.') . ' VND',
             ]);
 
-            // Tạo user service package
+            // Tạo user service package để track đơn hàng
             $topup = UserServicePackage::create([
                 'user_id' => $user->id,
                 'service_package_id' => null,
@@ -128,18 +128,37 @@ class TopupController extends Controller
                 'payment_method' => $request->payment_method,
                 'price_paid' => $selectedPackage['price'],
                 'currency' => 'VND',
-                'credits_remaining' => $selectedPackage['credits'],
+                'credits_remaining' => 0, // Not a credits package
                 'metadata' => [
-                    'type' => 'credits',
+                    'type' => 'topup',
                     'package_id' => $selectedPackage['id'],
                     'package_name' => $selectedPackage['name'],
-                    'bonus_credits' => $selectedPackage['bonus'] ?? 0,
+                    'base_amount' => $selectedPackage['price'],
+                    'bonus_amount' => $selectedPackage['bonus'] ?? 0,
+                    'total_amount' => $selectedPackage['price'] + ($selectedPackage['bonus'] ?? 0),
                     'transaction_id' => $transaction->id,
                 ],
             ]);
 
             return $topup;
         });
+
+        // Notify all admins about new topup request
+        $amountFormatted = number_format($selectedPackage['price'], 0, ',', '.');
+        app(\App\Services\NotificationService::class)->sendToAdmins(
+            '💳 Yêu cầu nạp tiền mới',
+            "{$user->name} vừa đặt {$selectedPackage['name']} ({$amountFormatted} ₫). Vui lòng kiểm tra và duyệt.",
+            'info',
+            [
+                'topup_id' => $topup->id,
+                'order_code' => $topup->order_code,
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'amount' => $selectedPackage['price'],
+            ],
+            '/admin/transactions?activeTableTab=pending-tab',
+            'Xem giao dịch'
+        );
 
         return redirect()->route('topup.payment', $topup->id);
     }
@@ -149,13 +168,9 @@ class TopupController extends Controller
      */
     public function payment(UserServicePackage $topup)
     {
-        $user = Auth::user();
+        $this->authorize('view', $topup);
 
-        if ($topup->user_id !== $user->id) {
-            abort(403);
-        }
-
-        $packages = collect($this->getCreditPackages());
+        $packages = collect($this->getTopupPackages());
         $packageInfo = $packages->firstWhere('id', $topup->metadata['package_id'] ?? null);
 
         return Inertia::render('Topup/Payment', [

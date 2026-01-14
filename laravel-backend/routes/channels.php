@@ -62,3 +62,14 @@ Broadcast::channel('recording.{userId}', function ($user, $userId) {
     return (int) $user->id === (int) $userId;
 });
 
+// Private channel for wallet updates
+Broadcast::channel('wallet.{userId}', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
+});
+
+// Private channel for device-specific events (recording, job execution)
+// User can subscribe to devices they own
+Broadcast::channel('device.{deviceId}', function ($user, $deviceId) {
+    // Check if this device belongs to the user
+    return $user->devices()->where('device_id', $deviceId)->exists();
+});

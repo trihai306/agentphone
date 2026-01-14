@@ -118,7 +118,8 @@ object SocketJobManager {
                 val authUrl = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
                     "http://10.0.2.2:8000/api/pusher/auth"
                 } else {
-                    "https://laravel-backend.test/api/pusher/auth"
+                    // Use same base URL as API calls for physical devices
+                    "${com.agent.portal.utils.NetworkUtils.getApiBaseUrl()}/pusher/auth"
                 }
                 
                 val authorizer = HttpChannelAuthorizer(authUrl)
@@ -248,40 +249,97 @@ object SocketJobManager {
     private fun subscribeToPrivateChannel() {
         if (deviceId == null) return
 
-        val channelName = "device-$deviceId"
+        // Use private-device.{id} format to match Laravel PrivateChannel('device.{id}')
+        val channelName = "private-device.$deviceId"
         Log.i(TAG, "Subscribing to private channel: $channelName")
 
-        deviceChannel = pusher?.subscribe(channelName)
+        deviceChannel = pusher?.subscribePrivate(channelName, object : com.pusher.client.channel.PrivateChannelEventListener {
+            override fun onSubscriptionSucceeded(channelName: String) {
+                Log.i(TAG, "✅ Private channel subscribed successfully: $channelName")
+            }
+            override fun onAuthenticationFailure(message: String?, e: Exception?) {
+                Log.e(TAG, "❌ Private channel auth FAILED: $message", e)
+            }
+            override fun onEvent(event: PusherEvent) {
+                Log.i(TAG, "📥 Private channel event: ${event.eventName} - ${event.data}")
+                // Route events to handlers
+                when (event.eventName) {
+                    "job:new" -> handleNewJob(event.data)
+                    "job:cancel" -> handleCancelJob(event.data)
+                    "job:pause" -> handlePauseJob(event.data)
+                    "job:resume" -> handleResumeJob(event.data)
+                    "config:update" -> handleConfigUpdate(event.data)
+                    "recording.stop_requested" -> handleRecordingStopRequested(event.data)
+                    "workflow:test" -> {
+                        Log.i(TAG, "🧪 Received workflow:test event!")
+                        handleWorkflowTest(event.data)
+                    }
+                }
+            }
+        })
 
-        // Bind to job events
-        deviceChannel?.bind("job:new", object : SubscriptionEventListener {
+        // Bind to job events - use PrivateChannelEventListener for private channels
+        deviceChannel?.bind("job:new", object : com.pusher.client.channel.PrivateChannelEventListener {
             override fun onEvent(event: PusherEvent) {
                 handleNewJob(event.data)
             }
+            override fun onSubscriptionSucceeded(channelName: String) {
+                Log.i(TAG, "Private channel subscribed: $channelName")
+            }
+            override fun onAuthenticationFailure(message: String?, e: Exception?) {
+                Log.e(TAG, "Auth failed for private channel: $message", e)
+            }
         })
 
-        deviceChannel?.bind("job:cancel", object : SubscriptionEventListener {
+        deviceChannel?.bind("job:cancel", object : com.pusher.client.channel.PrivateChannelEventListener {
             override fun onEvent(event: PusherEvent) {
                 handleCancelJob(event.data)
             }
+            override fun onSubscriptionSucceeded(channelName: String) {}
+            override fun onAuthenticationFailure(message: String?, e: Exception?) {}
         })
 
-        deviceChannel?.bind("job:pause", object : SubscriptionEventListener {
+        deviceChannel?.bind("job:pause", object : com.pusher.client.channel.PrivateChannelEventListener {
             override fun onEvent(event: PusherEvent) {
                 handlePauseJob(event.data)
             }
+            override fun onSubscriptionSucceeded(channelName: String) {}
+            override fun onAuthenticationFailure(message: String?, e: Exception?) {}
         })
 
-        deviceChannel?.bind("job:resume", object : SubscriptionEventListener {
+        deviceChannel?.bind("job:resume", object : com.pusher.client.channel.PrivateChannelEventListener {
             override fun onEvent(event: PusherEvent) {
                 handleResumeJob(event.data)
             }
+            override fun onSubscriptionSucceeded(channelName: String) {}
+            override fun onAuthenticationFailure(message: String?, e: Exception?) {}
         })
 
-        deviceChannel?.bind("config:update", object : SubscriptionEventListener {
+        deviceChannel?.bind("config:update", object : com.pusher.client.channel.PrivateChannelEventListener {
             override fun onEvent(event: PusherEvent) {
                 handleConfigUpdate(event.data)
             }
+            override fun onSubscriptionSucceeded(channelName: String) {}
+            override fun onAuthenticationFailure(message: String?, e: Exception?) {}
+        })
+
+        // Listen for recording stop command from web
+        deviceChannel?.bind("recording.stop_requested", object : com.pusher.client.channel.PrivateChannelEventListener {
+            override fun onEvent(event: PusherEvent) {
+                handleRecordingStopRequested(event.data)
+            }
+            override fun onSubscriptionSucceeded(channelName: String) {}
+            override fun onAuthenticationFailure(message: String?, e: Exception?) {}
+        })
+
+        // Listen for workflow test run command from web (quick test without job creation)
+        deviceChannel?.bind("workflow:test", object : com.pusher.client.channel.PrivateChannelEventListener {
+            override fun onEvent(event: PusherEvent) {
+                Log.i(TAG, "🧪 Received workflow:test event")
+                handleWorkflowTest(event.data)
+            }
+            override fun onSubscriptionSucceeded(channelName: String) {}
+            override fun onAuthenticationFailure(message: String?, e: Exception?) {}
         })
 
         Log.i(TAG, "Private channel subscription complete")
@@ -295,7 +353,7 @@ object SocketJobManager {
             try {
                 // Unsubscribe from channel (automatically unbinds all events)
                 if (deviceId != null) {
-                    pusher?.unsubscribe("device-$deviceId")
+                    pusher?.unsubscribe("private-device.$deviceId")
                 }
                 deviceChannel = null
                 
@@ -376,7 +434,7 @@ object SocketJobManager {
                 )
 
                 val request = okhttp3.Request.Builder()
-                    .url("$apiUrl/recording-events")
+                    .url("$apiUrl/notifications/recording-events")
                     .post(requestBody)
                     .addHeader("Authorization", "Bearer $token")
                     .addHeader("Content-Type", "application/json")
@@ -394,6 +452,88 @@ object SocketJobManager {
                 response.close()
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to publish event '$eventName'", e)
+            }
+        }
+    }
+
+    /**
+     * Publish individual action event during recording for real-time Flow Editor sync
+     * 
+     * @param sessionId Recording session ID
+     * @param event The recorded event with all details
+     */
+    fun publishActionEvent(sessionId: String, event: com.agent.portal.recording.RecordedEvent) {
+        scope.launch {
+            try {
+                val context = contextRef?.get() ?: run {
+                    Log.w(TAG, "Context not available, cannot publish action event")
+                    return@launch
+                }
+
+                // Get auth token
+                val sessionManager = com.agent.portal.auth.SessionManager(context)
+                val session = sessionManager.getSession()
+                val token = session?.token
+
+                if (token == null) {
+                    Log.w(TAG, "No auth token, cannot publish action event")
+                    return@launch
+                }
+
+                // Determine API URL
+                val apiUrl = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
+                    "http://10.0.2.2:8000/api"
+                } else {
+                    "https://laravel-backend.test/api"
+                }
+
+                // Build action event data
+                val actionData = mapOf(
+                    "device_id" to (deviceId ?: "unknown"),
+                    "session_id" to sessionId,
+                    "event_type" to event.eventType,
+                    "sequence_number" to event.sequenceNumber,
+                    "timestamp" to event.timestamp,
+                    "package_name" to event.packageName,
+                    "class_name" to event.className,
+                    "resource_id" to event.resourceId,
+                    "content_description" to event.contentDescription,
+                    "text" to event.text,
+                    "bounds" to event.bounds,
+                    "x" to (event.x ?: 0),
+                    "y" to (event.y ?: 0),
+                    "is_clickable" to event.isClickable,
+                    "is_editable" to event.isEditable,
+                    "is_scrollable" to event.isScrollable
+                )
+
+                // Send HTTP POST request
+                val client = okhttp3.OkHttpClient()
+                val json = gson.toJson(actionData)
+                val requestBody = okhttp3.RequestBody.create(
+                    "application/json".toMediaTypeOrNull(),
+                    json
+                )
+
+                val request = okhttp3.Request.Builder()
+                    .url("$apiUrl/notifications/recording-actions")
+                    .post(requestBody)
+                    .addHeader("Authorization", "Bearer $token")
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Accept", "application/json")
+                    .build()
+
+                val response = client.newCall(request).execute()
+
+                if (response.isSuccessful) {
+                    Log.d(TAG, "📤 Published action: ${event.eventType} #${event.sequenceNumber}")
+                } else {
+                    Log.w(TAG, "Failed to publish action: ${response.code}")
+                }
+
+                response.close()
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to publish action event", e)
             }
         }
     }
@@ -593,6 +733,140 @@ object SocketJobManager {
 
         } catch (e: Exception) {
             Log.e(TAG, "Error processing config update", e)
+        }
+    }
+
+    /**
+     * Handle recording stop request from web
+     * This is triggered when user clicks Stop on Flow Editor
+     */
+    private fun handleRecordingStopRequested(data: String) {
+        try {
+            Log.i(TAG, "⏹️ Recording stop requested from web")
+            
+            // Parse session data
+            val json = gson.fromJson(data, Map::class.java)
+            val sessionId = json["session"]?.let { 
+                (it as? Map<*, *>)?.get("session_id") as? String 
+            }
+            
+            Log.i(TAG, "Stopping recording session: $sessionId")
+            
+            // Stop recording via RecordingManager
+            val result = com.agent.portal.recording.RecordingManager.stopRecording()
+            
+            if (result.success) {
+                Log.i(TAG, "✅ Recording stopped successfully from web command")
+            } else {
+                Log.w(TAG, "Recording stop failed: ${result.message}")
+            }
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error handling recording stop request", e)
+        }
+    }
+
+    /**
+     * Handle workflow test run from web Flow Editor
+     * This executes actions directly without creating a formal WorkflowJob
+     * STOPS on first error and reports progress back to frontend
+     */
+    private fun handleWorkflowTest(data: String) {
+        try {
+            Log.i(TAG, "🧪 Workflow test run received from web")
+            
+            // Parse test run payload
+            val json = gson.fromJson(data, Map::class.java)
+            val flowId = (json["flow_id"] as? Number)?.toInt() ?: 0
+            val flowName = json["flow_name"] as? String ?: "Test Workflow"
+            val actionsRaw = json["actions"] as? List<*> ?: emptyList<Any>()
+            
+            Log.i(TAG, "Test run: flowId=$flowId, flowName=$flowName, actions=${actionsRaw.size}")
+            
+            if (actionsRaw.isEmpty()) {
+                Log.w(TAG, "No actions in test run payload")
+                return
+            }
+            
+            val context = contextRef?.get() ?: run {
+                Log.e(TAG, "Context not available for test run")
+                return
+            }
+            
+            // Execute actions in background
+            scope.launch {
+                try {
+                    val executor = JobExecutor(context)
+                    
+                    Log.i(TAG, "🚀 Starting test run with ${actionsRaw.size} actions")
+                    var successCount = 0
+                    var failedAction: String? = null
+                    var failReason: String? = null
+                    
+                    for ((index, action) in actionsRaw.withIndex()) {
+                        val actionMap = action as? Map<*, *> ?: continue
+                        val actionType = actionMap["type"] as? String ?: continue
+                        val actionId = actionMap["id"] as? String ?: "action_$index"
+                        
+                        // Extract params and convert to proper Map<String, Any>
+                        @Suppress("UNCHECKED_CAST")
+                        val params = (actionMap["params"] as? Map<String, Any>) ?: emptyMap()
+                        val waitAfter = (actionMap["wait_after"] as? Number)?.toLong() ?: 500L
+                        
+                        Log.i(TAG, "  [${index + 1}/${actionsRaw.size}] Executing: $actionType (wait_after=${waitAfter}ms)")
+                        
+                        // Log params for debugging
+                        val resourceId = params["resourceId"]
+                        val contentDesc = params["contentDescription"]
+                        val text = params["text"]
+                        val x = params["x"]
+                        val y = params["y"]
+                        Log.d(TAG, "    Params: resourceId=$resourceId, contentDesc=$contentDesc, text=${text?.toString()?.take(30)}, x=$x, y=$y")
+                        
+                        try {
+                            val result = executor.executeTestAction(actionType, params)
+                            if (result.success) {
+                                Log.i(TAG, "  ✓ Action $actionType completed via ${result.data?.get("method") ?: "unknown"}")
+                                successCount++
+                            } else {
+                                // STOP on error
+                                failedAction = actionType
+                                failReason = result.message ?: result.error ?: "Unknown error"
+                                Log.e(TAG, "  ✗ Action $actionType FAILED: $failReason")
+                                Log.e(TAG, "  ⛔ STOPPING workflow due to error")
+                                break
+                            }
+                            
+                            // Wait between actions
+                            if (waitAfter > 0) {
+                                delay(waitAfter)
+                            }
+                        } catch (e: Exception) {
+                            failedAction = actionType
+                            failReason = e.message ?: "Exception occurred"
+                            Log.e(TAG, "  ✗ Action $actionType EXCEPTION: ${e.message}")
+                            Log.e(TAG, "  ⛔ STOPPING workflow due to error")
+                            break
+                        }
+                    }
+                    
+                    // Final summary
+                    if (failedAction != null) {
+                        Log.e(TAG, "❌ Test run FAILED: $flowName")
+                        Log.e(TAG, "   Completed: $successCount/${actionsRaw.size} actions")
+                        Log.e(TAG, "   Failed at: $failedAction")
+                        Log.e(TAG, "   Reason: $failReason")
+                    } else {
+                        Log.i(TAG, "✅ Test run completed: $flowName ($successCount/${actionsRaw.size} actions)")
+                    }
+                    
+                } catch (e: Exception) {
+                    Log.e(TAG, "Test run failed", e)
+                }
+            }
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error handling workflow test", e)
         }
     }
 

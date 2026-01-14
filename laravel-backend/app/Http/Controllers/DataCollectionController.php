@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreDataCollectionRequest;
 use App\Models\DataCollection;
 use App\Models\DataRecord;
 use Illuminate\Http\Request;
@@ -19,10 +20,10 @@ class DataCollectionController extends Controller
 
         $collections = $user->dataCollections()
             ->withCount([
-                'records' => function ($query) {
-                    $query->where('status', 'active');
-                }
-            ])
+                    'records' => function ($query) {
+                        $query->where('status', 'active');
+                    }
+                ])
             ->orderBy('updated_at', 'desc')
             ->get()
             ->map(fn($collection) => [
@@ -54,20 +55,9 @@ class DataCollectionController extends Controller
     /**
      * Store a newly created collection
      */
-    public function store(Request $request)
+    public function store(StoreDataCollectionRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'icon' => 'nullable|string|max:10',
-            'color' => 'nullable|string|max:7',
-            'schema' => 'required|array',
-            'schema.*.name' => 'required|string',
-            'schema.*.type' => 'required|string|in:text,number,email,date,boolean,select,textarea,url,phone,currency,rating,autonumber',
-            'schema.*.required' => 'boolean',
-            'schema.*.default' => 'nullable',
-            'schema.*.options' => 'nullable|array',
-        ]);
+        $validated = $request->validated();
 
         $collection = Auth::user()->dataCollections()->create([
             'name' => $validated['name'],

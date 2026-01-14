@@ -162,12 +162,7 @@ class AiGenerationController extends Controller
      */
     public function show(AiGeneration $generation)
     {
-        $user = Auth::user();
-
-        // Authorization
-        if ($generation->user_id !== $user->id) {
-            abort(403, 'Unauthorized');
-        }
+        $this->authorize('view', $generation);
 
         return Inertia::render('AiStudio/Show', [
             'generation' => $this->formatGeneration($generation),
@@ -179,12 +174,7 @@ class AiGenerationController extends Controller
      */
     public function checkStatus(AiGeneration $generation)
     {
-        $user = Auth::user();
-
-        // Authorization
-        if ($generation->user_id !== $user->id) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+        $this->authorize('view', $generation);
 
         // Update status from provider
         $generation = $this->aiService->checkGenerationStatus($generation);
@@ -199,12 +189,7 @@ class AiGenerationController extends Controller
      */
     public function delete(AiGeneration $generation)
     {
-        $user = Auth::user();
-
-        // Authorization
-        if ($generation->user_id !== $user->id) {
-            abort(403, 'Unauthorized');
-        }
+        $this->authorize('delete', $generation);
 
         // Delete file from storage if exists
         if ($generation->result_path) {

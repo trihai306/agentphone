@@ -34,6 +34,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
                 'wallet' => fn() => $this->getWalletData($request),
+                'ai_credits' => fn() => $request->user()?->ai_credits ?? 0,
             ],
             'flash' => [
                 'success' => fn() => $request->session()->get('success'),

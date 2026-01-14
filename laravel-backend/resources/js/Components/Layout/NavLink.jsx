@@ -1,6 +1,10 @@
 import { Link } from '@inertiajs/react';
+import { useTheme } from '@/Contexts/ThemeContext';
 
-export default function NavLink({ href, icon, children, active = false, collapsed = false }) {
+export default function NavLink({ href, icon, children, active = false, collapsed = false, highlight = false }) {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+
     const icons = {
         home: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
         device: "M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z",
@@ -18,44 +22,36 @@ export default function NavLink({ href, icon, children, active = false, collapse
         flow: "M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z",
         media: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z",
         database: "M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4",
+        ai: "M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
+        credits: "M13 10V3L4 14h7v7l9-11h-7z",
+        gallery: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z",
     };
 
-    if (collapsed) {
-        return (
-            <Link
-                href={href}
-                className={`relative flex items-center justify-center p-2.5 rounded-xl transition-all group ${active
-                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md'
-                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200'
-                    }`}
-                title={children}
-            >
-                <svg className={`w-5 h-5 ${active ? 'text-white' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={icons[icon]} />
-                </svg>
-                {active && (
-                    <div className="absolute right-1 top-1 w-2 h-2 bg-white rounded-full"></div>
-                )}
-            </Link>
-        );
-    }
+    const baseStyles = collapsed
+        ? 'flex items-center justify-center p-2.5 rounded-xl transition-all duration-200'
+        : 'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200';
+
+    const activeStyles = active
+        ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25'
+        : highlight && !active
+            ? isDark
+                ? 'text-violet-400 hover:text-white hover:bg-white/5'
+                : 'text-violet-600 hover:text-violet-700 hover:bg-violet-50'
+            : isDark
+                ? 'text-gray-400 hover:text-white hover:bg-white/5'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100';
 
     return (
         <Link
             href={href}
-            className={`flex items-center space-x-3 px-3 py-2 rounded-xl transition-all group ${active
-                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
-                }`}
+            className={`${baseStyles} ${activeStyles}`}
+            title={collapsed ? children : undefined}
         >
-            <div className={`p-2 rounded-lg ${active ? 'bg-white/20' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'} transition-all`}>
-                <svg className={`w-4 h-4 ${active ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={icons[icon]} />
-                </svg>
-            </div>
-            <span className="text-[13px] font-medium">{children}</span>
-            {active && (
-                <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>
+            <svg className={`w-5 h-5 flex-shrink-0 ${active ? 'text-white' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={icons[icon] || icons.home} />
+            </svg>
+            {!collapsed && (
+                <span className="text-sm font-medium">{children}</span>
             )}
         </Link>
     );

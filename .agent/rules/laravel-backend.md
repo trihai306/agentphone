@@ -55,6 +55,56 @@ PHẦN ADMIN (Filament v3)
 - Migration chuẩn, naming rõ ràng, index/foreign key khi cần.
 - Không tạo bảng/field dư thừa.
 
+LARAVEL BACKEND DESIGN PATTERNS (bắt buộc)
+
+(1) Controller Pattern:
+- Controller chỉ làm 3 việc: validate input → gọi logic → trả response.
+- Không viết business logic trực tiếp trong controller.
+- Dùng Route Model Binding cho single resource actions.
+- Luôn check authorization: `if ($model->user_id !== $user->id) abort(403);`
+
+(2) Form Request Pattern:
+- Tách validation ra FormRequest cho các action phức tạp (store/update).
+- Đặt tại `app/Http/Requests/{Feature}Request.php`.
+- Dùng `authorize()` method để check quyền nếu cần.
+
+(3) Service Pattern (khi cần):
+- Chỉ tạo Service khi logic được tái sử dụng ở nhiều nơi hoặc quá phức tạp cho controller.
+- Đặt tại `app/Services/{Feature}Service.php`.
+- Service không inject Request, chỉ nhận data đã validate.
+
+(4) Policy Pattern:
+- Dùng Laravel Policy cho authorization phức tạp.
+- Đặt tại `app/Policies/{Model}Policy.php`.
+- Register trong `AuthServiceProvider`.
+
+(5) Model Pattern:
+- Model chứa: relationships, scopes, accessors/mutators, casts.
+- Không viết business logic nặng trong Model.
+- Dùng `$fillable` hoặc `$guarded` cho mass assignment.
+- Dùng Eloquent scopes cho query hay dùng: `scopeActive()`, `scopeForUser()`.
+
+(6) API Response Pattern:
+- JSON API: luôn trả về structure nhất quán.
+```php
+return response()->json([
+    'success' => true,
+    'data' => $data,
+    'message' => 'Success message',
+]);
+```
+- Error response: status code phù hợp (400, 401, 403, 404, 422, 500).
+- Inertia: dùng `Inertia::render()` hoặc `redirect()->back()->with()`.
+
+(7) Event/Listener Pattern (khi cần):
+- Dùng cho side-effects không block request (email, notification, logging).
+- Đặt tại `app/Events/` và `app/Listeners/`.
+
+(8) Database Pattern:
+- Dùng `DB::transaction()` cho multi-table operations.
+- Index các cột hay query: foreign keys, status, created_at.
+- Soft deletes khi cần audit trail.
+
 QUY TRÌNH THỰC THI MỖI KHI CODE
 Bước 1 — Đọc cấu trúc hiện có:
 - Xác định: routes, controllers, models, policies, pages/components, filament resources hiện có liên quan.

@@ -3,6 +3,7 @@ package com.agent.portal.socket
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import android.view.accessibility.AccessibilityNodeInfo
 import com.agent.portal.accessibility.PortalAccessibilityService
 import kotlinx.coroutines.delay
 import java.lang.ref.WeakReference
@@ -165,27 +166,190 @@ class JobExecutor(context: Context) {
         )
     }
 
+    /**
+     * Execute a single action for test runs (public method for quick test without full job context)
+     * @param actionType The action type string (tap, text_input, scroll, etc.)
+     * @param params The action parameters
+     */
+    suspend fun executeTestAction(actionType: String, params: Map<String, Any>): ActionResult {
+        return try {
+            when (actionType) {
+                "tap", "click" -> executeTap(params)
+                "double_tap" -> executeDoubleTap(params)
+                "long_press" -> executeLongPress(params)
+                "swipe" -> executeSwipe(params)
+                "scroll" -> executeScroll(params)
+                "text_input" -> executeTextInput(params)
+                "press_key" -> executePressKey(params)
+                "start_app" -> executeStartApp(params)
+                "wait" -> executeWait(params)
+                "screenshot" -> executeScreenshot(params)
+                else -> ActionResult(
+                    actionId = "unknown",
+                    success = false,
+                    message = "Unknown action type: $actionType",
+                    error = "Unsupported action"
+                )
+            }
+        } catch (e: Exception) {
+            ActionResult(
+                actionId = actionType,
+                success = false,
+                message = "Action failed: ${e.message}",
+                error = e.message
+            )
+        }
+    }
+
     // ================================================================================
     // Action Implementations
     // ================================================================================
 
     private suspend fun executeTap(params: Map<String, Any>): ActionResult {
-        val context = contextRef.get() ?: throw Exception("Context is null")
         val accessibilityService = PortalAccessibilityService.instance
             ?: throw Exception("Accessibility service not available")
 
-        val x = (params["x"] as? Number)?.toInt() ?: throw Exception("Missing x coordinate")
-        val y = (params["y"] as? Number)?.toInt() ?: throw Exception("Missing y coordinate")
-
-        val success = accessibilityService.performTap(x, y)
-
-        return ActionResult(
-            actionId = "tap_${x}_${y}",
-            success = success,
-            message = if (success) "Tap executed at ($x, $y)" else "Tap failed",
-            data = mapOf("x" to x, "y" to y),
-            error = if (!success) "Failed to perform tap" else null
-        )
+        // ========================================================================
+        // SMART SELECTOR SYSTEM: Try accessibility attributes first, coordinates as fallback
+        // Priority: resourceId > text > contentDescription > coordinates
+        // ========================================================================
+        
+        val resourceId = params["resourceId"] as? String
+        val text = params["text"] as? String
+        val contentDescription = params["contentDescription"] as? String
+        val x = (params["x"] as? Number)?.toInt()
+        val y = (params["y"] as? Number)?.toInt()
+        
+        val rootNode = accessibilityService.rootInActiveWindow
+        
+        Log.d(TAG, "🔍 Tap selectors: resourceId=$resourceId, contentDesc=${contentDescription?.take(30)}, text=${text?.take(30)}, x=$x, y=$y")
+        Log.d(TAG, "   RootNode available: ${rootNode != null}")
+        
+        // Priority 1: Try resourceId (most stable)
+        if (!resourceId.isNullOrBlank() && rootNode != null) {
+            val nodes = rootNode.findAccessibilityNodeInfosByViewId(resourceId)
+            Log.d(TAG, "   [resourceId] Found ${nodes.size} nodes")
+            val node = nodes.firstOrNull()
+            if (node != null) {
+                try {
+                    val success = node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                    if (success) {
+                        Log.d(TAG, "✓ Tap via RESOURCE_ID: $resourceId")
+                        return ActionResult(
+                            actionId = "tap_resourceId",
+                            success = true,
+                            message = "Tap executed via resourceId: $resourceId",
+                            data = mapOf("method" to "resourceId", "selector" to resourceId)
+                        )
+                    } else {
+                        Log.d(TAG, "   [resourceId] Node found but click failed")
+                    }
+                } finally {
+                    node.recycle()
+                }
+            }
+        } else if (resourceId.isNullOrBlank()) {
+            Log.d(TAG, "   [resourceId] SKIPPED - empty/null")
+        }
+        
+        // Priority 2: Try contentDescription (good for accessibility labels like "Share", "Like")
+        if (!contentDescription.isNullOrBlank() && rootNode != null) {
+            Log.d(TAG, "   [contentDesc] Searching for: ${contentDescription.take(40)}")
+            val node = findNodeByContentDescription(contentDescription, rootNode)
+            if (node != null) {
+                Log.d(TAG, "   [contentDesc] Node FOUND, attempting click")
+                try {
+                    val success = node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                    if (success) {
+                        Log.d(TAG, "✓ Tap via CONTENT_DESC: $contentDescription")
+                        return ActionResult(
+                            actionId = "tap_contentDesc",
+                            success = true,
+                            message = "Tap executed via contentDescription: $contentDescription",
+                            data = mapOf("method" to "contentDescription", "selector" to contentDescription)
+                        )
+                    } else {
+                        Log.d(TAG, "   [contentDesc] Node found but click FAILED")
+                    }
+                } finally {
+                    node.recycle()
+                }
+            } else {
+                Log.d(TAG, "   [contentDesc] Node NOT found in tree")
+            }
+        } else if (contentDescription.isNullOrBlank()) {
+            Log.d(TAG, "   [contentDesc] SKIPPED - empty/null")
+        }
+        
+        // Priority 3: Try text (good for buttons, labels)
+        if (!text.isNullOrBlank() && rootNode != null) {
+            Log.d(TAG, "   [text] Searching for: ${text.take(40)}")
+            val nodes = rootNode.findAccessibilityNodeInfosByText(text)
+            Log.d(TAG, "   [text] Found ${nodes.size} nodes containing text")
+            val node = nodes.firstOrNull { it.text?.toString() == text }
+            if (node != null) {
+                Log.d(TAG, "   [text] Exact match found, attempting click")
+                try {
+                    val success = node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                    if (success) {
+                        Log.d(TAG, "✓ Tap via TEXT: $text")
+                        return ActionResult(
+                            actionId = "tap_text",
+                            success = true,
+                            message = "Tap executed via text: $text",
+                            data = mapOf("method" to "text", "selector" to text)
+                        )
+                    } else {
+                        Log.d(TAG, "   [text] Node found but click FAILED")
+                    }
+                } finally {
+                    node.recycle()
+                }
+            } else {
+                Log.d(TAG, "   [text] No exact match found")
+            }
+        } else if (text.isNullOrBlank()) {
+            Log.d(TAG, "   [text] SKIPPED - empty/null")
+        }
+        
+        // Fallback: Use coordinates
+        if (x != null && y != null) {
+            val success = accessibilityService.performTap(x, y)
+            Log.d(TAG, "Tap via COORDINATES: ($x, $y) - ${if (success) "success" else "failed"}")
+            return ActionResult(
+                actionId = "tap_${x}_${y}",
+                success = success,
+                message = if (success) "Tap executed at ($x, $y)" else "Tap failed at ($x, $y)",
+                data = mapOf("method" to "coordinates", "x" to x, "y" to y),
+                error = if (!success) "Failed to perform tap" else null
+            )
+        }
+        
+        // No method available
+        throw Exception("No valid selector (resourceId/text/contentDescription) or coordinates available")
+    }
+    
+    /**
+     * Find node by content description recursively
+     */
+    private fun findNodeByContentDescription(desc: String, node: AccessibilityNodeInfo?): AccessibilityNodeInfo? {
+        if (node == null) return null
+        
+        if (node.contentDescription?.toString() == desc) {
+            return node
+        }
+        
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i) ?: continue
+            val result = findNodeByContentDescription(desc, child)
+            if (result != null) {
+                if (child != result) child.recycle()
+                return result
+            }
+            child.recycle()
+        }
+        
+        return null
     }
 
     private suspend fun executeDoubleTap(params: Map<String, Any>): ActionResult {
@@ -253,6 +417,8 @@ class JobExecutor(context: Context) {
 
         val direction = params["direction"] as? String ?: throw Exception("Missing direction")
         val amount = (params["amount"] as? Number)?.toInt() ?: 1
+        
+        Log.d(TAG, "Executing scroll: direction=$direction, amount=$amount")
 
         // Perform scroll using accessibility service
         val success = when (direction.lowercase()) {
@@ -266,8 +432,9 @@ class JobExecutor(context: Context) {
         return ActionResult(
             actionId = "scroll_$direction",
             success = success,
-            message = "Scroll $direction executed",
-            data = mapOf("direction" to direction, "amount" to amount)
+            message = if (success) "Scroll $direction completed" else "Scroll $direction failed",
+            data = mapOf("direction" to direction, "amount" to amount, "method" to "swipe_gesture"),
+            error = if (!success) "Gesture dispatch failed" else null
         )
     }
 
@@ -275,14 +442,21 @@ class JobExecutor(context: Context) {
         val accessibilityService = PortalAccessibilityService.instance
             ?: throw Exception("Accessibility service not available")
 
-        val text = params["text"] as? String ?: throw Exception("Missing text")
+        // Backend sends 'inputText', fall back to 'text' for compatibility
+        val text = (params["inputText"] as? String) 
+            ?: (params["text"] as? String) 
+            ?: throw Exception("Missing inputText or text")
+        
+        Log.d(TAG, "Executing text input: text='${text.take(20)}...'")
+        
         val success = accessibilityService.inputText(text)
 
         return ActionResult(
             actionId = "text_input",
             success = success,
-            message = "Text input executed",
-            data = mapOf("text" to text)
+            message = if (success) "Text input completed: '${text.take(20)}'" else "Text input failed - no focused editable field",
+            data = mapOf("text" to text, "method" to "accessibility"),
+            error = if (!success) "No focused editable field found" else null
         )
     }
 
@@ -310,13 +484,17 @@ class JobExecutor(context: Context) {
             if (intent != null) {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
-                delay(2000) // Wait for app to start
+                
+                // Wait for app to start - minimal delay, main wait handled by wait_after
+                delay(2000)
+                
+                Log.d(TAG, "App started: $packageName")
 
                 return ActionResult(
                     actionId = "start_app_$packageName",
                     success = true,
-                    message = "App started",
-                    data = mapOf("package_name" to packageName)
+                    message = "App started: $packageName",
+                    data = mapOf("package_name" to packageName, "method" to "launch_intent")
                 )
             } else {
                 throw Exception("Package not found: $packageName")

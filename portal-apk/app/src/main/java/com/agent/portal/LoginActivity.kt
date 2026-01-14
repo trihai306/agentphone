@@ -156,12 +156,8 @@ class LoginActivity : AppCompatActivity() {
                             deviceResponse.device?.socketUrl?.let { socketUrl ->
                                 connectToSocket(socketUrl, response.token)
                             } ?: run {
-                                // Use appropriate socket URL based on environment
-                                val socketUrl = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
-                                    "http://10.0.2.2:6001" // Soketi default port on host machine
-                                } else {
-                                    "wss://laravel-backend.test" // Production WebSocket URL
-                                }
+                                // Use NetworkUtils to get appropriate socket URL based on environment
+                                val socketUrl = com.agent.portal.utils.NetworkUtils.getSocketUrl()
                                 connectToSocket(socketUrl, response.token)
                             }
                         } else {
@@ -208,17 +204,16 @@ class LoginActivity : AppCompatActivity() {
      */
     private fun connectToSocket(socketUrl: String, authToken: String) {
         try {
-            // Pusher/Soketi credentials (socketUrl parameter ignored, kept for compatibility)
+            // Pusher/Soketi credentials
             val appKey = "app-key"
-            val host = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
-                "10.0.2.2" // Host machine for emulator
-            } else {
-                "laravel-backend.test" // Production
-            }
-            val port = 6001
-            val encrypted = false // HTTP for emulator
             
-            Log.i(TAG, "Connecting to Pusher: $host:$port")
+            // Parse socket URL from NetworkUtils
+            val actualSocketUrl = com.agent.portal.utils.NetworkUtils.getSocketUrl()
+            val host = java.net.URI(actualSocketUrl).host
+            val port = java.net.URI(actualSocketUrl).port.let { if (it == -1) 6001 else it }
+            val encrypted = actualSocketUrl.startsWith("wss://") || actualSocketUrl.startsWith("https://")
+            
+            Log.i(TAG, "Connecting to Pusher: $host:$port (encrypted: $encrypted)")
             
             // Initialize SocketJobManager with Pusher credentials
             com.agent.portal.socket.SocketJobManager.init(

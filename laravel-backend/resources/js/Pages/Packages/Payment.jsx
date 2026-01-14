@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Link, router, usePage } from '@inertiajs/react';
-import { useTranslation } from 'react-i18next';
+import { Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
+import { useTheme } from '@/Contexts/ThemeContext';
 
 export default function Payment({ userPackage = {}, paymentMethods = [], bankInfo = {} }) {
-    const { t } = useTranslation();
-    const { auth } = usePage().props;
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     const [copied, setCopied] = useState(null);
-    const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes
+    const [timeLeft, setTimeLeft] = useState(30 * 60);
 
     const pkg = userPackage.service_package || {};
 
@@ -24,12 +24,10 @@ export default function Payment({ userPackage = {}, paymentMethods = [], bankInf
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const formatPrice = (price) => {
-        return new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: userPackage.currency || 'VND',
-        }).format(price);
-    };
+    const formatPrice = (price) => new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: userPackage.currency || 'VND',
+    }).format(price);
 
     const copyToClipboard = (text, field) => {
         navigator.clipboard.writeText(text);
@@ -40,209 +38,166 @@ export default function Payment({ userPackage = {}, paymentMethods = [], bankInf
     const selectedMethod = paymentMethods.find(m => m.id === userPackage.payment_method) || {};
 
     return (
-        <AppLayout title={t('packages.breadcrumb.payment')}>
-            <div className="max-w-4xl mx-auto">
-                {/* Breadcrumb */}
-                <nav className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-8">
-                    <Link href="/packages" className="hover:text-purple-600 dark:hover:text-purple-400">
-                        {t('packages.breadcrumb.packages')}
-                    </Link>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                    <span className="text-gray-900 dark:text-white font-medium">{t('packages.breadcrumb.payment')}</span>
-                </nav>
-
-                {/* Timer Warning */}
-                <div className={`mb-6 p-4 rounded-2xl border ${timeLeft < 300
-                        ? 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700'
-                        : 'bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-700'
-                    }`}>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                            <svg className={`w-6 h-6 ${timeLeft < 300 ? 'text-red-500' : 'text-amber-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <AppLayout title="Payment">
+            <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
+                <div className="max-w-[900px] mx-auto px-6 py-6">
+                    {/* Header */}
+                    <div className="flex items-center gap-4 mb-6">
+                        <Link
+                            href="/packages"
+                            className={`p-2 rounded-lg ${isDark ? 'hover:bg-[#1a1a1a]' : 'hover:bg-gray-100'}`}
+                        >
+                            <svg className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                             </svg>
-                            <div>
-                                <h3 className={`font-semibold ${timeLeft < 300 ? 'text-red-800 dark:text-red-200' : 'text-amber-800 dark:text-amber-200'}`}>
-                                    {t('packages.payment_time')}
-                                </h3>
-                                <p className={`text-sm ${timeLeft < 300 ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'}`}>
-                                    {t('packages.payment_time_warning')}
-                                </p>
-                            </div>
+                        </Link>
+                        <div className="flex-1">
+                            <h1 className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                Complete Payment
+                            </h1>
+                            <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                                Order #{userPackage.order_code}
+                            </p>
                         </div>
-                        <div className={`text-3xl font-mono font-bold ${timeLeft < 300 ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                        <div className={`px-4 py-2 rounded-lg font-mono text-lg font-bold ${timeLeft < 300 ? (isDark ? 'bg-red-900/30 text-red-400' : 'bg-red-50 text-red-600') : (isDark ? 'bg-amber-900/30 text-amber-400' : 'bg-amber-50 text-amber-600')}`}>
                             {formatTime(timeLeft)}
                         </div>
                     </div>
-                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Order Info */}
-                    <div className="lg:col-span-1">
-                        <div className="sticky top-24 bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                            <div className="p-6 bg-gradient-to-br from-purple-600 to-indigo-600">
-                                <h2 className="text-xl font-bold text-white">{t('packages.order_number', { code: userPackage.order_code })}</h2>
-                                <p className="text-white/80 text-sm mt-1">
-                                    {new Date(userPackage.created_at).toLocaleDateString('vi-VN')}
-                                </p>
-                            </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Order Summary */}
+                        <div className="lg:col-span-1 lg:order-2">
+                            <div className={`p-5 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
+                                <h2 className={`text-sm font-medium mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Order Summary</h2>
 
-                            <div className="p-6 space-y-4">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">{t('packages.service_package')}</span>
-                                    <span className="font-semibold text-gray-900 dark:text-white">{pkg.name}</span>
+                                <div className="space-y-3 mb-4">
+                                    <div className="flex justify-between text-sm">
+                                        <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Package</span>
+                                        <span className={isDark ? 'text-white' : 'text-gray-900'}>{pkg.name}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Status</span>
+                                        <span className={`px-2 py-0.5 text-xs font-medium rounded ${isDark ? 'bg-amber-900/30 text-amber-400' : 'bg-amber-50 text-amber-600'}`}>
+                                            Pending
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600 dark:text-gray-400">{t('common.status')}</span>
-                                    <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-sm font-semibold rounded-full">
-                                        {t('packages.awaiting_payment')}
-                                    </span>
-                                </div>
-                                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                                    <div className="flex justify-between items-baseline">
-                                        <span className="text-lg font-bold text-gray-900 dark:text-white">{t('packages.total')}</span>
-                                        <span className="text-2xl font-extrabold text-purple-600 dark:text-purple-400">
+
+                                <div className={`pt-4 border-t ${isDark ? 'border-[#2a2a2a]' : 'border-gray-100'}`}>
+                                    <div className="flex justify-between">
+                                        <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Total</span>
+                                        <span className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                             {formatPrice(userPackage.price_paid)}
                                         </span>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Payment Instructions */}
-                    <div className="lg:col-span-2">
-                        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                                {t('packages.payment_instructions')} - {selectedMethod.name}
-                            </h3>
-
+                        {/* Payment Instructions */}
+                        <div className="lg:col-span-2 lg:order-1 space-y-4">
                             {userPackage.payment_method === 'bank_transfer' && (
-                                <div className="space-y-4">
-                                    <p className="text-gray-600 dark:text-gray-400">
-                                        {t('packages.bank_transfer_note')}
-                                    </p>
+                                <div className={`p-5 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
+                                    <h2 className={`text-sm font-medium mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Bank Transfer Details</h2>
 
-                                    {/* Bank Info */}
-                                    <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-6 space-y-4">
-                                        <div className="flex justify-between items-center">
-                                            <div>
-                                                <span className="text-sm text-gray-500 dark:text-gray-400">{t('packages.bank_name')}</span>
-                                                <p className="font-semibold text-gray-900 dark:text-white">{bankInfo.bank_name}</p>
+                                    <div className="space-y-4">
+                                        <div className={`p-4 rounded-lg ${isDark ? 'bg-[#222]' : 'bg-gray-50'}`}>
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Bank</span>
+                                                    <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{bankInfo.bank_name}</p>
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Account Number</span>
+                                                        <p className={`font-mono font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{bankInfo.account_number}</p>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => copyToClipboard(bankInfo.account_number, 'account')}
+                                                        className={`px-3 py-1 text-xs rounded ${isDark ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-gray-200 hover:bg-gray-300'}`}
+                                                    >
+                                                        {copied === 'account' ? 'Copied!' : 'Copy'}
+                                                    </button>
+                                                </div>
+                                                <div>
+                                                    <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Account Name</span>
+                                                    <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{bankInfo.account_name}</p>
+                                                </div>
+                                                {bankInfo.branch && (
+                                                    <div>
+                                                        <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Branch</span>
+                                                        <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{bankInfo.branch}</p>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
-                                        <div className="flex justify-between items-center">
-                                            <div>
-                                                <span className="text-sm text-gray-500 dark:text-gray-400">{t('packages.account_number')}</span>
-                                                <p className="font-mono font-semibold text-gray-900 dark:text-white text-lg">{bankInfo.account_number}</p>
-                                            </div>
-                                            <button
-                                                onClick={() => copyToClipboard(bankInfo.account_number, 'account')}
-                                                className="px-3 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
-                                            >
-                                                {copied === 'account' ? t('packages.copied') : t('packages.copy')}
-                                            </button>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <div>
-                                                <span className="text-sm text-gray-500 dark:text-gray-400">{t('packages.account_name')}</span>
-                                                <p className="font-semibold text-gray-900 dark:text-white">{bankInfo.account_name}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <div>
-                                                <span className="text-sm text-gray-500 dark:text-gray-400">{t('packages.branch')}</span>
-                                                <p className="font-semibold text-gray-900 dark:text-white">{bankInfo.branch}</p>
-                                            </div>
-                                        </div>
-                                    </div>
 
-                                    {/* Transfer Content */}
-                                    <div className="bg-purple-50 dark:bg-purple-900/20 rounded-2xl p-6">
-                                        <div className="flex justify-between items-center">
-                                            <div>
-                                                <span className="text-sm text-purple-600 dark:text-purple-400 font-medium">{t('packages.transfer_content')}</span>
-                                                <p className="font-mono font-bold text-purple-800 dark:text-purple-200 text-xl mt-1">
-                                                    {userPackage.order_code}
-                                                </p>
+                                        <div className={`p-4 rounded-lg ${isDark ? 'bg-purple-900/20' : 'bg-purple-50'}`}>
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <span className={`text-xs ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>Transfer Description (Required)</span>
+                                                    <p className={`font-mono font-bold text-lg ${isDark ? 'text-purple-300' : 'text-purple-800'}`}>{userPackage.order_code}</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => copyToClipboard(userPackage.order_code, 'code')}
+                                                    className={`px-4 py-2 text-sm font-medium rounded-lg ${isDark ? 'bg-purple-600 text-white hover:bg-purple-500' : 'bg-purple-600 text-white hover:bg-purple-700'}`}
+                                                >
+                                                    {copied === 'code' ? 'Copied!' : 'Copy'}
+                                                </button>
                                             </div>
-                                            <button
-                                                onClick={() => copyToClipboard(userPackage.order_code, 'content')}
-                                                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                                            >
-                                                {copied === 'content' ? t('packages.copied') : t('packages.copy')}
-                                            </button>
                                         </div>
-                                    </div>
 
-                                    {/* Amount */}
-                                    <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-6">
-                                        <div className="flex justify-between items-center">
-                                            <div>
-                                                <span className="text-sm text-green-600 dark:text-green-400 font-medium">{t('packages.payment_amount')}</span>
-                                                <p className="font-bold text-green-800 dark:text-green-200 text-2xl mt-1">
-                                                    {formatPrice(userPackage.price_paid)}
-                                                </p>
+                                        <div className={`p-4 rounded-lg ${isDark ? 'bg-emerald-900/20' : 'bg-emerald-50'}`}>
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <span className={`text-xs ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>Amount to Transfer</span>
+                                                    <p className={`font-bold text-xl ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>{formatPrice(userPackage.price_paid)}</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => copyToClipboard(String(userPackage.price_paid), 'amount')}
+                                                    className={`px-4 py-2 text-sm font-medium rounded-lg ${isDark ? 'bg-emerald-600 text-white hover:bg-emerald-500' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}
+                                                >
+                                                    {copied === 'amount' ? 'Copied!' : 'Copy'}
+                                                </button>
                                             </div>
-                                            <button
-                                                onClick={() => copyToClipboard(userPackage.price_paid.toString(), 'amount')}
-                                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                                            >
-                                                {copied === 'amount' ? t('packages.copied') : t('packages.copy')}
-                                            </button>
                                         </div>
                                     </div>
                                 </div>
                             )}
 
                             {userPackage.payment_method !== 'bank_transfer' && (
-                                <div className="text-center py-12">
-                                    <div className="w-20 h-20 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                                        <svg className="w-10 h-10 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </div>
-                                    <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                                        {t('packages.redirecting')}
-                                    </h4>
-                                    <p className="text-gray-600 dark:text-gray-400">
-                                        {t('packages.redirect_message', { method: selectedMethod.name })}
+                                <div className={`p-8 rounded-xl text-center ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
+                                    <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>
+                                        Redirecting to {selectedMethod.name}...
                                     </p>
                                 </div>
                             )}
-                        </div>
 
-                        {/* Notes */}
-                        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-700">
-                            <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-3 flex items-center space-x-2">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <span>{t('packages.important_notes')}</span>
-                            </h4>
-                            <ul className="text-blue-700 dark:text-blue-300 text-sm space-y-2">
-                                <li>• {t('packages.note_transfer')}</li>
-                                <li>• {t('packages.note_activation')}</li>
-                                <li>• {t('packages.note_support')}</li>
-                            </ul>
-                        </div>
+                            {/* Notes */}
+                            <div className={`p-4 rounded-lg ${isDark ? 'bg-blue-900/20' : 'bg-blue-50'}`}>
+                                <h3 className={`text-sm font-medium mb-2 ${isDark ? 'text-blue-300' : 'text-blue-800'}`}>Important Notes</h3>
+                                <ul className={`text-xs space-y-1 ${isDark ? 'text-blue-300/80' : 'text-blue-700'}`}>
+                                    <li>• Use exact transfer description for automatic verification</li>
+                                    <li>• Package activation within 5-15 minutes after confirmation</li>
+                                    <li>• Contact support if you need assistance</li>
+                                </ul>
+                            </div>
 
-                        {/* Actions */}
-                        <div className="flex items-center justify-between mt-6">
-                            <Link
-                                href="/packages"
-                                className="px-6 py-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-semibold"
-                            >
-                                {t('common.back')}
-                            </Link>
-                            <button
-                                onClick={() => window.location.reload()}
-                                className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-2xl transition-colors"
-                            >
-                                {t('packages.i_have_paid')}
-                            </button>
+                            {/* Actions */}
+                            <div className="flex justify-end gap-3">
+                                <Link
+                                    href="/packages"
+                                    className={`px-4 py-2 text-sm font-medium rounded-lg ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
+                                >
+                                    Back
+                                </Link>
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className={`px-6 py-2 text-sm font-medium rounded-lg ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'}`}
+                                >
+                                    I've Completed Payment
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

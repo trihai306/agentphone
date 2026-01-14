@@ -329,6 +329,20 @@ object RecordingManager {
             } catch (e: Exception) {
                 Log.e(TAG, "Error flushing pending scroll", e)
             }
+            
+            // Flush any pending text input before stopping
+            try {
+                val pendingText = EventCapture.flushPendingTextInput()
+                if (pendingText != null) {
+                    eventBuffer.add(pendingText.copy(
+                        sequenceNumber = eventSequence.incrementAndGet(),
+                        relativeTimestamp = System.currentTimeMillis() - recordingStartTime.get()
+                    ))
+                    Log.i(TAG, "Flushed pending text input, now ${eventBuffer.size} events")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error flushing pending text input", e)
+            }
 
             val eventCount = eventBuffer.size
             Log.i(TAG, "Recording stopped: $currentRecordingId with $eventCount events")
@@ -571,6 +585,17 @@ object RecordingManager {
         // Capture screenshot asynchronously (slow, non-blocking)
         if (screenshotEnabled && context != null) {
             captureScreenshotAsync(context, eventWithSequence)
+        }
+
+        // Publish event to server for real-time Flow Editor sync
+        try {
+            com.agent.portal.socket.SocketJobManager.publishActionEvent(
+                recordingId ?: "unknown",
+                eventWithSequence
+            )
+            Log.d(TAG, "📤 Published action event: ${event.eventType}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to publish action event", e)
         }
 
         return true

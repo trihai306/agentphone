@@ -82,8 +82,9 @@ class AdvancedGestureDetector {
         val timeSinceLastScroll = currentTime - lastScrollTimestamp
 
         // Check if this is a continuation of the same scroll gesture
+        // Allow "scroll" direction to match any previous direction for apps without delta info
         val isSameGesture = timeSinceLastScroll < SCROLL_DEBOUNCE_TIMEOUT &&
-                lastScrollDirection == direction &&
+                (lastScrollDirection == direction || direction == "scroll" || lastScrollDirection == "scroll") &&
                 lastScrollPackage == packageName
 
         if (isSameGesture) {
@@ -97,7 +98,7 @@ class AdvancedGestureDetector {
                 shouldRecord = false,
                 accumulatedDeltaX = accumulatedScrollDeltaX,
                 accumulatedDeltaY = accumulatedScrollDeltaY,
-                direction = direction
+                direction = if (direction != "scroll") direction else (lastScrollDirection ?: direction)
             )
         } else {
             // New scroll gesture - return accumulated values from previous gesture if any

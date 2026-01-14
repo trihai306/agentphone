@@ -5,15 +5,17 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Cookie;
 use Symfony\Component\HttpFoundation\Response;
 
 class SetLocale
 {
     /**
+     * Available locales
+     */
+    protected array $availableLocales = ['vi', 'en'];
+
+    /**
      * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -24,54 +26,65 @@ class SetLocale
         App::setLocale($locale);
 
         // Store in session for authenticated users
-        if ($request->user()) {
+        if ($request->hasSession()) {
             session(['locale' => $locale]);
         }
 
         $response = $next($request);
 
-        // Set cookie for all users (30 days)
-        $cookie = cookie('locale', $locale, 60 * 24 * 30);
+        // Only set cookie if locale changed or not present
+        // Use plain cookie (not encrypted) for JavaScript compatibility
+        $response->headers->setCookie(
+            cookie('locale', $locale, 60 * 24 * 30, '/', null, false, false)
+        );
 
-        return $response->withCookie($cookie);
+        return $response;
     }
 
     /**
      * Determine the locale from various sources.
+     * Priority: Cookie (from JS) > User preference > Session > Browser > Default
      */
     protected function determineLocale(Request $request): string
     {
-        // Priority order:
-        // 1. Explicit session value (set by user)
-        // 2. Cookie value
-        // 3. Browser accept-language header
-        // 4. Default fallback
+        // 1. Check raw cookie first (set by JavaScript)
+        // This must be checked before anything else
+        $rawCookie = $_COOKIE['locale'] ?? null;
+        if ($rawCookie && in_array($rawCookie, $this->availableLocales)) {
+            return $rawCookie;
+        }
 
-        $availableLocales = ['vi', 'en'];
+        // 2. Check Laravel's cookie accessor (fallback)
+        try {
+            $laravelCookie = $request->cookie('locale');
+            if ($laravelCookie && in_array($laravelCookie, $this->availableLocales)) {
+                return $laravelCookie;
+            }
+        } catch (\Exception $e) {
+            // Ignore decryption errors
+        }
 
-        // Check session first
-        if ($request->session()->has('locale')) {
-            $locale = $request->session()->get('locale');
-            if (in_array($locale, $availableLocales)) {
-                return $locale;
+        // 3. Check authenticated user's preference
+        $user = $request->user();
+        if ($user && !empty($user->language) && in_array($user->language, $this->availableLocales)) {
+            return $user->language;
+        }
+
+        // 4. Check session
+        if ($request->hasSession() && $request->session()->has('locale')) {
+            $sessionLocale = $request->session()->get('locale');
+            if (in_array($sessionLocale, $this->availableLocales)) {
+                return $sessionLocale;
             }
         }
 
-        // Check cookie
-        if ($request->hasCookie('locale')) {
-            $locale = $request->cookie('locale');
-            if (in_array($locale, $availableLocales)) {
-                return $locale;
-            }
-        }
-
-        // Check browser language
-        $browserLocale = $request->getPreferredLanguage($availableLocales);
+        // 5. Check browser language
+        $browserLocale = $request->getPreferredLanguage($this->availableLocales);
         if ($browserLocale) {
             return $browserLocale;
         }
 
-        // Default to Vietnamese (since the app is currently in Vietnamese)
+        // 6. Default to Vietnamese
         return config('app.locale', 'vi');
     }
 }

@@ -37,7 +37,10 @@
         "yes": "Có",
         "no": "Không",
         "or": "hoặc",
-        "and": "và"
+        "and": "và",
+        "more": "khác",
+        "no_date": "Không có ngày",
+        "invalid_date": "Ngày không hợp lệ"
     },
     "dashboard": {
         "title": "Bảng Điều Khiển",
@@ -138,7 +141,7 @@
         "no_devices": "Chưa có thiết bị nào",
         "status": {
             "online": "Trực tuyến",
-            "offline": "Ngoại tuyền",
+            "offline": "Ngoại tuyến",
             "maintenance": "Bảo trì"
         },
         "fields": {
@@ -150,7 +153,19 @@
             "app_version": "Phiên bản ứng dụng",
             "last_active": "Lần hoạt động cuối",
             "created_at": "Ngày tạo"
-        }
+        },
+        "confirm_delete": "Bạn có chắc chắn muốn xóa thiết bị này?",
+        "manage_description": "Quản lý các thiết bị Android đã kết nối",
+        "download_apk": "Tải APK",
+        "search_placeholder": "Tìm kiếm thiết bị...",
+        "never": "Chưa bao giờ",
+        "just_now": "Vừa xong",
+        "minutes_ago": "{{count}} phút trước",
+        "hours_ago": "{{count}} giờ trước",
+        "days_ago": "{{count}} ngày trước",
+        "no_results": "Không tìm thấy thiết bị",
+        "no_results_desc": "Không có kết quả cho \"{{query}}\"",
+        "download_description": "Tải ứng dụng CLICKAI Portal về thiết bị Android để bắt đầu"
     },
     "flows": {
         "title": "Workflows",
@@ -167,22 +182,83 @@
         "connections": "Kết nối",
         "add_node": "Thêm Nút",
         "save": "Lưu",
-        "saved": "Đã lưu"
+        "saved": "Đã lưu",
+        "search_placeholder": "Tìm kiếm workflows...",
+        "stats": {
+            "draft": "Bản nháp",
+            "active": "Hoạt động",
+            "total": "Tổng"
+        }
     },
     "data_collections": {
         "title": "Bộ Sưu Tập Dữ Liệu",
+        "description": "Lưu trữ và quản lý dữ liệu cho các workflow tự động hóa",
         "create_collection": "Tạo Bộ Sưu Tập",
         "collection_list": "Danh Sách Bộ Sưu Tập",
         "edit_collection": "Chỉnh Sửa Bộ Sưu Tập",
         "delete_collection": "Xóa Bộ Sưu Tập",
-        "records": "Bản ghi",
+        "records": "bản ghi",
+        "fields": "trường",
         "schema": "Lược đồ",
         "add_record": "Thêm Bản Ghi",
         "edit_record": "Sửa Bản Ghi",
         "delete_record": "Xóa Bản Ghi",
+        "delete_record_confirm": "Bạn có chắc chắn muốn xóa bản ghi này?",
+        "delete_records": "Xóa Các Bản Ghi",
+        "delete_bulk_confirm": "Bạn có chắc chắn muốn xóa {{count}} bản ghi?",
         "no_collections": "Chưa có bộ sưu tập nào",
         "no_records": "Chưa có bản ghi nào",
-        "total_records": "Tổng bản ghi"
+        "total_records": "Tổng bản ghi",
+        "delete_title": "Xóa Bộ Sưu Tập",
+        "delete_confirm": "Bạn có chắc không? Tất cả dữ liệu sẽ bị xóa.",
+        "deleted": "Đã xóa bộ sưu tập",
+        "csv_coming_soon": "Nhập CSV sẽ sớm ra mắt!",
+        "search_placeholder": "Tìm kiếm bộ sưu tập...",
+        "search_records": "Tìm kiếm bản ghi...",
+        "showing_count": "Hiển thị {{shown}} trên {{total}} bộ sưu tập",
+        "showing_of": "Hiển thị {{count}} trên {{total}} bản ghi",
+        "clear_filters": "Xóa bộ lọc",
+        "no_description": "Chưa có mô tả",
+        "no_results": "Không tìm thấy kết quả",
+        "no_results_for": "Không có kết quả cho \"{{term}}\"",
+        "no_filter_match": "Không có bộ sưu tập nào khớp với bộ lọc",
+        "create_first": "Tạo bộ sưu tập đầu tiên",
+        "empty_description": "Lưu trữ và tổ chức dữ liệu để hỗ trợ các workflow tự động hóa",
+        "per_page": "mỗi trang",
+        "rows": "dòng",
+        "add_row": "Thêm dòng",
+        "export": "Xuất",
+        "record_added": "Đã thêm bản ghi",
+        "record_updated": "Đã cập nhật bản ghi",
+        "record_deleted": "Đã xóa bản ghi",
+        "records_deleted": "Đã xóa {{count}} bản ghi",
+        "try_different_search": "Thử từ khóa tìm kiếm khác",
+        "add_first_record": "Thêm bản ghi đầu tiên",
+        "sort": {
+            "last_updated": "Cập nhật gần nhất",
+            "date_created": "Ngày tạo",
+            "name_az": "Tên (A-Z)",
+            "records_count": "Số bản ghi"
+        },
+        "filter": {
+            "all": "Tất cả",
+            "has_data": "Có dữ liệu",
+            "empty": "Trống",
+            "with_workflows": "Có Workflow"
+        },
+        "stats": {
+            "collections": "Bộ sưu tập",
+            "total_records": "Tổng bản ghi",
+            "active_workflows": "Workflow hoạt động"
+        },
+        "new_collection": "Tạo mới",
+        "start_fresh": "Bắt đầu mới",
+        "create_empty": "Tạo bộ sưu tập trống",
+        "quick_templates": "Mẫu nhanh",
+        "prebuild_structure": "Bắt đầu với cấu trúc có sẵn",
+        "import_csv": "Nhập CSV",
+        "create_from_csv": "Tạo từ dữ liệu bảng tính",
+        "press_n_hint": "Nhấn N để tạo nhanh"
     },
     "packages": {
         "title": "Gói Dịch Vụ",
@@ -209,6 +285,23 @@
         "save_percent": "Tiết kiệm {{percent}}%",
         "duration": "Thời hạn",
         "days": "ngày",
+        "days_remaining": "Ngày còn lại",
+        "credits": "Credits",
+        "credits_remaining": "Credits còn lại",
+        "devices": "Thiết bị",
+        "devices_used": "Thiết bị đang dùng",
+        "device_slots": "Slot thiết bị",
+        "active_packages": "Gói đang hoạt động",
+        "my_active_packages": "Gói Đang Sử Dụng",
+        "time_remaining": "Thời gian còn lại",
+        "view_all_plans": "Xem tất cả gói",
+        "manage_description": "Quản lý các gói dịch vụ và đăng ký của bạn",
+        "renew_now": "Gia Hạn Ngay",
+        "renew_early": "Gia Hạn Sớm",
+        "start_free_trial": "Bắt Đầu Dùng Thử",
+        "get_started_free": "Bắt Đầu Miễn Phí",
+        "no_packages": "Không tìm thấy gói nào",
+        "no_packages_desc": "Thử chọn danh mục khác hoặc quay lại sau",
         "days_remaining": "Ngày còn lại",
         "credits": "Credits",
         "credits_remaining": "Credits còn lại",
@@ -360,7 +453,15 @@
         "history": "Lịch Sử Sử Dụng",
         "packages": "Gói Credits",
         "select_package": "Chọn gói",
-        "buy_now": "Mua ngay"
+        "buy_now": "Mua ngay",
+        "description": "Mua credits để tạo hình ảnh và video AI",
+        "confirm_purchase": "Xác Nhận Mua",
+        "confirm_purchase_message": "Mua {{credits}} AI credits với giá {{price}}?",
+        "insufficient_balance": "Số dư không đủ. Vui lòng nạp tiền.",
+        "credit_usage": "Sử Dụng Credits",
+        "cost_per_image": "1 credit mỗi ảnh",
+        "cost_per_video": "5 credits mỗi video",
+        "purchase_success": "Mua {{credits}} AI credits thành công!"
     },
     "media": {
         "title": "Thư Viện",
@@ -376,7 +477,18 @@
         "file_name": "Tên tệp",
         "file_size": "Kích thước",
         "uploaded": "Đã tải lên",
-        "no_files": "Chưa có tệp nào"
+        "no_files": "Chưa có tệp nào",
+        "total_files": "Tổng File",
+        "storage_used": "Dung Lượng Đã Dùng",
+        "manage_description": "Quản lý hình ảnh và video của bạn",
+        "upload_files": "Tải File Lên",
+        "drop_or_click": "Kéo thả file vào đây hoặc nhấp để tải lên",
+        "file_types": "JPG, PNG, GIF, MP4 • Tối đa 50MB",
+        "delete_file": "Xóa File",
+        "delete_files": "Xóa Files",
+        "confirm_delete": "Bạn có chắc chắn?",
+        "confirm_delete_count": "Xóa {{count}} file?",
+        "upload_first_file": "Tải file đầu tiên để bắt đầu với thư viện media của bạn"
     },
     "notifications": {
         "title": "Thông Báo",
@@ -514,6 +626,71 @@
         "notifications": "Thông Báo",
         "topup": "Nạp Tiền",
         "error_reports": "Báo Lỗi",
-        "ai_credits": "AI Credits"
+        "ai_credits": "AI Credits",
+        "overview": "Tổng Quan",
+        "services": "Dịch Vụ",
+        "ai_tools": "Công Cụ AI",
+        "billing": "Thanh Toán",
+        "account": "Tài Khoản",
+        "support": "Hỗ Trợ",
+        "collapse": "Thu gọn menu"
+    },
+    "jobs": {
+        "title": "Công việc",
+        "description": "Quản lý và theo dõi các job thực thi workflow",
+        "create_job": "Tạo Job",
+        "create_first_job": "Tạo Job Đầu Tiên",
+        "no_jobs": "Chưa có job nào",
+        "no_jobs_description": "Tạo job đầu tiên để bắt đầu chạy workflow trên thiết bị",
+        "cancel_job": "Huỷ Job",
+        "confirm_cancel": "Bạn có chắc muốn huỷ job này?",
+        "delete_job": "Xoá Job",
+        "confirm_delete": "Bạn có chắc muốn xoá job này?",
+        "retry_job": "Thử lại",
+        "view_logs": "Xem Logs",
+        "stats": {
+            "total": "Tổng Job",
+            "running": "Đang Chạy",
+            "completed": "Hoàn Thành",
+            "failed": "Thất Bại"
+        },
+        "status": {
+            "pending": "Chờ xử lý",
+            "queued": "Đã xếp hàng",
+            "running": "Đang chạy",
+            "completed": "Hoàn thành",
+            "failed": "Thất bại",
+            "cancelled": "Đã huỷ"
+        },
+        "table": {
+            "job": "Công việc",
+            "flow": "Workflow",
+            "device": "Thiết bị",
+            "status": "Trạng thái",
+            "progress": "Tiến độ",
+            "created": "Ngày tạo"
+        },
+        "form": {
+            "name": "Tên Job",
+            "name_placeholder": "Nhập tên job...",
+            "select_flow": "Chọn Workflow",
+            "select_device": "Chọn Thiết Bị",
+            "priority": "Độ ưu tiên",
+            "schedule": "Lên lịch",
+            "run_now": "Chạy ngay"
+        },
+        "detail": {
+            "job_info": "Thông Tin Job",
+            "tasks": "Danh Sách Task",
+            "logs": "Logs",
+            "error": "Lỗi",
+            "result": "Kết quả",
+            "started_at": "Bắt đầu",
+            "completed_at": "Hoàn thành",
+            "duration": "Thời gian"
+        }
+    },
+    "header": {
+        "welcome_back": "Chào mừng trở lại"
     }
 }

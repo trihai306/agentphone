@@ -169,15 +169,14 @@ class MainActivity : AppCompatActivity() {
         try {
             // Pusher/Soketi credentials
             val appKey = "app-key"
-            val host = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
-                "10.0.2.2" // Host machine for emulator
-            } else {
-                "laravel-backend.test" // Production
-            }
-            val port = 6001
-            val encrypted = false // HTTP for emulator, set true for production WSS
             
-            Log.i("MainActivity", "Initializing Pusher connection: $host:$port")
+            // Get host from NetworkUtils based on device type
+            val socketUrl = com.agent.portal.utils.NetworkUtils.getSocketUrl()
+            val host = java.net.URI(socketUrl).host
+            val port = java.net.URI(socketUrl).port.let { if (it == -1) 6001 else it }
+            val encrypted = socketUrl.startsWith("wss://") || socketUrl.startsWith("https://")
+            
+            Log.i("MainActivity", "Initializing Pusher connection: $host:$port (encrypted: $encrypted)")
             
             // Initialize and connect
             com.agent.portal.socket.SocketJobManager.init(
@@ -1307,14 +1306,34 @@ private fun setupSocketStatus() {
 
     /**
      * Launches the specified app by package name.
+     * Force-stops the app first to ensure it restarts from the beginning.
      */
     private fun launchApp(packageName: String) {
         try {
+            // Force-stop the app first to ensure fresh start
+            try {
+                val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+                // killBackgroundProcesses requires KILL_BACKGROUND_PROCESSES permission
+                activityManager.killBackgroundProcesses(packageName)
+                Log.d("MainActivity", "Force-stopped app: $packageName")
+                
+                // Give the system a moment to fully stop the app
+                Thread.sleep(300)
+            } catch (e: Exception) {
+                Log.w("MainActivity", "Could not force-stop app (may need permission): ${e.message}")
+                // Continue anyway - the app will still be launched
+            }
+            
             val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
             if (launchIntent != null) {
-                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                // Clear task and start fresh
+                launchIntent.addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK or 
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or 
+                    Intent.FLAG_ACTIVITY_CLEAR_TASK
+                )
                 startActivity(launchIntent)
-                Log.d("MainActivity", "Launched app: $packageName")
+                Log.d("MainActivity", "Launched app (fresh start): $packageName")
             } else {
                 Log.w("MainActivity", "No launch intent for package: $packageName")
                 Toast.makeText(this, "Cannot launch app", Toast.LENGTH_SHORT).show()

@@ -1,139 +1,81 @@
-import { Link, usePage, router } from '@inertiajs/react';
-import { useTranslation } from 'react-i18next';
+import { Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
-
-const notificationStyles = {
-    info: {
-        bg: 'bg-blue-50 dark:bg-blue-900/20',
-        border: 'border-blue-200 dark:border-blue-800',
-        icon: 'text-blue-500',
-        iconPath: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
-        badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400',
-    },
-    success: {
-        bg: 'bg-green-50 dark:bg-green-900/20',
-        border: 'border-green-200 dark:border-green-800',
-        icon: 'text-green-500',
-        iconPath: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-        badge: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400',
-    },
-    warning: {
-        bg: 'bg-yellow-50 dark:bg-yellow-900/20',
-        border: 'border-yellow-200 dark:border-yellow-800',
-        icon: 'text-yellow-500',
-        iconPath: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z',
-        badge: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400',
-    },
-    error: {
-        bg: 'bg-red-50 dark:bg-red-900/20',
-        border: 'border-red-200 dark:border-red-800',
-        icon: 'text-red-500',
-        iconPath: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z',
-        badge: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
-    },
-};
+import { useTheme } from '@/Contexts/ThemeContext';
 
 export default function Show({ notification }) {
-    const { t } = useTranslation();
-    const { flash } = usePage().props;
-    const style = notificationStyles[notification.type] || notificationStyles.info;
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
 
     const handleDelete = () => {
         router.delete(`/notifications/${notification.id}`, {
-            onSuccess: () => {
-                router.visit('/notifications');
-            }
+            onSuccess: () => router.visit('/notifications'),
         });
     };
 
+    const getTypeStyle = () => {
+        const styles = {
+            success: isDark ? 'text-emerald-400' : 'text-emerald-600',
+            warning: isDark ? 'text-amber-400' : 'text-amber-600',
+            error: isDark ? 'text-red-400' : 'text-red-600',
+            info: isDark ? 'text-blue-400' : 'text-blue-600',
+        };
+        return styles[notification.type] || styles.info;
+    };
+
     return (
-        <AppLayout title={t('notifications.view_notification', { defaultValue: 'View Notification' })}>
-            {/* Header */}
-            <div className="mb-8">
-                <Link
-                    href="/notifications"
-                    className="inline-flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                    <span>{t('notifications.back_to_notifications', { defaultValue: 'Back to Notifications' })}</span>
-                </Link>
-            </div>
-
-            {/* Flash Messages */}
-            {flash?.success && (
-                <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
-                    <p className="text-green-700 dark:text-green-400">{flash.success}</p>
-                </div>
-            )}
-
-            {/* Notification Detail */}
-            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-gray-900/50 border border-gray-100 dark:border-gray-700/50 overflow-hidden">
-                <div className={`p-8 ${style.bg} border-b ${style.border}`}>
-                    <div className="flex items-start space-x-4">
-                        <div className={`flex-shrink-0 w-16 h-16 rounded-2xl bg-white dark:bg-gray-800 border ${style.border} flex items-center justify-center shadow-lg`}>
-                            <svg
-                                className={`w-8 h-8 ${style.icon}`}
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d={style.iconPath}
-                                />
+        <AppLayout title="Notification">
+            <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
+                <div className="max-w-[600px] mx-auto px-6 py-6">
+                    {/* Header */}
+                    <div className="flex items-center gap-4 mb-6">
+                        <Link
+                            href="/notifications"
+                            className={`p-2 rounded-lg ${isDark ? 'hover:bg-[#1a1a1a]' : 'hover:bg-gray-100'}`}
+                        >
+                            <svg className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                             </svg>
-                        </div>
-                        <div className="flex-1">
-                            <div className="flex items-center space-x-3 mb-2">
-                                <span className={`px-3 py-1 text-xs font-semibold rounded-full ${style.badge}`}>
-                                    {notification.type.toUpperCase()}
-                                </span>
-                            </div>
-                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                {notification.title}
-                            </h1>
-                        </div>
+                        </Link>
+                        <h1 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            Notification
+                        </h1>
                     </div>
-                </div>
 
-                <div className="p-8">
-                    <div className="prose dark:prose-invert max-w-none">
-                        <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
+                    {/* Content */}
+                    <div className={`p-6 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
+                        <div className="mb-4">
+                            <span className={`text-xs font-medium uppercase ${getTypeStyle()}`}>
+                                {notification.type}
+                            </span>
+                        </div>
+
+                        <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            {notification.title}
+                        </h2>
+
+                        <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                             {notification.message}
                         </p>
-                    </div>
 
-                    {notification.action_url && (
-                        <div className="mt-6">
+                        {notification.action_url && (
                             <a
                                 href={notification.action_url}
-                                className="inline-flex items-center space-x-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors"
+                                className={`inline-block mt-6 px-4 py-2 text-sm font-medium rounded-lg ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'
+                                    }`}
                             >
-                                <span>{notification.action_text || t('notifications.view_details', { defaultValue: 'View details' })}</span>
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                </svg>
+                                {notification.action_text || 'View Details'} →
                             </a>
-                        </div>
-                    )}
+                        )}
 
-                    <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                        <div className="flex items-center justify-between">
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                                <p>{t('notifications.received', { defaultValue: 'Received' })}: {new Date(notification.created_at).toLocaleString()}</p>
-                            </div>
+                        <div className={`flex items-center justify-between mt-6 pt-6 border-t ${isDark ? 'border-[#2a2a2a]' : 'border-gray-100'}`}>
+                            <span className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                                {new Date(notification.created_at).toLocaleString()}
+                            </span>
                             <button
                                 onClick={handleDelete}
-                                className="flex items-center space-x-2 px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                                className={`text-sm ${isDark ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-700'}`}
                             >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                                <span>{t('notifications.delete', { defaultValue: 'Delete' })}</span>
+                                Delete
                             </button>
                         </div>
                     </div>

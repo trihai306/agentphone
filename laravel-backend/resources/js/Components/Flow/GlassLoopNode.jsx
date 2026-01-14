@@ -126,6 +126,28 @@ function GlassLoopNode({ id, data, selected }) {
                             <span>All iterations completed</span>
                         </div>
                     )}
+
+                    {/* Edit Sub-Flow Button */}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            data?.onEditSubFlow?.(id);
+                        }}
+                        className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${isDark
+                                ? 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20'
+                                : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200'
+                            }`}
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Edit Sub-Flow
+                        {data?.subFlow?.nodes?.length > 2 && (
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] ${isDark ? 'bg-indigo-500/30' : 'bg-indigo-200'}`}>
+                                {data.subFlow.nodes.length - 2} actions
+                            </span>
+                        )}
+                    </button>
                 </div>
 
                 {/* Branch Labels */}

@@ -24,8 +24,20 @@ function RecordedActionNode({ data, selected }) {
     // Get action color scheme
     const getActionColors = () => {
         switch (actionType) {
+            case 'open_app':
+            case 'launch_app':
+                return {
+                    primary: '#10b981',    // emerald/green for app launch
+                    bg: 'rgba(16, 185, 129, 0.15)',
+                    iconBg: 'rgba(16, 185, 129, 0.2)',
+                    ring: 'ring-emerald-500',
+                    text: 'text-emerald-400',
+                    glow: '0 0 15px rgba(16, 185, 129, 0.3)'
+                };
             case 'click':
+            case 'tap':
             case 'long_click':
+            case 'long_press':
                 return {
                     primary: '#3b82f6',    // blue
                     bg: 'rgba(59, 130, 246, 0.15)',
@@ -89,6 +101,15 @@ function RecordedActionNode({ data, selected }) {
                     text: 'text-gray-400',
                     glow: '0 0 15px rgba(107, 114, 128, 0.3)'
                 };
+            case 'focus':
+                return {
+                    primary: '#8b5cf6',    // violet
+                    bg: 'rgba(139, 92, 246, 0.15)',
+                    iconBg: 'rgba(139, 92, 246, 0.2)',
+                    ring: 'ring-violet-500',
+                    text: 'text-violet-400',
+                    glow: '0 0 15px rgba(139, 92, 246, 0.3)'
+                };
             default:
                 return {
                     primary: '#10b981',    // emerald
@@ -104,12 +125,30 @@ function RecordedActionNode({ data, selected }) {
     // Get action icon SVG
     const getActionIcon = () => {
         switch (actionType) {
+            case 'open_app':
+            case 'launch_app':
+                return (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l3-3m0 0l3 3m-3-3v8" opacity="0.6" />
+                    </svg>
+                );
+            case 'tap':
             case 'click':
             case 'long_click':
+            case 'long_press':
                 return (
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 4c.55 0 1 .45 1 1v6h6c.55 0 1 .45 1 1s-.45 1-1 1h-6v6c0 .55-.45 1-1 1s-1-.45-1-1v-6H5c-.55 0-1-.45-1-1s.45-1 1-1h6V5c0-.55.45-1 1-1z" />
-                        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.3" />
+                    <svg className="w-4 h-4" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="4" fill="currentColor" />
+                        <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.4" />
+                        <circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.2" />
+                    </svg>
+                );
+            case 'focus':
+                return (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
                 );
             case 'text_input':
@@ -165,8 +204,13 @@ function RecordedActionNode({ data, selected }) {
     // Format action label
     const getActionLabel = () => {
         const labels = {
+            'open_app': 'Open App',
+            'launch_app': 'Launch App',
+            'tap': 'Tap',
             'click': 'Click',
             'long_click': 'Long Press',
+            'long_press': 'Long Press',
+            'focus': 'Focus',
             'text_input': 'Type Text',
             'set_text': 'Set Text',
             'scroll': 'Scroll',
@@ -284,6 +328,12 @@ function RecordedActionNode({ data, selected }) {
                     {data?.isRecorded && (
                         <div className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${isDark ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-600'}`}>
                             REC
+                        </div>
+                    )}
+                    {/* Repeat count badge for merged scrolls */}
+                    {data?.repeatCount > 1 && (
+                        <div className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600'}`}>
+                            ×{data.repeatCount}
                         </div>
                     )}
                 </div>

@@ -1,14 +1,42 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    XMarkIcon,
-    DocumentArrowDownIcon,
-    CursorArrowRaysIcon,
-    ArrowPathIcon,
-    PlusIcon,
-    Squares2X2Icon,
-    ListBulletIcon,
-} from '@heroicons/react/24/outline';
+
+// Inline SVG Icons
+const XMarkIcon = ({ className }) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+);
+
+const DocumentArrowDownIcon = ({ className }) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+    </svg>
+);
+
+const CursorArrowRaysIcon = ({ className }) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25V4.5m5.834.166l-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243l-1.59-1.59" />
+    </svg>
+);
+
+const ArrowPathIcon = ({ className }) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+    </svg>
+);
+
+const PlusIcon = ({ className }) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.5v15m7.5-7.5h-15" />
+    </svg>
+);
+
+const ListBulletIcon = ({ className }) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+    </svg>
+);
 
 /**
  * Import Recording Modal - Preview and import recorded events as workflow nodes
@@ -72,6 +100,12 @@ export default function ImportRecordingModal({
         return icons[type] || '📦';
     };
 
+    const importModes = [
+        { id: 'append', label: 'Append', Icon: PlusIcon, desc: 'Add after existing nodes' },
+        { id: 'sequence', label: 'Sequence', Icon: ListBulletIcon, desc: 'Create linked sequence' },
+        { id: 'replace', label: 'Replace', Icon: ArrowPathIcon, desc: 'Replace all nodes' },
+    ];
+
     React.useEffect(() => {
         if (isOpen && session) {
             fetchPreview();
@@ -123,20 +157,16 @@ export default function ImportRecordingModal({
                             Import Mode
                         </label>
                         <div className="flex gap-2">
-                            {[
-                                { id: 'append', label: 'Append', icon: PlusIcon, desc: 'Add after existing nodes' },
-                                { id: 'sequence', label: 'Sequence', icon: ListBulletIcon, desc: 'Create linked sequence' },
-                                { id: 'replace', label: 'Replace', icon: ArrowPathIcon, desc: 'Replace all nodes' },
-                            ].map((mode) => (
+                            {importModes.map((mode) => (
                                 <button
                                     key={mode.id}
                                     onClick={() => setImportMode(mode.id)}
                                     className={`flex-1 flex flex-col items-center gap-1 p-3 rounded-xl border transition-all ${importMode === mode.id
-                                            ? 'bg-violet-500/20 border-violet-500/50 text-violet-400'
-                                            : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
+                                        ? 'bg-violet-500/20 border-violet-500/50 text-violet-400'
+                                        : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
                                         }`}
                                 >
-                                    <mode.icon className="w-5 h-5" />
+                                    <mode.Icon className="w-5 h-5" />
                                     <span className="text-sm font-medium">{mode.label}</span>
                                     <span className="text-xs text-gray-500">{mode.desc}</span>
                                 </button>

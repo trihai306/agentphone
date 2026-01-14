@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreMediaRequest;
 use App\Models\UserMedia;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -93,14 +94,8 @@ class MediaController extends Controller
     /**
      * Upload new media files
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StoreMediaRequest $request): RedirectResponse
     {
-        $request->validate([
-            'files' => 'required|array|max:10',
-            'files.*' => 'required|file|max:51200|mimes:jpg,jpeg,png,gif,webp,mp4,mov,avi,webm',
-            'folder' => 'nullable|string|max:255',
-        ]);
-
         $user = $request->user();
 
         // Get or create storage plan

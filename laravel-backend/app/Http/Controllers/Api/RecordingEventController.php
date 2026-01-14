@@ -73,6 +73,23 @@ class RecordingEventController extends Controller
                     'user_id' => $device->user_id
                 ]);
 
+                // Broadcast recording.started to device channel for Flow Editor
+                try {
+                    broadcast(new \App\Events\RecordingStatusChanged(
+                        $request->device_id,
+                        'started',
+                        [
+                            'session_id' => $sessionId,
+                            'session' => $session,
+                            'started_at' => $session->started_at,
+                            'target_app' => $session->target_app,
+                        ]
+                    ))->toOthers();
+                    Log::info("Broadcast recording.started to device channel");
+                } catch (\Exception $e) {
+                    Log::warning("Failed to broadcast recording.started: " . $e->getMessage());
+                }
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Recording session created',
@@ -104,6 +121,23 @@ class RecordingEventController extends Controller
                     'duration' => $request->duration,
                     'event_count' => $request->event_count
                 ]);
+
+                // Broadcast recording.stopped to device channel for Flow Editor
+                try {
+                    broadcast(new \App\Events\RecordingStatusChanged(
+                        $request->device_id,
+                        'stopped',
+                        [
+                            'session_id' => $sessionId,
+                            'stopped_at' => $session->stopped_at,
+                            'duration' => $request->duration,
+                            'event_count' => $request->event_count,
+                        ]
+                    ))->toOthers();
+                    Log::info("Broadcast recording.stopped to device channel");
+                } catch (\Exception $e) {
+                    Log::warning("Failed to broadcast recording.stopped: " . $e->getMessage());
+                }
 
                 return response()->json([
                     'success' => true,
@@ -155,20 +189,28 @@ class RecordingEventController extends Controller
         $validator = Validator::make($request->all(), [
             'session_id' => 'required|string',
             'device_id' => 'required|string',
-            'flow_id' => 'required|integer',
             'event_type' => 'required|string',
             'timestamp' => 'required|integer',
             'sequence_number' => 'required|integer',
-            'package_name' => 'sometimes|string',
-            'resource_id' => 'sometimes|string',
-            'text' => 'sometimes|string',
-            'bounds' => 'sometimes|string',
-            'x' => 'sometimes|integer',
-            'y' => 'sometimes|integer',
-            'screenshot' => 'sometimes|string', // base64 encoded
+            'package_name' => 'nullable|string',
+            'class_name' => 'nullable|string',
+            'resource_id' => 'nullable|string',
+            'content_description' => 'nullable|string',
+            'text' => 'nullable|string',
+            'bounds' => 'nullable|string',
+            'x' => 'nullable|integer',
+            'y' => 'nullable|integer',
+            'is_clickable' => 'nullable|boolean',
+            'is_editable' => 'nullable|boolean',
+            'is_scrollable' => 'nullable|boolean',
+            'screenshot' => 'nullable|string', // base64 encoded
         ]);
 
         if ($validator->fails()) {
+            Log::warning("Recording action validation failed", [
+                'errors' => $validator->errors()->toArray(),
+                'input' => $request->all()
+            ]);
             return response()->json([
                 'success' => false,
                 'errors' => $validator->errors()
@@ -179,10 +221,23 @@ class RecordingEventController extends Controller
             // Find recording session
             $session = RecordingSession::where('session_id', $request->session_id)->first();
             if (!$session) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Recording session not found'
-                ], 404);
+                // Session not found - create one on-the-fly
+                $device = Device::where('device_id', $request->device_id)->first();
+                if (!$device) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Device not found'
+                    ], 404);
+                }
+
+                $session = RecordingSession::create([
+                    'device_id' => $device->id,
+                    'user_id' => $device->user_id,
+                    'session_id' => $request->session_id,
+                    'status' => 'recording',
+                    'started_at' => now(),
+                    'actions' => [],
+                ]);
             }
 
             // Handle screenshot upload if provided
@@ -197,11 +252,16 @@ class RecordingEventController extends Controller
                 'timestamp' => $request->timestamp,
                 'sequence_number' => $request->sequence_number,
                 'package_name' => $request->package_name ?? '',
+                'class_name' => $request->class_name ?? '',
                 'resource_id' => $request->resource_id ?? '',
+                'content_description' => $request->content_description ?? '',
                 'text' => $request->text ?? '',
                 'bounds' => $request->bounds ?? '',
                 'x' => $request->x,
                 'y' => $request->y,
+                'is_clickable' => $request->is_clickable ?? false,
+                'is_editable' => $request->is_editable ?? false,
+                'is_scrollable' => $request->is_scrollable ?? false,
                 'screenshot_url' => $screenshotUrl,
             ];
 
@@ -210,17 +270,22 @@ class RecordingEventController extends Controller
             $actions[] = $eventData;
             $session->update(['actions' => $actions]);
 
-            // Broadcast to Flow Editor for real-time node generation
-            broadcast(new \App\Events\RecordingEventReceived(
-                $session->user_id,
-                $request->flow_id,
-                $request->session_id,
-                $eventData
-            ))->toOthers();
+            // Broadcast to Flow Editor via device channel for real-time node generation
+            try {
+                broadcast(new \App\Events\RecordingActionCaptured(
+                    $request->device_id,
+                    $request->session_id,
+                    $eventData
+                ))->toOthers();
+                Log::info("Broadcast action to device channel: {$request->device_id}");
+            } catch (\Exception $e) {
+                Log::warning("Failed to broadcast action: " . $e->getMessage());
+            }
 
             Log::info("Recording action captured: {$request->event_type}", [
                 'session_id' => $request->session_id,
-                'sequence' => $request->sequence_number
+                'sequence' => $request->sequence_number,
+                'device_id' => $request->device_id
             ]);
 
             return response()->json([
@@ -343,6 +408,27 @@ class RecordingEventController extends Controller
                 'stopped_at' => now(),
                 'event_count' => count($session->actions ?? []),
             ]);
+
+            // Get device to broadcast stop command
+            $device = Device::find($session->device_id);
+            if ($device) {
+                try {
+                    // Broadcast stop command to APK via device channel
+                    broadcast(new \App\Events\RecordingStatusChanged(
+                        $device->device_id, // Android device ID
+                        'stop_requested',   // Signal APK to stop recording
+                        [
+                            'session_id' => $sessionId,
+                            'stopped_at' => now()->toISOString(),
+                            'event_count' => count($session->actions ?? []),
+                            'source' => 'web', // Indicate stop was initiated from web
+                        ]
+                    ))->toOthers();
+                    Log::info("Broadcast recording stop to device: {$device->device_id}");
+                } catch (\Exception $e) {
+                    Log::warning("Failed to broadcast stop: " . $e->getMessage());
+                }
+            }
 
             return response()->json([
                 'success' => true,

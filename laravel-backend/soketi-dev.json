@@ -13,7 +13,18 @@
             "maxConnections": -1,
             "maxBackendEventsPerSecond": -1,
             "maxClientEventsPerSecond": -1,
-            "maxReadRequestsPerSecond": -1
+            "maxReadRequestsPerSecond": -1,
+            "webhooks": [
+                {
+                    "url": "http://localhost:8000/api/pusher/webhook",
+                    "event_types": [
+                        "member_added",
+                        "member_removed",
+                        "channel_occupied",
+                        "channel_vacated"
+                    ]
+                }
+            ]
         }
     ]
 }

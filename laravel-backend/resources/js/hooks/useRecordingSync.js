@@ -12,10 +12,11 @@ export function useRecordingSync(userId, options = {}) {
     const [eventCount, setEventCount] = useState(0);
     const channelRef = useRef(null);
 
+    // Store callbacks in refs to prevent re-subscription on callback changes
+    const callbacksRef = useRef(options);
+    callbacksRef.current = options;
+
     const {
-        onSessionStarted,
-        onSessionStopped,
-        onEventReceived,
         enabled = true,
     } = options;
 
@@ -42,7 +43,7 @@ export function useRecordingSync(userId, options = {}) {
                     });
                     setEvents([]);
                     setEventCount(0);
-                    onSessionStarted?.(data);
+                    callbacksRef.current.onSessionStarted?.(data);
                 })
                 .listen('.session.stopped', (data) => {
                     console.log('⏹️ Recording session stopped:', data);
@@ -54,13 +55,13 @@ export function useRecordingSync(userId, options = {}) {
                         stoppedAt: new Date(data.stopped_at),
                         actions: data.actions,
                     } : null);
-                    onSessionStopped?.(data);
+                    callbacksRef.current.onSessionStopped?.(data);
                 })
                 .listen('.event.received', (data) => {
                     console.log('📍 Recording event:', data.event?.event_type);
                     setEvents(prev => [...prev, data.event]);
                     setEventCount(data.event_count);
-                    onEventReceived?.(data);
+                    callbacksRef.current.onEventReceived?.(data);
                 });
 
             setIsConnected(true);
@@ -72,12 +73,13 @@ export function useRecordingSync(userId, options = {}) {
 
         return () => {
             if (channelRef.current) {
+                console.log(`🔌 Leaving channel ${channelName}`);
                 window.Echo.leave(channelName);
                 channelRef.current = null;
                 setIsConnected(false);
             }
         };
-    }, [userId, enabled, onSessionStarted, onSessionStopped, onEventReceived]);
+    }, [userId, enabled]); // Only re-subscribe when userId or enabled changes
 
     // Clear session
     const clearSession = useCallback(() => {

@@ -20,6 +20,7 @@ import { useTheme } from '@/Contexts/ThemeContext';
 import ThemeToggle from '@/Components/ThemeToggle';
 import MediaPickerModal from '@/Components/MediaPickerModal';
 import CollectionPickerModal from '@/Components/CollectionPickerModal';
+import { useToast } from '@/Components/Layout/ToastProvider';
 
 // Execution state
 import { useExecutionState, ExecutionStatus, NodeStatus } from '@/hooks/useExecutionState';
@@ -48,6 +49,8 @@ import GlassDataSourceNode from '../../Components/Flow/GlassDataSourceNode';
 import GlassConditionNode from '../../Components/Flow/GlassConditionNode';
 import GlassTextInputNode from '../../Components/Flow/GlassTextInputNode';
 import GlassHttpNode from '../../Components/Flow/GlassHttpNode';
+import SmartActionNode from '../../Components/Flow/SmartActionNode';
+import LoopSubFlowModal from '../../Components/Flow/LoopSubFlowModal';
 import QuickAddMenu from '../../Components/Flow/QuickAddMenu';
 import LiveRecordingPanel from '../../Components/Flow/LiveRecordingPanel';
 import ImportRecordingModal from '../../Components/Flow/ImportRecordingModal';
@@ -60,17 +63,26 @@ const nodeTypes = {
     process: ProcessNode,
     action: CustomNode,
 
-    // Recorded Actions
-    recorded_action: RecordedActionNode,
-    click: RecordedActionNode,
-    text_input: RecordedActionNode,
-    scroll: RecordedActionNode,
-    swipe: RecordedActionNode,
-    key_event: RecordedActionNode,
+    // Recorded Actions - Smart Professional Nodes
+    recorded_action: SmartActionNode,
+    smart_action: SmartActionNode,
+    open_app: SmartActionNode,
+    click: SmartActionNode,
+    tap: SmartActionNode,
+    long_press: SmartActionNode,
+    text_input: SmartActionNode,
+    scroll: SmartActionNode,
+    swipe: SmartActionNode,
+    key_event: SmartActionNode,
+    focus: SmartActionNode,
+    back: SmartActionNode,
+    home: SmartActionNode,
 
     // Logic/Conditions - Premium Glass versions
     condition: GlassConditionNode,
     loop: GlassLoopNode,
+    loopStart: SmartActionNode,  // Used in LoopSubFlowModal
+    loopEnd: SmartActionNode,    // Used in LoopSubFlowModal
     wait: WaitNode,
     assert: AssertNode,
 
@@ -106,6 +118,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const { addToast } = useToast();
 
     const [nodes, setNodes] = useState(flow.nodes || []);
     const [edges, setEdges] = useState(flow.edges || []);
@@ -116,6 +129,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     const [flowName, setFlowName] = useState(flow.name);
     const [editingName, setEditingName] = useState(false);
     const [selectedNode, setSelectedNode] = useState(null);
+    const [selectedNodes, setSelectedNodes] = useState([]); // Multi-select support
     const [isDraggingOver, setIsDraggingOver] = useState(false);
     const [draggedNodeType, setDraggedNodeType] = useState(null);
     const [showLogPanel, setShowLogPanel] = useState(false);
@@ -130,7 +144,11 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     const [recordedActions, setRecordedActions] = useState([]);
     const [showRecordingPanel, setShowRecordingPanel] = useState(false);
     const [isRecordingPaused, setIsRecordingPaused] = useState(false);
+    const consecutiveActionsRef = useRef([]); // Track repeated actions for loop detection (useRef to avoid stale closure)
     const recordingTimerRef = useRef(null);
+
+    // Test Run state
+    const [testRunning, setTestRunning] = useState(false);
 
     // Media Picker state
     const [showMediaPicker, setShowMediaPicker] = useState(false);
@@ -140,6 +158,13 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     const [showCollectionPicker, setShowCollectionPicker] = useState(false);
     const [collectionPickerNodeId, setCollectionPickerNodeId] = useState(null);
 
+    // Loop Sub-Flow Modal state
+    const [showLoopSubFlowModal, setShowLoopSubFlowModal] = useState(false);
+    const [editingLoopNodeId, setEditingLoopNodeId] = useState(null);
+
+    // Debug Panel state - shows raw APK event data
+    const [debugEvents, setDebugEvents] = useState([]);
+    const [showDebugPanel, setShowDebugPanel] = useState(false);
     const reactFlowWrapper = useRef(null);
     const { screenToFlowPosition, fitView, zoomIn, zoomOut, getZoom } = useReactFlow();
     const saveTimeoutRef = useRef(null);
@@ -162,13 +187,20 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         hasError,
     } = useExecutionState(nodes, edges);
 
-    // Update nodes with execution state
+    // Update nodes with execution state and callbacks
     const nodesWithExecution = useMemo(() => {
         return nodes.map(node => ({
             ...node,
             data: {
                 ...node.data,
                 executionState: nodeStates[node.id]?.status || NodeStatus.IDLE,
+                // Pass edit sub-flow callback for loop nodes
+                ...(node.type === 'loop' && {
+                    onEditSubFlow: (nodeId) => {
+                        setEditingLoopNodeId(nodeId);
+                        setShowLoopSubFlowModal(true);
+                    }
+                }),
             }
         }));
     }, [nodes, nodeStates]);
@@ -226,6 +258,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                 setRecordedNodeCount(0);
                 setRecordingDuration(0);
                 setRecordedActions([]);
+                consecutiveActionsRef.current = []; // Reset loop detection tracking
                 setShowRecordingPanel(true);
                 setIsRecordingPaused(false);
 
@@ -297,81 +330,449 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         setRecordedNodeCount(prev => prev - 1);
     }, [recordedActions]);
 
-    // Create node from recorded event
+    // Normalize event type for comparison (group similar actions)
+    const normalizeEventType = useCallback((eventType) => {
+        const normalizeMap = {
+            'tap': 'click',
+            'long_click': 'click',
+            'long_press': 'click',
+            'set_text': 'text_input',
+            // Scroll: keep up/down distinct for separate Loops
+            'scroll': 'scroll',           // Generic scroll
+            'scroll_up': 'scroll_up',     // Scroll up - distinct from down
+            'scroll_down': 'scroll_down', // Scroll down - distinct from up
+            // Swipe: keep direction for distinct Loops
+            'swipe_left': 'swipe_left',
+            'swipe_right': 'swipe_right',
+            'swipe_up': 'swipe_up',
+            'swipe_down': 'swipe_down',
+            'back': 'key_event',
+            'home': 'key_event',
+        };
+        return normalizeMap[eventType] || eventType;
+    }, []);
+
+    // Extract app name from package name (e.g., "com.google.chrome" -> "Chrome")
+    const getAppNameFromPackage = useCallback((packageName) => {
+        if (!packageName) return '';
+        const parts = packageName.split('.');
+        const lastPart = parts[parts.length - 1];
+        // Capitalize first letter
+        return lastPart.charAt(0).toUpperCase() + lastPart.slice(1);
+    }, []);
+
+    // Generate smart, descriptive label for nodes
+    const generateSmartLabel = useCallback((eventData) => {
+        const eventType = eventData.event_type || eventData.eventType || '';
+        const text = eventData.text || '';
+        const appName = eventData.app_name || getAppNameFromPackage(eventData.package_name || eventData.packageName);
+        const actionData = eventData.action_data || {};
+
+        // Truncate text for display
+        const truncatedText = text.length > 25 ? text.substring(0, 22) + '...' : text;
+
+        switch (eventType) {
+            case 'tap':
+            case 'click':
+                if (truncatedText) return `Tap '${truncatedText}'`;
+                return appName ? `Tap in ${appName}` : 'Tap';
+
+            case 'long_tap':
+            case 'long_click':
+            case 'long_press':
+                if (truncatedText) return `Long press '${truncatedText}'`;
+                return 'Long Press';
+
+            case 'double_tap':
+                if (truncatedText) return `Double tap '${truncatedText}'`;
+                return 'Double Tap';
+
+            case 'text_input':
+            case 'set_text':
+                const inputText = actionData.text || text || '';
+                const displayText = inputText.length > 20 ? inputText.substring(0, 17) + '...' : inputText;
+                return displayText ? `Type '${displayText}'` : 'Type Text';
+
+            case 'scroll_up':
+                return 'Scroll Up';
+            case 'scroll_down':
+                return 'Scroll Down';
+            case 'scroll':
+                const direction = actionData.direction || 'down';
+                return `Scroll ${direction.charAt(0).toUpperCase() + direction.slice(1)}`;
+
+            case 'swipe_left':
+                return 'Swipe Left';
+            case 'swipe_right':
+                return 'Swipe Right';
+            case 'swipe_up':
+                return 'Swipe Up';
+            case 'swipe_down':
+                return 'Swipe Down';
+
+            case 'open_app':
+                return appName ? `Open ${appName}` : 'Open App';
+
+            case 'back':
+                return 'Press Back';
+            case 'home':
+                return 'Press Home';
+
+            default:
+                // Fallback: capitalize event type
+                return eventType.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        }
+    }, [getAppNameFromPackage]);
+
+    // Map event type to node type
+    const getNodeType = useCallback((eventType) => {
+        const typeMap = {
+            'open_app': 'open_app',
+            'click': 'click',
+            'tap': 'click',
+            'long_click': 'click',
+            'long_press': 'click',
+            'text_input': 'text_input',
+            'set_text': 'text_input',
+            'scroll': 'scroll',
+            'scroll_up': 'scroll',
+            'scroll_down': 'scroll',
+            'swipe': 'swipe',
+            'swipe_left': 'swipe',
+            'swipe_right': 'swipe',
+            'swipe_up': 'swipe',
+            'swipe_down': 'swipe',
+            'key_event': 'key_event',
+            'back': 'key_event',
+            'home': 'key_event',
+            'focus': 'focus',
+        };
+        return typeMap[eventType] || 'recorded_action';
+    }, []);
+
+    // Create a Loop node from consecutive actions
+    const createLoopNodeFromActions = useCallback((actions, position) => {
+        const loopNodeId = `loop_${Date.now()}`;
+        const firstAction = actions[0];
+        const actionLabel = firstAction.label || firstAction.eventType;
+
+        // Create the action node for sub-flow
+        const subFlowActionNode = {
+            id: 'subflow-action-1',
+            type: getNodeType(firstAction.eventType),
+            position: { x: 200, y: 200 },
+            data: {
+                label: actionLabel,
+                eventType: firstAction.eventType,
+                resourceId: firstAction.resourceId,
+                text: firstAction.text,
+                screenshotUrl: firstAction.screenshotUrl,
+                coordinates: firstAction.coordinates,
+                bounds: firstAction.bounds,
+                packageName: firstAction.packageName,
+                className: firstAction.className,
+                isRecorded: true,
+            },
+        };
+
+        // Create sub-flow with loopStart -> action -> loopEnd
+        const subFlow = {
+            nodes: [
+                {
+                    id: 'loop-start',
+                    type: 'loopStart',
+                    data: { label: 'Loop Start', itemVariable: 'iteration' },
+                    position: { x: 200, y: 50 },
+                },
+                subFlowActionNode,
+                {
+                    id: 'loop-end',
+                    type: 'loopEnd',
+                    data: { label: 'Continue' },
+                    position: { x: 200, y: 350 },
+                },
+            ],
+            edges: [
+                {
+                    id: 'edge-start-action',
+                    source: 'loop-start',
+                    target: 'subflow-action-1',
+                    type: 'animated',
+                },
+                {
+                    id: 'edge-action-end',
+                    source: 'subflow-action-1',
+                    target: 'loop-end',
+                    type: 'animated',
+                },
+            ],
+        };
+
+        // Create the Loop node
+        const loopNode = {
+            id: loopNodeId,
+            type: 'loop',
+            position: position,
+            data: {
+                label: `Loop: ${actionLabel} ×${actions.length}`,
+                loopType: 'count',
+                iterations: actions.length,
+                itemVariable: 'iteration',
+                indexVariable: 'index',
+                subFlow: subFlow,
+                isAutoGenerated: true,
+                originalActionCount: actions.length,
+                onEditSubFlow: (nodeId) => {
+                    setEditingLoopNodeId(nodeId);
+                    setShowLoopSubFlowModal(true);
+                },
+            },
+        };
+
+        return loopNode;
+    }, [getNodeType]);
+
+    // Smart Loop Detection: Create node from recorded event
     const createNodeFromEvent = useCallback((eventData, nodeSuggestion) => {
-        const existingNodesCount = nodes.length;
+        const normalizedType = normalizeEventType(eventData.event_type);
+        const LOOP_THRESHOLD = 3; // Create loop after 3 repeated actions
+
+        // Event types that should NEVER be grouped into loops
+        const LOOP_EXCLUDED_TYPES = ['text_input', 'set_text', 'focus', 'text_delete', 'open_app'];
+        const shouldExcludeFromLoop = LOOP_EXCLUDED_TYPES.includes(normalizedType) ||
+            LOOP_EXCLUDED_TYPES.includes(eventData.event_type);
+
+        // Generate node ID first (we'll need it for tracking)
         const newNodeId = `recorded_${Date.now()}_${eventData.sequence_number}`;
 
-        // Auto-layout: stack nodes vertically with smart positioning
-        const baseX = 400;
-        const baseY = 100;
-        const spacing = 150; // Larger spacing for recorded nodes with screenshots
+        // Access ref directly (not stale like state in closure)
+        const currentConsecutive = consecutiveActionsRef.current;
 
-        // Map event type to node type
-        const getNodeType = (eventType) => {
-            const typeMap = {
-                'click': 'click',
-                'long_click': 'click',
-                'text_input': 'text_input',
-                'set_text': 'text_input',
-                'scroll': 'scroll',
-                'scroll_up': 'scroll',
-                'scroll_down': 'scroll',
-                'swipe': 'swipe',
-                'swipe_left': 'swipe',
-                'swipe_right': 'swipe',
-                'swipe_up': 'swipe',
-                'swipe_down': 'swipe',
-                'key_event': 'key_event',
-                'back': 'key_event',
-                'home': 'key_event',
-            };
-            return typeMap[eventType] || 'recorded_action';
+        // Check if this action is similar to consecutive actions (only if not excluded)
+        const isSimilarAction = !shouldExcludeFromLoop &&
+            currentConsecutive.length > 0 &&
+            normalizeEventType(currentConsecutive[0].eventType) === normalizedType;
+
+        console.log(`📝 Recording action: ${eventData.event_type} (normalized: ${normalizedType})`, {
+            consecutiveCount: currentConsecutive.length,
+            isSimilarAction,
+            shouldExcludeFromLoop,
+            existingTypes: currentConsecutive.map(a => a.eventType)
+        });
+
+        // Build the new action object with nodeId already set
+        // Use smart label generation for descriptive node names
+        const smartLabel = generateSmartLabel(eventData);
+        const newAction = {
+            eventType: eventData.event_type,
+            label: smartLabel,
+            resourceId: eventData.resource_id || eventData.resourceId,
+            text: eventData.text,
+            screenshotUrl: eventData.screenshot_url || nodeSuggestion.data?.screenshotUrl,
+            coordinates: { x: eventData.x, y: eventData.y },
+            bounds: eventData.bounds,
+            packageName: eventData.package_name,
+            className: eventData.class_name,
+            nodeId: newNodeId, // Set nodeId immediately
         };
 
-        const newNode = {
-            id: newNodeId,
-            type: getNodeType(eventData.event_type),
-            position: {
-                x: baseX,
-                y: baseY + (existingNodesCount * spacing)
-            },
-            data: {
-                label: nodeSuggestion.data?.label || eventData.event_type,
-                color: nodeSuggestion.data?.color || 'blue',
-                eventType: eventData.event_type,
-                resourceId: eventData.resource_id || eventData.resourceId,
-                text: eventData.text,
-                screenshotUrl: eventData.screenshot_url || nodeSuggestion.data?.screenshotUrl,
-                coordinates: {
-                    x: eventData.x || eventData.coordinates?.x,
-                    y: eventData.y || eventData.coordinates?.y
+        if (isSimilarAction) {
+            // Add to consecutive actions
+            const newConsecutiveActions = [...currentConsecutive, newAction];
+            consecutiveActionsRef.current = newConsecutiveActions; // Update ref immediately
+
+            console.log(`🔢 Consecutive ${normalizedType} count: ${newConsecutiveActions.length}`);
+
+            // Check if we've reached the threshold
+            if (newConsecutiveActions.length >= LOOP_THRESHOLD) {
+                console.log(`🔄 Smart Loop Detection: ${newConsecutiveActions.length} consecutive "${normalizedType}" actions`);
+
+                // Check if ANY Loop with same action type exists - MERGE into it
+                setNodes(prevNodes => {
+                    // Find existing Loop with same action type
+                    const existingLoop = prevNodes.find(node => {
+                        if (node.type !== 'loop' || !node.data?.isAutoGenerated) return false;
+                        const loopActionType = node.data.subFlow?.nodes?.find(n => n.type !== 'loopStart' && n.type !== 'loopEnd')?.data?.eventType;
+                        const loopNormalizedType = loopActionType ? normalizeEventType(loopActionType) : null;
+                        return loopNormalizedType === normalizedType;
+                    });
+
+                    // Get the node IDs of consecutive actions we need to remove
+                    const existingNodeIds = newConsecutiveActions
+                        .slice(0, -1) // Exclude current action (not created yet)
+                        .map(a => a.nodeId)
+                        .filter(Boolean);
+
+                    if (existingLoop) {
+                        // MERGE: Increase iterations of existing Loop and remove individual nodes
+                        const newIterations = (existingLoop.data.iterations || 3) + newConsecutiveActions.length;
+                        console.log(`🔗 Merging ${newConsecutiveActions.length} actions into existing Loop: ${existingLoop.data.iterations} → ${newIterations} iterations`);
+                        console.log(`🗑️ Removing ${existingNodeIds.length} individual nodes:`, existingNodeIds);
+
+                        // Update Loop and remove individual nodes
+                        const updatedNodes = prevNodes
+                            .filter(n => !existingNodeIds.includes(n.id)) // Remove individual scroll nodes
+                            .map(n =>
+                                n.id === existingLoop.id
+                                    ? {
+                                        ...n,
+                                        data: {
+                                            ...n.data,
+                                            iterations: newIterations,
+                                            originalActionCount: newIterations,
+                                            label: `Loop: ${n.data.label.split('×')[0].trim()} ×${newIterations}`,
+                                        }
+                                    }
+                                    : n
+                            );
+
+                        // Remove edges connected to removed nodes
+                        setEdges(prevEdges =>
+                            prevEdges.filter(e =>
+                                !existingNodeIds.includes(e.source) && !existingNodeIds.includes(e.target)
+                            )
+                        );
+
+                        // Update recorded actions
+                        setRecordedActions(prev =>
+                            prev.filter(a => !existingNodeIds.includes(a.nodeId))
+                        );
+
+                        // Reset consecutive tracking
+                        consecutiveActionsRef.current = [];
+                        return updatedNodes;
+                    }
+
+                    // No existing Loop to merge - CREATE NEW LOOP
+                    console.log(`🆕 Creating new Loop node for ${newConsecutiveActions.length} actions`);
+
+                    // existingNodeIds already declared above
+
+                    // Find position for loop node
+                    const firstNodeToRemove = prevNodes.find(n => n.id === existingNodeIds[0]);
+                    const loopPosition = firstNodeToRemove?.position || { x: 400, y: 100 };
+
+                    // Create the loop node
+                    const loopNode = createLoopNodeFromActions(newConsecutiveActions, loopPosition);
+
+                    // Find node before first removed node
+                    const firstRemovedIndex = prevNodes.findIndex(n => n.id === existingNodeIds[0]);
+                    const nodeBeforeLoop = firstRemovedIndex > 0 ? prevNodes[firstRemovedIndex - 1] : null;
+
+                    // Remove old nodes and add loop node
+                    const filtered = prevNodes.filter(n => !existingNodeIds.includes(n.id));
+
+                    // Update edges
+                    setEdges(prevEdges => {
+                        const filteredEdges = prevEdges.filter(e =>
+                            !existingNodeIds.includes(e.source) && !existingNodeIds.includes(e.target)
+                        );
+                        if (nodeBeforeLoop) {
+                            // Check if nodeBeforeLoop is a Loop - connect from 'complete' handle
+                            const isLoopNode = nodeBeforeLoop.type === 'loop';
+                            filteredEdges.push({
+                                id: `edge_${nodeBeforeLoop.id}_${loopNode.id}`,
+                                source: nodeBeforeLoop.id,
+                                target: loopNode.id,
+                                sourceHandle: isLoopNode ? 'complete' : undefined,
+                                type: 'animated',
+                                animated: true,
+                            });
+                        }
+                        return filteredEdges;
+                    });
+
+                    // Update recorded actions
+                    setRecordedActions(prev => {
+                        const filteredActions = prev.filter(a => !existingNodeIds.includes(a.nodeId));
+                        return [...filteredActions, {
+                            nodeId: loopNode.id,
+                            eventType: 'loop',
+                            label: loopNode.data.label,
+                            timestamp: Date.now(),
+                            isLoop: true,
+                        }];
+                    });
+
+                    // Reset consecutive tracking
+                    consecutiveActionsRef.current = [];
+                    return [...filtered, loopNode];
+                });
+
+                return; // Don't create normal node
+            }
+            // Not yet at threshold, ref already updated above, continue to create normal node
+        } else {
+            // Different action type or excluded type
+            if (shouldExcludeFromLoop) {
+                // Excluded types (text_input, focus, etc.) should reset tracking completely
+                console.log(`🚫 Excluded action type: ${normalizedType}, resetting consecutive tracking`);
+                consecutiveActionsRef.current = [];
+            } else {
+                // Start new tracking with this action
+                console.log(`🔀 Different action type, resetting consecutive tracking with: ${normalizedType}`);
+                consecutiveActionsRef.current = [newAction];
+            }
+        }
+
+        // Create normal node with functional update to get latest state
+        setNodes(prevNodes => {
+            const existingNodesCount = prevNodes.length;
+            const lastNode = prevNodes[existingNodesCount - 1];
+
+            // Auto-layout: position below last node
+            const baseX = 400;
+            const baseY = 100;
+            const nodeHeight = 150; // Increased for Loop nodes
+            const gap = 80;
+
+            let newY = baseY;
+            if (lastNode && lastNode.position) {
+                newY = lastNode.position.y + nodeHeight + gap;
+            }
+
+            const newNode = {
+                id: newNodeId,
+                type: getNodeType(eventData.event_type),
+                position: { x: baseX, y: newY },
+                data: {
+                    label: nodeSuggestion.data?.label || eventData.event_type,
+                    color: nodeSuggestion.data?.color || 'blue',
+                    eventType: eventData.event_type,
+                    resourceId: eventData.resource_id || eventData.resourceId,
+                    text: eventData.text,
+                    screenshotUrl: eventData.screenshot_url || nodeSuggestion.data?.screenshotUrl,
+                    coordinates: { x: eventData.x, y: eventData.y },
+                    bounds: eventData.bounds,
+                    packageName: eventData.package_name,
+                    className: eventData.class_name,
+                    contentDescription: eventData.content_description,
+                    actionData: eventData.action_data,
+                    isRecorded: true,
+                    sequenceNumber: eventData.sequence_number,
                 },
-                bounds: eventData.bounds,
-                packageName: eventData.package_name,
-                className: eventData.class_name,
-                isRecorded: true,
-                sequenceNumber: eventData.sequence_number,
-            },
-        };
+            };
 
-        // Auto-connect to previous node
-        const newEdges = [];
-        if (existingNodesCount > 0) {
-            const previousNode = nodes[existingNodesCount - 1];
-            newEdges.push({
-                id: `edge_${previousNode.id}_${newNodeId}`,
-                source: previousNode.id,
-                target: newNodeId,
-                type: 'animated',
-                animated: true,
-            });
-        }
+            // Auto-connect to previous node
+            if (existingNodesCount > 0) {
+                const isLoopNode = lastNode.type === 'loop';
+                const edgeConfig = {
+                    id: `edge_${lastNode.id}_${newNodeId}`,
+                    source: lastNode.id,
+                    target: newNodeId,
+                    type: 'animated',
+                    animated: true,
+                };
+                if (isLoopNode) {
+                    edgeConfig.sourceHandle = 'complete';
+                }
+                setEdges(prevEdges => [...prevEdges, edgeConfig]);
+            }
 
-        setNodes(prev => [...prev, newNode]);
-        if (newEdges.length > 0) {
-            setEdges(prev => [...prev, ...newEdges]);
-        }
+            console.log('✅ Node created from recording:', newNode.data.label, `(ID: ${newNodeId})`, `Y: ${newY}`);
+            return [...prevNodes, newNode];
+        });
+
         setRecordedNodeCount(prev => prev + 1);
 
         // Track action for undo and history panel
@@ -382,26 +783,101 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
             timestamp: Date.now(),
             screenshotUrl: eventData.screenshot_url,
         }]);
+    }, [normalizeEventType, getNodeType, createLoopNodeFromActions]);
 
-        console.log('Node created from recording:', newNode.data.label);
-    }, [nodes]);
-
-    // Listen for recording events via Echo
+    // Listen for recording events from selected device via Echo
     useEffect(() => {
-        if (!isRecording || !recordingSession) return;
+        // Only listen when a device is selected
+        if (!selectedDevice) return;
 
         try {
-            if (typeof window !== 'undefined' && window.Echo) {
-                const channelName = `recording.${props.auth?.user?.id}.${flow.id}`;
+            if (typeof window !== 'undefined' && window.Echo && props.auth?.user?.id) {
+                // Listen to device-specific channel
+                const channelName = `device.${selectedDevice.device_id}`;
                 const channel = window.Echo.private(channelName);
 
+                console.log('Listening to device channel:', channelName);
+
+                // APK started recording
+                channel.listen('.recording.started', (e) => {
+                    console.log('APK started recording:', e);
+                    setRecordingSession(e.session);
+                    setIsRecording(true);
+                    setRecordedNodeCount(0);
+                    setRecordingDuration(0);
+                    setRecordedActions([]);
+                    consecutiveActionsRef.current = []; // Reset loop detection tracking
+                    setShowRecordingPanel(true);
+                    setIsRecordingPaused(false);
+
+                    // Auto-create "Open App" node as the first node in workflow
+                    const targetApp = e.session?.target_app || e.session?.session?.target_app || 'App';
+                    const appName = targetApp === 'manual' ? 'Manual Navigation' :
+                        targetApp.split('.').pop() || targetApp; // Get last part of package name
+
+                    const openAppEvent = {
+                        event_type: 'open_app',
+                        sequence_number: 0,
+                        package_name: targetApp,
+                        text: '',
+                        resource_id: '',
+                    };
+
+                    const openAppSuggestion = {
+                        type: 'open_app',
+                        data: {
+                            label: `Open ${appName}`,
+                            color: 'green',
+                        }
+                    };
+
+                    createNodeFromEvent(openAppEvent, openAppSuggestion);
+
+                    // Start timer
+                    recordingTimerRef.current = setInterval(() => {
+                        setRecordingDuration(prev => prev + 1);
+                    }, 1000);
+                });
+
+                // APK stopped recording
+                channel.listen('.recording.stopped', (e) => {
+                    console.log('APK stopped recording:', e);
+                    if (recordingTimerRef.current) {
+                        clearInterval(recordingTimerRef.current);
+                        recordingTimerRef.current = null;
+                    }
+                    setIsRecording(false);
+                    setIsRecordingPaused(false);
+                });
+
+                // APK captured an event (action)
                 channel.listen('.event.captured', (e) => {
-                    console.log('Recording event received:', e);
+                    console.log('📥 Recording event received from APK:', {
+                        eventType: e.event?.event_type,
+                        sequenceNumber: e.event?.sequence_number,
+                        timestamp: Date.now(),
+                        fullEvent: e.event,
+                        nodeSuggestion: e.node_suggestion
+                    });
+
+                    // Store raw event for debug panel (limit to last 20 events)
+                    setDebugEvents(prev => [...prev.slice(-19), {
+                        id: Date.now(),
+                        receivedAt: new Date().toISOString(),
+                        raw: e.event,
+                        suggestion: e.node_suggestion
+                    }]);
+
+                    console.log('🔍 Current consecutiveActionsRef:', consecutiveActionsRef.current);
                     createNodeFromEvent(e.event, e.node_suggestion);
+                    console.log('🔍 After createNodeFromEvent, consecutiveActionsRef:', consecutiveActionsRef.current);
                 });
 
                 return () => {
                     try {
+                        console.log('Leaving device channel:', channelName);
+                        channel.stopListening('.recording.started');
+                        channel.stopListening('.recording.stopped');
                         channel.stopListening('.event.captured');
                         window.Echo.leave(channelName);
                     } catch (err) {
@@ -412,7 +888,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         } catch (error) {
             console.warn('Echo not available for recording events:', error);
         }
-    }, [isRecording, recordingSession, flow.id, props.auth, createNodeFromEvent]);
+    }, [selectedDevice, props.auth, createNodeFromEvent]);
 
     // Auto-save function
     const saveFlow = useCallback(async (currentNodes, currentEdges, currentViewport) => {
@@ -443,14 +919,16 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         }
     }, [flow.id]);
 
-    // Debounced auto-save
+    // Debounced auto-save (DISABLED - use Ctrl+S for manual save)
     const debouncedSave = useCallback((currentNodes, currentEdges, currentViewport) => {
-        if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current);
-        }
-        saveTimeoutRef.current = setTimeout(() => {
-            saveFlow(currentNodes, currentEdges, currentViewport);
-        }, 1000);
+        // Auto-save disabled - user requested manual save only
+        // Uncomment below to re-enable auto-save:
+        // if (saveTimeoutRef.current) {
+        //     clearTimeout(saveTimeoutRef.current);
+        // }
+        // saveTimeoutRef.current = setTimeout(() => {
+        //     saveFlow(currentNodes, currentEdges, currentViewport);
+        // }, 1000);
     }, [saveFlow]);
 
     const onNodesChange = useCallback((changes) => {
@@ -493,6 +971,18 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
     const onPaneClick = useCallback(() => {
         setSelectedNode(null);
+        setSelectedNodes([]);
+    }, []);
+
+    // Handle multi-selection changes from ReactFlow
+    const onSelectionChange = useCallback(({ nodes: selectedNodesList }) => {
+        setSelectedNodes(selectedNodesList || []);
+        // If single selection, also set selectedNode for config panel
+        if (selectedNodesList?.length === 1) {
+            setSelectedNode(selectedNodesList[0]);
+        } else if (selectedNodesList?.length > 1) {
+            setSelectedNode(null); // Clear single selection when multi-selecting
+        }
     }, []);
 
     // Handler for updating node from config panel
@@ -604,31 +1094,64 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         saveFlow(nodes, edges, viewport);
     };
 
-    const deleteSelectedNode = useCallback(() => {
-        if (selectedNode) {
-            setNodes((nds) => {
-                const newNodes = nds.filter(n => n.id !== selectedNode.id);
-                debouncedSave(newNodes, edges, viewport);
-                return newNodes;
-            });
-            setEdges((eds) => eds.filter(e => e.source !== selectedNode.id && e.target !== selectedNode.id));
-            setSelectedNode(null);
-        }
-    }, [selectedNode, edges, viewport, debouncedSave]);
+    // Delete selected nodes (supports single and multi-selection)
+    const deleteSelectedNodes = useCallback(() => {
+        // Get all node IDs to delete
+        const nodeIdsToDelete = selectedNodes.length > 0
+            ? selectedNodes.map(n => n.id)
+            : selectedNode ? [selectedNode.id] : [];
+
+        if (nodeIdsToDelete.length === 0) return;
+
+        console.log(`🗑️ Deleting ${nodeIdsToDelete.length} node(s):`, nodeIdsToDelete);
+
+        // Calculate new nodes and edges BEFORE setting state
+        const newNodes = nodes.filter(n => !nodeIdsToDelete.includes(n.id));
+        const newEdges = edges.filter(e =>
+            !nodeIdsToDelete.includes(e.source) && !nodeIdsToDelete.includes(e.target)
+        );
+
+        // Update state
+        setNodes(newNodes);
+        setEdges(newEdges);
+
+        // Clear browser memory/cache: reset recording tracking
+        consecutiveActionsRef.current = [];
+        setRecordedActions(prev => prev.filter(a => !nodeIdsToDelete.includes(a.nodeId)));
+        setRecordedNodeCount(newNodes.length);
+        console.log('🧹 Cleared browser cache: consecutiveActionsRef, updated recordedActions');
+
+        // Save IMMEDIATELY (not debounced) to ensure persistence
+        saveFlow(newNodes, newEdges, viewport);
+
+        setSelectedNode(null);
+        setSelectedNodes([]);
+    }, [nodes, edges, selectedNode, selectedNodes, viewport, saveFlow]);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
-            if ((e.key === 'Delete' || e.key === 'Backspace') && selectedNode && !editingName) {
-                deleteSelectedNode();
+            // Delete/Backspace to delete selected nodes
+            if ((e.key === 'Delete' || e.key === 'Backspace') && !editingName) {
+                const hasSelection = selectedNode || selectedNodes.length > 0;
+                if (hasSelection) {
+                    e.preventDefault();
+                    deleteSelectedNodes();
+                }
             }
+            // Cmd/Ctrl+S to save
             if (e.key === 's' && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault();
                 handleManualSave();
             }
+            // Cmd/Ctrl+A to select all nodes
+            if (e.key === 'a' && (e.metaKey || e.ctrlKey) && !editingName) {
+                e.preventDefault();
+                setSelectedNodes(nodes);
+            }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [selectedNode, editingName, deleteSelectedNode]);
+    }, [selectedNode, selectedNodes, editingName, deleteSelectedNodes, nodes]);
 
     useEffect(() => {
         return () => {
@@ -785,8 +1308,8 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
                         {/* Flow Name */}
                         <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${isDark ? 'bg-white' : 'bg-gray-900'}`}>
+                                <svg className={`w-5 h-5 ${isDark ? 'text-black' : 'text-white'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
                                 </svg>
                             </div>
@@ -1062,33 +1585,32 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 {/* Divider */}
                                 <div className={`w-px h-6 ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-200'}`} />
 
-                                {/* Recording Button */}
+                                {/* Recording Status - Controlled by APK */}
                                 {selectedDevice && (
-                                    <button
-                                        onClick={isRecording ? stopRecording : startRecording}
+                                    <div
                                         className={`h-9 px-4 flex items-center gap-2 text-sm font-medium rounded-lg transition-all border ${isRecording
-                                            ? 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'
+                                            ? 'bg-red-500/20 border-red-500/30 text-red-400'
                                             : isDark
-                                                ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/30'
-                                                : 'bg-indigo-50 border-indigo-200 text-indigo-600 hover:bg-indigo-100'
+                                                ? 'bg-[#1a1a1a] border-[#2a2a2a] text-gray-500'
+                                                : 'bg-gray-100 border-gray-200 text-gray-400'
                                             }`}
-                                        title={isRecording ? `Recording... (${recordedNodeCount} actions)` : 'Start recording actions from device'}
+                                        title={isRecording ? `APK đang ghi... (${recordedNodeCount} actions)` : 'Chờ APK bắt đầu ghi'}
                                     >
                                         {isRecording ? (
                                             <>
                                                 <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                                                <span>Stop</span>
+                                                <span>Đang ghi</span>
                                                 <span className="text-xs opacity-70">({recordedNodeCount})</span>
                                             </>
                                         ) : (
                                             <>
-                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                <svg className="w-4 h-4 opacity-50" fill="currentColor" viewBox="0 0 24 24">
                                                     <circle cx="12" cy="12" r="8" />
                                                 </svg>
-                                                <span>Record</span>
+                                                <span className="opacity-50">Chờ APK</span>
                                             </>
                                         )}
-                                    </button>
+                                    </div>
                                 )}
                             </>
                         )}
@@ -1099,14 +1621,41 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                         {/* Execution Controls */}
                         {!isRunning && !isPaused && (
                             <button
-                                onClick={startExecution}
-                                disabled={nodes.length === 0}
-                                className="h-9 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-sm font-semibold rounded-lg transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={async () => {
+                                    // If device selected, run on device
+                                    if (selectedDevice) {
+                                        setTestRunning(true);
+                                        try {
+                                            const response = await axios.post(`/flows/${flow.id}/test-run`, {
+                                                device_id: selectedDevice.id,
+                                            });
+                                            if (response.data.success) {
+                                                addToast(`Running on ${selectedDevice.name} (${response.data.data.actions_count} actions)`, 'success');
+                                            }
+                                        } catch (error) {
+                                            addToast(`Run failed: ${error.response?.data?.message || error.message}`, 'error');
+                                        } finally {
+                                            setTestRunning(false);
+                                        }
+                                    } else {
+                                        // No device - run local simulation
+                                        startExecution();
+                                    }
+                                }}
+                                disabled={nodes.length === 0 || testRunning}
+                                className={`h-9 px-4 text-sm font-semibold rounded-lg transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'}`}
                             >
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                                </svg>
-                                Run
+                                {testRunning ? (
+                                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                    </svg>
+                                ) : (
+                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                                    </svg>
+                                )}
+                                Run{selectedDevice ? ` on ${selectedDevice.name.substring(0, 10)}...` : ''}
                             </button>
                         )}
 
@@ -1209,7 +1758,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                         </button>
 
                         {/* Deploy Button */}
-                        <button className="h-9 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-sm font-semibold rounded-lg transition-all flex items-center gap-2 shadow-lg shadow-indigo-500/20">
+                        <button className={`h-9 px-4 text-sm font-semibold rounded-lg transition-all flex items-center gap-2 ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'}`}>
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1614,6 +2163,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 onMoveEnd={onMoveEnd}
                                 onNodeClick={onNodeClick}
                                 onPaneClick={onPaneClick}
+                                onSelectionChange={onSelectionChange}
                                 nodeTypes={nodeTypes}
                                 edgeTypes={edgeTypes}
                                 defaultEdgeOptions={defaultEdgeOptions}
@@ -1623,6 +2173,10 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 fitView={nodes.length === 0}
                                 snapToGrid={true}
                                 snapGrid={[20, 20]}
+                                selectionOnDrag={true}
+                                selectionMode="partial"
+                                multiSelectionKeyCode="Shift"
+                                deleteKeyCode={null}
                                 proOptions={{ hideAttribution: true }}
                                 className={`transition-colors duration-300 ${isDark ? '!bg-[#0a0a0a]' : '!bg-gray-50'}`}
                             >
@@ -1691,8 +2245,8 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 {nodes.length === 0 && (
                                     <Panel position="top-center" className="!m-0 !top-1/2 !-translate-y-1/2">
                                         <div className="text-center">
-                                            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 flex items-center justify-center shadow-2xl shadow-indigo-500/10">
-                                                <svg className="w-10 h-10 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div className={`w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center ${isDark ? 'bg-[#1a1a1a] border border-[#2a2a2a]' : 'bg-gray-100 border border-gray-200'}`}>
+                                                <svg className={`w-10 h-10 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                                 </svg>
                                             </div>
@@ -1932,7 +2486,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 </div>
                                 <div className={`p-4 border-t ${isDark ? 'border-[#1e1e1e]' : 'border-gray-200'}`}>
                                     <button
-                                        onClick={deleteSelectedNode}
+                                        onClick={deleteSelectedNodes}
                                         className="w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-sm font-semibold rounded-lg transition-all border border-red-500/20 hover:border-red-500/40"
                                     >
                                         Delete Node
@@ -2047,6 +2601,204 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                     debouncedSave(nodes.concat(positionedNodes), edges, viewport);
                 }}
             />
+
+            {/* Loop Sub-Flow Editor Modal */}
+            <LoopSubFlowModal
+                isOpen={showLoopSubFlowModal}
+                onClose={() => {
+                    setShowLoopSubFlowModal(false);
+                    setEditingLoopNodeId(null);
+                }}
+                loopNode={nodes.find(n => n.id === editingLoopNodeId)}
+                onSaveSubFlow={(nodeId, subFlow) => {
+                    setNodes(prev => prev.map(node =>
+                        node.id === nodeId
+                            ? { ...node, data: { ...node.data, subFlow } }
+                            : node
+                    ));
+                    debouncedSave(nodes, edges, viewport);
+                }}
+            />
+
+            {/* Debug Panel for APK Events */}
+            {showDebugPanel && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: '300px',
+                        background: 'rgba(15, 23, 42, 0.98)',
+                        borderTop: '1px solid rgba(139, 92, 246, 0.3)',
+                        zIndex: 1000,
+                        overflow: 'auto',
+                        fontFamily: 'monospace',
+                        fontSize: '11px',
+                    }}
+                >
+                    <div style={{
+                        padding: '8px 16px',
+                        background: 'rgba(139, 92, 246, 0.2)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 1
+                    }}>
+                        <span style={{ color: '#a78bfa', fontWeight: 'bold' }}>
+                            🔍 APK Event Debug ({debugEvents.length} events)
+                        </span>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                                onClick={() => setDebugEvents([])}
+                                style={{
+                                    padding: '4px 8px',
+                                    background: 'rgba(239, 68, 68, 0.3)',
+                                    color: '#f87171',
+                                    border: '1px solid rgba(239, 68, 68, 0.5)',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '10px'
+                                }}
+                            >
+                                Clear
+                            </button>
+                            <button
+                                onClick={() => setShowDebugPanel(false)}
+                                style={{
+                                    padding: '4px 8px',
+                                    background: 'rgba(100, 116, 139, 0.3)',
+                                    color: '#94a3b8',
+                                    border: '1px solid rgba(100, 116, 139, 0.5)',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '10px'
+                                }}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                    <div style={{ padding: '8px' }}>
+                        {debugEvents.length === 0 && (
+                            <div style={{
+                                color: '#64748b',
+                                textAlign: 'center',
+                                padding: '40px',
+                                fontStyle: 'italic'
+                            }}>
+                                Waiting for APK events... Start recording to see data here.
+                            </div>
+                        )}
+                        {debugEvents.slice().reverse().map((event, idx) => (
+                            <div
+                                key={event.id}
+                                style={{
+                                    marginBottom: '12px',
+                                    padding: '8px',
+                                    background: 'rgba(30, 41, 59, 0.8)',
+                                    borderRadius: '6px',
+                                    border: '1px solid rgba(71, 85, 105, 0.3)'
+                                }}
+                            >
+                                <div style={{
+                                    color: '#22c55e',
+                                    fontWeight: 'bold',
+                                    marginBottom: '4px'
+                                }}>
+                                    #{debugEvents.length - idx}: {event.raw?.event_type || 'unknown'}
+                                    <span style={{ color: '#64748b', fontWeight: 'normal', marginLeft: '8px' }}>
+                                        {event.receivedAt}
+                                    </span>
+                                </div>
+                                <table style={{ width: '100%', color: '#e2e8f0' }}>
+                                    <tbody>
+                                        <tr>
+                                            <td style={{ color: '#f472b6', width: '120px' }}>package_name:</td>
+                                            <td>{event.raw?.package_name || '-'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style={{ color: '#f472b6' }}>class_name:</td>
+                                            <td style={{ wordBreak: 'break-all' }}>{event.raw?.class_name || '-'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style={{ color: '#60a5fa' }}>resource_id:</td>
+                                            <td style={{
+                                                wordBreak: 'break-all',
+                                                color: event.raw?.resource_id ? '#4ade80' : '#64748b'
+                                            }}>
+                                                {event.raw?.resource_id || '(empty)'}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style={{ color: '#fbbf24' }}>text:</td>
+                                            <td style={{
+                                                color: event.raw?.text ? '#fde047' : '#64748b'
+                                            }}>
+                                                {event.raw?.text || '(empty)'}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style={{ color: '#c084fc' }}>content_desc:</td>
+                                            <td>{event.raw?.content_description || '-'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style={{ color: '#2dd4bf' }}>bounds:</td>
+                                            <td>{event.raw?.bounds || '-'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style={{ color: '#fb923c' }}>x, y:</td>
+                                            <td>{event.raw?.x ?? '-'}, {event.raw?.y ?? '-'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style={{ color: '#94a3b8' }}>flags:</td>
+                                            <td>
+                                                {event.raw?.is_clickable && <span style={{ color: '#22c55e', marginRight: '4px' }}>clickable</span>}
+                                                {event.raw?.is_editable && <span style={{ color: '#3b82f6', marginRight: '4px' }}>editable</span>}
+                                                {event.raw?.is_scrollable && <span style={{ color: '#a855f7' }}>scrollable</span>}
+                                            </td>
+                                        </tr>
+                                        {event.raw?.action_data && (
+                                            <tr>
+                                                <td style={{ color: '#e879f9' }}>action_data:</td>
+                                                <td style={{ wordBreak: 'break-all' }}>
+                                                    {JSON.stringify(event.raw.action_data)}
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Debug Panel Toggle Button */}
+            <button
+                onClick={() => setShowDebugPanel(!showDebugPanel)}
+                style={{
+                    position: 'fixed',
+                    bottom: showDebugPanel ? '310px' : '10px',
+                    right: '10px',
+                    padding: '8px 12px',
+                    background: showDebugPanel ? 'rgba(139, 92, 246, 0.8)' : 'rgba(30, 41, 59, 0.9)',
+                    color: showDebugPanel ? '#fff' : '#a78bfa',
+                    border: '1px solid rgba(139, 92, 246, 0.5)',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    zIndex: 1001,
+                    fontSize: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                }}
+            >
+                🔍 Debug {debugEvents.length > 0 && `(${debugEvents.length})`}
+            </button>
         </>
     );
 }

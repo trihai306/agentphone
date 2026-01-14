@@ -13,6 +13,8 @@
     <!-- Permission for recent apps usage stats -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
+    <!-- Permission to force-stop apps before recording -->
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
 
     <!-- Package visibility for Android 11+ (API 30+) -->
     <!-- This allows querying all installed apps with launcher intents -->

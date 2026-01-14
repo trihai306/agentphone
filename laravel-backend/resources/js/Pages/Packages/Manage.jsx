@@ -1,38 +1,30 @@
 import { useState } from 'react';
-import { Link, router, usePage } from '@inertiajs/react';
-import { useTranslation } from 'react-i18next';
+import { Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
+import { useTheme } from '@/Contexts/ThemeContext';
 
 export default function Manage({ userPackage = {} }) {
-    const { t } = useTranslation();
-    const { auth } = usePage().props;
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelReason, setCancelReason] = useState('');
     const [processing, setProcessing] = useState(false);
 
     const pkg = userPackage.service_package || {};
 
-    const formatPrice = (price) => {
-        return new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: userPackage.currency || 'VND',
-        }).format(price);
-    };
+    const formatPrice = (price) => new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: userPackage.currency || 'VND',
+    }).format(price);
 
     const formatDate = (dateStr) => {
         if (!dateStr) return 'N/A';
-        return new Date(dateStr).toLocaleDateString('vi-VN', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        });
+        return new Date(dateStr).toLocaleDateString();
     };
 
     const handleCancel = () => {
         setProcessing(true);
-        router.post(`/my-packages/${userPackage.id}/cancel`, {
-            reason: cancelReason,
-        }, {
+        router.post(`/my-packages/${userPackage.id}/cancel`, { reason: cancelReason }, {
             onFinish: () => {
                 setProcessing(false);
                 setShowCancelModal(false);
@@ -40,211 +32,132 @@ export default function Manage({ userPackage = {} }) {
         });
     };
 
-    const getStatusBadge = (status) => {
-        const styles = {
-            active: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
-            pending: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300',
-            expired: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300',
-            cancelled: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
-        };
-        const labels = {
-            active: t('packages.active'),
-            pending: t('packages.pending'),
-            expired: t('packages.expired'),
-            cancelled: t('packages.cancelled'),
-        };
-        return (
-            <span className={`px-3 py-1 text-sm font-semibold rounded-full ${styles[status] || styles.pending}`}>
-                {labels[status] || status}
-            </span>
-        );
+    const getStatusStyle = (status) => {
+        if (status === 'active') return isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-50 text-emerald-600';
+        if (status === 'pending') return isDark ? 'bg-amber-900/30 text-amber-400' : 'bg-amber-50 text-amber-600';
+        if (status === 'expired' || status === 'cancelled') return isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-500';
+        return isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-500';
     };
 
     const creditsPercent = userPackage.remaining_credits != null && pkg.credits
-        ? Math.round((userPackage.remaining_credits / pkg.credits) * 100)
-        : null;
+        ? Math.round((userPackage.remaining_credits / pkg.credits) * 100) : null;
 
     return (
-        <AppLayout title={`${t('packages.manage_package')} - ${pkg.name || t('packages.title')}`}>
-            <div className="max-w-4xl mx-auto">
-                {/* Breadcrumb */}
-                <nav className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-8">
-                    <Link href="/packages" className="hover:text-purple-600 dark:hover:text-purple-400">
-                        {t('packages.breadcrumb.packages')}
-                    </Link>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                    <span className="text-gray-900 dark:text-white font-medium">{t('packages.breadcrumb.manage')}</span>
-                </nav>
-
-                {/* Package Header */}
-                <div className="bg-gradient-to-br from-purple-600 to-indigo-600 rounded-3xl p-8 text-white mb-8">
-                    <div className="flex items-start justify-between">
-                        <div>
-                            <div className="flex items-center space-x-3 mb-2">
-                                {pkg.badge && (
-                                    <span className="px-3 py-1 bg-white/20 text-sm font-semibold rounded-full">
-                                        {pkg.badge}
-                                    </span>
-                                )}
-                                {getStatusBadge(userPackage.status)}
+        <AppLayout title={`Manage - ${pkg.name || 'Package'}`}>
+            <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
+                <div className="max-w-[900px] mx-auto px-6 py-6">
+                    {/* Header */}
+                    <div className="flex items-center gap-4 mb-6">
+                        <Link
+                            href="/packages"
+                            className={`p-2 rounded-lg ${isDark ? 'hover:bg-[#1a1a1a]' : 'hover:bg-gray-100'}`}
+                        >
+                            <svg className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </Link>
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                                <h1 className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                    {pkg.name}
+                                </h1>
+                                <span className={`px-2 py-0.5 text-xs font-medium rounded ${getStatusStyle(userPackage.status)}`}>
+                                    {userPackage.status}
+                                </span>
                             </div>
-                            <h1 className="text-3xl font-bold mb-2">{pkg.name}</h1>
-                            <p className="text-white/80">{pkg.description}</p>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-white/60 text-sm">{t('packages.order_code')}</p>
-                            <p className="font-mono font-bold text-lg">{userPackage.order_code}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Stats Cards */}
-                    <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        {/* Days Remaining */}
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-                            <div className="flex items-center space-x-4">
-                                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-                                    <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p className="text-gray-500 dark:text-gray-400 text-sm">{t('packages.days_remaining')}</p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                                        {userPackage.days_remaining ?? 'N/A'}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Credits */}
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-                            <div className="flex items-center space-x-4">
-                                <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center">
-                                    <svg className="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p className="text-gray-500 dark:text-gray-400 text-sm">{t('packages.credits_remaining')}</p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                                        {userPackage.remaining_credits?.toLocaleString() ?? 'N/A'}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Devices */}
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-                            <div className="flex items-center space-x-4">
-                                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
-                                    <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p className="text-gray-500 dark:text-gray-400 text-sm">{t('packages.devices_used')}</p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                                        {userPackage.used_devices ?? 0}/{pkg.max_devices === -1 ? '∞' : pkg.max_devices ?? 0}
-                                    </p>
-                                </div>
-                            </div>
+                            <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                                Order #{userPackage.order_code}
+                            </p>
                         </div>
                     </div>
 
-                    {/* Details */}
-                    <div className="lg:col-span-2">
-                        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('packages.package_details')}</h3>
-                            </div>
-                            <div className="p-6 space-y-4">
-                                <div className="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
-                                    <span className="text-gray-600 dark:text-gray-400">{t('packages.activation_date')}</span>
-                                    <span className="font-semibold text-gray-900 dark:text-white">
-                                        {formatDate(userPackage.activated_at)}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
-                                    <span className="text-gray-600 dark:text-gray-400">{t('packages.expiry_date')}</span>
-                                    <span className="font-semibold text-gray-900 dark:text-white">
-                                        {formatDate(userPackage.expires_at)}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
-                                    <span className="text-gray-600 dark:text-gray-400">{t('packages.price_paid')}</span>
-                                    <span className="font-semibold text-gray-900 dark:text-white">
-                                        {formatPrice(userPackage.price_paid)}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
-                                    <span className="text-gray-600 dark:text-gray-400">{t('packages.payment_status')}</span>
-                                    <span className={`px-3 py-1 text-sm font-semibold rounded-full ${userPackage.payment_status === 'paid'
-                                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                                            : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                                        }`}>
-                                        {userPackage.payment_status === 'paid' ? t('packages.paid') : t('packages.awaiting_payment')}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between py-3">
-                                    <span className="text-gray-600 dark:text-gray-400">{t('packages.auto_renew')}</span>
-                                    <span className={`px-3 py-1 text-sm font-semibold rounded-full ${userPackage.auto_renew
-                                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
-                                        }`}>
-                                        {userPackage.auto_renew ? t('packages.on') : t('packages.off')}
-                                    </span>
+                    {/* Stats */}
+                    <div className="grid grid-cols-3 gap-4 mb-6">
+                        <div className={`p-4 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
+                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Days Remaining</p>
+                            <p className={`text-xl font-bold mt-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                {userPackage.days_remaining ?? 'N/A'}
+                            </p>
+                        </div>
+                        <div className={`p-4 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
+                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Credits Remaining</p>
+                            <p className={`text-xl font-bold mt-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                {userPackage.remaining_credits?.toLocaleString() ?? 'N/A'}
+                            </p>
+                        </div>
+                        <div className={`p-4 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
+                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Devices Used</p>
+                            <p className={`text-xl font-bold mt-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                {userPackage.used_devices ?? 0}/{pkg.max_devices === -1 ? '∞' : pkg.max_devices ?? 0}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Details */}
+                        <div className="lg:col-span-2">
+                            <div className={`p-5 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
+                                <h2 className={`text-sm font-medium mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Details</h2>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between text-sm">
+                                        <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Activation Date</span>
+                                        <span className={isDark ? 'text-white' : 'text-gray-900'}>{formatDate(userPackage.activated_at)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Expiry Date</span>
+                                        <span className={isDark ? 'text-white' : 'text-gray-900'}>{formatDate(userPackage.expires_at)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Price Paid</span>
+                                        <span className={isDark ? 'text-white' : 'text-gray-900'}>{formatPrice(userPackage.price_paid)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Payment Status</span>
+                                        <span className={`px-2 py-0.5 text-xs font-medium rounded ${userPackage.payment_status === 'paid' ? (isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-50 text-emerald-600') : (isDark ? 'bg-amber-900/30 text-amber-400' : 'bg-amber-50 text-amber-600')}`}>
+                                            {userPackage.payment_status === 'paid' ? 'Paid' : 'Pending'}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Auto Renew</span>
+                                        <span className={isDark ? 'text-white' : 'text-gray-900'}>{userPackage.auto_renew ? 'On' : 'Off'}</span>
+                                    </div>
                                 </div>
 
                                 {/* Credits Progress */}
                                 {creditsPercent !== null && (
-                                    <div className="pt-4">
-                                        <div className="flex justify-between text-sm mb-2">
-                                            <span className="text-gray-600 dark:text-gray-400">{t('packages.credits_usage')}</span>
-                                            <span className="font-semibold text-gray-900 dark:text-white">
+                                    <div className={`mt-4 pt-4 border-t ${isDark ? 'border-[#2a2a2a]' : 'border-gray-100'}`}>
+                                        <div className="flex justify-between text-xs mb-2">
+                                            <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Credits Usage</span>
+                                            <span className={isDark ? 'text-white' : 'text-gray-900'}>
                                                 {userPackage.credits_used?.toLocaleString() || 0} / {pkg.credits?.toLocaleString()}
                                             </span>
                                         </div>
-                                        <div className="w-full h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                                        <div className={`w-full h-2 rounded-full overflow-hidden ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-100'}`}>
                                             <div
-                                                className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all"
+                                                className={`h-full rounded-full ${isDark ? 'bg-white' : 'bg-gray-900'}`}
                                                 style={{ width: `${100 - creditsPercent}%` }}
-                                            ></div>
+                                            />
                                         </div>
                                     </div>
                                 )}
                             </div>
                         </div>
-                    </div>
 
-                    {/* Actions */}
-                    <div className="lg:col-span-1">
-                        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 space-y-4">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('packages.actions_section')}</h3>
-
+                        {/* Actions */}
+                        <div className="space-y-4">
                             {userPackage.status === 'active' && (
                                 <>
                                     <Link
                                         href={`/packages/${pkg.id}/subscribe`}
-                                        className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all"
+                                        className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'}`}
                                     >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                        </svg>
-                                        <span>{t('packages.renew')}</span>
+                                        Renew
                                     </Link>
-
                                     <button
                                         onClick={() => setShowCancelModal(true)}
-                                        className="w-full flex items-center justify-center space-x-2 px-4 py-3 border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 font-semibold rounded-xl transition-all"
+                                        className={`w-full px-4 py-2.5 text-sm font-medium rounded-lg ${isDark ? 'text-red-400 hover:bg-red-900/20' : 'text-red-600 hover:bg-red-50'}`}
                                     >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                        <span>{t('packages.cancel_package')}</span>
+                                        Cancel Package
                                     </button>
                                 </>
                             )}
@@ -252,49 +165,26 @@ export default function Manage({ userPackage = {} }) {
                             {userPackage.status === 'pending' && (
                                 <Link
                                     href={`/my-packages/${userPackage.id}/payment`}
-                                    className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-xl transition-all"
+                                    className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg ${isDark ? 'bg-amber-500 text-black hover:bg-amber-400' : 'bg-amber-500 text-white hover:bg-amber-600'}`}
                                 >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                                    </svg>
-                                    <span>{t('packages.pay_now')}</span>
+                                    Pay Now
                                 </Link>
                             )}
 
                             {userPackage.status === 'expired' && (
                                 <Link
                                     href={`/packages/${pkg.id}/subscribe`}
-                                    className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all"
+                                    className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg ${isDark ? 'bg-emerald-500 text-black hover:bg-emerald-400' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
                                 >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                    </svg>
-                                    <span>{t('packages.resubscribe')}</span>
+                                    Resubscribe
                                 </Link>
                             )}
 
                             <Link
                                 href="/packages"
-                                className="w-full flex items-center justify-center space-x-2 px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-semibold rounded-xl transition-all"
+                                className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
                             >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                                </svg>
-                                <span>{t('common.back')}</span>
-                            </Link>
-                        </div>
-
-                        {/* Help */}
-                        <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-700">
-                            <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">{t('packages.need_help')}</h4>
-                            <p className="text-blue-700 dark:text-blue-300 text-sm mb-4">
-                                {t('packages.help_description')}
-                            </p>
-                            <Link
-                                href="/contact"
-                                className="text-blue-600 dark:text-blue-400 font-semibold hover:underline text-sm"
-                            >
-                                {t('packages.contact_support')} →
+                                Back to Packages
                             </Link>
                         </div>
                     </div>
@@ -303,46 +193,34 @@ export default function Manage({ userPackage = {} }) {
 
             {/* Cancel Modal */}
             {showCancelModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-md w-full p-6">
-                        <div className="text-center mb-6">
-                            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t('packages.confirm_cancel')}</h3>
-                            <p className="text-gray-600 dark:text-gray-400 mt-2">
-                                {t('packages.confirm_cancel_message', { name: pkg.name })}
-                            </p>
-                        </div>
-
-                        <div className="mb-6">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {t('packages.cancel_reason')}
-                            </label>
-                            <textarea
-                                value={cancelReason}
-                                onChange={(e) => setCancelReason(e.target.value)}
-                                rows={3}
-                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                                placeholder={t('packages.cancel_reason_placeholder')}
-                            />
-                        </div>
-
-                        <div className="flex space-x-3">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+                    <div className={`w-full max-w-md p-6 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white'}`}>
+                        <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            Cancel Package?
+                        </h3>
+                        <p className={`text-sm mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                            Are you sure you want to cancel {pkg.name}?
+                        </p>
+                        <textarea
+                            value={cancelReason}
+                            onChange={(e) => setCancelReason(e.target.value)}
+                            placeholder="Reason for cancellation (optional)"
+                            rows={3}
+                            className={`w-full px-3 py-2 rounded-lg text-sm mb-4 ${isDark ? 'bg-[#222] border-[#2a2a2a] text-white' : 'bg-white border-gray-200 text-gray-900'} border focus:outline-none`}
+                        />
+                        <div className="flex justify-end gap-3">
                             <button
                                 onClick={() => setShowCancelModal(false)}
-                                className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-semibold rounded-xl transition-all"
+                                className={`px-4 py-2 text-sm font-medium rounded-lg ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
                             >
-                                {t('packages.no_keep')}
+                                Keep Package
                             </button>
                             <button
                                 onClick={handleCancel}
                                 disabled={processing}
-                                className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-all disabled:opacity-50"
+                                className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
                             >
-                                {processing ? t('packages.processing') : t('packages.yes_cancel')}
+                                {processing ? 'Cancelling...' : 'Yes, Cancel'}
                             </button>
                         </div>
                     </div>

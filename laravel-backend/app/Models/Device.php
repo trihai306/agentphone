@@ -81,9 +81,16 @@ class Device extends Model
 
     /**
      * Check if device is currently online
+     * Device is online if socket is connected OR was active in last X minutes
      */
     public function isOnline(int $minutes = 5): bool
     {
+        // Socket connected is most accurate
+        if ($this->socket_connected) {
+            return true;
+        }
+
+        // Fallback to activity-based check
         return $this->status === self::STATUS_ACTIVE
             && $this->last_active_at
             && $this->last_active_at->gte(now()->subMinutes($minutes));

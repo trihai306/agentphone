@@ -30,9 +30,21 @@ class DeviceController extends Controller
         // Normalize field names (support both 'name' and 'device_name')
         $deviceName = $request->input('name') ?? $request->input('device_name') ?? 'Unknown Device';
         $deviceId = $request->input('device_id');
+        $model = $request->input('model');
 
-        // Check if device already exists
+        // Find existing device - priority:
+        // 1. By device_id (exact match)
+        // 2. By model + user_id (for emulators that change device_id)
         $existingDevice = Device::where('device_id', $deviceId)->first();
+
+        // If not found by device_id, check by model + user_id (prevents duplicates for same model)
+        $isModelMatch = false;
+        if (!$existingDevice && $model) {
+            $existingDevice = Device::where('user_id', $user->id)
+                ->where('model', $model)
+                ->first();
+            $isModelMatch = (bool) $existingDevice;
+        }
 
         if (!$existingDevice) {
             // Check device limit for new devices
@@ -49,25 +61,39 @@ class DeviceController extends Controller
 
         DB::beginTransaction();
         try {
-            $device = Device::updateOrCreate(
-                ['device_id' => $deviceId],
-                [
+            if ($existingDevice) {
+                // Update existing device (including device_id if it changed)
+                $existingDevice->update([
+                    'device_id' => $deviceId, // Update device_id in case it changed
                     'user_id' => $user->id,
                     'name' => $deviceName,
-                    'model' => $request->input('model'),
+                    'model' => $model,
                     'android_version' => $request->input('android_version'),
                     'status' => Device::STATUS_ACTIVE,
                     'last_active_at' => now(),
-                ]
-            );
+                ]);
+                $device = $existingDevice;
+            } else {
+                // Create new device
+                $device = Device::create([
+                    'device_id' => $deviceId,
+                    'user_id' => $user->id,
+                    'name' => $deviceName,
+                    'model' => $model,
+                    'android_version' => $request->input('android_version'),
+                    'status' => Device::STATUS_ACTIVE,
+                    'last_active_at' => now(),
+                ]);
+            }
 
             // Log the activity
-            $event = $existingDevice ? 'device_updated' : 'device_registered';
+            $event = $existingDevice ? ($isModelMatch ? 'device_id_updated' : 'device_updated') : 'device_registered';
             $device->logActivity($event, $ipAddress, [
                 'user_agent' => $request->userAgent(),
                 'name' => $deviceName,
-                'model' => $request->input('model'),
+                'model' => $model,
                 'android_version' => $request->input('android_version'),
+                'device_id_changed' => $isModelMatch,
             ]);
 
             DB::commit();
@@ -75,7 +101,7 @@ class DeviceController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => $existingDevice
-                    ? 'Thiết bị đã được cập nhật thành công'
+                    ? ($isModelMatch ? 'Thiết bị đã được nhận diện lại' : 'Thiết bị đã được cập nhật thành công')
                     : 'Thiết bị đã được đăng ký thành công',
                 'device' => new DeviceResource($device),
             ], $existingDevice ? 200 : 201);

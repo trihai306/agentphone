@@ -84,15 +84,15 @@ function LoopNode({ id, data, selected }) {
                             {isRunning ? 'Iterating...' : 'Loop'}
                         </span>
                     </div>
-                    {/* Iteration Counter */}
-                    {(currentIteration !== undefined || totalIterations) && (
-                        <span
-                            className="px-1.5 py-0.5 rounded text-[10px] font-bold"
-                            style={{ backgroundColor: `${color}20`, color }}
-                        >
-                            {currentIteration ?? 0}/{totalIterations ?? iterations}
-                        </span>
-                    )}
+                    {/* Iteration Counter - Always show iterations */}
+                    <span
+                        className="px-2 py-1 rounded-full text-xs font-bold"
+                        style={{ backgroundColor: `${color}25`, color }}
+                    >
+                        {currentIteration !== undefined
+                            ? `${currentIteration}/${totalIterations ?? iterations}`
+                            : `×${iterations}`}
+                    </span>
                 </div>
 
                 {/* Body */}

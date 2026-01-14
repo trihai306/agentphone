@@ -267,6 +267,37 @@ class PortalAccessibilityService : AccessibilityService() {
         // Pass event to gesture detector for gesture shortcut detection
         gestureDetector?.onAccessibilityEvent(event)
 
+        // ========== TOUCH EXPLORATION MODE - Accurate User Touch Detection ==========
+        // Handle touch interaction events from Touch Exploration Mode
+        // These events ONLY fire when user is actually touching the screen
+        when (event.eventType) {
+            AccessibilityEvent.TYPE_TOUCH_INTERACTION_START -> {
+                // User started touching the screen
+                EventCapture.onUserTouchStart()
+                Log.d(TAG, "👆 TOUCH_INTERACTION_START - User is touching")
+                return // Don't record this event itself
+            }
+            AccessibilityEvent.TYPE_TOUCH_INTERACTION_END -> {
+                // User lifted finger from screen
+                EventCapture.onUserTouchEnd()
+                Log.d(TAG, "👆 TOUCH_INTERACTION_END - User stopped touching")
+                return // Don't record this event itself
+            }
+            AccessibilityEvent.TYPE_GESTURE_DETECTION_START -> {
+                // Gesture detection started (more specific than touch)
+                EventCapture.onGestureStart()
+                Log.d(TAG, "🔄 GESTURE_DETECTION_START")
+                return // Don't record this event itself
+            }
+            AccessibilityEvent.TYPE_GESTURE_DETECTION_END -> {
+                // Gesture detection ended
+                EventCapture.onGestureEnd()
+                Log.d(TAG, "🔄 GESTURE_DETECTION_END")
+                return // Don't record this event itself
+            }
+        }
+        // ========== END TOUCH EXPLORATION MODE ==========
+
         // Log ALL events when recording to debug event reception (limit to recordable types)
         val isRecordable = EventCapture.isRecordableEvent(event.eventType)
         val isActivelyRecording = RecordingManager.isActivelyRecording()
@@ -274,9 +305,8 @@ class PortalAccessibilityService : AccessibilityService() {
         // Log state for debugging
         if (isRecordable) {
             if (isActivelyRecording) {
-                Log.d(TAG, ">>> Event received (RECORDING): ${EventCapture.getEventTypeName(event.eventType)} | pkg: ${event.packageName} | hasSource: ${event.source != null}")
-            } else {
-                Log.d(TAG, ">>> Event received (NOT RECORDING): ${EventCapture.getEventTypeName(event.eventType)} | State: ${RecordingManager.getState()}")
+                val touchState = if (EventCapture.isUserTouching()) "TOUCHING" else "NOT_TOUCHING"
+                Log.d(TAG, ">>> Event received (RECORDING|$touchState): ${EventCapture.getEventTypeName(event.eventType)} | pkg: ${event.packageName}")
             }
         }
 
@@ -293,8 +323,6 @@ class PortalAccessibilityService : AccessibilityService() {
         if (recordedEvent != null) {
             RecordingManager.addEvent(recordedEvent)
             Log.i(TAG, "✓ Event captured: ${recordedEvent.eventType} | Total events: ${RecordingManager.getEventCount()}")
-        } else {
-            Log.w(TAG, "✗ Failed to capture event: ${EventCapture.getEventTypeName(event.eventType)}")
         }
     }
 

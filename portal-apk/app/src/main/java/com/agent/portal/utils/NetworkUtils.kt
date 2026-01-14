@@ -8,6 +8,12 @@ import android.os.Build
 object NetworkUtils {
     
     /**
+     * Development host IP - Change this to your dev machine's IP
+     * Run `ifconfig | grep inet` to find your IP
+     */
+    private const val DEV_HOST = "192.168.50.117"
+    
+    /**
      * Get the appropriate localhost URL for current environment
      * 
      * Returns:
@@ -31,16 +37,17 @@ object NetworkUtils {
      * - Herd runs on HTTPS by default
      * - Use laravel-backend.test domain (DNS resolves on emulator via /etc/hosts)
      * - Or use IP 10.0.2.2 with HTTPS and trust self-signed cert
+     * 
+     * For physical devices in local development:
+     * - Use DEV_HOST with HTTP (php artisan serve on port 8000)
      */
     fun getApiBaseUrl(): String {
         return if (isEmulator()) {
-            // Emulator - Laravel Herd uses HTTPS
-            // Option 1: Use domain (requires /etc/hosts on emulator - not possible)
-            // Option 2: Use IP with HTTPS (requires SSL workaround)
-            "https://10.0.2.2/api" // Herd default HTTPS port 443
+            // Emulator - point to host machine
+            "http://10.0.2.2:8000/api"
         } else {
-            // Physical device - use actual server URL
-            "https://your-server.com/api" // Change this!
+            // Physical device - use dev machine IP for local development
+            "http://$DEV_HOST:8000/api"
         }
     }
     
@@ -52,8 +59,8 @@ object NetworkUtils {
             // Emulator - point to host machine
             "http://10.0.2.2:6001"
         } else {
-            // Physical device - use actual server URL
-            "wss://your-server.com" // Change this!
+            // Physical device - use dev machine IP for local development
+            "http://$DEV_HOST:6001"
         }
     }
     

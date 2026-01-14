@@ -18,30 +18,37 @@ export default function Index({ stats, recentDevices, walletBalance = 0, activeP
     };
 
     const statCards = [
-        { label: 'Total Devices', value: stats?.total || 0 },
-        { label: 'Active', value: stats?.active || 0 },
-        { label: 'Packages', value: activePackages },
-        { label: 'Workflows', value: workflowCount },
+        { label: t('dashboard.stats.total_devices'), value: stats?.total || 0 },
+        { label: t('dashboard.stats.active'), value: stats?.active || 0 },
+        { label: t('dashboard.stats.packages'), value: activePackages },
+        { label: t('flows.title'), value: workflowCount },
     ];
 
     const quickActions = [
-        { href: '/devices', icon: '📱', label: 'Devices', desc: 'Manage your devices' },
-        { href: '/flows', icon: '⚡', label: 'Workflows', desc: 'Automation flows' },
-        { href: '/ai-studio', icon: '✨', label: 'AI Studio', desc: 'Generate content' },
-        { href: '/media', icon: '🖼️', label: 'Media', desc: 'File library' },
+        { href: '/devices', icon: '📱', label: t('devices.title'), desc: t('dashboard.quick_actions.devices.description') },
+        { href: '/flows', icon: '⚡', label: t('flows.title'), desc: t('dashboard.quick_actions.workflows.description') },
+        { href: '/ai-studio', icon: '✨', label: t('ai_studio.title'), desc: t('ai_studio.generate') },
+        { href: '/media', icon: '🖼️', label: t('media.title'), desc: t('media.my_media') },
+    ];
+
+    const systemServices = [
+        { key: 'api_server', label: t('dashboard.system_status.api_server') },
+        { key: 'database', label: t('dashboard.system_status.database') },
+        { key: 'websocket', label: t('dashboard.system_status.websocket') },
+        { key: 'queue', label: t('dashboard.system_status.queue_worker') },
     ];
 
     return (
-        <AppLayout title="Dashboard">
+        <AppLayout title={t('dashboard.title')}>
             <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
                 <div className="max-w-[1400px] mx-auto px-6 py-6">
                     {/* Header */}
                     <div className="mb-8">
                         <h1 className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            Welcome back, {auth.user?.name}
+                            {t('dashboard.welcome', { name: auth.user?.name })}
                         </h1>
                         <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                            Here's what's happening with your account
+                            {t('dashboard.quick_actions.description')}
                         </p>
                     </div>
 
@@ -67,7 +74,7 @@ export default function Index({ stats, recentDevices, walletBalance = 0, activeP
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                    Wallet Balance
+                                    {t('dashboard.stats.wallet_balance')}
                                 </p>
                                 <p className={`text-3xl font-semibold mt-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                     {formatCurrency(walletBalance)}
@@ -76,11 +83,11 @@ export default function Index({ stats, recentDevices, walletBalance = 0, activeP
                             <Link
                                 href="/topup"
                                 className={`px-4 py-2 text-sm font-medium rounded-lg ${isDark
-                                        ? 'bg-white text-black hover:bg-gray-100'
-                                        : 'bg-gray-900 text-white hover:bg-gray-800'
+                                    ? 'bg-white text-black hover:bg-gray-100'
+                                    : 'bg-gray-900 text-white hover:bg-gray-800'
                                     }`}
                             >
-                                Top Up
+                                {t('topup.title')}
                             </Link>
                         </div>
                     </div>
@@ -89,7 +96,7 @@ export default function Index({ stats, recentDevices, walletBalance = 0, activeP
                         {/* Quick Actions */}
                         <div className="lg:col-span-2">
                             <h2 className={`text-sm font-medium uppercase tracking-wider mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Quick Actions
+                                {t('dashboard.quick_actions.title')}
                             </h2>
                             <div className="grid grid-cols-2 gap-3">
                                 {quickActions.map((action, i) => (
@@ -97,8 +104,8 @@ export default function Index({ stats, recentDevices, walletBalance = 0, activeP
                                         key={i}
                                         href={action.href}
                                         className={`p-4 rounded-xl transition-all ${isDark
-                                                ? 'bg-[#1a1a1a] hover:bg-[#222]'
-                                                : 'bg-white border border-gray-200 hover:border-gray-300'
+                                            ? 'bg-[#1a1a1a] hover:bg-[#222]'
+                                            : 'bg-white border border-gray-200 hover:border-gray-300'
                                             }`}
                                     >
                                         <span className="text-2xl">{action.icon}</span>
@@ -116,23 +123,23 @@ export default function Index({ stats, recentDevices, walletBalance = 0, activeP
                         {/* System Status */}
                         <div>
                             <h2 className={`text-sm font-medium uppercase tracking-wider mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                System Status
+                                {t('dashboard.system_status.title')}
                             </h2>
                             <div className={`p-4 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
                                 <div className="flex items-center gap-2 mb-4">
                                     <span className="w-2 h-2 bg-emerald-500 rounded-full" />
                                     <span className={`text-sm font-medium ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                                        All systems operational
+                                        {t('dashboard.system_status.active')}
                                     </span>
                                 </div>
                                 <div className="space-y-3">
-                                    {['API Server', 'Database', 'WebSocket', 'Queue'].map((service, i) => (
+                                    {systemServices.map((service, i) => (
                                         <div key={i} className="flex items-center justify-between">
                                             <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                                {service}
+                                                {service.label}
                                             </span>
                                             <span className={`text-xs font-medium ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                                                Online
+                                                {t('dashboard.recent_devices.status.online')}
                                             </span>
                                         </div>
                                     ))}
@@ -145,13 +152,13 @@ export default function Index({ stats, recentDevices, walletBalance = 0, activeP
                     <div className="mt-8">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className={`text-sm font-medium uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Recent Devices
+                                {t('dashboard.recent_devices.title')}
                             </h2>
                             <Link
                                 href="/devices"
                                 className={`text-sm ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
                             >
-                                View all →
+                                {t('common.view_all')} →
                             </Link>
                         </div>
 
@@ -161,13 +168,13 @@ export default function Index({ stats, recentDevices, walletBalance = 0, activeP
                                     <thead>
                                         <tr className={`border-b ${isDark ? 'border-[#2a2a2a]' : 'border-gray-100'}`}>
                                             <th className={`text-left py-3 px-4 text-xs font-medium uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                Device
+                                                {t('devices.title')}
                                             </th>
                                             <th className={`text-left py-3 px-4 text-xs font-medium uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                Status
+                                                {t('common.status')}
                                             </th>
                                             <th className={`text-left py-3 px-4 text-xs font-medium uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                Last Active
+                                                {t('devices.fields.last_active')}
                                             </th>
                                         </tr>
                                     </thead>
@@ -184,18 +191,18 @@ export default function Index({ stats, recentDevices, walletBalance = 0, activeP
                                                                 {device.name || device.device_id}
                                                             </p>
                                                             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                                {device.model || 'Unknown'}
+                                                                {device.model || t('dashboard.recent_devices.unknown')}
                                                             </p>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="py-3 px-4">
-                                                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${device.status === 'online'
-                                                            ? isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-50 text-emerald-600'
-                                                            : isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-500'
+                                                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${device.status === 'active'
+                                                        ? isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-50 text-emerald-600'
+                                                        : isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-500'
                                                         }`}>
-                                                        <span className={`w-1.5 h-1.5 rounded-full ${device.status === 'online' ? 'bg-emerald-500' : 'bg-gray-400'}`} />
-                                                        {device.status === 'online' ? 'Online' : 'Offline'}
+                                                        <span className={`w-1.5 h-1.5 rounded-full ${device.status === 'active' ? 'bg-emerald-500' : 'bg-gray-400'}`} />
+                                                        {device.status === 'active' ? t('dashboard.recent_devices.status.online') : t('dashboard.recent_devices.status.offline')}
                                                     </span>
                                                 </td>
                                                 <td className={`py-3 px-4 text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
@@ -212,10 +219,10 @@ export default function Index({ stats, recentDevices, walletBalance = 0, activeP
                                     <span className="text-xl">📱</span>
                                 </div>
                                 <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    No devices yet
+                                    {t('dashboard.recent_devices.empty.title')}
                                 </p>
                                 <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    Connect your first device to get started
+                                    {t('dashboard.recent_devices.empty.description')}
                                 </p>
                             </div>
                         )}

@@ -37,13 +37,126 @@ object EventCapture {
     private const val EVENT_TEXT_INPUT = "text_input"
     private const val EVENT_TEXT_DELETE = "text_delete"
     private const val EVENT_SCROLL = "scroll"
+    private const val EVENT_SCROLL_UP = "scroll_up"
+    private const val EVENT_SCROLL_DOWN = "scroll_down"
+    private const val EVENT_SCROLL_LEFT = "scroll_left"
+    private const val EVENT_SCROLL_RIGHT = "scroll_right"
     private const val EVENT_FOCUS = "focus"
     private const val EVENT_GESTURE_START = "gesture_start"
     private const val EVENT_GESTURE_END = "gesture_end"
     private const val EVENT_UNKNOWN = "unknown"
 
+    // ========== SMART FILTERING CONSTANTS ==========
+    // Minimum scroll delta threshold (skip micro-scrolls < 50px)
+    private const val MIN_SCROLL_DELTA_THRESHOLD = 50
+    
+    // Focus event suppression window (skip focus if tap/text within 500ms)
+    private const val FOCUS_SUPPRESSION_WINDOW_MS = 500L
+    
+    // ========== TOUCH EXPLORATION MODE - RELIABLE USER DETECTION ==========
+    // This is the PRIMARY method for detecting user-initiated events
+    // TOUCH_INTERACTION_START/END events directly indicate when user is touching
+    
+    // Current touch state - TRUE when user is physically touching the screen
+    @Volatile
+    private var userIsTouching: Boolean = false
+    
+    // Current gesture state - TRUE when a gesture is being performed
+    @Volatile
+    private var gestureInProgress: Boolean = false
+    
+    // Timestamp when touch started (for timeout fallback)
+    private var touchStartTimestamp: Long = 0L
+    
+    // Grace period after touch ends to capture final events (ms)
+    // Some events (like scroll end) may arrive slightly after touch ends
+    private const val TOUCH_GRACE_PERIOD_MS = 200L
+    private var touchEndTimestamp: Long = 0L
+    
+    // ========== LEGACY FALLBACK (for devices without Touch Exploration) ==========
+    // These are ONLY used if Touch Exploration Mode doesn't work
+    private var lastUserTouchTimestamp: Long = 0L
+    private var lastScrollTimestamp: Long = 0L
+    private var lastActivityClassName: String = ""
+    private var rapidScrollCounter: Int = 0
+    private const val MAX_RAPID_SCROLLS_ALLOWED = 2
+    private const val USER_TOUCH_TIMEOUT_MS = 1500L
+    private const val MIN_USER_SCROLL_INTERVAL_MS = 100L
+    
+    // Track last focus event for suppression
+    private var lastFocusResourceId: String = ""
+    private var lastFocusTimestamp: Long = 0L
+
     // Advanced gesture detector instance
     private val gestureDetector = AdvancedGestureDetector()
+    
+    // ========== TOUCH EXPLORATION MODE CALLBACKS ==========
+    
+    /**
+     * Called when TOUCH_INTERACTION_START event is received.
+     * User has started touching the screen.
+     */
+    fun onUserTouchStart() {
+        userIsTouching = true
+        touchStartTimestamp = System.currentTimeMillis()
+        lastUserTouchTimestamp = touchStartTimestamp
+        rapidScrollCounter = 0
+        Log.d(TAG, "✅ User touch started - events will be recorded")
+    }
+    
+    /**
+     * Called when TOUCH_INTERACTION_END event is received.
+     * User has lifted finger from screen.
+     */
+    fun onUserTouchEnd() {
+        userIsTouching = false
+        touchEndTimestamp = System.currentTimeMillis()
+        Log.d(TAG, "⏹️ User touch ended - grace period ${TOUCH_GRACE_PERIOD_MS}ms")
+    }
+    
+    /**
+     * Called when GESTURE_DETECTION_START event is received.
+     * A gesture is being performed.
+     */
+    fun onGestureStart() {
+        gestureInProgress = true
+        // Also mark as user touching for safety
+        if (!userIsTouching) {
+            userIsTouching = true
+            touchStartTimestamp = System.currentTimeMillis()
+        }
+        Log.d(TAG, "🔄 Gesture started")
+    }
+    
+    /**
+     * Called when GESTURE_DETECTION_END event is received.
+     * Gesture has completed.
+     */
+    fun onGestureEnd() {
+        gestureInProgress = false
+        Log.d(TAG, "🔄 Gesture ended")
+    }
+    
+    /**
+     * Check if user is currently touching the screen.
+     * Includes grace period after touch ends.
+     */
+    fun isUserTouching(): Boolean {
+        if (userIsTouching) return true
+        
+        // Check grace period after touch ended
+        val timeSinceTouchEnd = System.currentTimeMillis() - touchEndTimestamp
+        if (timeSinceTouchEnd < TOUCH_GRACE_PERIOD_MS) {
+            return true
+        }
+        
+        return false
+    }
+    
+    /**
+     * Check if a gesture is in progress.
+     */
+    fun isGestureInProgress(): Boolean = gestureInProgress
 
     /**
      * Process an AccessibilityEvent and extract relevant data for recording.
@@ -75,7 +188,46 @@ object EventCapture {
 
         // Handle scroll debouncing - only record when gesture is complete
         if (eventType == EVENT_SCROLL) {
+            // Flush any pending text input before processing scroll
+            val pendingText = flushPendingTextInput()
+            if (pendingText != null) {
+                // In this case, we want to record the text first
+                // The scroll will be captured on the next call
+                Log.d(TAG, "Flushed pending text before scroll")
+                RecordingManager.addEvent(pendingText)
+            }
             return captureScrollEvent(event)
+        }
+        
+        // For tap events, flush any pending text input first
+        // Also check if this tap follows a recent focus on same element (suppress the tap's implicit focus)
+        if (eventType == EVENT_TAP || eventType == EVENT_LONG_TAP) {
+            // Mark this as user interaction - update touch timestamp
+            lastUserTouchTimestamp = System.currentTimeMillis()
+            rapidScrollCounter = 0 // Reset rapid scroll counter on user touch
+            
+            val pendingText = flushPendingTextInput()
+            if (pendingText != null) {
+                Log.d(TAG, "Flushed pending text before tap")
+                RecordingManager.addEvent(pendingText)
+            }
+        }
+        
+        // Handle focus events with suppression logic
+        // Skip focus events that are likely to be followed by tap/text on same element
+        if (eventType == EVENT_FOCUS) {
+            val node = event.source
+            val resourceId = node?.viewIdResourceName ?: ""
+            node?.recycle()
+            
+            // Track this focus event
+            lastFocusResourceId = resourceId
+            lastFocusTimestamp = System.currentTimeMillis()
+            
+            // Skip focus events - they add noise without value
+            // The actual action (tap, text input) will be recorded anyway
+            Log.d(TAG, "Skipping focus event (resource: ${resourceId.takeLast(30)})")
+            return null
         }
 
         // Get the source node - may be null for some events
@@ -109,9 +261,36 @@ object EventCapture {
                 }
 
                 // Detect text operations for text change events
+                // TEXT_INPUT events are debounced - update pending text and return null
                 if (eventType == EVENT_TEXT_INPUT) {
                     val beforeText = event.beforeText?.toString() ?: ""
-                    val currentText = getTextFromEvent(event)
+                    
+                    // CRITICAL: Get text from NODE (full field content), not from event (only fragment)
+                    // node.text contains the complete current text in the input field
+                    val currentText = node.text?.toString() ?: getTextFromEvent(event)
+                    
+                    Log.d(TAG, "Text change detected: before='${beforeText.take(20)}' current='${currentText.take(20)}' added=${event.addedCount} removed=${event.removedCount}")
+                    
+                    // ========== INLINE TIMEOUT CHECK ==========
+                    // Check if there's pending text that's older than debounce timeout
+                    // If so, flush it BEFORE updating with new text
+                    // This ensures text is eventually recorded even without tap/scroll trigger
+                    val currentResourceId = elementData.resourceId
+                    if (pendingTextValue.isNotEmpty() && pendingTextTimestamp > 0) {
+                        val elapsed = System.currentTimeMillis() - pendingTextTimestamp
+                        val isDifferentField = currentResourceId != pendingTextResourceId
+                        
+                        if (elapsed >= TEXT_DEBOUNCE_TIMEOUT_MS || isDifferentField) {
+                            // Flush the old pending text
+                            val flushedEvent = flushPendingTextInput()
+                            if (flushedEvent != null) {
+                                Log.d(TAG, "✓ Auto-flushed pending text after ${elapsed}ms (different field: $isDifferentField)")
+                                RecordingManager.addEvent(flushedEvent)
+                            }
+                        }
+                    }
+                    // ========== END INLINE TIMEOUT CHECK ==========
+                    
                     val textOp = gestureDetector.processTextChange(
                         beforeText,
                         currentText,
@@ -119,19 +298,27 @@ object EventCapture {
                         event.removedCount
                     )
 
-                    // If it's a deletion, change event type
+                    // If it's a deletion, we still debounce but with special handling
                     if (textOp == TextOperationType.DELETE) {
-                        eventType = EVENT_TEXT_DELETE
-                        actionData = (actionData ?: mutableMapOf()).toMutableMap().apply {
-                            put("operation_type", "delete")
-                            put("is_backspace", event.removedCount == 1)
-                            put("deleted_text", beforeText.substring(
-                                event.fromIndex,
-                                minOf(event.fromIndex + event.removedCount, beforeText.length)
-                            ))
-                        }
-                        Log.d(TAG, "✓ Detected text deletion: ${event.removedCount} chars")
+                        Log.d(TAG, "✓ Detected text deletion: ${event.removedCount} chars (debounced)")
                     }
+                    
+                    // Update pending text and return null (debouncing)
+                    // The text will be emitted when user taps, scrolls, or timeout occurs
+                    updatePendingTextInput(
+                        event = event,
+                        node = node,
+                        text = currentText,
+                        resourceId = elementData.resourceId,
+                        packageName = event.packageName?.toString() ?: "",
+                        className = event.className?.toString() ?: "",
+                        bounds = elementData.bounds,
+                        centerX = elementData.centerX,
+                        centerY = elementData.centerY
+                    )
+                    
+                    // Return null to indicate debouncing - event will be recorded later
+                    return null
                 }
 
                 // Create the recorded event with full data
@@ -196,28 +383,227 @@ object EventCapture {
      * @param event The scroll AccessibilityEvent
      * @return RecordedEvent if scroll gesture is complete, null if still accumulating
      */
+    // Track previous scroll position for direction detection
+    private var lastScrollY: Int = -1
+    private var lastScrollX: Int = -1
+    
+    // ========== TEXT INPUT DEBOUNCING ==========
+    // Text input debounce timeout (700ms - wait for user to finish typing)
+    private const val TEXT_DEBOUNCE_TIMEOUT_MS = 700L
+    
+    // Track pending text input for debouncing
+    private var pendingTextEvent: AccessibilityEvent? = null
+    private var pendingTextValue: String = ""
+    private var pendingTextResourceId: String = ""
+    private var pendingTextTimestamp: Long = 0
+    private var pendingTextNode: AccessibilityNodeInfo? = null
+    private var pendingTextPackage: String = ""
+    private var pendingTextClassName: String = ""
+    private var pendingTextBounds: String = ""
+    private var pendingTextCenterX: Int? = null
+    private var pendingTextCenterY: Int? = null
+    
+    /**
+     * Check if there's pending text input that should be flushed.
+     * Call this when a non-text event occurs (tap, scroll) or periodically.
+     */
+    fun checkPendingTextInput(): RecordedEvent? {
+        if (pendingTextValue.isEmpty()) return null
+        
+        val elapsed = System.currentTimeMillis() - pendingTextTimestamp
+        if (elapsed >= TEXT_DEBOUNCE_TIMEOUT_MS) {
+            return flushPendingTextInput()
+        }
+        return null
+    }
+    
+    /**
+     * Force flush any pending text input.
+     * Call when recording stops or when focus changes.
+     */
+    fun flushPendingTextInput(): RecordedEvent? {
+        if (pendingTextValue.isEmpty()) return null
+        
+        Log.d(TAG, "✓ Flushing pending text input: '${pendingTextValue.take(20)}...'")
+        
+        val recordedEvent = RecordedEvent(
+            eventType = EVENT_TEXT_INPUT,
+            timestamp = pendingTextTimestamp,
+            packageName = pendingTextPackage,
+            className = pendingTextClassName,
+            resourceId = pendingTextResourceId,
+            contentDescription = "",
+            text = pendingTextValue,
+            bounds = pendingTextBounds,
+            isClickable = false,
+            isEditable = true,
+            isScrollable = false,
+            actionData = mapOf(
+                "text" to pendingTextValue,
+                "input_type" to "keyboard"
+            ),
+            x = pendingTextCenterX,
+            y = pendingTextCenterY,
+            nodeIndex = null
+        )
+        
+        // Clear pending state
+        pendingTextValue = ""
+        pendingTextResourceId = ""
+        pendingTextTimestamp = 0
+        try { pendingTextNode?.recycle() } catch (_: Exception) {}
+        pendingTextNode = null
+        pendingTextPackage = ""
+        pendingTextClassName = ""
+        pendingTextBounds = ""
+        pendingTextCenterX = null
+        pendingTextCenterY = null
+        
+        return recordedEvent
+    }
+    
+    /**
+     * Update pending text input (called for each TEXT_CHANGED event).
+     * Returns null to indicate the event is being debounced.
+     */
+    private fun updatePendingTextInput(
+        event: AccessibilityEvent,
+        node: AccessibilityNodeInfo?,
+        text: String,
+        resourceId: String,
+        packageName: String,
+        className: String,
+        bounds: String,
+        centerX: Int?,
+        centerY: Int?
+    ) {
+        pendingTextValue = text
+        pendingTextResourceId = resourceId
+        pendingTextTimestamp = System.currentTimeMillis()
+        pendingTextPackage = packageName
+        pendingTextClassName = className
+        pendingTextBounds = bounds
+        pendingTextCenterX = centerX
+        pendingTextCenterY = centerY
+        
+        // Keep reference to node (recycle old one first)
+        try { pendingTextNode?.recycle() } catch (_: Exception) {}
+        pendingTextNode = node?.let { 
+            try { AccessibilityNodeInfo.obtain(it) } catch (_: Exception) { null }
+        }
+        
+        Log.d(TAG, "Text debounced: '${text.take(20)}...' (waiting for more input)")
+    }
+    
     private fun captureScrollEvent(event: AccessibilityEvent): RecordedEvent? {
         val packageName = event.packageName?.toString() ?: ""
         val className = event.className?.toString() ?: ""
+        val currentTime = System.currentTimeMillis()
 
-        // Extract scroll data
-        val deltaX = if (event.maxScrollX > 0) event.scrollDeltaX else 0
-        val deltaY = if (event.maxScrollY > 0) event.scrollDeltaY else 0
-
-        // Determine direction
-        val direction = when {
-            deltaY > 0 -> "down"
-            deltaY < 0 -> "up"
-            deltaX > 0 -> "right"
-            deltaX < 0 -> "left"
-            else -> "unknown"
+        // ========== HYBRID USER-INITIATED SCROLL DETECTION ==========
+        // Uses Touch Exploration Mode if available, falls back to timing heuristics
+        
+        // Check if we have touch exploration data (touchStartTimestamp > 0 means we've received touch events)
+        val hasTouchExplorationData = touchStartTimestamp > 0 || touchEndTimestamp > 0
+        
+        if (hasTouchExplorationData) {
+            // PRIMARY: Use Touch Exploration Mode (most accurate)
+            if (!isUserTouching()) {
+                Log.d(TAG, "Ignoring scroll: user NOT touching (Touch Exploration Mode)")
+                return null
+            }
+            Log.d(TAG, "✓ Scroll allowed: user IS touching (Touch Exploration Mode)")
+        } else {
+            // FALLBACK: Use timing-based heuristics
+            // This handles devices/apps where Touch Exploration events aren't available
+            
+            // Check 1: Time since last tap/click (which updates lastUserTouchTimestamp)
+            val timeSinceUserTouch = currentTime - lastUserTouchTimestamp
+            if (timeSinceUserTouch > USER_TOUCH_TIMEOUT_MS && lastUserTouchTimestamp > 0) {
+                Log.d(TAG, "Ignoring scroll: no recent user touch (${timeSinceUserTouch}ms ago, fallback mode)")
+                return null
+            }
+            
+            // Check 2: Rapid consecutive scrolls (likely animation)
+            val timeSinceLastScroll = currentTime - lastScrollTimestamp
+            if (timeSinceLastScroll < MIN_USER_SCROLL_INTERVAL_MS && lastScrollTimestamp > 0) {
+                rapidScrollCounter++
+                if (rapidScrollCounter > MAX_RAPID_SCROLLS_ALLOWED) {
+                    Log.d(TAG, "Ignoring rapid scroll: ${rapidScrollCounter} consecutive (likely animation)")
+                    lastScrollTimestamp = currentTime
+                    return null
+                }
+            } else {
+                rapidScrollCounter = 0
+            }
+            lastScrollTimestamp = currentTime
         }
+        
+        // SECONDARY: Activity change detection - skip scroll during screen transitions
+        if (className != lastActivityClassName && lastActivityClassName.isNotEmpty()) {
+            lastActivityClassName = className
+            Log.d(TAG, "Ignoring scroll: activity changed to $className (likely navigation)")
+            return null
+        }
+        lastActivityClassName = className
+        
+        // ========== END USER-INITIATED DETECTION ==========
+
+        // Extract scroll data - read deltas directly (don't depend on maxScroll check)
+        var deltaX = event.scrollDeltaX
+        var deltaY = event.scrollDeltaY
+        
+        val currentScrollY = event.scrollY
+        val currentScrollX = event.scrollX
+
+        // Determine direction - note: deltaY > 0 means finger swiped UP (content scrolled down)
+        // But user intent is "scroll up" so we use UP direction
+        
+        // Check minimum scroll threshold - ignore micro-scrolls
+        val absDeltaY = kotlin.math.abs(deltaY)
+        val absDeltaX = kotlin.math.abs(deltaX)
+        if (absDeltaY < MIN_SCROLL_DELTA_THRESHOLD && absDeltaX < MIN_SCROLL_DELTA_THRESHOLD) {
+            // Also check position-based delta
+            val positionDeltaY = kotlin.math.abs(currentScrollY - lastScrollY)
+            val positionDeltaX = kotlin.math.abs(currentScrollX - lastScrollX)
+            if (positionDeltaY < MIN_SCROLL_DELTA_THRESHOLD && positionDeltaX < MIN_SCROLL_DELTA_THRESHOLD) {
+                Log.d(TAG, "Ignoring micro-scroll: deltaY=$deltaY, deltaX=$deltaX (threshold=$MIN_SCROLL_DELTA_THRESHOLD)")
+                return null
+            }
+        }
+        
+        val direction: String
+        when {
+            deltaY > 0 -> direction = "up"   // Finger swiped up = scroll up
+            deltaY < 0 -> direction = "down" // Finger swiped down = scroll down
+            deltaX > 0 -> direction = "left" // Finger swiped left = scroll left
+            deltaX < 0 -> direction = "right" // Finger swiped right = scroll right
+            // If no delta provided, use scroll position comparison
+            lastScrollY >= 0 && currentScrollY != lastScrollY -> {
+                direction = if (currentScrollY > lastScrollY) "up" else "down"
+                deltaY = if (currentScrollY > lastScrollY) 100 else -100
+                Log.d(TAG, "Direction detected from position: lastY=$lastScrollY currentY=$currentScrollY -> $direction")
+            }
+            lastScrollX >= 0 && currentScrollX != lastScrollX -> {
+                direction = if (currentScrollX > lastScrollX) "left" else "right"
+                deltaX = if (currentScrollX > lastScrollX) 100 else -100
+            }
+            else -> {
+                // No delta and no position change - this is NOT a real scroll, ignore it
+                Log.d(TAG, "Ignoring scroll event: no delta and no position change (deltaY=$deltaY, deltaX=$deltaX, scrollY=$currentScrollY)")
+                return null
+            }
+        }
+        
+        // Update last scroll position
+        lastScrollY = currentScrollY
+        lastScrollX = currentScrollX
 
         // Process with debouncing
         val scrollResult = gestureDetector.processScrollEvent(
             direction = direction,
             deltaX = deltaX,
-            deltaY = deltaY,
+            deltaY = if (deltaY == 0) 100 else deltaY, // Ensure non-zero for debounce logic
             packageName = packageName,
             className = className
         )
@@ -243,10 +629,19 @@ object EventCapture {
                 event.maxScrollY
             )
 
+            // Get direction-specific event type for distinct Loop detection on FE
+            val scrollEventType = when (scrollResult.direction) {
+                "up" -> EVENT_SCROLL_UP
+                "down" -> EVENT_SCROLL_DOWN
+                "left" -> EVENT_SCROLL_LEFT
+                "right" -> EVENT_SCROLL_RIGHT
+                else -> EVENT_SCROLL
+            }
+
             if (node != null) {
                 val elementData = extractElementData(node)
                 RecordedEvent(
-                    eventType = EVENT_SCROLL,
+                    eventType = scrollEventType,
                     timestamp = System.currentTimeMillis(),
                     packageName = packageName,
                     className = className,
@@ -264,7 +659,7 @@ object EventCapture {
                 )
             } else {
                 RecordedEvent(
-                    eventType = EVENT_SCROLL,
+                    eventType = scrollEventType,
                     timestamp = System.currentTimeMillis(),
                     packageName = packageName,
                     className = className,
@@ -364,8 +759,17 @@ object EventCapture {
             0, 0, 0, 0
         )
 
+        // Direction-specific event type
+        val scrollEventType = when (scrollResult.direction) {
+            "up" -> EVENT_SCROLL_UP
+            "down" -> EVENT_SCROLL_DOWN
+            "left" -> EVENT_SCROLL_LEFT
+            "right" -> EVENT_SCROLL_RIGHT
+            else -> EVENT_SCROLL
+        }
+
         return RecordedEvent(
-            eventType = EVENT_SCROLL,
+            eventType = scrollEventType,
             timestamp = System.currentTimeMillis(),
             packageName = packageName,
             className = className,
@@ -400,8 +804,17 @@ object EventCapture {
             0, 0, 0, 0
         )
 
+        // Direction-specific event type
+        val scrollEventType = when (scrollResult.direction) {
+            "up" -> EVENT_SCROLL_UP
+            "down" -> EVENT_SCROLL_DOWN
+            "left" -> EVENT_SCROLL_LEFT
+            "right" -> EVENT_SCROLL_RIGHT
+            else -> EVENT_SCROLL
+        }
+
         return RecordedEvent(
-            eventType = EVENT_SCROLL,
+            eventType = scrollEventType,
             timestamp = System.currentTimeMillis(),
             packageName = packageName,
             className = className,
@@ -529,12 +942,12 @@ object EventCapture {
                 val deltaX = if (event.maxScrollX > 0) event.scrollDeltaX else 0
                 val deltaY = if (event.maxScrollY > 0) event.scrollDeltaY else 0
 
-                // Determine scroll direction
+                // Determine scroll direction - note: deltaY > 0 means finger swiped UP
                 val direction = when {
-                    deltaY > 0 -> "down"
-                    deltaY < 0 -> "up"
-                    deltaX > 0 -> "right"
-                    deltaX < 0 -> "left"
+                    deltaY > 0 -> "up"   // Finger swiped up = scroll up
+                    deltaY < 0 -> "down" // Finger swiped down = scroll down
+                    deltaX > 0 -> "left"
+                    deltaX < 0 -> "right"
                     else -> "unknown"
                 }
 
@@ -696,7 +1109,22 @@ object EventCapture {
      */
     fun resetGestureDetector() {
         gestureDetector.reset()
-        Log.d(TAG, "Gesture detector reset")
+        lastScrollY = -1
+        lastScrollX = -1
+        
+        // Reset Touch Exploration Mode state
+        userIsTouching = false
+        gestureInProgress = false
+        touchStartTimestamp = 0L
+        touchEndTimestamp = 0L
+        
+        // Reset legacy fallback tracking
+        lastUserTouchTimestamp = 0L
+        lastScrollTimestamp = 0L
+        lastActivityClassName = ""
+        rapidScrollCounter = 0
+        
+        Log.d(TAG, "Gesture detector and Touch Exploration state reset")
     }
 }
 

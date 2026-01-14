@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AppLayout from '../../Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useToast } from '@/Components/Layout/ToastProvider';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
 
 export default function AiCreditsIndex({ packages = [], currentCredits = 0, walletBalance = 0 }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const { addToast } = useToast();
     const { showConfirm } = useConfirm();
@@ -14,16 +16,16 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
 
     const handlePurchase = async (pkg) => {
         if (walletBalance < pkg.price) {
-            addToast('Insufficient balance. Please top up.', 'warning');
+            addToast(t('ai_credits.insufficient_balance'), 'warning');
             return;
         }
 
         const confirmed = await showConfirm({
-            title: 'Confirm Purchase',
-            message: `Buy ${pkg.credits} AI credits for ${pkg.formatted_price}?`,
+            title: t('ai_credits.confirm_purchase'),
+            message: t('ai_credits.confirm_purchase_message', { credits: pkg.credits, price: pkg.formatted_price }),
             type: 'info',
-            confirmText: 'Buy Now',
-            cancelText: 'Cancel',
+            confirmText: t('ai_credits.buy_now'),
+            cancelText: t('common.cancel'),
         });
 
         if (!confirmed) return;
@@ -45,29 +47,29 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
     }).format(amount);
 
     return (
-        <AppLayout title="AI Credits">
+        <AppLayout title={t('ai_credits.title')}>
             <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
                 <div className="max-w-[1000px] mx-auto px-6 py-6">
                     {/* Header */}
                     <div className="mb-8">
                         <h1 className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            AI Credits
+                            {t('ai_credits.title')}
                         </h1>
                         <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                            Purchase credits for AI image and video generation
+                            {t('ai_credits.description')}
                         </p>
                     </div>
 
                     {/* Balance Cards */}
                     <div className="grid grid-cols-2 gap-4 mb-8">
                         <div className={`p-5 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
-                            <p className={`text-xs font-medium ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>AI Credits</p>
+                            <p className={`text-xs font-medium ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('ai_credits.title')}</p>
                             <p className={`text-3xl font-semibold mt-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 {formatNumber(currentCredits)}
                             </p>
                         </div>
                         <div className={`p-5 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
-                            <p className={`text-xs font-medium ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Wallet Balance</p>
+                            <p className={`text-xs font-medium ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('dashboard.stats.wallet_balance')}</p>
                             <p className={`text-3xl font-semibold mt-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 {formatCurrency(walletBalance)}
                             </p>
@@ -75,28 +77,28 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
                                 href="/topup"
                                 className={`text-sm mt-2 inline-block ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
                             >
-                                Top up →
+                                {t('topup.title')} →
                             </Link>
                         </div>
                     </div>
 
                     {/* Packages */}
                     <h2 className={`text-sm font-medium uppercase tracking-wider mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        Credit Packages
+                        {t('ai_credits.packages')}
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                         {packages.map((pkg) => (
                             <div
                                 key={pkg.id}
                                 className={`p-5 rounded-xl transition-all ${pkg.is_featured
-                                        ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
-                                        : isDark ? 'bg-[#1a1a1a] hover:bg-[#222]' : 'bg-white border border-gray-200 hover:border-gray-300'
+                                    ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
+                                    : isDark ? 'bg-[#1a1a1a] hover:bg-[#222]' : 'bg-white border border-gray-200 hover:border-gray-300'
                                     }`}
                             >
                                 {pkg.badge && (
                                     <span className={`text-xs font-medium px-2 py-0.5 rounded mb-2 inline-block ${pkg.is_featured
-                                            ? isDark ? 'bg-black/10' : 'bg-white/20'
-                                            : isDark ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-50 text-purple-600'
+                                        ? isDark ? 'bg-black/10' : 'bg-white/20'
+                                        : isDark ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-50 text-purple-600'
                                         }`}>
                                         {pkg.badge}
                                     </span>
@@ -128,7 +130,7 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
 
                                 {pkg.discount_percent && (
                                     <p className={`text-sm mb-3 ${pkg.is_featured ? (isDark ? 'text-black/60' : 'text-white/60') : isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                                        Save {pkg.discount_percent}%
+                                        {t('packages.save_percent', { percent: pkg.discount_percent })}
                                     </p>
                                 )}
 
@@ -136,11 +138,11 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
                                     onClick={() => handlePurchase(pkg)}
                                     disabled={processing}
                                     className={`w-full py-2.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 ${pkg.is_featured
-                                            ? isDark ? 'bg-black text-white hover:bg-gray-900' : 'bg-white text-gray-900 hover:bg-gray-100'
-                                            : isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'
+                                        ? isDark ? 'bg-black text-white hover:bg-gray-900' : 'bg-white text-gray-900 hover:bg-gray-100'
+                                        : isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'
                                         }`}
                                 >
-                                    {processing ? 'Processing...' : 'Buy Now'}
+                                    {processing ? t('packages.processing') : t('ai_credits.buy_now')}
                                 </button>
                             </div>
                         ))}
@@ -149,7 +151,7 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
                     {/* Usage Info */}
                     <div className={`p-5 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
                         <h3 className={`text-sm font-medium uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Credit Usage
+                            {t('ai_credits.credit_usage')}
                         </h3>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="flex items-center gap-3">
@@ -159,8 +161,8 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
                                     </svg>
                                 </div>
                                 <div>
-                                    <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Image Generation</p>
-                                    <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>1 credit per image</p>
+                                    <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('ai_studio.image_generation')}</p>
+                                    <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('ai_credits.cost_per_image')}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
@@ -170,8 +172,8 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
                                     </svg>
                                 </div>
                                 <div>
-                                    <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Video Generation</p>
-                                    <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>5 credits per video</p>
+                                    <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('ai_studio.video_generation')}</p>
+                                    <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('ai_credits.cost_per_video')}</p>
                                 </div>
                             </div>
                         </div>

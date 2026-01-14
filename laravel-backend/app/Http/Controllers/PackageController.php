@@ -23,9 +23,10 @@ class PackageController extends Controller
             ->get()
             ->map(fn($pkg) => $this->formatPackage($pkg));
 
-        // Lấy gói của user đang sử dụng
+        // Lấy gói của user đang sử dụng (CHỈ lấy những gói service package thực sự, bỏ qua topup records)
         $myPackages = UserServicePackage::with('servicePackage')
             ->where('user_id', $user->id)
+            ->whereNotNull('service_package_id') // Exclude topup records
             ->whereIn('status', ['active', 'pending', 'expired'])
             ->orderByDesc('created_at')
             ->get()
@@ -161,11 +162,7 @@ class PackageController extends Controller
      */
     public function manage(UserServicePackage $userPackage)
     {
-        $user = Auth::user();
-
-        if ($userPackage->user_id !== $user->id) {
-            abort(403);
-        }
+        $this->authorize('view', $userPackage);
 
         return Inertia::render('Packages/Manage', [
             'userPackage' => $this->formatUserPackage($userPackage),
@@ -177,11 +174,7 @@ class PackageController extends Controller
      */
     public function cancel(Request $request, UserServicePackage $userPackage)
     {
-        $user = Auth::user();
-
-        if ($userPackage->user_id !== $user->id) {
-            abort(403);
-        }
+        $this->authorize('cancel', $userPackage);
 
         $userPackage->update([
             'status' => 'cancelled',
@@ -198,11 +191,9 @@ class PackageController extends Controller
      */
     public function payment(UserServicePackage $userPackage)
     {
-        $user = Auth::user();
+        $this->authorize('view', $userPackage);
 
-        if ($userPackage->user_id !== $user->id) {
-            abort(403);
-        }
+        $user = Auth::user();
 
         // Get user's main wallet
         $wallet = $user->wallets()->where('currency', 'VND')->first();
@@ -289,17 +280,21 @@ class PackageController extends Controller
      */
     private function calculateUserStats($user): array
     {
-        $activePackages = UserServicePackage::where('user_id', $user->id)
+        // Base query - only real service packages (exclude topup records)
+        $baseQuery = fn() => UserServicePackage::where('user_id', $user->id)
+            ->whereNotNull('service_package_id');
+
+        $activePackages = (clone $baseQuery)()
             ->where('status', 'active')
             ->count();
 
-        $remainingCredits = UserServicePackage::where('user_id', $user->id)
+        $remainingCredits = (clone $baseQuery)()
             ->where('status', 'active')
             ->sum('credits_remaining');
 
         // Tính tổng thiết bị được phép từ các gói active
-        $maxDevices = UserServicePackage::with('servicePackage')
-            ->where('user_id', $user->id)
+        $maxDevices = (clone $baseQuery)()
+            ->with('servicePackage')
             ->where('status', 'active')
             ->get()
             ->sum(fn($pkg) => $pkg->servicePackage?->max_devices ?? 0);
@@ -308,7 +303,7 @@ class PackageController extends Controller
         $usedDevices = $user->devices?->count() ?? 0;
 
         // Tính số ngày còn lại của gói gần hết hạn nhất
-        $nearestExpiry = UserServicePackage::where('user_id', $user->id)
+        $nearestExpiry = (clone $baseQuery)()
             ->where('status', 'active')
             ->whereNotNull('expires_at')
             ->orderBy('expires_at')

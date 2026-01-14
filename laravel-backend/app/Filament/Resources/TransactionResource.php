@@ -360,6 +360,42 @@ class TransactionResource extends Resource
                         $amountFormatted = number_format($record->final_amount, 0, ',', '.');
                         $newBalanceFormatted = number_format($wallet->balance, 0, ',', '.');
 
+                        // Send notification to user
+                        $user = $record->user;
+                        if ($user) {
+                            $notificationTitle = $record->type === Transaction::TYPE_DEPOSIT
+                                ? '💰 Nạp tiền thành công!'
+                                : '✅ Rút tiền thành công!';
+                            $notificationMessage = $record->type === Transaction::TYPE_DEPOSIT
+                                ? "Đã cộng {$amountFormatted} ₫ vào ví. Số dư mới: {$newBalanceFormatted} ₫"
+                                : "Đã xử lý yêu cầu rút {$amountFormatted} ₫. Số dư còn lại: {$newBalanceFormatted} ₫";
+
+                            // Use NotificationService for consistent data source (system_notifications table)
+                            app(\App\Services\NotificationService::class)->sendToUser(
+                                $user,
+                                $notificationTitle,
+                                $notificationMessage,
+                                'success',
+                                [
+                                    'transaction_id' => $record->id,
+                                    'transaction_code' => $record->transaction_code,
+                                    'amount' => $record->final_amount,
+                                    'new_balance' => $wallet->balance,
+                                ],
+                                '/topup/history',
+                                'Xem lịch sử'
+                            );
+
+                            // Broadcast wallet update for real-time UI update
+                            event(new \App\Events\WalletUpdated(
+                                $user->id,
+                                $wallet->balance,
+                                $previousBalance,
+                                $record->type,
+                                $notificationMessage
+                            ));
+                        }
+
                         Notification::make()
                             ->success()
                             ->title('✅ Duyệt giao dịch thành công!')

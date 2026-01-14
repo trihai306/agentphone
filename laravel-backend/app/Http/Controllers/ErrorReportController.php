@@ -97,10 +97,7 @@ class ErrorReportController extends Controller
      */
     public function show(Request $request, ErrorReport $errorReport): Response
     {
-        // Ensure user can only view their own reports
-        if ($errorReport->user_id !== $request->user()->id) {
-            abort(403);
-        }
+        $this->authorize('view', $errorReport);
 
         $errorReport->load(['responses.user', 'assignedAdmin']);
 
@@ -117,10 +114,7 @@ class ErrorReportController extends Controller
      */
     public function addResponse(Request $request, ErrorReport $errorReport)
     {
-        // Ensure user can only respond to their own reports
-        if ($errorReport->user_id !== $request->user()->id) {
-            abort(403);
-        }
+        $this->authorize('respond', $errorReport);
 
         $validated = $request->validate([
             'message' => 'required|string|min:1',

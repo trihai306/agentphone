@@ -63,15 +63,15 @@ class DataRecordController extends Controller
     /**
      * Update the specified record
      */
-    public function update(Request $request, DataRecord $record)
+    public function update(Request $request, DataCollection $dataCollection, $record)
     {
-        $this->authorize('update', $record->collection);
+        $this->authorize('update', $dataCollection);
 
-        $collection = $record->collection;
+        $dataRecord = $dataCollection->records()->findOrFail($record);
 
         // Validate against schema
         $rules = [];
-        foreach ($collection->schema as $field) {
+        foreach ($dataCollection->schema as $field) {
             $fieldName = "data.{$field['name']}";
             $fieldRules = [];
 
@@ -106,7 +106,7 @@ class DataRecordController extends Controller
 
         $validated = $request->validate($rules);
 
-        $record->update([
+        $dataRecord->update([
             'data' => $validated['data'],
         ]);
 
@@ -116,11 +116,12 @@ class DataRecordController extends Controller
     /**
      * Remove the specified record
      */
-    public function destroy(DataRecord $record)
+    public function destroy(DataCollection $dataCollection, $record)
     {
-        $this->authorize('update', $record->collection);
+        $this->authorize('update', $dataCollection);
 
-        $record->delete();
+        $dataRecord = $dataCollection->records()->findOrFail($record);
+        $dataRecord->delete();
 
         return back()->with('success', 'Record deleted successfully!');
     }
