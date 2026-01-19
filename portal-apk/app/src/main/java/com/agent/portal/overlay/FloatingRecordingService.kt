@@ -15,6 +15,9 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
@@ -24,7 +27,9 @@ import android.view.View
 import android.view.WindowManager
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.LinearInterpolator
+import android.view.animation.OvershootInterpolator
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
@@ -35,8 +40,15 @@ import com.agent.portal.recording.WorkflowManager
 import java.util.Locale
 
 /**
- * Floating bubble service that shows recording status and event count.
- * The bubble can be dragged around and tapped to stop recording.
+ * Smart Pill Floating Recording Service v2
+ * 
+ * Features:
+ * - Minimized dot state (just pulsing red dot)
+ * - Expanded pill state (full controls)
+ * - Auto-collapse after inactivity
+ * - Double-tap to stop
+ * - Smooth edge snapping
+ * - Modern glassmorphic design
  */
 class FloatingRecordingService : Service() {
 
@@ -45,6 +57,10 @@ class FloatingRecordingService : Service() {
         private const val NOTIFICATION_ID = 2002
         private const val CHANNEL_ID = "recording_bubble_channel"
         private const val UPDATE_INTERVAL_MS = 300L
+        
+        // Auto-collapse timers
+        private const val COLLAPSE_TO_MINI_MS = 5000L  // 5 seconds
+        private const val COLLAPSE_TO_DOT_MS = 10000L // 10 seconds total
 
         const val ACTION_SHOW = "com.agent.portal.SHOW_RECORDING_BUBBLE"
         const val ACTION_HIDE = "com.agent.portal.HIDE_RECORDING_BUBBLE"
@@ -59,13 +75,30 @@ class FloatingRecordingService : Service() {
         fun isRunning(): Boolean = instance != null
     }
 
+    // Bubble states
+    enum class BubbleState {
+        EXPANDED,   // Full pill with all controls
+        MINIMIZED   // Just the recording dot
+    }
+
+    private var currentState = BubbleState.EXPANDED
     private var windowManager: WindowManager? = null
     private var bubbleView: View? = null
     private var isBubbleAdded = false
 
+    // View references
+    private var minimizedContainer: View? = null
+    private var expandedContainer: View? = null
+    private var tvEventCount: TextView? = null
+    private var tvDuration: TextView? = null
+    private var btnPause: View? = null
+    private var btnStop: View? = null
+    private var ivPause: ImageView? = null
+
     private val handler = Handler(Looper.getMainLooper())
     private var pulseAnimator: AnimatorSet? = null
     private var recordingStartTime: Long = 0L
+    private var lastInteractionTime: Long = 0L
 
     // For dragging
     private var initialX = 0
@@ -73,7 +106,10 @@ class FloatingRecordingService : Service() {
     private var initialTouchX = 0f
     private var initialTouchY = 0f
     private var isDragging = false
-    private var lastClickTime = 0L
+    
+    // For double-tap detection
+    private var lastTapTime = 0L
+    private val DOUBLE_TAP_THRESHOLD_MS = 300L
 
     // For snap-to-edge animation
     private var screenWidth = 0
@@ -90,11 +126,17 @@ class FloatingRecordingService : Service() {
             }
         }
     }
+    
+    private val autoCollapseRunnable = Runnable {
+        if (currentState == BubbleState.EXPANDED) {
+            collapseToMinimized()
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
         instance = this
-        Log.i(TAG, "FloatingRecordingService created")
+        Log.i(TAG, "FloatingRecordingService created (v2 Smart Pill)")
 
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         createNotificationChannel()
@@ -129,6 +171,7 @@ class FloatingRecordingService : Service() {
         super.onDestroy()
         hideBubble()
         handler.removeCallbacks(updateRunnable)
+        handler.removeCallbacks(autoCollapseRunnable)
         pulseAnimator?.cancel()
         instance = null
         Log.i(TAG, "FloatingRecordingService destroyed")
@@ -173,17 +216,6 @@ class FloatingRecordingService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Quick Actions action
-        val quickActionsIntent = Intent(this, FloatingRecordingService::class.java).apply {
-            action = ACTION_QUICK_ACTIONS
-        }
-        val quickActionsPendingIntent = PendingIntent.getService(
-            this,
-            2,
-            quickActionsIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
         // Open app action
         val openIntent = Intent(this, MainActivity::class.java)
         val openPendingIntent = PendingIntent.getActivity(
@@ -193,12 +225,10 @@ class FloatingRecordingService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Determine pause/resume label
         val isPaused = RecordingManager.getState() == RecordingManager.RecordingState.PAUSED
         val pauseLabel = if (isPaused) "Resume" else "Pause"
         val pauseIcon = if (isPaused) R.drawable.ic_play else R.drawable.ic_pause
 
-        // Build notification with expanded actions
         val eventCount = RecordingManager.getEventCount()
         val duration = formatDuration(System.currentTimeMillis() - recordingStartTime)
         val statusText = if (isPaused) "Paused • $eventCount events" else "$eventCount events • $duration"
@@ -211,11 +241,8 @@ class FloatingRecordingService : Service() {
             .setContentIntent(openPendingIntent)
             .addAction(pauseIcon, pauseLabel, pausePendingIntent)
             .addAction(R.drawable.ic_stop_circle, "Stop", stopPendingIntent)
-            .addAction(R.drawable.ic_grid_actions, "Actions", quickActionsPendingIntent)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
-            .setStyle(NotificationCompat.BigTextStyle()
-                .bigText("$statusText\nTap to open app • Swipe for more actions"))
             .build()
     }
 
@@ -234,40 +261,43 @@ class FloatingRecordingService : Service() {
             // Start foreground service
             startForeground(NOTIFICATION_ID, createNotification())
 
-            // Get screen dimensions for initial position
+            // Get screen dimensions
             val displayMetrics = resources.displayMetrics
             screenWidth = displayMetrics.widthPixels
             screenHeight = displayMetrics.heightPixels
 
-            // Create bubble view with themed context
-            // Services don't inherit app theme, so we need to wrap the context with the app theme
+            // Create bubble view with v2 layout
             val themedContext = android.view.ContextThemeWrapper(this, R.style.Theme_AgentPortal)
             val inflater = themedContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
             bubbleView = inflater.inflate(R.layout.layout_recording_bubble, null)
 
-            // Setup layout params - position at bottom-right corner
+            // Cache view references
+            cacheViewReferences()
+
+            // Setup layout params - position at right side
             val params = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                     WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
                 else
+                    @Suppress("DEPRECATION")
                     WindowManager.LayoutParams.TYPE_PHONE,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                         WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 PixelFormat.TRANSLUCENT
             ).apply {
                 gravity = Gravity.TOP or Gravity.START
-                // Position at bottom-right corner
-                x = screenWidth - dpToPx(280)  // Bubble width + margin
-                y = screenHeight - dpToPx(180) // From bottom
+                // Position at right side, middle of screen
+                x = screenWidth - dpToPx(240)
+                y = screenHeight / 3
             }
 
-            // Setup touch listener for drag and click
+            // Setup drag touch listener (with button detection to not block clicks)
             setupTouchListener(params)
-
-            // Setup stop button click listener (for new layout)
-            setupStopButton()
+            
+            // Setup button click listeners
+            setupButtonListeners()
 
             // Add view
             windowManager?.addView(bubbleView, params)
@@ -275,18 +305,133 @@ class FloatingRecordingService : Service() {
 
             // Track recording start time
             recordingStartTime = System.currentTimeMillis()
+            lastInteractionTime = System.currentTimeMillis()
+
+            // Start in expanded state
+            currentState = BubbleState.EXPANDED
+            showExpandedState()
 
             // Start pulse animation
             startPulseAnimation()
 
             // Start updating event count
             handler.post(updateRunnable)
+            
+            // Schedule auto-collapse
+            scheduleAutoCollapse()
 
-            Log.i(TAG, "Recording bubble shown")
+            Log.i(TAG, "Recording bubble v2 shown")
 
         } catch (e: Exception) {
             Log.e(TAG, "Failed to show bubble", e)
         }
+    }
+    
+    private fun cacheViewReferences() {
+        bubbleView?.let { view ->
+            // For v2 layout 
+            minimizedContainer = view.findViewById(R.id.minimizedContainer)
+            expandedContainer = view.findViewById(R.id.expandedContainer)
+            
+            // Common elements (both layouts)
+            tvEventCount = view.findViewById(R.id.tvEventCount)
+            tvDuration = view.findViewById(R.id.tvDuration)
+            btnStop = view.findViewById(R.id.btnStop)
+            
+            // v2 layout has btnPause, original has btnQuickActions
+            btnPause = view.findViewById(R.id.btnPause)
+            ivPause = view.findViewById(R.id.ivPause)
+            
+            Log.d(TAG, "View references cached: btnStop=${btnStop != null}, tvEventCount=${tvEventCount != null}")
+        }
+    }
+    
+    private fun setupButtonListeners() {
+        // Set direct click listeners on buttons (required because FLAG_NOT_FOCUSABLE)
+        // With FLAG_NOT_FOCUSABLE, parent touch listener doesn't receive events from clickable children
+        
+        Log.i(TAG, "Setting up button listeners - btnStop: ${btnStop != null}, btnQuickActions: ${bubbleView?.findViewById<View>(R.id.btnQuickActions) != null}")
+        
+        // Stop button - direct click listener
+        btnStop?.setOnClickListener { v ->
+            Log.i(TAG, "=== STOP BUTTON CLICKED via OnClickListener ===")
+            hapticFeedback()
+            stopRecording()
+        }
+        
+        // Also set touch listener to ensure we get the event
+        btnStop?.setOnTouchListener { v, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    Log.d(TAG, "btnStop: ACTION_DOWN")
+                    recordInteraction()
+                    false // Let click listener handle it
+                }
+                MotionEvent.ACTION_UP -> {
+                    Log.i(TAG, "=== STOP BUTTON: ACTION_UP via touch listener ===")
+                    // Perform click manually if click listener wasn't triggered
+                    val deltaX = kotlin.math.abs(event.rawX - initialTouchX)
+                    val deltaY = kotlin.math.abs(event.rawY - initialTouchY)
+                    if (deltaX < 20 && deltaY < 20) {
+                        Log.i(TAG, "Manually triggering stopRecording()")
+                        hapticFeedback()
+                        stopRecording()
+                        true
+                    } else {
+                        false
+                    }
+                }
+                else -> false
+            }
+        }
+        
+        // QuickActions button - direct click listener  
+        bubbleView?.findViewById<View>(R.id.btnQuickActions)?.let { btn ->
+            btn.setOnClickListener { v ->
+                Log.i(TAG, "QuickActions button clicked via OnClickListener")
+                hapticFeedback()
+                toggleQuickActionsPanel()
+            }
+            
+            btn.setOnTouchListener { v, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        recordInteraction()
+                        false
+                    }
+                    else -> false
+                }
+            }
+        }
+        
+        // Pause button if exists (v2 layout)
+        btnPause?.let { btn ->
+            btn.setOnClickListener { v ->
+                Log.i(TAG, "Pause button clicked via OnClickListener")
+                hapticFeedback()
+                togglePauseRecording()
+            }
+        }
+        
+        // Minimized container - for expanding
+        minimizedContainer?.setOnClickListener { v ->
+            Log.i(TAG, "Minimized dot clicked - expanding")
+            hapticFeedback()
+            expandToPill()
+        }
+        
+        // Recording indicator (pulseRing parent) - tap to minimize
+        bubbleView?.findViewById<View>(R.id.pulseRing)?.parent?.let { parent ->
+            if (parent is View) {
+                parent.setOnClickListener {
+                    Log.i(TAG, "Recording indicator tapped - minimizing")
+                    hapticFeedback()
+                    collapseToMinimized()
+                }
+            }
+        }
+        
+        Log.i(TAG, "Button listeners set up successfully")
     }
 
     private fun hideBubble() {
@@ -294,6 +439,7 @@ class FloatingRecordingService : Service() {
 
         try {
             handler.removeCallbacks(updateRunnable)
+            handler.removeCallbacks(autoCollapseRunnable)
             pulseAnimator?.cancel()
 
             bubbleView?.let {
@@ -315,26 +461,32 @@ class FloatingRecordingService : Service() {
         bubbleView?.setOnTouchListener { view, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
-                    // Get bubble size on first touch
                     bubbleWidth = view.width
                     bubbleHeight = view.height
-
                     initialX = params.x
                     initialY = params.y
                     initialTouchX = event.rawX
                     initialTouchY = event.rawY
                     isDragging = false
-                    lastClickTime = System.currentTimeMillis()
-                    // Return false to allow child views to handle click
-                    false
+                    
+                    // Reset auto-collapse timer on interaction
+                    recordInteraction()
+                    
+                    // Check if touch is on a button - if so, let button handle it
+                    if (isTouchOnButton(event.x, event.y)) {
+                        Log.d(TAG, "Touch on button - letting button handle")
+                        false // Let child button handle
+                    } else {
+                        false // Allow child views to handle initially
+                    }
                 }
 
                 MotionEvent.ACTION_MOVE -> {
                     val deltaX = (event.rawX - initialTouchX).toInt()
                     val deltaY = (event.rawY - initialTouchY).toInt()
 
-                    // Only consider it dragging if moved more than 10 pixels
-                    if (kotlin.math.abs(deltaX) > 10 || kotlin.math.abs(deltaY) > 10) {
+                    // Only start dragging if moved significantly AND not on buttons
+                    if (!isDragging && (kotlin.math.abs(deltaX) > 15 || kotlin.math.abs(deltaY) > 15)) {
                         isDragging = true
                     }
 
@@ -342,54 +494,188 @@ class FloatingRecordingService : Service() {
                         params.x = initialX + deltaX
                         params.y = initialY + deltaY
                         windowManager?.updateViewLayout(bubbleView, params)
-                        // Return true only when actually dragging
-                        true
+                        true // Consume during drag
                     } else {
-                        // Not dragging yet, allow children to receive event
-                        false
+                        false // Let children handle
                     }
                 }
 
                 MotionEvent.ACTION_UP -> {
                     if (isDragging) {
-                        // Snap to nearest edge when released
                         snapToEdge(params)
+                        true
+                    } else {
+                        // Check for double-tap to stop
+                        val now = System.currentTimeMillis()
+                        if (now - lastTapTime < DOUBLE_TAP_THRESHOLD_MS) {
+                            Log.i(TAG, "Double-tap detected - stopping recording")
+                            hapticFeedback()
+                            stopRecording()
+                            true
+                        } else {
+                            lastTapTime = now
+                            false // Let button handle click
+                        }
                     }
-                    // If we were dragging, consume the event
-                    // Otherwise, let children handle the click
-                    isDragging
                 }
 
                 else -> false
             }
         }
     }
-
+    
     /**
-     * Snap bubble to the nearest screen edge with smooth animation
+     * Check if touch coordinates are within button bounds
      */
+    private fun isTouchOnButton(x: Float, y: Float): Boolean {
+        // Check btnStop
+        btnStop?.let { btn ->
+            val location = IntArray(2)
+            btn.getLocationInWindow(location)
+            bubbleView?.let { bubble ->
+                val bubbleLocation = IntArray(2)
+                bubble.getLocationInWindow(bubbleLocation)
+                
+                val relativeX = location[0] - bubbleLocation[0]
+                val relativeY = location[1] - bubbleLocation[1]
+                
+                if (x >= relativeX && x <= relativeX + btn.width &&
+                    y >= relativeY && y <= relativeY + btn.height) {
+                    Log.d(TAG, "Touch is on Stop button")
+                    return true
+                }
+            }
+        }
+        
+        // Check btnQuickActions / btnPause
+        val quickActionsBtn = bubbleView?.findViewById<View>(R.id.btnQuickActions) ?: btnPause
+        quickActionsBtn?.let { btn ->
+            val location = IntArray(2)
+            btn.getLocationInWindow(location)
+            bubbleView?.let { bubble ->
+                val bubbleLocation = IntArray(2)
+                bubble.getLocationInWindow(bubbleLocation)
+                
+                val relativeX = location[0] - bubbleLocation[0]
+                val relativeY = location[1] - bubbleLocation[1]
+                
+                if (x >= relativeX && x <= relativeX + btn.width &&
+                    y >= relativeY && y <= relativeY + btn.height) {
+                    Log.d(TAG, "Touch is on QuickActions/Pause button")
+                    return true
+                }
+            }
+        }
+        
+        return false
+    }
+    
+    private fun recordInteraction() {
+        lastInteractionTime = System.currentTimeMillis()
+        // Only schedule auto-collapse if layout supports it
+        if (minimizedContainer != null && expandedContainer != null) {
+            scheduleAutoCollapse()
+        }
+    }
+    
+    private fun scheduleAutoCollapse() {
+        // Only collapse if containers exist
+        if (minimizedContainer == null || expandedContainer == null) {
+            return
+        }
+        handler.removeCallbacks(autoCollapseRunnable)
+        handler.postDelayed(autoCollapseRunnable, COLLAPSE_TO_MINI_MS)
+    }
+    
+    private fun collapseToMinimized() {
+        // Skip if layout doesn't support minimized state
+        if (minimizedContainer == null || expandedContainer == null) {
+            Log.d(TAG, "Layout doesn't support minimized state - skipping collapse")
+            return
+        }
+        if (currentState == BubbleState.MINIMIZED) return
+        
+        Log.i(TAG, "Collapsing to minimized state")
+        currentState = BubbleState.MINIMIZED
+        
+        // Animate transition
+        expandedContainer?.animate()
+            ?.alpha(0f)
+            ?.scaleX(0.5f)
+            ?.scaleY(0.5f)
+            ?.setDuration(200)
+            ?.withEndAction {
+                expandedContainer?.visibility = View.GONE
+                minimizedContainer?.visibility = View.VISIBLE
+                minimizedContainer?.alpha = 0f
+                minimizedContainer?.scaleX = 0.5f
+                minimizedContainer?.scaleY = 0.5f
+                minimizedContainer?.animate()
+                    ?.alpha(1f)
+                    ?.scaleX(1f)
+                    ?.scaleY(1f)
+                    ?.setDuration(200)
+                    ?.setInterpolator(OvershootInterpolator())
+                    ?.start()
+            }
+            ?.start()
+    }
+    
+    private fun expandToPill() {
+        if (currentState == BubbleState.EXPANDED) return
+        
+        Log.i(TAG, "Expanding to pill state")
+        currentState = BubbleState.EXPANDED
+        recordInteraction()
+        
+        // Animate transition
+        minimizedContainer?.animate()
+            ?.alpha(0f)
+            ?.scaleX(0.5f)
+            ?.scaleY(0.5f)
+            ?.setDuration(200)
+            ?.withEndAction {
+                minimizedContainer?.visibility = View.GONE
+                expandedContainer?.visibility = View.VISIBLE
+                expandedContainer?.alpha = 0f
+                expandedContainer?.scaleX = 0.8f
+                expandedContainer?.scaleY = 0.8f
+                expandedContainer?.animate()
+                    ?.alpha(1f)
+                    ?.scaleX(1f)
+                    ?.scaleY(1f)
+                    ?.setDuration(250)
+                    ?.setInterpolator(OvershootInterpolator())
+                    ?.start()
+            }
+            ?.start()
+    }
+    
+    private fun showExpandedState() {
+        minimizedContainer?.visibility = View.GONE
+        expandedContainer?.visibility = View.VISIBLE
+        expandedContainer?.alpha = 1f
+        expandedContainer?.scaleX = 1f
+        expandedContainer?.scaleY = 1f
+    }
+
     private fun snapToEdge(params: WindowManager.LayoutParams) {
         val currentX = params.x
         val currentY = params.y
         val centerX = currentX + bubbleWidth / 2
 
-        // Determine target X: snap to left or right edge
         val marginPx = (EDGE_MARGIN * resources.displayMetrics.density).toInt()
         val targetX = if (centerX < screenWidth / 2) {
-            // Snap to left edge
             marginPx
         } else {
-            // Snap to right edge
             screenWidth - bubbleWidth - marginPx
         }
 
-        // Clamp Y position to keep bubble on screen
         val targetY = currentY.coerceIn(marginPx, screenHeight - bubbleHeight - marginPx)
 
-        // Animate to target position
         val animator = ValueAnimator.ofFloat(0f, 1f).apply {
-            duration = 200
-            interpolator = AccelerateDecelerateInterpolator()
+            duration = 250
+            interpolator = OvershootInterpolator(0.8f)
             addUpdateListener { animation ->
                 val fraction = animation.animatedValue as Float
                 params.x = (currentX + (targetX - currentX) * fraction).toInt()
@@ -402,40 +688,6 @@ class FloatingRecordingService : Service() {
             }
         }
         animator.start()
-
-        Log.d(TAG, "Snap to edge: ($currentX, $currentY) -> ($targetX, $targetY)")
-    }
-
-    // Remove onBubbleTapped() - no longer needed since buttons handle their own clicks
-
-    private fun setupStopButton() {
-        bubbleView?.let { view ->
-            // Try to find stop button by resource name (for new layout)
-            val btnStopId = resources.getIdentifier("btnStop", "id", packageName)
-            Log.d(TAG, "btnStopId lookup: $btnStopId (0 means not found)")
-            if (btnStopId != 0) {
-                val btnStop = view.findViewById<View>(btnStopId)
-                Log.d(TAG, "btnStop view: $btnStop (null means not found in layout)")
-                btnStop?.setOnClickListener {
-                    Log.i(TAG, "=== STOP BUTTON CLICKED IN BUBBLE ===")
-                    Log.i(TAG, "Recording state BEFORE stop: ${RecordingManager.getState()}")
-                    Log.i(TAG, "Event count BEFORE stop: ${RecordingManager.getEventCount()}")
-                    stopRecording()
-                }
-            } else {
-                Log.w(TAG, "btnStop ID not found in resources - button won't work!")
-            }
-
-            // Setup Quick Actions button
-            val btnQuickActionsId = resources.getIdentifier("btnQuickActions", "id", packageName)
-            if (btnQuickActionsId != 0) {
-                val btnQuickActions = view.findViewById<View>(btnQuickActionsId)
-                btnQuickActions?.setOnClickListener {
-                    Log.i(TAG, "Quick actions button clicked")
-                    toggleQuickActionsPanel()
-                }
-            }
-        }
     }
 
     private fun toggleQuickActionsPanel() {
@@ -456,40 +708,28 @@ class FloatingRecordingService : Service() {
     private fun stopRecording() {
         Log.i(TAG, "=== stopRecording() called ===")
 
-        // Get app package BEFORE stopping (it will be cleared after stop)
         val appPackage = RecordingManager.getTargetAppPackage()
-
         Log.i(TAG, "App package: $appPackage")
 
-        // Stop the recording (this will flush pending scroll events)
         val result = RecordingManager.stopRecording()
-
-        // Get events AFTER stopping (to include flushed scroll events)
         val events = RecordingManager.getEvents()
         val eventCount = events.size
-        val newState = RecordingManager.getState()
 
-        Log.i(TAG, "RecordingManager.stopRecording() result: success=${result.success}, message=${result.message}")
-        Log.i(TAG, "Recording state AFTER stop: $newState")
-        Log.i(TAG, "Event count AFTER stop: $eventCount")
+        Log.i(TAG, "stopRecording result: success=${result.success}, events=$eventCount")
 
-        // Show feedback to user
+        // Show feedback
         Handler(Looper.getMainLooper()).post {
             if (result.success) {
                 val durationSec = result.duration / 1000
-                val message = "Recording stopped\n${result.eventCount} events • ${durationSec}s"
-                Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "✓ Recording stopped • ${result.eventCount} events • ${durationSec}s", Toast.LENGTH_LONG).show()
             } else {
-                Toast.makeText(this, "Failed to stop: ${result.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Failed: ${result.message}", Toast.LENGTH_SHORT).show()
             }
         }
 
-        // Auto-save workflow if there are events
+        // Auto-save workflow
         if (events.isNotEmpty() && appPackage != null) {
-            Log.i(TAG, "Auto-saving workflow...")
             WorkflowManager.init(this)
-
-            // Get app name from package manager
             val appName = try {
                 val pm = packageManager
                 val appInfo = pm.getApplicationInfo(appPackage, 0)
@@ -498,7 +738,6 @@ class FloatingRecordingService : Service() {
                 appPackage.substringAfterLast(".")
             }
 
-            // Generate default workflow name with timestamp
             val timestamp = java.text.SimpleDateFormat("HH:mm", Locale.getDefault()).format(java.util.Date())
             val workflowName = "$appName - $timestamp"
 
@@ -510,31 +749,13 @@ class FloatingRecordingService : Service() {
             )
 
             if (workflowId != null) {
-                Log.i(TAG, "Workflow saved: $workflowName ($workflowId)")
-                Handler(Looper.getMainLooper()).post {
-                    Toast.makeText(this, "Workflow saved: $workflowName", Toast.LENGTH_SHORT).show()
-                }
-            } else {
-                Log.e(TAG, "Failed to save workflow")
+                Log.i(TAG, "Workflow saved: $workflowName")
             }
-        } else {
-            Log.w(TAG, "No events or app package, workflow not saved")
         }
 
-        // Hide the bubble
-        Log.i(TAG, "Calling hideBubble()...")
         hideBubble()
-
-        // Send broadcast to update MainActivity
-        Log.i(TAG, "Sending RECORDING_STOPPED broadcast...")
-        val intent = Intent("com.agent.portal.RECORDING_STOPPED")
-        sendBroadcast(intent)
-
-        // Stop service
-        Log.i(TAG, "Calling stopSelf()...")
+        sendBroadcast(Intent("com.agent.portal.RECORDING_STOPPED"))
         stopSelf()
-
-        Log.i(TAG, "=== stopRecording() completed ===")
     }
 
     private fun togglePauseRecording() {
@@ -542,14 +763,17 @@ class FloatingRecordingService : Service() {
         when (state) {
             RecordingManager.RecordingState.RECORDING -> {
                 RecordingManager.pauseRecording()
+                ivPause?.setImageResource(R.drawable.ic_play)
                 updateNotification()
             }
             RecordingManager.RecordingState.PAUSED -> {
                 RecordingManager.resumeRecording()
+                ivPause?.setImageResource(R.drawable.ic_pause)
                 updateNotification()
             }
-            else -> { /* Do nothing */ }
+            else -> { }
         }
+        recordInteraction()
     }
 
     private fun updateNotification() {
@@ -558,21 +782,12 @@ class FloatingRecordingService : Service() {
     }
 
     private fun updateEventCount() {
-        bubbleView?.let { view ->
-            val tvEventCount = view.findViewById<TextView>(R.id.tvEventCount)
-            tvEventCount?.text = RecordingManager.getEventCount().toString()
-
-            // Update duration display if available
-            val tvDurationId = resources.getIdentifier("tvDuration", "id", packageName)
-            if (tvDurationId != 0) {
-                val tvDuration = view.findViewById<TextView>(tvDurationId)
-                tvDuration?.text = formatDuration(System.currentTimeMillis() - recordingStartTime)
-            }
-
-            // Update notification as well
-            val notificationManager = getSystemService(NotificationManager::class.java)
-            notificationManager.notify(NOTIFICATION_ID, createNotification())
-        }
+        tvEventCount?.text = RecordingManager.getEventCount().toString()
+        tvDuration?.text = formatDuration(System.currentTimeMillis() - recordingStartTime)
+        
+        // Update notification periodically
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager.notify(NOTIFICATION_ID, createNotification())
     }
 
     private fun formatDuration(millis: Long): String {
@@ -589,44 +804,36 @@ class FloatingRecordingService : Service() {
     private fun startPulseAnimation() {
         bubbleView?.let { view ->
             val recordingDot = view.findViewById<View>(R.id.recordingDot)
+            val pulseRing = view.findViewById<View>(R.id.pulseRing)
 
-            // Try to find pulse ring by resource name (for new layout compatibility)
-            val pulseRingId = resources.getIdentifier("pulseRing", "id", packageName)
-            val pulseRing: View? = if (pulseRingId != 0) view.findViewById(pulseRingId) else null
-
-            // Dot pulse animation
-            val dotAlphaAnimator = ObjectAnimator.ofFloat(recordingDot, "alpha", 1f, 0.5f).apply {
+            val dotAlpha = ObjectAnimator.ofFloat(recordingDot, "alpha", 1f, 0.6f).apply {
                 duration = 800
                 repeatCount = ValueAnimator.INFINITE
                 repeatMode = ValueAnimator.REVERSE
                 interpolator = AccelerateDecelerateInterpolator()
             }
 
-            val animators = mutableListOf<android.animation.Animator>(dotAlphaAnimator)
+            val animators = mutableListOf<android.animation.Animator>(dotAlpha)
 
-            // Add pulse ring animations if available
             pulseRing?.let { ring ->
-                val ringScaleX = ObjectAnimator.ofFloat(ring, "scaleX", 1f, 1.4f).apply {
+                val ringScaleX = ObjectAnimator.ofFloat(ring, "scaleX", 1f, 1.5f).apply {
                     duration = 1200
                     repeatCount = ValueAnimator.INFINITE
                     repeatMode = ValueAnimator.RESTART
                     interpolator = LinearInterpolator()
                 }
-
-                val ringScaleY = ObjectAnimator.ofFloat(ring, "scaleY", 1f, 1.4f).apply {
+                val ringScaleY = ObjectAnimator.ofFloat(ring, "scaleY", 1f, 1.5f).apply {
                     duration = 1200
                     repeatCount = ValueAnimator.INFINITE
                     repeatMode = ValueAnimator.RESTART
                     interpolator = LinearInterpolator()
                 }
-
-                val ringAlpha = ObjectAnimator.ofFloat(ring, "alpha", 0.6f, 0f).apply {
+                val ringAlpha = ObjectAnimator.ofFloat(ring, "alpha", 0.5f, 0f).apply {
                     duration = 1200
                     repeatCount = ValueAnimator.INFINITE
                     repeatMode = ValueAnimator.RESTART
                     interpolator = LinearInterpolator()
                 }
-
                 animators.addAll(listOf(ringScaleX, ringScaleY, ringAlpha))
             }
 
@@ -634,6 +841,28 @@ class FloatingRecordingService : Service() {
                 playTogether(animators)
                 start()
             }
+        }
+    }
+    
+    private fun hapticFeedback() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+                vibratorManager.defaultVibrator.vibrate(
+                    VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE)
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    vibrator.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE))
+                } else {
+                    @Suppress("DEPRECATION")
+                    vibrator.vibrate(30)
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Haptic feedback failed", e)
         }
     }
 

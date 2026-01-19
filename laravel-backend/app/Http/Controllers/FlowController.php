@@ -6,6 +6,7 @@ use App\Http\Requests\StoreFlowRequest;
 use App\Models\Flow;
 use App\Models\FlowEdge;
 use App\Models\FlowNode;
+use App\Services\FlowService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,11 @@ use Inertia\Inertia;
 
 class FlowController extends Controller
 {
+    public function __construct(
+        protected FlowService $flowService
+    ) {
+    }
+
     /**
      * Display list of flows
      */
@@ -82,13 +88,6 @@ class FlowController extends Controller
                 'is_online' => true, // Already filtered by online scope
                 'last_active_at' => $device->last_active_at?->diffForHumans(),
             ]);
-
-        \Log::info('FlowController edit():', [
-            'user_id' => $user->id,
-            'flow_id' => $flow->id,
-            'onlineDevices_count' => $onlineDevices->count(),
-            'onlineDevices' => $onlineDevices->values()->toArray(),
-        ]);
 
         // Get user's media files for ResourceNodes
         $mediaFiles = $user->media()
@@ -388,37 +387,8 @@ class FlowController extends Controller
             ], 400);
         }
 
-        // Get flow nodes and convert to actions
-        $nodes = $flow->nodes()
-            ->whereNotIn('type', ['start', 'end', 'dataSource', 'condition', 'loop'])
-            ->orderBy('id')
-            ->get();
-
-        $actions = $nodes->map(function ($node, $index) {
-            $nodeData = $node->data ?? [];
-            $actionType = $this->mapNodeTypeToAction($node->type);
-
-            // Extract and map params based on action type
-            $params = $this->extractActionParams($actionType, $nodeData);
-
-            // Smart default wait times based on action type
-            $defaultWait = match ($actionType) {
-                'start_app' => 4000,  // Heavy apps need more time to load
-                'scroll' => 1000,     // Wait for scroll animation
-                'text_input' => 1000, // Wait for keyboard/input
-                'swipe' => 800,       // Wait for swipe animation
-                default => 500,       // Default for tap/click
-            };
-
-            return [
-                'id' => $node->node_id,
-                'type' => $actionType,
-                'sequence' => $index + 1,
-                'params' => $params,
-                // Priority: timeout (from UI panel) -> wait_after -> delayAfter -> default
-                'wait_after' => $nodeData['timeout'] ?? $nodeData['wait_after'] ?? $nodeData['delayAfter'] ?? $defaultWait,
-            ];
-        })->values()->toArray();
+        // Traverse flow graph to get actions in correct execution order
+        $actions = $this->flowService->traverseFlowForActions($flow);
 
         if (empty($actions)) {
             return response()->json([
@@ -440,11 +410,6 @@ class FlowController extends Controller
         // Broadcast workflow:test event to device
         broadcast(new \App\Events\DispatchJobToDevice($device, $payload, 'workflow:test'))->toOthers();
 
-        \Log::info("Test run sent to device {$device->device_id}", [
-            'flow_id' => $flow->id,
-            'actions_count' => count($actions),
-        ]);
-
         return response()->json([
             'success' => true,
             'message' => 'Test run started',
@@ -457,169 +422,52 @@ class FlowController extends Controller
     }
 
     /**
-     * Map flow node type to APK action type
+     * Receive real-time action progress from APK and broadcast to frontend
+     * This enables node highlighting during workflow execution
      */
-    protected function mapNodeTypeToAction(string $nodeType): string
+    public function reportTestRunProgress(Request $request)
     {
-        $mapping = [
-            'tap' => 'tap',
-            'click' => 'tap',
-            'doubleTap' => 'double_tap',
-            'double_tap' => 'double_tap',
-            'longPress' => 'long_press',
-            'long_press' => 'long_press',
-            'swipe' => 'swipe',
-            'scroll' => 'scroll',
-            'scroll_up' => 'scroll',
-            'scroll_down' => 'scroll',
-            'scroll_left' => 'scroll',
-            'scroll_right' => 'scroll',
-            'input' => 'text_input',
-            'textInput' => 'text_input',
-            'text_input' => 'text_input',
-            'pressKey' => 'press_key',
-            'press_key' => 'press_key',
-            'back' => 'press_key',
-            'home' => 'press_key',
-            'startApp' => 'start_app',
-            'openApp' => 'start_app',
-            'open_app' => 'start_app',  // Recorded from APK
-            'start_app' => 'start_app',
-            'wait' => 'wait',
-            'delay' => 'wait',
-            'screenshot' => 'screenshot',
-        ];
+        $request->validate([
+            'flow_id' => 'required|integer',
+            'action_id' => 'required|string',
+            'status' => 'required|in:running,success,error,skipped',
+            'sequence' => 'required|integer',
+            'total_actions' => 'required|integer',
+            'message' => 'nullable|string',
+            'error_branch_target' => 'nullable|string',
+            'result' => 'nullable|array',
+        ]);
 
-        return $mapping[$nodeType] ?? 'custom';
-    }
+        $user = Auth::user();
 
-    /**
-     * Extract and normalize action params from node data
-     * Maps ReactFlow node data structure to APK-expected params format
-     * Uses Accessibility attributes for element finding, with coordinates as fallback
-     */
-    protected function extractActionParams(string $actionType, array $nodeData): array
-    {
-        // Common accessibility attributes that APK uses to find elements
-        $commonAttrs = [
-            'resourceId' => $nodeData['resourceId'] ?? null,
-            'text' => $nodeData['text'] ?? null,
-            'contentDescription' => $nodeData['contentDescription'] ?? null,
-            'className' => $nodeData['className'] ?? null,
-            'bounds' => $nodeData['bounds'] ?? null,
-            'packageName' => $nodeData['packageName'] ?? null,
-        ];
+        // Verify the flow belongs to the user
+        $flow = Flow::where('id', $request->flow_id)
+            ->where('user_id', $user->id)
+            ->first();
 
-        // Coordinates as fallback
-        $coords = $nodeData['coordinates'] ?? [];
-        $x = $coords['x'] ?? $nodeData['x'] ?? null;
-        $y = $coords['y'] ?? $nodeData['y'] ?? null;
-
-        switch ($actionType) {
-            case 'tap':
-            case 'double_tap':
-            case 'long_press':
-                // APK requires x, y as non-null integers - use center of bounds or default
-                $tapX = $x;
-                $tapY = $y;
-                if (($tapX === null || $tapY === null) && isset($nodeData['bounds'])) {
-                    // Parse bounds "left,top,right,bottom" → center point
-                    $b = explode(',', $nodeData['bounds']);
-                    if (count($b) === 4) {
-                        $tapX = (int) (((int) $b[0] + (int) $b[2]) / 2);
-                        $tapY = (int) (((int) $b[1] + (int) $b[3]) / 2);
-                    }
-                }
-                return array_merge($commonAttrs, [
-                    'x' => $tapX ?? 540,
-                    'y' => $tapY ?? 960,
-                    'duration' => $nodeData['duration'] ?? 100,
-                    'eventType' => $nodeData['eventType'] ?? 'tap',
-                ]);
-
-            case 'swipe':
-                return array_merge($commonAttrs, [
-                    'startX' => $nodeData['startX'] ?? $x,
-                    'startY' => $nodeData['startY'] ?? $y,
-                    'endX' => $nodeData['endX'] ?? null,
-                    'endY' => $nodeData['endY'] ?? null,
-                    'duration' => $nodeData['duration'] ?? 300,
-                    'direction' => $nodeData['direction'] ?? null,
-                ]);
-
-            case 'scroll':
-                // Parse direction from multiple sources:
-                // 1. Direct nodeData.direction (from config panel)
-                // 2. actionData.direction (from APK recording)
-                // 3. eventType (scroll_up, scroll_down, etc.)
-                // 4. nodeType itself (scroll_up, scroll_down, etc.)
-                $actionData = $nodeData['actionData'] ?? [];
-                $direction = $nodeData['direction']
-                    ?? $actionData['direction']
-                    ?? null;
-
-                if (!$direction && isset($nodeData['eventType'])) {
-                    if (str_contains($nodeData['eventType'], 'up'))
-                        $direction = 'up';
-                    elseif (str_contains($nodeData['eventType'], 'down'))
-                        $direction = 'down';
-                    elseif (str_contains($nodeData['eventType'], 'left'))
-                        $direction = 'left';
-                    elseif (str_contains($nodeData['eventType'], 'right'))
-                        $direction = 'right';
-                }
-
-                // Also check the original node type for direction (e.g., scroll_up)
-                $originalType = $nodeData['eventType'] ?? $nodeData['type'] ?? '';
-                if (!$direction && str_contains($originalType, 'scroll_')) {
-                    if (str_contains($originalType, 'up'))
-                        $direction = 'up';
-                    elseif (str_contains($originalType, 'down'))
-                        $direction = 'down';
-                    elseif (str_contains($originalType, 'left'))
-                        $direction = 'left';
-                    elseif (str_contains($originalType, 'right'))
-                        $direction = 'right';
-                }
-
-                return array_merge($commonAttrs, [
-                    'direction' => $direction ?? 'down',
-                    'amount' => $nodeData['amount'] ?? $actionData['amount'] ?? 1,
-                    'distance' => $nodeData['distance'] ?? 500,
-                    'x' => $x ?? 540,
-                    'y' => $y ?? 1000,
-                ]);
-
-            case 'text_input':
-                return array_merge($commonAttrs, [
-                    'inputText' => $nodeData['text'] ?? $nodeData['value'] ?? $nodeData['inputText'] ?? '',
-                    'clearFirst' => $nodeData['clearFirst'] ?? false,
-                ]);
-
-            case 'press_key':
-                return [
-                    'key' => $nodeData['key'] ?? $nodeData['keyCode'] ?? 'KEYCODE_BACK',
-                ];
-
-            case 'start_app':
-                return [
-                    'package_name' => $nodeData['packageName'] ?? $nodeData['package'] ?? '',  // APK expects 'package_name'
-                    'activity' => $nodeData['activity'] ?? null,
-                ];
-
-            case 'wait':
-                return [
-                    'duration' => $nodeData['duration'] ?? $nodeData['delay'] ?? 1000,
-                ];
-
-            case 'screenshot':
-                return [
-                    'filename' => $nodeData['filename'] ?? null,
-                ];
-
-            default:
-                // Return all node data for custom/unknown types
-                return $nodeData;
+        if (!$flow) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Flow not found or unauthorized',
+            ], 404);
         }
+
+        // Broadcast progress event to frontend
+        event(new \App\Events\WorkflowActionProgress(
+            userId: $user->id,
+            flowId: $flow->id,
+            actionId: $request->action_id,
+            status: $request->status,
+            sequence: $request->sequence,
+            totalActions: $request->total_actions,
+            message: $request->message,
+            errorBranchTarget: $request->error_branch_target,
+            result: $request->result,
+        ));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Progress reported',
+        ]);
     }
 }

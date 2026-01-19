@@ -1,4 +1,4 @@
-import { memo, useState, useCallback } from 'react';
+import { memo, useState, useCallback, useRef } from 'react';
 import ReactFlow, {
     Background,
     Controls,
@@ -9,10 +9,14 @@ import ReactFlow, {
     Handle,
     Position,
     ReactFlowProvider,
+    useReactFlow,
 } from 'reactflow';
 import { useTheme } from '@/Contexts/ThemeContext';
 import SmartActionNode from './SmartActionNode';
+import GlassConditionNode from './GlassConditionNode';
 import AnimatedEdge from './AnimatedEdge';
+import NodeConfigPanel from './NodeConfigPanel';
+import NodePalette from './NodePalette';
 
 // Custom Loop Start Node with proper source handle
 const LoopStartNode = memo(({ data }) => {
@@ -69,16 +73,29 @@ const nodeTypes = {
     tap: SmartActionNode,
     click: SmartActionNode,
     scroll: SmartActionNode,
+    scroll_up: SmartActionNode,
+    scroll_down: SmartActionNode,
+    scroll_left: SmartActionNode,
+    scroll_right: SmartActionNode,
     text_input: SmartActionNode,
     smart_action: SmartActionNode,
     swipe: SmartActionNode,
     open_app: SmartActionNode,
+    start_app: SmartActionNode,
     key_event: SmartActionNode,
     focus: SmartActionNode,
     back: SmartActionNode,
     home: SmartActionNode,
     long_press: SmartActionNode,
+    double_tap: SmartActionNode,
     recorded_action: SmartActionNode,
+    // Logic nodes
+    condition: GlassConditionNode,
+    delay: SmartActionNode,
+    wait: SmartActionNode,
+    assert: SmartActionNode,
+    wait_for_element: SmartActionNode,
+    element_check: SmartActionNode,
     // Loop node (for nested loops)
     loop: SmartActionNode,
 };
@@ -89,11 +106,13 @@ const edgeTypes = {
 
 /**
  * LoopSubFlowModal - Premium modal for editing sub-workflow inside a Loop node
- * Features: Glassmorphic design, action toolbar with icons, variable hints
+ * Features: Glassmorphic design, sidebar with drag-drop, 3-column layout
  */
-function LoopSubFlowModal({ isOpen, onClose, loopNode, onSaveSubFlow }) {
+function LoopSubFlowModal({ isOpen, onClose, loopNode, onSaveSubFlow, selectedDevice, userId }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const reactFlowWrapper = useRef(null);
+    const { screenToFlowPosition } = useReactFlow();
 
     // Sub-flow nodes and edges (stored in loopNode.data.subFlow)
     const initialSubFlow = loopNode?.data?.subFlow || {
@@ -102,13 +121,13 @@ function LoopSubFlowModal({ isOpen, onClose, loopNode, onSaveSubFlow }) {
                 id: 'loop-start',
                 type: 'loopStart',
                 data: { label: 'Loop Start', itemVariable: loopNode?.data?.itemVariable || 'item' },
-                position: { x: 200, y: 50 },
+                position: { x: 250, y: 50 },
             },
             {
                 id: 'loop-end',
                 type: 'loopEnd',
                 data: { label: 'Continue' },
-                position: { x: 200, y: 450 },
+                position: { x: 250, y: 400 },
             },
         ],
         edges: [],
@@ -116,6 +135,24 @@ function LoopSubFlowModal({ isOpen, onClose, loopNode, onSaveSubFlow }) {
 
     const [nodes, setNodes] = useState(initialSubFlow.nodes);
     const [edges, setEdges] = useState(initialSubFlow.edges);
+    const [selectedNode, setSelectedNode] = useState(null);
+
+    // Node click handler
+    const onNodeClick = useCallback((event, node) => {
+        // Don't open config for loopStart/loopEnd nodes
+        if (node.type === 'loopStart' || node.type === 'loopEnd') return;
+        setSelectedNode(node);
+    }, []);
+
+    const onPaneClick = useCallback(() => {
+        setSelectedNode(null);
+    }, []);
+
+    // Handler for updating node from config panel
+    const handleUpdateNode = useCallback((nodeId, updatedNode) => {
+        setNodes((nds) => nds.map((n) => n.id === nodeId ? updatedNode : n));
+        setSelectedNode(updatedNode);
+    }, []);
 
     const onNodesChange = useCallback(
         (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
@@ -141,31 +178,68 @@ function LoopSubFlowModal({ isOpen, onClose, loopNode, onSaveSubFlow }) {
         onClose();
     };
 
-    // Action types with icons and colors
-    const actionTypes = [
-        { type: 'tap', label: 'Tap', icon: '👆', color: '#3b82f6' },
-        { type: 'text_input', label: 'Type', icon: '⌨️', color: '#a855f7' },
-        { type: 'scroll', label: 'Scroll', icon: '📜', color: '#f59e0b' },
-        { type: 'swipe', label: 'Swipe', icon: '👋', color: '#06b6d4' },
-        { type: 'click', label: 'Click', icon: '🖱️', color: '#10b981' },
-    ];
+    // ========================================================================
+    // DRAG & DROP HANDLERS
+    // ========================================================================
+    const onDragOver = useCallback((event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+    }, []);
 
-    // Quick add action node
-    const addActionNode = (type, color) => {
-        const actionInfo = actionTypes.find(a => a.type === type);
+    const onDrop = useCallback((event) => {
+        event.preventDefault();
+
+        const type = event.dataTransfer.getData('application/reactflow');
+        const nodeDataStr = event.dataTransfer.getData('application/nodedata');
+
+        if (!type) return;
+
+        // Get drop position in flow coordinates
+        const position = screenToFlowPosition({
+            x: event.clientX,
+            y: event.clientY,
+        });
+
+        // Parse node data
+        let nodeInfo = {};
+        try {
+            nodeInfo = JSON.parse(nodeDataStr);
+        } catch (e) {
+            console.error('Failed to parse node data', e);
+        }
+
+        // Build node data based on type
+        const nodeData = {
+            eventType: type,
+            actionType: type,
+            label: nodeInfo?.label || type,
+            isRecorded: false,
+        };
+
+        // Add type-specific default data
+        if (type === 'delay' || type === 'wait') {
+            nodeData.duration = 1000;
+        } else if (type === 'condition') {
+            nodeData.condition = '{{item.status}} == "active"';
+        } else if (type === 'assert') {
+            nodeData.assertType = 'exists';
+            nodeData.timeout = 5000;
+        } else if (type === 'wait_for_element') {
+            nodeData.timeout = 10000;
+        } else if (type === 'element_check') {
+            nodeData.checkType = 'exists';
+            nodeData.timeout = 3000;
+        }
+
         const newNode = {
             id: `${type}-${Date.now()}`,
             type: type,
-            data: {
-                eventType: type,
-                actionType: type,
-                label: actionInfo?.label || type,
-                isRecorded: false,
-            },
-            position: { x: 200, y: 120 + (nodes.length - 1) * 100 },
+            data: nodeData,
+            position,
         };
+
         setNodes((nds) => [...nds, newNode]);
-    };
+    }, [screenToFlowPosition]);
 
     const itemVar = loopNode?.data?.itemVariable || 'item';
     const indexVar = loopNode?.data?.indexVariable || 'index';
@@ -180,8 +254,7 @@ function LoopSubFlowModal({ isOpen, onClose, loopNode, onSaveSubFlow }) {
 
             {/* Modal Container */}
             <div
-                className={`relative w-[90vw] max-w-6xl h-[85vh] rounded-3xl overflow-hidden ${isDark ? 'bg-[#0a0a0a]' : 'bg-white'
-                    }`}
+                className={`relative w-[95vw] max-w-7xl h-[90vh] rounded-3xl overflow-hidden flex flex-col ${isDark ? 'bg-[#0a0a0a]' : 'bg-white'}`}
                 onClick={(e) => e.stopPropagation()}
                 style={{
                     boxShadow: isDark
@@ -192,57 +265,65 @@ function LoopSubFlowModal({ isOpen, onClose, loopNode, onSaveSubFlow }) {
             >
                 {/* Gradient overlay at top */}
                 <div
-                    className="absolute top-0 left-0 right-0 h-32 pointer-events-none"
+                    className="absolute top-0 left-0 right-0 h-32 pointer-events-none z-10"
                     style={{
                         background: 'linear-gradient(180deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%)',
                     }}
                 />
 
                 {/* Header */}
-                <div className={`relative flex items-center justify-between px-8 py-5 border-b ${isDark ? 'border-white/10' : 'border-gray-200'
-                    }`}>
+                <div className={`relative z-20 flex items-center justify-between px-6 py-4 border-b shrink-0 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                     <div className="flex items-center gap-4">
                         {/* Animated Loop Icon */}
                         <div
-                            className="w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden"
+                            className="w-12 h-12 rounded-2xl flex items-center justify-center relative overflow-hidden"
                             style={{
                                 background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                                 boxShadow: '0 8px 32px rgba(99, 102, 241, 0.4)',
                             }}
                         >
                             <div className="absolute inset-0 bg-white/10 animate-pulse" />
-                            <svg className="w-7 h-7 text-white relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                            <svg className="w-6 h-6 text-white relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
                         </div>
 
                         <div>
-                            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 Loop Sub-Workflow
                             </h2>
-                            <p className={`text-sm mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                            <p className={`text-xs mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                 Design actions for each iteration
                             </p>
                         </div>
                     </div>
 
                     {/* Variable Pills */}
-                    <div className="flex items-center gap-3 mr-6">
-                        <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${isDark ? 'bg-indigo-500/10 border border-indigo-500/20' : 'bg-indigo-50 border border-indigo-200'}`}>
-                            <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Current Item:</span>
-                            <code className="text-sm font-bold text-indigo-400">{`{{${itemVar}}}`}</code>
+                    <div className="flex items-center gap-3">
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl ${isDark ? 'bg-indigo-500/10 border border-indigo-500/20' : 'bg-indigo-50 border border-indigo-200'}`}>
+                            <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Item:</span>
+                            <code className="text-xs font-bold text-indigo-400">{`{{${itemVar}}}`}</code>
                         </div>
-                        <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${isDark ? 'bg-cyan-500/10 border border-cyan-500/20' : 'bg-cyan-50 border border-cyan-200'}`}>
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl ${isDark ? 'bg-cyan-500/10 border border-cyan-500/20' : 'bg-cyan-50 border border-cyan-200'}`}>
                             <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Index:</span>
-                            <code className="text-sm font-bold text-cyan-400">{`{{${indexVar}}}`}</code>
+                            <code className="text-xs font-bold text-cyan-400">{`{{${indexVar}}}`}</code>
                         </div>
                     </div>
 
                     {/* Action Buttons */}
                     <div className="flex items-center gap-3">
+                        {/* Node count badge */}
+                        {nodes.length > 2 && (
+                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${isDark ? 'bg-emerald-500/10' : 'bg-emerald-50'}`}>
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                <span className="text-xs font-medium text-emerald-500">
+                                    {nodes.length - 2} nodes
+                                </span>
+                            </div>
+                        )}
                         <button
                             onClick={onClose}
-                            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${isDark
+                            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${isDark
                                 ? 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10'
                                 : 'bg-gray-100 hover:bg-gray-200 text-gray-600 border border-gray-200'
                                 }`}
@@ -251,104 +332,81 @@ function LoopSubFlowModal({ isOpen, onClose, loopNode, onSaveSubFlow }) {
                         </button>
                         <button
                             onClick={handleSave}
-                            className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:scale-105"
+                            className="px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:scale-105"
                             style={{
                                 background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                                 boxShadow: '0 4px 16px rgba(99, 102, 241, 0.4)',
                             }}
                         >
-                            💾 Save Sub-Flow
+                            💾 Save
                         </button>
                     </div>
                 </div>
 
-                {/* Action Toolbar */}
-                <div className={`flex items-center gap-3 px-8 py-4 border-b ${isDark ? 'border-white/5 bg-white/[0.02]' : 'border-gray-100 bg-gray-50/50'}`}>
-                    <span className={`text-sm font-semibold ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        Add Action:
-                    </span>
+                {/* 3-Column Layout: Sidebar + Canvas + Config */}
+                <div className="flex-1 flex overflow-hidden">
+                    {/* LEFT: Node Palette Sidebar */}
+                    <NodePalette />
 
-                    <div className="flex items-center gap-2">
-                        {actionTypes.map((action) => (
-                            <button
-                                key={action.type}
-                                onClick={() => addActionNode(action.type, action.color)}
-                                className={`group flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:scale-105 ${isDark
-                                    ? 'bg-white/5 hover:bg-white/10 border border-white/10'
-                                    : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'
-                                    }`}
-                                style={{
-                                    '--action-color': action.color,
-                                }}
-                            >
-                                <span className="text-lg">{action.icon}</span>
-                                <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>{action.label}</span>
-                            </button>
-                        ))}
+                    {/* CENTER: ReactFlow Canvas */}
+                    <div
+                        ref={reactFlowWrapper}
+                        className="flex-1 relative"
+                        onDragOver={onDragOver}
+                        onDrop={onDrop}
+                    >
+                        <ReactFlow
+                            nodes={nodes}
+                            edges={edges}
+                            onNodesChange={onNodesChange}
+                            onEdgesChange={onEdgesChange}
+                            onConnect={onConnect}
+                            onNodeClick={onNodeClick}
+                            onPaneClick={onPaneClick}
+                            nodeTypes={nodeTypes}
+                            edgeTypes={edgeTypes}
+                            fitView
+                            proOptions={{ hideAttribution: true }}
+                            defaultEdgeOptions={{
+                                type: 'animated',
+                                style: { stroke: '#6366f1', strokeWidth: 2 },
+                                markerEnd: { type: MarkerType.ArrowClosed, color: '#6366f1' },
+                            }}
+                        >
+                            <Background
+                                variant="dots"
+                                gap={24}
+                                size={1.5}
+                                color={isDark ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.1)'}
+                            />
+                            <Controls
+                                showInteractive={false}
+                                position="bottom-right"
+                                className={`rounded-xl overflow-hidden ${isDark ? '!bg-[#1a1a1a] !border-white/10' : '!bg-white !border-gray-200'}`}
+                            />
+                        </ReactFlow>
+
+                        {/* Drop Hint Overlay */}
+                        <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full text-xs font-medium pointer-events-none ${isDark ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-50 text-indigo-600'}`}>
+                            💡 Drag nodes from sidebar or connect handles
+                        </div>
                     </div>
 
-                    {/* Node count badge */}
-                    {nodes.length > 2 && (
-                        <div className={`ml-auto flex items-center gap-2 px-3 py-1.5 rounded-full ${isDark ? 'bg-emerald-500/10' : 'bg-emerald-50'}`}>
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-xs font-medium text-emerald-500">
-                                {nodes.length - 2} actions
-                            </span>
+                    {/* RIGHT: Node Configuration Panel */}
+                    {selectedNode && (
+                        <div className={`w-80 border-l overflow-y-auto ${isDark ? 'border-white/10 bg-[#0f0f0f]' : 'border-gray-200 bg-gray-50'}`}>
+                            <NodeConfigPanel
+                                node={selectedNode}
+                                onUpdateNode={handleUpdateNode}
+                                onClose={() => setSelectedNode(null)}
+                                upstreamVariables={[]}
+                                loopContext={{ itemVariable: itemVar, indexVariable: indexVar }}
+                                selectedDevice={selectedDevice}
+                                userId={userId}
+                                embedded={true}
+                            />
                         </div>
                     )}
-                </div>
-
-                {/* ReactFlow Editor */}
-                <div className="h-[calc(100%-180px)]">
-                    <ReactFlow
-                        nodes={nodes}
-                        edges={edges}
-                        onNodesChange={onNodesChange}
-                        onEdgesChange={onEdgesChange}
-                        onConnect={onConnect}
-                        nodeTypes={nodeTypes}
-                        edgeTypes={edgeTypes}
-                        fitView
-                        proOptions={{ hideAttribution: true }}
-                        defaultEdgeOptions={{
-                            type: 'animated',
-                            style: { stroke: '#6366f1', strokeWidth: 2 },
-                            markerEnd: { type: MarkerType.ArrowClosed, color: '#6366f1' },
-                        }}
-                    >
-                        <Background
-                            variant="dots"
-                            gap={24}
-                            size={1.5}
-                            color={isDark ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.1)'}
-                        />
-                        <Controls
-                            showInteractive={false}
-                            position="bottom-right"
-                            className={`rounded-xl overflow-hidden ${isDark ? '!bg-[#1a1a1a] !border-white/10' : '!bg-white !border-gray-200'}`}
-                        />
-                    </ReactFlow>
-                </div>
-
-                {/* Footer Tip */}
-                <div className={`absolute bottom-0 left-0 right-0 px-8 py-4 border-t ${isDark ? 'border-white/5 bg-gradient-to-r from-[#0a0a0a] via-[#0f0f0f] to-[#0a0a0a]' : 'border-gray-100 bg-gradient-to-r from-gray-50 via-white to-gray-50'
-                    }`}>
-                    <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-6">
-                            <span className={`flex items-center gap-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                <span className="text-lg">💡</span>
-                                Drag handles to connect nodes
-                            </span>
-                            <span className={`flex items-center gap-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                <span className="text-lg">🔄</span>
-                                Actions run for each item
-                            </span>
-                        </div>
-                        <div className={`flex items-center gap-2 ${isDark ? 'text-indigo-400' : 'text-indigo-500'}`}>
-                            <span className="text-lg">⚡</span>
-                            <span className="font-medium">Pro tip: Use TRUE/FALSE handles for conditional logic</span>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

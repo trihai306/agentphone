@@ -148,7 +148,7 @@ export default function LiveRecordingPanel({
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`fixed bottom-4 right-4 z-50 ${className}`}
+                className={`fixed bottom-4 right-4 z-[45] ${className}`}
             >
                 <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container/80 backdrop-blur-xl border border-white/10 text-sm text-gray-400">
                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
@@ -163,7 +163,7 @@ export default function LiveRecordingPanel({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className={`fixed bottom-4 right-4 z-50 ${className}`}
+            className={`fixed bottom-4 right-4 z-[45] ${className}`}
         >
             <div className="w-80 rounded-2xl bg-surface-container/90 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden">
                 {/* Header */}

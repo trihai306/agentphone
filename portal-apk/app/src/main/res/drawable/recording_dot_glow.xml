@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Recording Dot with Glow Effect -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Outer glow -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#66FF3B30" />
+            <size android:width="18dp" android:height="18dp" />
+        </shape>
+    </item>
+    <!-- Inner solid dot -->
+    <item android:left="3dp" android:top="3dp" android:right="3dp" android:bottom="3dp">
+        <shape android:shape="oval">
+            <solid android:color="#FF3B30" />
+        </shape>
+    </item>
+</layer-list>

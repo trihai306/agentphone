@@ -5,28 +5,19 @@ namespace App\Services;
 use App\Models\AiGeneration;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\AI\AiProviderFactory;
+use App\Services\AI\AiProviderInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class AiGenerationService
 {
-    protected ?ReplicateApiClient $replicateClient = null;
+    protected AiProviderFactory $providerFactory;
 
-    public function __construct()
+    public function __construct(AiProviderFactory $providerFactory)
     {
-        // Lazy loading - client will be created when needed
-    }
-
-    /**
-     * Get or create the Replicate API client
-     */
-    protected function getReplicateClient(): ReplicateApiClient
-    {
-        if ($this->replicateClient === null) {
-            $this->replicateClient = new ReplicateApiClient();
-        }
-        return $this->replicateClient;
+        $this->providerFactory = $providerFactory;
     }
 
     /**
@@ -40,6 +31,9 @@ class AiGenerationService
         $width = $params['width'] ?? config("ai-generation.models.image.{$model}.default_width", 1024);
         $height = $params['height'] ?? config("ai-generation.models.image.{$model}.default_height", 1024);
 
+        // Get provider for this model
+        $providerName = config("ai-generation.models.image.{$model}.provider", 'replicate');
+
         // Calculate cost
         $cost = $this->calculateImageCost($model, $params);
 
@@ -49,7 +43,7 @@ class AiGenerationService
         }
 
         // Start transaction
-        return DB::transaction(function () use ($user, $model, $prompt, $negativePrompt, $width, $height, $cost, $params) {
+        return DB::transaction(function () use ($user, $model, $providerName, $prompt, $negativePrompt, $width, $height, $cost, $params) {
             // Deduct credits
             $user->deductAiCredits($cost);
 
@@ -58,6 +52,7 @@ class AiGenerationService
                 'user_id' => $user->id,
                 'type' => AiGeneration::TYPE_IMAGE,
                 'model' => $model,
+                'provider' => $providerName,
                 'prompt' => $prompt,
                 'negative_prompt' => $negativePrompt,
                 'parameters' => [
@@ -65,6 +60,8 @@ class AiGenerationService
                     'height' => $height,
                     ...$params,
                 ],
+                'aspect_ratio' => $params['aspect_ratio'] ?? null,
+                'resolution' => null,
                 'credits_used' => $cost,
                 'status' => AiGeneration::STATUS_PENDING,
             ]);
@@ -95,9 +92,14 @@ class AiGenerationService
      */
     public function generateVideo(User $user, array $params): AiGeneration
     {
-        $model = $params['model'] ?? 'kling-2.0';
+        $model = $params['model'] ?? 'veo-3.1';
         $prompt = $params['prompt'];
         $duration = $params['duration'] ?? config("ai-generation.models.video.{$model}.default_duration", 5);
+        $resolution = $params['resolution'] ?? config("ai-generation.models.video.{$model}.default_resolution", '1080p');
+        $aspectRatio = $params['aspect_ratio'] ?? '16:9';
+
+        // Get provider for this model
+        $providerName = config("ai-generation.models.video.{$model}.provider", 'replicate');
 
         // Calculate cost
         $cost = $this->calculateVideoCost($model, $params);
@@ -108,7 +110,7 @@ class AiGenerationService
         }
 
         // Start transaction
-        return DB::transaction(function () use ($user, $model, $prompt, $duration, $cost, $params) {
+        return DB::transaction(function () use ($user, $model, $providerName, $prompt, $duration, $resolution, $aspectRatio, $cost, $params) {
             // Deduct credits
             $user->deductAiCredits($cost);
 
@@ -117,11 +119,17 @@ class AiGenerationService
                 'user_id' => $user->id,
                 'type' => AiGeneration::TYPE_VIDEO,
                 'model' => $model,
+                'provider' => $providerName,
                 'prompt' => $prompt,
                 'parameters' => [
                     'duration' => $duration,
+                    'resolution' => $resolution,
+                    'aspect_ratio' => $aspectRatio,
                     ...$params,
                 ],
+                'aspect_ratio' => $aspectRatio,
+                'resolution' => $resolution,
+                'has_audio' => $params['generate_audio'] ?? false,
                 'credits_used' => $cost,
                 'status' => AiGeneration::STATUS_PENDING,
             ]);
@@ -148,23 +156,83 @@ class AiGenerationService
     }
 
     /**
+     * Generate video from an image (image-to-video)
+     */
+    public function generateVideoFromImage(User $user, array $params): AiGeneration
+    {
+        $model = $params['model'] ?? 'veo-3.1';
+        $prompt = $params['prompt'];
+        $imagePath = $params['source_image'];
+        $duration = $params['duration'] ?? config("ai-generation.models.video.{$model}.default_duration", 5);
+        $resolution = $params['resolution'] ?? config("ai-generation.models.video.{$model}.default_resolution", '1080p');
+        $aspectRatio = $params['aspect_ratio'] ?? '16:9';
+
+        $providerName = config("ai-generation.models.video.{$model}.provider", 'replicate');
+
+        // Calculate cost (same as video)
+        $cost = $this->calculateVideoCost($model, $params);
+
+        if (!$user->hasEnoughCredits($cost)) {
+            throw new \Exception("Insufficient credits. Required: {$cost}, Available: {$user->ai_credits}");
+        }
+
+        return DB::transaction(function () use ($user, $model, $providerName, $prompt, $imagePath, $duration, $resolution, $aspectRatio, $cost, $params) {
+            $user->deductAiCredits($cost);
+
+            $generation = AiGeneration::create([
+                'user_id' => $user->id,
+                'type' => AiGeneration::TYPE_VIDEO,
+                'model' => $model,
+                'provider' => $providerName,
+                'prompt' => $prompt,
+                'parameters' => [
+                    'duration' => $duration,
+                    'resolution' => $resolution,
+                    'aspect_ratio' => $aspectRatio,
+                    ...$params,
+                ],
+                'aspect_ratio' => $aspectRatio,
+                'resolution' => $resolution,
+                'source_image_path' => $imagePath,
+                'has_audio' => $params['generate_audio'] ?? false,
+                'credits_used' => $cost,
+                'status' => AiGeneration::STATUS_PENDING,
+            ]);
+
+            Transaction::create([
+                'user_id' => $user->id,
+                'wallet_id' => null,
+                'ai_generation_id' => $generation->id,
+                'type' => Transaction::TYPE_AI_GENERATION,
+                'amount' => $cost,
+                'final_amount' => $cost,
+                'status' => Transaction::STATUS_COMPLETED,
+                'payment_method' => 'ai_credits',
+                'user_note' => "AI Image-to-Video: {$prompt}",
+                'completed_at' => now(),
+            ]);
+
+            $this->startImageToVideoGeneration($generation);
+
+            return $generation->fresh();
+        });
+    }
+
+    /**
      * Calculate cost for image generation
      */
     public function calculateImageCost(string $model, array $params): int
     {
         $baseCost = config("ai-generation.models.image.{$model}.credits_per_image", 10);
 
-        // Apply modifiers based on parameters
         $multiplier = 1.0;
 
-        // HD/size multiplier
         $width = $params['width'] ?? config("ai-generation.models.image.{$model}.default_width");
         $height = $params['height'] ?? config("ai-generation.models.image.{$model}.default_height");
         if ($width > 1024 || $height > 1024) {
             $multiplier *= config('ai-generation.cost_modifiers.hd_multiplier', 1.5);
         }
 
-        // Quality/steps multiplier
         $steps = $params['num_inference_steps'] ?? 0;
         if ($steps > 30) {
             $multiplier *= config('ai-generation.cost_modifiers.high_quality_multiplier', 1.3);
@@ -183,48 +251,40 @@ class AiGenerationService
 
         $baseCost = $costPerSecond * $duration;
 
-        // Apply resolution modifier for 1080p
+        // Apply resolution modifier
         $resolution = $params['resolution'] ?? config("ai-generation.models.video.{$model}.default_resolution");
         if ($resolution === '1080p') {
             $baseCost *= 1.5;
+        } elseif ($resolution === '4k') {
+            $baseCost *= config('ai-generation.cost_modifiers.4k_multiplier', 2.0);
         }
 
         return (int) ceil($baseCost);
     }
 
     /**
-     * Start async image generation
+     * Start async image generation using provider
      */
     protected function startImageGeneration(AiGeneration $generation): void
     {
         try {
-            $model = $generation->model;
-            $modelVersion = config("ai-generation.models.image.{$model}.version");
+            $provider = $this->providerFactory->forModel($generation->model, 'image');
+            $modelConfig = config("ai-generation.models.image.{$generation->model}");
             $params = $generation->parameters;
 
-            // Prepare input for Replicate
-            $input = [
-                'prompt' => $generation->prompt,
+            $result = $provider->generateImage($generation->prompt, [
+                'version' => $modelConfig['version'] ?? $generation->model,
+                'model' => $modelConfig['version'] ?? $generation->model,
                 'width' => $params['width'] ?? 1024,
                 'height' => $params['height'] ?? 1024,
-            ];
+                'negative_prompt' => $generation->negative_prompt,
+                'parameters' => $modelConfig['parameters'] ?? [],
+            ]);
 
-            if ($generation->negative_prompt) {
-                $input['negative_prompt'] = $generation->negative_prompt;
-            }
-
-            // Merge model-specific parameters
-            $modelParams = config("ai-generation.models.image.{$model}.parameters", []);
-            $input = array_merge($input, $modelParams, $params);
-
-            // Call Replicate API
-            $prediction = $this->getReplicateClient()->predict($modelVersion, $input);
-
-            // Update generation with provider ID
             $generation->update([
-                'provider_id' => $prediction['id'],
+                'provider_id' => $result['id'],
                 'status' => AiGeneration::STATUS_PROCESSING,
-                'provider_metadata' => $prediction,
+                'provider_metadata' => $result['raw'] ?? $result,
             ]);
 
         } catch (\Exception $e) {
@@ -238,47 +298,32 @@ class AiGenerationService
                 'error_message' => $e->getMessage(),
             ]);
 
-            // Refund credits
             $generation->user->addAiCredits($generation->credits_used);
         }
     }
 
     /**
-     * Start async video generation
+     * Start async video generation using provider
      */
     protected function startVideoGeneration(AiGeneration $generation): void
     {
         try {
-            $model = $generation->model;
-            $modelVersion = config("ai-generation.models.video.{$model}.version");
+            $provider = $this->providerFactory->forModel($generation->model, 'video');
+            $modelConfig = config("ai-generation.models.video.{$generation->model}");
             $params = $generation->parameters;
 
-            // Prepare input for Replicate
-            $input = [
-                'prompt' => $generation->prompt,
+            $result = $provider->generateVideo($generation->prompt, [
+                'model' => $modelConfig['version'] ?? $generation->model,
                 'duration' => $params['duration'] ?? 5,
-            ];
+                'resolution' => $params['resolution'] ?? '1080p',
+                'aspect_ratio' => $params['aspect_ratio'] ?? '16:9',
+                'negative_prompt' => $generation->negative_prompt ?? null,
+            ]);
 
-            // Add resolution data
-            $resolution = $params['resolution'] ?? config("ai-generation.models.video.{$model}.default_resolution");
-            $resolutionData = config("ai-generation.models.video.{$model}.resolutions.{$resolution}");
-            if ($resolutionData) {
-                $input['width'] = $resolutionData['width'];
-                $input['height'] = $resolutionData['height'];
-            }
-
-            // Merge model-specific parameters
-            $modelParams = config("ai-generation.models.video.{$model}.parameters", []);
-            $input = array_merge($input, $modelParams);
-
-            // Call Replicate API
-            $prediction = $this->getReplicateClient()->predict($modelVersion, $input);
-
-            // Update generation with provider ID
             $generation->update([
-                'provider_id' => $prediction['id'],
+                'provider_id' => $result['id'],
                 'status' => AiGeneration::STATUS_PROCESSING,
-                'provider_metadata' => $prediction,
+                'provider_metadata' => $result['raw'] ?? $result,
             ]);
 
         } catch (\Exception $e) {
@@ -292,13 +337,53 @@ class AiGenerationService
                 'error_message' => $e->getMessage(),
             ]);
 
-            // Refund credits
             $generation->user->addAiCredits($generation->credits_used);
         }
     }
 
     /**
-     * Check generation status and update
+     * Start image-to-video generation
+     */
+    protected function startImageToVideoGeneration(AiGeneration $generation): void
+    {
+        try {
+            $provider = $this->providerFactory->forModel($generation->model, 'video');
+            $params = $generation->parameters;
+
+            $result = $provider->generateVideoFromImage(
+                $generation->source_image_path,
+                $generation->prompt,
+                [
+                    'model' => config("ai-generation.models.video.{$generation->model}.version"),
+                    'duration' => $params['duration'] ?? 5,
+                    'resolution' => $params['resolution'] ?? '1080p',
+                    'aspect_ratio' => $params['aspect_ratio'] ?? '16:9',
+                ]
+            );
+
+            $generation->update([
+                'provider_id' => $result['id'],
+                'status' => AiGeneration::STATUS_PROCESSING,
+                'provider_metadata' => $result['raw'] ?? $result,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to start image-to-video generation', [
+                'generation_id' => $generation->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            $generation->update([
+                'status' => AiGeneration::STATUS_FAILED,
+                'error_message' => $e->getMessage(),
+            ]);
+
+            $generation->user->addAiCredits($generation->credits_used);
+        }
+    }
+
+    /**
+     * Check generation status and update using provider
      */
     public function checkGenerationStatus(AiGeneration $generation): AiGeneration
     {
@@ -307,20 +392,19 @@ class AiGenerationService
         }
 
         try {
-            $prediction = $this->getReplicateClient()->getPrediction($generation->provider_id);
-            $status = $prediction['status'] ?? '';
+            $provider = $this->providerFactory->make($generation->provider);
+            $result = $provider->checkStatus($generation->provider_id);
 
-            $generation->provider_metadata = $prediction;
+            $generation->provider_metadata = $result['raw'] ?? $result;
 
-            if ($status === 'succeeded') {
-                $this->handleSuccessfulGeneration($generation, $prediction);
-            } elseif (in_array($status, ['failed', 'canceled'])) {
+            if ($result['status'] === 'succeeded') {
+                $this->handleSuccessfulGeneration($generation, $result);
+            } elseif ($result['status'] === 'failed') {
                 $generation->update([
                     'status' => AiGeneration::STATUS_FAILED,
-                    'error_message' => $prediction['error'] ?? 'Generation failed or was canceled',
+                    'error_message' => $result['error'] ?? 'Generation failed',
                 ]);
 
-                // Refund credits
                 $generation->user->addAiCredits($generation->credits_used);
             }
 
@@ -339,24 +423,18 @@ class AiGenerationService
     /**
      * Handle successful generation - download and store result
      */
-    protected function handleSuccessfulGeneration(AiGeneration $generation, array $prediction): void
+    protected function handleSuccessfulGeneration(AiGeneration $generation, array $result): void
     {
         try {
-            $output = $prediction['output'] ?? null;
+            $output = $result['output'] ?? null;
 
             if (!$output) {
-                throw new \Exception('No output in prediction result');
+                throw new \Exception('No output in generation result');
             }
 
-            // Output can be a URL string or array of URLs
-            $url = is_array($output) ? $output[0] : $output;
-
-            // Download file
-            $fileContent = file_get_contents($url);
-
-            if ($fileContent === false) {
-                throw new \Exception('Failed to download generation result');
-            }
+            // Get provider to download
+            $provider = $this->providerFactory->make($generation->provider);
+            $fileContent = $provider->downloadResult($output);
 
             // Determine file extension
             $extension = $generation->type === AiGeneration::TYPE_IMAGE ? 'png' : 'mp4';
@@ -372,12 +450,15 @@ class AiGenerationService
             $disk = config('ai-generation.storage.disk');
             Storage::disk($disk)->put($path, $fileContent);
 
+            // Create UserMedia record to show in Media Library
+            $this->createMediaRecord($generation, $path, $disk, strlen($fileContent));
+
             // Update generation
             $generation->update([
                 'status' => AiGeneration::STATUS_COMPLETED,
-                'result_url' => $url,
+                'result_url' => $output,
                 'result_path' => $path,
-                'processing_time' => $prediction['metrics']['predict_time'] ?? null,
+                'processing_time' => $result['raw']['metrics']['predict_time'] ?? null,
             ]);
 
         } catch (\Exception $e) {
@@ -391,13 +472,56 @@ class AiGenerationService
                 'error_message' => 'Failed to download result: ' . $e->getMessage(),
             ]);
 
-            // Refund credits
             $generation->user->addAiCredits($generation->credits_used);
         }
     }
 
     /**
-     * Get available models for a specific type
+     * Create a UserMedia record for AI generated content
+     */
+    protected function createMediaRecord(AiGeneration $generation, string $path, string $disk, int $fileSize): void
+    {
+        try {
+            $isImage = $generation->type === AiGeneration::TYPE_IMAGE;
+            $mimeType = $isImage ? 'image/png' : 'video/mp4';
+            $extension = $isImage ? 'png' : 'mp4';
+            $filename = basename($path);
+
+            \App\Models\UserMedia::create([
+                'user_id' => $generation->user_id,
+                'filename' => $filename,
+                'original_name' => 'AI Generated - ' . mb_substr($generation->prompt, 0, 50, 'UTF-8') . '.' . $extension,
+                'mime_type' => $mimeType,
+                'file_size' => $fileSize,
+                'path' => $path,
+                'folder' => 'ai-generated',
+                'source' => 'ai_generated',
+                'ai_generation_id' => $generation->id,
+                'tags' => ['ai-generated', $generation->type, $generation->provider],
+                'metadata' => [
+                    'prompt' => $generation->prompt,
+                    'model' => $generation->model,
+                    'provider' => $generation->provider,
+                    'credits_used' => $generation->credits_used,
+                ],
+                'description' => 'Generated via AI Studio: ' . $generation->prompt,
+            ]);
+
+            Log::info('Created UserMedia record for AI generation', [
+                'generation_id' => $generation->id,
+                'path' => $path,
+            ]);
+        } catch (\Exception $e) {
+            Log::warning('Failed to create UserMedia record', [
+                'generation_id' => $generation->id,
+                'error' => $e->getMessage(),
+            ]);
+            // Don't throw - the generation was successful, media record is optional
+        }
+    }
+
+    /**
+     * Get available models for a specific type with provider info
      */
     public function getAvailableModels(string $type = 'image'): array
     {
@@ -405,14 +529,24 @@ class AiGenerationService
 
         $result = [];
         foreach ($models as $key => $config) {
+            // Include all models but mark disabled ones
             $result[] = [
                 'id' => $key,
                 'name' => $config['name'],
                 'description' => $config['description'] ?? '',
+                'provider' => $config['provider'] ?? 'replicate',
                 'credits_cost' => $type === 'image'
                     ? $config['credits_per_image']
                     : $config['credits_per_second'],
                 'type' => $type,
+                'badge' => $config['badge'] ?? null,
+                'badge_color' => $config['badge_color'] ?? null,
+                'features' => $config['features'] ?? [],
+                'resolutions' => $config['resolutions'] ?? [],
+                'aspect_ratios' => $config['aspect_ratios'] ?? [],
+                'max_duration' => $config['max_duration'] ?? null,
+                'enabled' => $config['enabled'] ?? true,
+                'coming_soon' => $config['coming_soon'] ?? false,
             ];
         }
 

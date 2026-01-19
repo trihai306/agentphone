@@ -17,16 +17,25 @@ class RecordingEventController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'event' => 'required|string|in:recording:started,recording:stopped,recording:saved',
+            'event' => 'required|string|in:recording:started,recording:stopped,recording:saved,inspect:result,visual:result',
             'device_id' => 'required|string',
-            'session_id' => 'required|string',
             'timestamp' => 'required|integer',
+            'session_id' => 'sometimes|string',
             'started_at' => 'sometimes|integer',
             'stopped_at' => 'sometimes|integer',
             'duration' => 'sometimes|integer',
             'event_count' => 'sometimes|integer',
             'target_app' => 'sometimes|string',
             'screenshot_enabled' => 'sometimes|boolean',
+            // Fields for inspect:result event
+            'success' => 'sometimes|boolean',
+            'elements' => 'sometimes|array',
+            'package_name' => 'sometimes|string',
+            'screen_width' => 'sometimes|integer',
+            'screen_height' => 'sometimes|integer',
+            'screenshot' => 'sometimes|string',
+            'element_count' => 'sometimes|integer',
+            'error' => 'sometimes|string',
         ]);
 
         if ($validator->fails()) {
@@ -48,7 +57,86 @@ class RecordingEventController extends Controller
             }
 
             $eventType = $request->event;
+
+            // Handle inspect:result event separately (no session_id required)
+            if ($eventType === 'inspect:result') {
+                try {
+                    broadcast(new \App\Events\InspectElementsResult(
+                        userId: $device->user_id,
+                        deviceId: $request->device_id,
+                        success: $request->success ?? false,
+                        elements: $request->elements ?? [],
+                        packageName: $request->package_name,
+                        screenshot: $request->screenshot,
+                        screenWidth: $request->screen_width,
+                        screenHeight: $request->screen_height,
+                        error: $request->error
+                    ));
+
+                    Log::info("Broadcast inspect:result to user channel", [
+                        'user_id' => $device->user_id,
+                        'device_id' => $request->device_id,
+                        'element_count' => $request->element_count ?? 0
+                    ]);
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Inspection result broadcasted'
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error("Failed to broadcast inspect:result: " . $e->getMessage());
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to broadcast result'
+                    ], 500);
+                }
+            }
+
+            // Handle visual:result event (OCR text detection results from APK)
+            if ($eventType === 'visual:result') {
+                try {
+                    broadcast(new \App\Events\VisualInspectResult(
+                        userId: $device->user_id,
+                        deviceId: $request->device_id,
+                        success: $request->success ?? false,
+                        textElements: $request->text_elements ?? [],
+                        totalElements: $request->total_elements ?? 0,
+                        processingTimeMs: $request->processing_time_ms ?? 0,
+                        screenshotWidth: $request->screenshot_width ?? 0,
+                        screenshotHeight: $request->screenshot_height ?? 0,
+                        statusBarHeight: $request->status_bar_height ?? 0,
+                        screenshot: $request->screenshot,
+                        error: $request->error
+                    ));
+
+                    Log::info("Broadcast visual:result to user channel", [
+                        'user_id' => $device->user_id,
+                        'device_id' => $request->device_id,
+                        'text_elements_count' => $request->total_elements ?? 0,
+                        'processing_time_ms' => $request->processing_time_ms ?? 0
+                    ]);
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Visual inspection result broadcasted'
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error("Failed to broadcast visual:result: " . $e->getMessage());
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to broadcast visual result'
+                    ], 500);
+                }
+            }
+
+            // For recording events, session_id is required
             $sessionId = $request->session_id;
+            if (!$sessionId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'session_id is required for recording events'
+                ], 422);
+            }
 
             // Handle different event types
             if ($eventType === 'recording:started') {
@@ -308,14 +396,22 @@ class RecordingEventController extends Controller
 
     /**
      * Save base64 screenshot to storage
+     * Screenshots are sent as JPEG (scaled 25%, quality 60%) from APK
      */
     private function saveScreenshot(string $base64, string $sessionId, int $sequence): ?string
     {
         try {
             $imageData = base64_decode($base64);
-            $filename = "recordings/{$sessionId}/screenshot_{$sequence}.png";
+
+            // Use JPEG extension since APK sends JPEG format
+            $filename = "recordings/{$sessionId}/screenshot_{$sequence}.jpg";
             \Storage::disk('public')->put($filename, $imageData);
-            return \Storage::disk('public')->url($filename);
+
+            $url = \Storage::disk('public')->url($filename);
+            $sizeKb = round(strlen($imageData) / 1024, 1);
+            Log::info("📸 Screenshot saved: {$filename} ({$sizeKb}KB)");
+
+            return $url;
         } catch (\Exception $e) {
             Log::warning("Failed to save screenshot: {$e->getMessage()}");
             return null;
@@ -443,6 +539,147 @@ class RecordingEventController extends Controller
                 'message' => 'Server error: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Check if workflow editor is listening for this device
+     * Called by APK before starting recording to ensure there's a listener
+     */
+    public function checkListener(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'device_id' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $deviceId = $request->device_id;
+        $cacheKey = "workflow:listener:{$deviceId}";
+
+        // Check if there's an active listener (set by Editor when subscribing)
+        $isListening = \Cache::has($cacheKey);
+        $listenerData = $isListening ? \Cache::get($cacheKey) : null;
+
+        Log::info("Check workflow listener for device: {$deviceId}", [
+            'is_listening' => $isListening,
+            'listener' => $listenerData
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'is_listening' => $isListening,
+            'listener' => $listenerData,
+            'message' => $isListening
+                ? 'Workflow editor is listening'
+                : 'No workflow editor listening. Please open Flow Editor and select this device.'
+        ]);
+    }
+
+    /**
+     * Register workflow editor as listener for device
+     * Called by Editor.jsx when subscribing to device channel
+     */
+    public function registerListener(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'device_id' => 'required|string',
+            'flow_id' => 'sometimes|integer',
+            'user_id' => 'sometimes|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $deviceId = $request->device_id;
+        $cacheKey = "workflow:listener:{$deviceId}";
+
+        // Store listener info with 1 hour TTL (will be refreshed or removed when editor closes)
+        $listenerData = [
+            'device_id' => $deviceId,
+            'flow_id' => $request->flow_id,
+            'user_id' => $request->user_id ?? auth()->id(),
+            'registered_at' => now()->toISOString(),
+        ];
+
+        \Cache::put($cacheKey, $listenerData, now()->addHour());
+
+        Log::info("Workflow listener registered for device: {$deviceId}", $listenerData);
+
+        // Broadcast to APK that Editor is now listening
+        try {
+            $device = Device::where('device_id', $deviceId)->first();
+            if ($device) {
+                broadcast(new \App\Events\RecordingStatusChanged(
+                    $deviceId,
+                    'editor_connected',
+                    [
+                        'flow_id' => $request->flow_id,
+                        'user_id' => $request->user_id ?? auth()->id(),
+                    ]
+                ))->toOthers();
+            }
+        } catch (\Exception $e) {
+            Log::warning("Failed to broadcast editor_connected: " . $e->getMessage());
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Listener registered',
+            'listener' => $listenerData
+        ]);
+    }
+
+    /**
+     * Unregister workflow editor listener for device
+     * Called by Editor.jsx when unsubscribing from device channel
+     */
+    public function unregisterListener(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'device_id' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $deviceId = $request->device_id;
+        $cacheKey = "workflow:listener:{$deviceId}";
+
+        \Cache::forget($cacheKey);
+
+        Log::info("Workflow listener unregistered for device: {$deviceId}");
+
+        // Broadcast to APK that Editor has disconnected
+        try {
+            $device = Device::where('device_id', $deviceId)->first();
+            if ($device) {
+                broadcast(new \App\Events\RecordingStatusChanged(
+                    $deviceId,
+                    'editor_disconnected',
+                    []
+                ))->toOthers();
+            }
+        } catch (\Exception $e) {
+            Log::warning("Failed to broadcast editor_disconnected: " . $e->getMessage());
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Listener unregistered'
+        ]);
     }
 }
 

@@ -1,5 +1,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
+import { changeLanguage, getCurrentLanguage } from '@/i18n';
 import ReactFlow, {
     addEdge,
     applyEdgeChanges,
@@ -18,12 +20,14 @@ import 'reactflow/dist/style.css';
 // Theme support
 import { useTheme } from '@/Contexts/ThemeContext';
 import ThemeToggle from '@/Components/ThemeToggle';
+import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import MediaPickerModal from '@/Components/MediaPickerModal';
 import CollectionPickerModal from '@/Components/CollectionPickerModal';
 import { useToast } from '@/Components/Layout/ToastProvider';
 
 // Execution state
 import { useExecutionState, ExecutionStatus, NodeStatus } from '@/hooks/useExecutionState';
+import { useUndoRedo } from '@/hooks/useUndoRedo';
 
 // Custom node types
 import CustomNode from '../../Components/Flow/CustomNode';
@@ -50,10 +54,13 @@ import GlassConditionNode from '../../Components/Flow/GlassConditionNode';
 import GlassTextInputNode from '../../Components/Flow/GlassTextInputNode';
 import GlassHttpNode from '../../Components/Flow/GlassHttpNode';
 import SmartActionNode from '../../Components/Flow/SmartActionNode';
+import ElementCheckNode from '../../Components/Flow/ElementCheckNode';
+import WaitForElementNode from '../../Components/Flow/WaitForElementNode';
 import LoopSubFlowModal from '../../Components/Flow/LoopSubFlowModal';
 import QuickAddMenu from '../../Components/Flow/QuickAddMenu';
 import LiveRecordingPanel from '../../Components/Flow/LiveRecordingPanel';
 import ImportRecordingModal from '../../Components/Flow/ImportRecordingModal';
+import WorkflowPreviewModal from '../../Components/Flow/WorkflowPreviewModal';
 
 const nodeTypes = {
     // Control Flow
@@ -69,10 +76,20 @@ const nodeTypes = {
     open_app: SmartActionNode,
     click: SmartActionNode,
     tap: SmartActionNode,
+    long_tap: SmartActionNode,       // Long press/tap from APK
     long_press: SmartActionNode,
+    double_tap: SmartActionNode,     // Double tap detection
     text_input: SmartActionNode,
     scroll: SmartActionNode,
+    scroll_up: SmartActionNode,      // Direction-specific scroll from APK
+    scroll_down: SmartActionNode,
+    scroll_left: SmartActionNode,
+    scroll_right: SmartActionNode,
     swipe: SmartActionNode,
+    swipe_left: SmartActionNode,     // Direction-specific swipe
+    swipe_right: SmartActionNode,
+    swipe_up: SmartActionNode,
+    swipe_down: SmartActionNode,
     key_event: SmartActionNode,
     focus: SmartActionNode,
     back: SmartActionNode,
@@ -85,6 +102,8 @@ const nodeTypes = {
     loopEnd: SmartActionNode,    // Used in LoopSubFlowModal
     wait: WaitNode,
     assert: AssertNode,
+    element_check: ElementCheckNode,      // Check element exists/text/visible
+    wait_for_element: WaitForElementNode, // Wait for element with timeout
 
     // Resources - Premium Glass versions
     file_input: FileInputNode,
@@ -113,16 +132,20 @@ const defaultEdgeOptions = {
 function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     // Use usePage to get props directly - workaround for Inertia prop hydration bug
     const { props } = usePage();
-    const onlineDevices = props.onlineDevices || [];
+    const [onlineDevices, setOnlineDevices] = useState(props.onlineDevices || []);
     const collections = props.dataCollections || dataCollections;
 
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     const { addToast } = useToast();
+    const { t } = useTranslation();
 
     const [nodes, setNodes] = useState(flow.nodes || []);
     const [edges, setEdges] = useState(flow.edges || []);
     const [viewport, setViewport] = useState(flow.viewport || { x: 0, y: 0, zoom: 1 });
+
+    // Undo/Redo history management
+    const { takeSnapshot, undo, redo, canUndo, canRedo } = useUndoRedo(nodes, edges, setNodes, setEdges);
     const [saving, setSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState(null);
     const [showSidebar, setShowSidebar] = useState(true);
@@ -134,7 +157,9 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     const [draggedNodeType, setDraggedNodeType] = useState(null);
     const [showLogPanel, setShowLogPanel] = useState(false);
     const [selectedDevice, setSelectedDevice] = useState(null);
+    const [showLangDropdown, setShowLangDropdown] = useState(false);
     const [showDeviceSelector, setShowDeviceSelector] = useState(false);
+    const [showClearConfirm, setShowClearConfirm] = useState(false);
 
     // Recording mode state
     const [isRecording, setIsRecording] = useState(false);
@@ -162,6 +187,9 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     const [showLoopSubFlowModal, setShowLoopSubFlowModal] = useState(false);
     const [editingLoopNodeId, setEditingLoopNodeId] = useState(null);
 
+    // Workflow Preview Modal state
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
+
     // Debug Panel state - shows raw APK event data
     const [debugEvents, setDebugEvents] = useState([]);
     const [showDebugPanel, setShowDebugPanel] = useState(false);
@@ -186,6 +214,123 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         isCompleted,
         hasError,
     } = useExecutionState(nodes, edges);
+
+    // Sync selectedNode when nodes change (fix stale state bug)
+    useEffect(() => {
+        if (selectedNode) {
+            const updatedNode = nodes.find(n => n.id === selectedNode.id);
+            if (updatedNode && JSON.stringify(updatedNode) !== JSON.stringify(selectedNode)) {
+                setSelectedNode(updatedNode);
+            } else if (!updatedNode) {
+                // Node was deleted
+                setSelectedNode(null);
+            }
+        }
+    }, [nodes]);
+
+    // Auto-select first online device when page loads
+    useEffect(() => {
+        if (!selectedDevice && onlineDevices && onlineDevices.length > 0) {
+            setSelectedDevice(onlineDevices[0]);
+        }
+    }, [onlineDevices]);
+
+    // Inject callbacks into data_source and file_input nodes after initial load
+    // This ensures "Change Collection" and "Browse Media" buttons work for nodes loaded from DB
+    useEffect(() => {
+        let needsUpdate = false;
+
+        const updatedNodes = nodes.map(node => {
+            // Inject callbacks for data_source nodes
+            if (node.type === 'data_source' && !node.data?.onSelectCollection) {
+                needsUpdate = true;
+                return {
+                    ...node,
+                    data: {
+                        ...node.data,
+                        onSelectCollection: (nodeId) => {
+                            setCollectionPickerNodeId(nodeId);
+                            setShowCollectionPicker(true);
+                        },
+                        onUpdateData: (nodeId, key, value) => {
+                            setNodes((nds) => nds.map(n =>
+                                n.id === nodeId
+                                    ? { ...n, data: { ...n.data, [key]: value } }
+                                    : n
+                            ));
+                        }
+                    }
+                };
+            }
+            // Inject callbacks for file_input nodes
+            if (node.type === 'file_input' && !node.data?.onBrowseMedia) {
+                needsUpdate = true;
+                return {
+                    ...node,
+                    data: {
+                        ...node.data,
+                        onBrowseMedia: (nodeId) => {
+                            setMediaPickerNodeId(nodeId);
+                            setShowMediaPicker(true);
+                        }
+                    }
+                };
+            }
+            return node;
+        });
+
+        if (needsUpdate) {
+            setNodes(updatedNodes);
+        }
+    }, []); // Run only on mount
+
+    // Process existing data wire connections on mount
+    // This ensures LoopNodes connected to DataSourceNodes are properly configured
+    useEffect(() => {
+        const processedNodes = new Set();
+
+        edges.forEach(edge => {
+            // Check if this is a data wire connection
+            const sourceNode = nodes.find(n => n.id === edge.source);
+            const targetNode = nodes.find(n => n.id === edge.target);
+
+            if (!sourceNode || !targetNode) return;
+
+            const isDataWire = edge.sourceHandle === 'data-output' ||
+                (sourceNode.type === 'data_source' && edge.targetHandle === 'data-input');
+
+            // If DataSourceNode → LoopNode connection exists but LoopNode isn't configured
+            if (isDataWire &&
+                sourceNode.type === 'data_source' &&
+                targetNode.type === 'loop' &&
+                !targetNode.data?.dataSourceNodeId &&
+                !processedNodes.has(targetNode.id)) {
+
+                const outputName = sourceNode.data?.outputName ||
+                    sourceNode.data?.collectionName?.toLowerCase().replace(/\s+/g, '_') || 'records';
+
+                processedNodes.add(targetNode.id);
+
+                setNodes(nds => nds.map(node => {
+                    if (node.id === targetNode.id) {
+                        return {
+                            ...node,
+                            data: {
+                                ...node.data,
+                                dataSource: 'data',
+                                dataSourceNodeId: sourceNode.id,
+                                dataSourceName: outputName,
+                                sourceVariable: `{{${outputName}}}`,
+                                connectedCollectionName: sourceNode.data?.collectionName,
+                                connectedRecordCount: sourceNode.data?.recordCount,
+                            }
+                        };
+                    }
+                    return node;
+                }));
+            }
+        });
+    }, []); // Run once on mount
 
     // Update nodes with execution state and callbacks
     const nodesWithExecution = useMemo(() => {
@@ -237,6 +382,12 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     const startRecording = useCallback(async () => {
         if (!selectedDevice) return;
 
+        // Check accessibility service first
+        if (!selectedDevice.accessibility_enabled) {
+            addToast(`❌ ${t('flows.editor.accessibility.not_enabled_record')}`, 'error');
+            return;
+        }
+
         try {
             const response = await fetch('/recording-sessions/start', {
                 method: 'POST',
@@ -266,8 +417,6 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                 recordingTimerRef.current = setInterval(() => {
                     setRecordingDuration(prev => prev + 1);
                 }, 1000);
-
-                console.log('Recording started:', data.session.session_id);
             }
         } catch (error) {
             console.error('Failed to start recording:', error);
@@ -297,7 +446,6 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
             if (data.success) {
                 setIsRecording(false);
                 setIsRecordingPaused(false);
-                console.log('Recording stopped:', recordedNodeCount, 'nodes created');
             }
         } catch (error) {
             console.error('Failed to stop recording:', error);
@@ -425,29 +573,34 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     }, [getAppNameFromPackage]);
 
     // Map event type to node type
+    // Return the exact event type so SmartActionNode can display correct icon/color
     const getNodeType = useCallback((eventType) => {
         const typeMap = {
             'open_app': 'open_app',
             'click': 'click',
-            'tap': 'click',
-            'long_click': 'click',
-            'long_press': 'click',
+            'tap': 'tap',                       // Keep specific
+            'long_click': 'long_press',
+            'long_tap': 'long_tap',             // Keep specific 
+            'long_press': 'long_press',
+            'double_tap': 'double_tap',         // Keep specific
             'text_input': 'text_input',
             'set_text': 'text_input',
             'scroll': 'scroll',
-            'scroll_up': 'scroll',
-            'scroll_down': 'scroll',
+            'scroll_up': 'scroll_up',           // Keep specific direction
+            'scroll_down': 'scroll_down',
+            'scroll_left': 'scroll_left',
+            'scroll_right': 'scroll_right',
             'swipe': 'swipe',
-            'swipe_left': 'swipe',
-            'swipe_right': 'swipe',
-            'swipe_up': 'swipe',
-            'swipe_down': 'swipe',
+            'swipe_left': 'swipe_left',         // Keep specific direction
+            'swipe_right': 'swipe_right',
+            'swipe_up': 'swipe_up',
+            'swipe_down': 'swipe_down',
             'key_event': 'key_event',
-            'back': 'key_event',
-            'home': 'key_event',
+            'back': 'back',                     // Keep specific
+            'home': 'home',
             'focus': 'focus',
         };
-        return typeMap[eventType] || 'recorded_action';
+        return typeMap[eventType] || eventType; // Fallback to eventType itself
     }, []);
 
     // Create a Loop node from consecutive actions
@@ -538,7 +691,12 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         const LOOP_THRESHOLD = 3; // Create loop after 3 repeated actions
 
         // Event types that should NEVER be grouped into loops
-        const LOOP_EXCLUDED_TYPES = ['text_input', 'set_text', 'focus', 'text_delete', 'open_app'];
+        // TAP/CLICK/TYPE actions should never be looped - each tap on different elements is unique
+        // Only SCROLL/SWIPE actions can be grouped into loops
+        const LOOP_EXCLUDED_TYPES = [
+            'text_input', 'set_text', 'focus', 'text_delete', 'open_app',
+            'click', 'tap', 'double_tap', 'long_click', 'long_press'
+        ];
         const shouldExcludeFromLoop = LOOP_EXCLUDED_TYPES.includes(normalizedType) ||
             LOOP_EXCLUDED_TYPES.includes(eventData.event_type);
 
@@ -549,16 +707,35 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         const currentConsecutive = consecutiveActionsRef.current;
 
         // Check if this action is similar to consecutive actions (only if not excluded)
+        // For click/tap actions, also require same resourceId or text (clicking different buttons shouldn't create a loop)
+        const resourceIdOrText = eventData.resource_id || eventData.resourceId || eventData.text || '';
+        const firstActionResourceOrText = currentConsecutive[0]?.resourceId || currentConsecutive[0]?.text || '';
+
+        // Also compare coordinates for element-based actions (tap/click at different positions = different elements)
+        const currentCoords = { x: eventData.x || 0, y: eventData.y || 0 };
+        const firstActionCoords = currentConsecutive[0]?.coordinates || { x: 0, y: 0 };
+        const COORD_TOLERANCE = 50; // Pixels - taps within 50px are considered "same position"
+        const isSamePosition = Math.abs(currentCoords.x - firstActionCoords.x) <= COORD_TOLERANCE &&
+            Math.abs(currentCoords.y - firstActionCoords.y) <= COORD_TOLERANCE;
+
+        // For scrolls/swipes, only match on event type (direction already encoded in normalized type)
+        // For taps/clicks, require SAME TARGET ELEMENT (position + identifier)
+        const isElementBasedAction = ['click', 'tap', 'long_click', 'long_press', 'double_tap'].includes(normalizedType) ||
+            ['click', 'tap', 'long_click', 'long_press', 'double_tap'].includes(eventData.event_type);
+
+        // For element-based actions (tap/click), we need STRICTER matching:
+        // - MUST be same position (within tolerance) - different positions = different elements
+        // - AND if both have resourceId/text, they must match too
+        // This prevents grouping clicks on different icons (Like, Share, Comment) into loops
+        const hasIdentifier = resourceIdOrText && firstActionResourceOrText;
+        const identifiersMatch = !hasIdentifier || (resourceIdOrText === firstActionResourceOrText);
+        const elementBasedMatch = isSamePosition && identifiersMatch;
+
         const isSimilarAction = !shouldExcludeFromLoop &&
             currentConsecutive.length > 0 &&
-            normalizeEventType(currentConsecutive[0].eventType) === normalizedType;
-
-        console.log(`📝 Recording action: ${eventData.event_type} (normalized: ${normalizedType})`, {
-            consecutiveCount: currentConsecutive.length,
-            isSimilarAction,
-            shouldExcludeFromLoop,
-            existingTypes: currentConsecutive.map(a => a.eventType)
-        });
+            normalizeEventType(currentConsecutive[0].eventType) === normalizedType &&
+            // For element-based actions, require same position AND matching identifiers
+            (!isElementBasedAction || elementBasedMatch);
 
         // Build the new action object with nodeId already set
         // Use smart label generation for descriptive node names
@@ -581,11 +758,8 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
             const newConsecutiveActions = [...currentConsecutive, newAction];
             consecutiveActionsRef.current = newConsecutiveActions; // Update ref immediately
 
-            console.log(`🔢 Consecutive ${normalizedType} count: ${newConsecutiveActions.length}`);
-
             // Check if we've reached the threshold
             if (newConsecutiveActions.length >= LOOP_THRESHOLD) {
-                console.log(`🔄 Smart Loop Detection: ${newConsecutiveActions.length} consecutive "${normalizedType}" actions`);
 
                 // Check if ANY Loop with same action type exists - MERGE into it
                 setNodes(prevNodes => {
@@ -606,8 +780,6 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                     if (existingLoop) {
                         // MERGE: Increase iterations of existing Loop and remove individual nodes
                         const newIterations = (existingLoop.data.iterations || 3) + newConsecutiveActions.length;
-                        console.log(`🔗 Merging ${newConsecutiveActions.length} actions into existing Loop: ${existingLoop.data.iterations} → ${newIterations} iterations`);
-                        console.log(`🗑️ Removing ${existingNodeIds.length} individual nodes:`, existingNodeIds);
 
                         // Update Loop and remove individual nodes
                         const updatedNodes = prevNodes
@@ -644,7 +816,6 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                     }
 
                     // No existing Loop to merge - CREATE NEW LOOP
-                    console.log(`🆕 Creating new Loop node for ${newConsecutiveActions.length} actions`);
 
                     // existingNodeIds already declared above
 
@@ -706,11 +877,9 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
             // Different action type or excluded type
             if (shouldExcludeFromLoop) {
                 // Excluded types (text_input, focus, etc.) should reset tracking completely
-                console.log(`🚫 Excluded action type: ${normalizedType}, resetting consecutive tracking`);
                 consecutiveActionsRef.current = [];
             } else {
                 // Start new tracking with this action
-                console.log(`🔀 Different action type, resetting consecutive tracking with: ${normalizedType}`);
                 consecutiveActionsRef.current = [newAction];
             }
         }
@@ -719,6 +888,56 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         setNodes(prevNodes => {
             const existingNodesCount = prevNodes.length;
             const lastNode = prevNodes[existingNodesCount - 1];
+
+            // ========== TEXT INPUT MERGING ==========
+            // If this is a text_input event and the last node is also text_input with same resourceId,
+            // UPDATE the existing node's text instead of creating a new one.
+            // This handles the case where timer flushes text every 500ms ("d" → "de" → "den" → "deno")
+            const isTextInput = eventData.event_type === 'text_input' || eventData.event_type === 'set_text';
+            const eventResourceId = eventData.resource_id || eventData.resourceId || '';
+
+            if (isTextInput && lastNode) {
+                const lastNodeIsTextInput = lastNode.data?.eventType === 'text_input' || lastNode.data?.eventType === 'set_text';
+                const lastNodeResourceId = lastNode.data?.resourceId || '';
+
+                // Check if same input field (same resourceId or same coordinates if no resourceId)
+                const isSameInputField = lastNodeIsTextInput && (
+                    (eventResourceId && lastNodeResourceId && eventResourceId === lastNodeResourceId) ||
+                    (!eventResourceId && !lastNodeResourceId &&
+                        lastNode.data?.coordinates?.x === eventData.x &&
+                        lastNode.data?.coordinates?.y === eventData.y)
+                );
+
+                if (isSameInputField) {
+                    const newText = eventData.text || '';
+                    const oldText = lastNode.data?.text || '';
+
+                    // Only update if text actually changed (new text is longer or different)
+                    if (newText !== oldText && newText.length >= oldText.length) {
+                        // Update the existing node's text
+                        return prevNodes.map(node =>
+                            node.id === lastNode.id
+                                ? {
+                                    ...node,
+                                    data: {
+                                        ...node.data,
+                                        text: newText,
+                                        label: generateSmartLabel({ ...eventData, text: newText }),
+                                        actionData: {
+                                            ...node.data.actionData,
+                                            text: newText,
+                                        },
+                                    }
+                                }
+                                : node
+                        );
+                    }
+
+                    // Text is same or shorter - no update needed
+                    return prevNodes;
+                }
+            }
+            // ========== END TEXT INPUT MERGING ==========
 
             // Auto-layout: position below last node
             const baseX = 400;
@@ -769,7 +988,6 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                 setEdges(prevEdges => [...prevEdges, edgeConfig]);
             }
 
-            console.log('✅ Node created from recording:', newNode.data.label, `(ID: ${newNodeId})`, `Y: ${newY}`);
             return [...prevNodes, newNode];
         });
 
@@ -790,17 +1008,60 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         // Only listen when a device is selected
         if (!selectedDevice) return;
 
+        // Helper function to register listener on backend
+        const registerListener = async () => {
+            try {
+                await fetch('/recording-listener/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        device_id: selectedDevice.device_id,
+                        flow_id: flow.id,
+                        user_id: props.auth?.user?.id,
+                    }),
+                });
+                console.log('✅ Workflow listener registered for device:', selectedDevice.device_id);
+            } catch (error) {
+                console.warn('Failed to register workflow listener:', error);
+            }
+        };
+
+        // Helper function to unregister listener on backend
+        const unregisterListener = async () => {
+            try {
+                await fetch('/recording-listener/unregister', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        device_id: selectedDevice.device_id,
+                    }),
+                });
+                console.log('📤 Workflow listener unregistered for device:', selectedDevice.device_id);
+            } catch (error) {
+                console.warn('Failed to unregister workflow listener:', error);
+            }
+        };
+
         try {
             if (typeof window !== 'undefined' && window.Echo && props.auth?.user?.id) {
                 // Listen to device-specific channel
                 const channelName = `device.${selectedDevice.device_id}`;
                 const channel = window.Echo.private(channelName);
 
-                console.log('Listening to device channel:', channelName);
+                // Register listener on backend so APK knows Editor is listening
+                registerListener();
 
                 // APK started recording
                 channel.listen('.recording.started', (e) => {
-                    console.log('APK started recording:', e);
+
                     setRecordingSession(e.session);
                     setIsRecording(true);
                     setRecordedNodeCount(0);
@@ -841,7 +1102,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
                 // APK stopped recording
                 channel.listen('.recording.stopped', (e) => {
-                    console.log('APK stopped recording:', e);
+
                     if (recordingTimerRef.current) {
                         clearInterval(recordingTimerRef.current);
                         recordingTimerRef.current = null;
@@ -852,13 +1113,6 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
                 // APK captured an event (action)
                 channel.listen('.event.captured', (e) => {
-                    console.log('📥 Recording event received from APK:', {
-                        eventType: e.event?.event_type,
-                        sequenceNumber: e.event?.sequence_number,
-                        timestamp: Date.now(),
-                        fullEvent: e.event,
-                        nodeSuggestion: e.node_suggestion
-                    });
 
                     // Store raw event for debug panel (limit to last 20 events)
                     setDebugEvents(prev => [...prev.slice(-19), {
@@ -868,14 +1122,14 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                         suggestion: e.node_suggestion
                     }]);
 
-                    console.log('🔍 Current consecutiveActionsRef:', consecutiveActionsRef.current);
                     createNodeFromEvent(e.event, e.node_suggestion);
-                    console.log('🔍 After createNodeFromEvent, consecutiveActionsRef:', consecutiveActionsRef.current);
                 });
 
                 return () => {
                     try {
-                        console.log('Leaving device channel:', channelName);
+                        // Unregister listener on backend when leaving
+                        unregisterListener();
+
                         channel.stopListening('.recording.started');
                         channel.stopListening('.recording.stopped');
                         channel.stopListening('.event.captured');
@@ -888,7 +1142,109 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         } catch (error) {
             console.warn('Echo not available for recording events:', error);
         }
-    }, [selectedDevice, props.auth, createNodeFromEvent]);
+    }, [selectedDevice, props.auth, createNodeFromEvent, flow.id]);
+
+    // Listen for device status changes (accessibility, etc.) via user channel
+    useEffect(() => {
+        if (!props.auth?.user?.id) return;
+
+        try {
+            if (typeof window !== 'undefined' && window.Echo) {
+                const userChannel = window.Echo.private(`user.${props.auth.user.id}`);
+
+                // Listen for device accessibility status changes
+                userChannel.listen('.device.accessibility.changed', (event) => {
+
+
+                    // Update onlineDevices list (for dropdown display)
+                    setOnlineDevices(prev => prev.map(d =>
+                        d.device_id === event.device.device_id
+                            ? { ...d, accessibility_enabled: event.accessibility_enabled }
+                            : d
+                    ));
+
+                    // Update selectedDevice if it's the one that changed
+                    if (selectedDevice && selectedDevice.device_id === event.device.device_id) {
+                        setSelectedDevice(prev => ({
+                            ...prev,
+                            accessibility_enabled: event.accessibility_enabled,
+                        }));
+
+                        // Show toast notification
+                        if (event.accessibility_enabled) {
+                            addToast(`✅ ${t('flows.editor.accessibility.enabled', { device: event.device.name })}`, 'success');
+                        } else {
+                            addToast(`⚠️ ${t('flows.editor.accessibility.disabled', { device: event.device.name })}`, 'warning');
+                        }
+                    }
+                });
+
+                // Listen for general device status changes
+                userChannel.listen('.device.status.changed', (event) => {
+
+
+                    // Update selectedDevice if needed
+                    if (selectedDevice && selectedDevice.id === event.device.id) {
+                        setSelectedDevice(prev => ({
+                            ...prev,
+                            ...event.device,
+                        }));
+                    }
+                });
+
+                // Listen for workflow action progress (real-time node highlighting)
+                userChannel.listen('.workflow.action.progress', (event) => {
+
+                    // Only process events for current flow
+                    if (event.flow_id !== flow.id) return;
+
+                    // Update node execution state
+                    setNodes(currentNodes =>
+                        currentNodes.map(node => {
+                            // Check if this is the active action node
+                            if (node.id === event.action_id) {
+                                return {
+                                    ...node,
+                                    data: {
+                                        ...node.data,
+                                        executionState: event.status === 'running' ? 'running'
+                                            : event.status === 'success' ? 'success'
+                                                : event.status === 'error' ? 'error'
+                                                    : event.status === 'skipped' ? 'error'
+                                                        : 'idle',
+                                    }
+                                };
+                            }
+                            // Reset previous running nodes to pending if still running
+                            if (node.data?.executionState === 'running' && event.status === 'running') {
+                                return {
+                                    ...node,
+                                    data: {
+                                        ...node.data,
+                                        executionState: 'pending',
+                                    }
+                                };
+                            }
+                            return node;
+                        })
+                    );
+
+                    // Show progress toast
+                    if (event.status === 'error') {
+                        addToast(`❌ Action failed: ${event.message || 'Unknown error'}`, 'error');
+                    }
+                });
+
+                return () => {
+                    userChannel.stopListening('.device.accessibility.changed');
+                    userChannel.stopListening('.device.status.changed');
+                    userChannel.stopListening('.workflow.action.progress');
+                };
+            }
+        } catch (error) {
+            console.warn('Echo not available for user events:', error);
+        }
+    }, [props.auth?.user?.id, selectedDevice?.device_id, addToast, flow.id, setNodes]);
 
     // Auto-save function
     const saveFlow = useCallback(async (currentNodes, currentEdges, currentViewport) => {
@@ -932,27 +1288,112 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     }, [saveFlow]);
 
     const onNodesChange = useCallback((changes) => {
+        // Snapshot before node removals for undo
+        const hasRemove = changes.some(c => c.type === 'remove');
+        if (hasRemove) takeSnapshot();
+
         setNodes((nds) => {
             const newNodes = applyNodeChanges(changes, nds);
             debouncedSave(newNodes, edges, viewport);
             return newNodes;
         });
-    }, [edges, viewport, debouncedSave]);
+    }, [edges, viewport, debouncedSave, takeSnapshot]);
 
     const onEdgesChange = useCallback((changes) => {
+        // Snapshot before edge removals for undo
+        const hasRemove = changes.some(c => c.type === 'remove');
+        if (hasRemove) takeSnapshot();
+
         setEdges((eds) => {
             const newEdges = applyEdgeChanges(changes, eds);
             debouncedSave(nodes, newEdges, viewport);
             return newEdges;
         });
-    }, [nodes, viewport, debouncedSave]);
+    }, [nodes, viewport, debouncedSave, takeSnapshot]);
 
     const onConnect = useCallback((connection) => {
+        // Check if this is a data wire connection (from DataSourceNode data-output)
+        const sourceNode = nodes.find(n => n.id === connection.source);
+        const targetNode = nodes.find(n => n.id === connection.target);
+
+        const isDataWire = connection.sourceHandle === 'data-output' ||
+            (sourceNode?.type === 'data_source' && connection.targetHandle === 'data-input');
+
+        // If connecting DataSourceNode to LoopNode via data wire, auto-populate variables
+        if (isDataWire && sourceNode?.type === 'data_source' && targetNode?.type === 'loop') {
+            const outputName = sourceNode.data?.outputName ||
+                sourceNode.data?.collectionName?.toLowerCase().replace(/\s+/g, '_') || 'records';
+
+            // Update LoopNode with data source info
+            setNodes((nds) => nds.map(node => {
+                if (node.id === targetNode.id) {
+                    return {
+                        ...node,
+                        data: {
+                            ...node.data,
+                            dataSource: 'data',
+                            dataSourceNodeId: sourceNode.id,
+                            dataSourceName: outputName,
+                            sourceVariable: `{{${outputName}}}`,
+                            // Also set collection info for display
+                            connectedCollectionName: sourceNode.data?.collectionName,
+                            connectedRecordCount: sourceNode.data?.recordCount,
+                        }
+                    };
+                }
+                return node;
+            }));
+        }
+
+        // If connecting DataSourceNode to Action nodes (text_input, set_text, click, tap) via data wire
+        const actionNodeTypes = ['text_input', 'set_text', 'click', 'tap'];
+        const targetActionType = targetNode?.data?.eventType || targetNode?.data?.actionType || targetNode?.type;
+
+        if (isDataWire && sourceNode?.type === 'data_source' && actionNodeTypes.includes(targetActionType)) {
+            const outputName = sourceNode.data?.outputName ||
+                sourceNode.data?.collectionName?.toLowerCase().replace(/\s+/g, '_') || 'records';
+            const collectionName = sourceNode.data?.collectionName || 'Data Source';
+
+            // Get first field from schema if available, otherwise use generic variable
+            const schema = sourceNode.data?.schema || [];
+            const firstField = schema.length > 0 ? schema[0].name : null;
+            const variableSuggestion = firstField
+                ? `{{item.${firstField}}}`
+                : `{{${outputName}}}`;
+
+            // Update Action node with data source info
+            setNodes((nds) => nds.map(node => {
+                if (node.id === targetNode.id) {
+                    return {
+                        ...node,
+                        data: {
+                            ...node.data,
+                            connectedDataSource: collectionName,
+                            connectedVariable: variableSuggestion,
+                            dataSourceNodeId: sourceNode.id,
+                            // For text_input, also set the inputText to use the variable
+                            ...(targetActionType === 'text_input' || targetActionType === 'set_text' ? {
+                                inputText: variableSuggestion,
+                            } : {}),
+                        }
+                    };
+                }
+                return node;
+            }));
+        }
+
+        // Create the edge
         setEdges((eds) => {
             const newEdge = {
                 ...connection,
                 id: `e${connection.source}-${connection.target}-${Date.now()}`,
                 ...defaultEdgeOptions,
+                // Style data wires differently
+                ...(isDataWire && {
+                    style: { stroke: '#f59e0b', strokeWidth: 3 },
+                    animated: true,
+                    type: 'smoothstep',
+                }),
             };
             const newEdges = addEdge(newEdge, eds);
             debouncedSave(nodes, newEdges, viewport);
@@ -1059,6 +1500,9 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
             position,
             data: {
                 label: label || type,
+                // CRITICAL: Set eventType so SmartActionNode knows which icon/label to display
+                // Without this, SmartActionNode defaults to 'tap' (see line 29 of SmartActionNode.jsx)
+                eventType: type,
                 // Add media browser callback for FileInputNode
                 ...(type === 'file_input' && {
                     onBrowseMedia: (nodeId) => {
@@ -1071,6 +1515,14 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                     onSelectCollection: (nodeId) => {
                         setCollectionPickerNodeId(nodeId);
                         setShowCollectionPicker(true);
+                    },
+                    // Callback for updating data inline (e.g., outputName)
+                    onUpdateData: (nodeId, key, value) => {
+                        setNodes((nds) => nds.map(node =>
+                            node.id === nodeId
+                                ? { ...node, data: { ...node.data, [key]: value } }
+                                : node
+                        ));
                     }
                 })
             },
@@ -1103,7 +1555,8 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
         if (nodeIdsToDelete.length === 0) return;
 
-        console.log(`🗑️ Deleting ${nodeIdsToDelete.length} node(s):`, nodeIdsToDelete);
+        // Take snapshot BEFORE delete for undo
+        takeSnapshot();
 
         // Calculate new nodes and edges BEFORE setting state
         const newNodes = nodes.filter(n => !nodeIdsToDelete.includes(n.id));
@@ -1119,17 +1572,214 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         consecutiveActionsRef.current = [];
         setRecordedActions(prev => prev.filter(a => !nodeIdsToDelete.includes(a.nodeId)));
         setRecordedNodeCount(newNodes.length);
-        console.log('🧹 Cleared browser cache: consecutiveActionsRef, updated recordedActions');
 
         // Save IMMEDIATELY (not debounced) to ensure persistence
         saveFlow(newNodes, newEdges, viewport);
 
         setSelectedNode(null);
         setSelectedNodes([]);
-    }, [nodes, edges, selectedNode, selectedNodes, viewport, saveFlow]);
+    }, [nodes, edges, selectedNode, selectedNodes, viewport, saveFlow, takeSnapshot]);
+
+    // Wrap selected nodes in a Loop - Multi-selection feature
+    const wrapSelectedNodesInLoop = useCallback(() => {
+        if (selectedNodes.length < 1) {
+            addToast('Select at least 1 node to wrap in Loop', 'warning');
+            return;
+        }
+
+        // Take snapshot for undo
+        takeSnapshot();
+
+        // Get selected node IDs
+        const selectedNodeIds = selectedNodes.map(n => n.id);
+
+        // Find edges that connect selected nodes to each other (internal edges)
+        const internalEdges = edges.filter(e =>
+            selectedNodeIds.includes(e.source) && selectedNodeIds.includes(e.target)
+        );
+
+        // Find edges from outside to selected nodes (incoming)
+        const incomingEdges = edges.filter(e =>
+            !selectedNodeIds.includes(e.source) && selectedNodeIds.includes(e.target)
+        );
+
+        // Find edges from selected nodes to outside (outgoing)
+        const outgoingEdges = edges.filter(e =>
+            selectedNodeIds.includes(e.source) && !selectedNodeIds.includes(e.target)
+        );
+
+        // Sort selected nodes by position to determine order (top to bottom, left to right)
+        const sortedNodes = [...selectedNodes].sort((a, b) => {
+            const yDiff = (a.position?.y || 0) - (b.position?.y || 0);
+            if (Math.abs(yDiff) > 50) return yDiff;
+            return (a.position?.x || 0) - (b.position?.x || 0);
+        });
+
+        // Create subFlow nodes
+        const subFlowNodes = [];
+        const subFlowEdges = [];
+
+        // Add loopStart
+        subFlowNodes.push({
+            id: 'loop-start',
+            type: 'loopStart',
+            data: { label: 'Loop Start', itemVariable: 'item' },
+            position: { x: 200, y: 50 },
+        });
+
+        // Add sorted action nodes
+        sortedNodes.forEach((node, index) => {
+            const subNodeId = `subflow-action-${index + 1}`;
+            subFlowNodes.push({
+                id: subNodeId,
+                type: node.type,
+                position: { x: 200, y: 150 + index * 100 },
+                data: {
+                    ...node.data,
+                    label: node.data?.label || node.type,
+                },
+            });
+
+            // Create edge from previous node
+            if (index === 0) {
+                subFlowEdges.push({
+                    id: `edge-start-${subNodeId}`,
+                    source: 'loop-start',
+                    target: subNodeId,
+                    type: 'smoothstep',
+                });
+            } else {
+                subFlowEdges.push({
+                    id: `edge-${index}-${subNodeId}`,
+                    source: `subflow-action-${index}`,
+                    target: subNodeId,
+                    type: 'smoothstep',
+                });
+            }
+        });
+
+        // Add loopEnd
+        const lastNodeId = `subflow-action-${sortedNodes.length}`;
+        subFlowNodes.push({
+            id: 'loop-end',
+            type: 'loopEnd',
+            data: { label: 'Continue' },
+            position: { x: 200, y: 150 + sortedNodes.length * 100 },
+        });
+        subFlowEdges.push({
+            id: 'edge-last-end',
+            source: lastNodeId,
+            target: 'loop-end',
+            type: 'smoothstep',
+        });
+
+        // Calculate Loop node position (center of selected nodes)
+        const avgX = sortedNodes.reduce((sum, n) => sum + (n.position?.x || 0), 0) / sortedNodes.length;
+        const avgY = sortedNodes.reduce((sum, n) => sum + (n.position?.y || 0), 0) / sortedNodes.length;
+
+        // Create Loop node
+        const loopNodeId = `loop-${Date.now()}`;
+        const loopNode = {
+            id: loopNodeId,
+            type: 'loop',
+            position: { x: avgX, y: avgY },
+            data: {
+                label: `Loop (${sortedNodes.length} actions)`,
+                loopType: 'count',
+                iterations: 3,
+                itemVariable: 'item',
+                indexVariable: 'index',
+                subFlow: {
+                    nodes: subFlowNodes,
+                    edges: subFlowEdges,
+                },
+            },
+        };
+
+        // Remove selected nodes and add Loop node
+        const remainingNodes = nodes.filter(n => !selectedNodeIds.includes(n.id));
+        const newNodes = [...remainingNodes, loopNode];
+
+        // Reconnect external edges to Loop node
+        const newEdges = edges.filter(e =>
+            !selectedNodeIds.includes(e.source) && !selectedNodeIds.includes(e.target)
+        );
+
+        // Redirect incoming edges to Loop node
+        incomingEdges.forEach(e => {
+            newEdges.push({
+                ...e,
+                id: `${e.id}-to-loop`,
+                target: loopNodeId,
+            });
+        });
+
+        // Redirect outgoing edges from Loop node
+        outgoingEdges.forEach(e => {
+            newEdges.push({
+                ...e,
+                id: `loop-${e.id}`,
+                source: loopNodeId,
+                sourceHandle: 'complete', // Use complete handle for loop continuation
+            });
+        });
+
+        // Update state
+        setNodes(newNodes);
+        setEdges(newEdges);
+        setSelectedNodes([]);
+        setSelectedNode(loopNode);
+
+        // Save
+        saveFlow(newNodes, newEdges, viewport);
+
+        addToast(`✅ Wrapped ${sortedNodes.length} nodes in Loop`, 'success');
+    }, [selectedNodes, nodes, edges, viewport, saveFlow, takeSnapshot, addToast]);
+
+    // Clear all nodes from the workflow
+    const handleClearAllNodes = useCallback(() => {
+        if (nodes.length === 0) return;
+        setShowClearConfirm(true);
+    }, [nodes.length]);
+
+    const confirmClearAllNodes = useCallback(() => {
+        // Clear all nodes and edges
+        setNodes([]);
+        setEdges([]);
+
+        // Clear browser memory/cache
+        consecutiveActionsRef.current = [];
+        setRecordedActions([]);
+        setRecordedNodeCount(0);
+
+        // Save immediately
+        saveFlow([], [], viewport);
+
+        setSelectedNode(null);
+        setSelectedNodes([]);
+        setShowClearConfirm(false);
+    }, [nodes.length, viewport, saveFlow]);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
+            // Ctrl/Cmd+Z = Undo (without Shift)
+            if (e.key === 'z' && (e.metaKey || e.ctrlKey) && !e.shiftKey && !editingName) {
+                e.preventDefault();
+                undo();
+                return;
+            }
+            // Ctrl/Cmd+Shift+Z = Redo
+            if (e.key === 'z' && (e.metaKey || e.ctrlKey) && e.shiftKey && !editingName) {
+                e.preventDefault();
+                redo();
+                return;
+            }
+            // Ctrl/Cmd+Y = Redo (alternative)
+            if (e.key === 'y' && (e.metaKey || e.ctrlKey) && !editingName) {
+                e.preventDefault();
+                redo();
+                return;
+            }
             // Delete/Backspace to delete selected nodes
             if ((e.key === 'Delete' || e.key === 'Backspace') && !editingName) {
                 const hasSelection = selectedNode || selectedNodes.length > 0;
@@ -1148,10 +1798,15 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                 e.preventDefault();
                 setSelectedNodes(nodes);
             }
+            // Cmd/Ctrl+L to wrap selected nodes in Loop
+            if (e.key === 'l' && (e.metaKey || e.ctrlKey) && !editingName && selectedNodes.length > 0) {
+                e.preventDefault();
+                wrapSelectedNodesInLoop();
+            }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [selectedNode, selectedNodes, editingName, deleteSelectedNodes, nodes]);
+    }, [selectedNode, selectedNodes, editingName, deleteSelectedNodes, nodes, undo, redo, wrapSelectedNodesInLoop]);
 
     useEffect(() => {
         return () => {
@@ -1342,35 +1997,8 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                         </div>
                     </div>
 
-                    {/* Center - Stats & Progress */}
-                    <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-6">
-                        <div className={`flex items-center gap-6 text-sm ${isRunning || isRecordingPaused ? 'opacity-50' : ''}`}>
-                            <div className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
-                                <span>{nodes.length} nodes</span>
-                            </div>
-                            <div className={`flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                <span>{edges.length} connections</span>
-                            </div>
-                        </div>
-
-                        {/* Execution Progress */}
-                        {(isRunning || isPaused) && (
-                            <div className="flex items-center gap-3">
-                                <div className={`w-32 h-2 rounded-full overflow-hidden ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-200'}`}>
-                                    <div
-                                        className="h-full progress-bar transition-all duration-300"
-                                        style={{ width: `${progress}%` }}
-                                    />
-                                </div>
-                                <span className="text-sm font-medium text-indigo-400">{Math.round(progress)}%</span>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Right - Actions */}
-                    <div className="flex items-center gap-3">
+                    {/* Right - Actions (compact layout) */}
+                    <div className="flex items-center gap-1.5">
                         {/* Device Selector - Always show */}
                         {(
                             <>
@@ -1476,9 +2104,27 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                                         return (
                                                             <button
                                                                 key={device.id}
-                                                                onClick={() => {
+                                                                onClick={async () => {
                                                                     setSelectedDevice(device);
                                                                     setTimeout(() => setShowDeviceSelector(false), 300);
+
+                                                                    // Request realtime accessibility check via socket
+                                                                    try {
+                                                                        const response = await axios.post('/devices/check-accessibility', {
+                                                                            device_id: device.device_id
+                                                                        });
+
+                                                                        // Show warning based on current DB value (realtime update will come via socket)
+                                                                        if (!response.data.current_status) {
+                                                                            addToast(`⚠️ ${t('flows.editor.accessibility.checking')}`, 'info');
+                                                                        }
+                                                                    } catch (err) {
+                                                                        console.warn('Failed to request accessibility check:', err);
+                                                                        // Fallback to DB value
+                                                                        if (!device.accessibility_enabled) {
+                                                                            addToast(`⚠️ ${t('flows.editor.accessibility.not_enabled_short')}`, 'warning');
+                                                                        }
+                                                                    }
                                                                 }}
                                                                 className={`group w-full text-left p-4 rounded-xl transition-all duration-300 relative overflow-hidden ${isSelected
                                                                     ? isDark
@@ -1534,11 +2180,29 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                                                                 }`}>
                                                                                 {device.name}
                                                                             </p>
+                                                                            {/* Accessibility Status Badge */}
+                                                                            {!device.accessibility_enabled && (
+                                                                                <div
+                                                                                    className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${isDark
+                                                                                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                                                                        : 'bg-amber-100 text-amber-700 border border-amber-300'
+                                                                                        }`}
+                                                                                    title="Accessibility Service chưa được bật"
+                                                                                >
+                                                                                    ⚠ A11Y
+                                                                                </div>
+                                                                            )}
                                                                         </div>
                                                                         <p className={`text-xs truncate ${isDark ? 'text-gray-400' : 'text-gray-500'
                                                                             }`}>
                                                                             {device.model || device.device_id || 'Unknown model'}
                                                                         </p>
+                                                                        {/* Accessibility warning text */}
+                                                                        {!device.accessibility_enabled && (
+                                                                            <p className={`text-[10px] mt-1 ${isDark ? 'text-amber-400/80' : 'text-amber-600'}`}>
+                                                                                Cần bật Accessibility Service
+                                                                            </p>
+                                                                        )}
                                                                     </div>
 
                                                                     {/* Checkmark Badge with Animation */}
@@ -1583,39 +2247,11 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 </div>
 
                                 {/* Divider */}
-                                <div className={`w-px h-6 ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-200'}`} />
-
-                                {/* Recording Status - Controlled by APK */}
-                                {selectedDevice && (
-                                    <div
-                                        className={`h-9 px-4 flex items-center gap-2 text-sm font-medium rounded-lg transition-all border ${isRecording
-                                            ? 'bg-red-500/20 border-red-500/30 text-red-400'
-                                            : isDark
-                                                ? 'bg-[#1a1a1a] border-[#2a2a2a] text-gray-500'
-                                                : 'bg-gray-100 border-gray-200 text-gray-400'
-                                            }`}
-                                        title={isRecording ? `APK đang ghi... (${recordedNodeCount} actions)` : 'Chờ APK bắt đầu ghi'}
-                                    >
-                                        {isRecording ? (
-                                            <>
-                                                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                                                <span>Đang ghi</span>
-                                                <span className="text-xs opacity-70">({recordedNodeCount})</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <svg className="w-4 h-4 opacity-50" fill="currentColor" viewBox="0 0 24 24">
-                                                    <circle cx="12" cy="12" r="8" />
-                                                </svg>
-                                                <span className="opacity-50">Chờ APK</span>
-                                            </>
-                                        )}
-                                    </div>
-                                )}
+                                <div className={`w-px h-5 ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-200'}`} />
                             </>
                         )}
 
-                        {/* Theme Toggle */}
+                        {/* Theme Toggle only */}
                         <ThemeToggle />
 
                         {/* Execution Controls */}
@@ -1625,15 +2261,46 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                     // If device selected, run on device
                                     if (selectedDevice) {
                                         setTestRunning(true);
+
+                                        // Do realtime accessibility check first
                                         try {
+                                            const checkResponse = await axios.post('/devices/check-accessibility', {
+                                                device_id: selectedDevice.device_id
+                                            });
+
+                                            if (!checkResponse.data.current_status) {
+                                                // Just warn, don't block - APK might have accessibility enabled but DB not updated
+                                                console.warn('⚠️ Accessibility check returned false, but proceeding anyway for testing');
+                                                // addToast(`⚠️ Accessibility có thể chưa bật - đang thử chạy...`, 'warning');
+                                            }
+                                        } catch (checkError) {
+                                            console.warn('Accessibility check failed, proceeding anyway:', checkError);
+                                        }
+
+                                        // Now run the workflow
+                                        try {
+                                            // Set all action nodes to 'pending' state for visual feedback
+                                            setNodes(currentNodes =>
+                                                currentNodes.map(node => ({
+                                                    ...node,
+                                                    data: {
+                                                        ...node.data,
+                                                        executionState: ['start', 'end', 'input', 'output', 'condition'].includes(node.type)
+                                                            ? node.data?.executionState
+                                                            : 'pending',
+                                                    }
+                                                }))
+                                            );
+
                                             const response = await axios.post(`/flows/${flow.id}/test-run`, {
                                                 device_id: selectedDevice.id,
                                             });
                                             if (response.data.success) {
-                                                addToast(`Running on ${selectedDevice.name} (${response.data.data.actions_count} actions)`, 'success');
+                                                addToast(t('flows.editor.run.success', { device: selectedDevice.name, count: response.data.data.actions_count }), 'success');
                                             }
                                         } catch (error) {
-                                            addToast(`Run failed: ${error.response?.data?.message || error.message}`, 'error');
+                                            console.error('🚀 Test-run error:', error.response?.data || error);
+                                            addToast(t('flows.editor.run.failed', { error: error.response?.data?.message || error.message }), 'error');
                                         } finally {
                                             setTestRunning(false);
                                         }
@@ -1643,19 +2310,19 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                     }
                                 }}
                                 disabled={nodes.length === 0 || testRunning}
-                                className={`h-9 px-4 text-sm font-semibold rounded-lg transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'}`}
+                                className={`h-8 px-2.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed ${isDark ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}
                             >
                                 {testRunning ? (
-                                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                     </svg>
                                 ) : (
-                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                                     </svg>
                                 )}
-                                Run{selectedDevice ? ` on ${selectedDevice.name.substring(0, 10)}...` : ''}
+                                <span className="hidden sm:inline">{selectedDevice ? `${selectedDevice.name.substring(0, 8)}` : 'Run'}</span>
                             </button>
                         )}
 
@@ -1720,51 +2387,132 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                             </button>
                         )}
 
-                        {/* Divider */}
-                        <div className={`w-px h-6 ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-200'}`} />
-
-                        {/* Save Status */}
-                        <div className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border transition-colors ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a]' : 'bg-gray-100 border-gray-200'}`}>
-                            {saving ? (
-                                <span className="text-amber-500 flex items-center gap-2">
-                                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                    </svg>
-                                    Saving...
-                                </span>
-                            ) : lastSaved ? (
-                                <span className="text-emerald-500 flex items-center gap-2">
-                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                    Saved
-                                </span>
-                            ) : (
-                                <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>Unsaved</span>
-                            )}
-                        </div>
-
-                        {/* Save Button */}
+                        {/* Preview Button */}
                         <button
-                            onClick={handleManualSave}
-                            disabled={saving}
-                            className={`h-9 px-4 text-sm font-medium rounded-lg transition-all flex items-center gap-2 border ${isDark ? 'bg-[#1a1a1a] hover:bg-[#252525] text-gray-300 border-[#2a2a2a]' : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200'}`}
+                            onClick={() => setShowPreviewModal(true)}
+                            disabled={nodes.filter(n => n.data?.screenshotUrl).length === 0}
+                            className={`h-8 px-2.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 border ${nodes.filter(n => n.data?.screenshotUrl).length > 0
+                                ? isDark
+                                    ? 'bg-purple-500/10 border-purple-500/30 text-purple-400 hover:bg-purple-500/20'
+                                    : 'bg-purple-50 border-purple-200 text-purple-600 hover:bg-purple-100'
+                                : isDark
+                                    ? 'bg-[#1a1a1a] border-[#2a2a2a] text-gray-600 cursor-not-allowed'
+                                    : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                                }`}
+                            title="Preview recorded workflow as slideshow"
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                            </svg>
-                            Save
-                        </button>
-
-                        {/* Deploy Button */}
-                        <button className={`h-9 px-4 text-sm font-semibold rounded-lg transition-all flex items-center gap-2 ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'}`}>
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            Deploy
+                            <span className="hidden sm:inline">Preview</span>
                         </button>
+
+                        {/* Divider */}
+                        <div className={`w-px h-5 ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-200'}`} />
+
+                        {/* Save Button with status indicator */}
+                        <button
+                            onClick={handleManualSave}
+                            disabled={saving}
+                            className={`h-8 px-3 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 border ${saving
+                                ? 'bg-amber-500/10 border-amber-500/30 text-amber-500'
+                                : lastSaved
+                                    ? isDark
+                                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
+                                        : 'bg-emerald-50 border-emerald-200 text-emerald-600 hover:bg-emerald-100'
+                                    : isDark
+                                        ? 'bg-[#1a1a1a] hover:bg-[#252525] text-gray-300 border-[#2a2a2a]'
+                                        : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200'
+                                }`}
+                            title={saving ? 'Saving...' : lastSaved ? 'Saved' : 'Save workflow'}
+                        >
+                            {saving ? (
+                                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                </svg>
+                            ) : lastSaved ? (
+                                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                            ) : (
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                                </svg>
+                            )}
+                            <span className="hidden sm:inline">{saving ? 'Saving' : lastSaved ? 'Saved' : 'Save'}</span>
+                        </button>
+
+                        {/* Deploy Button - compact */}
+                        <button className={`h-8 px-2.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'}`}>
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="hidden sm:inline">Deploy</span>
+                        </button>
+
+                        {/* Language Switcher */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowLangDropdown(!showLangDropdown)}
+                                className={`h-8 px-2 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 border ${isDark
+                                    ? 'bg-[#1a1a1a] hover:bg-[#252525] text-gray-300 border-[#2a2a2a] hover:border-[#3a3a3a]'
+                                    : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-300'
+                                    }`}
+                                title="Change Language"
+                            >
+                                <span className="text-sm">{getCurrentLanguage() === 'vi' ? '🇻🇳' : '🇺🇸'}</span>
+                                <span className="hidden sm:inline uppercase">{getCurrentLanguage()}</span>
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            {/* Language Dropdown */}
+                            {showLangDropdown && (
+                                <div className={`absolute top-full right-0 mt-1 w-32 rounded-lg shadow-xl border overflow-hidden z-50 ${isDark
+                                    ? 'bg-[#1a1a1a] border-[#2a2a2a]'
+                                    : 'bg-white border-gray-200'
+                                    }`}>
+                                    <button
+                                        onClick={() => {
+                                            changeLanguage('vi');
+                                            setShowLangDropdown(false);
+                                        }}
+                                        className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 transition-colors ${getCurrentLanguage() === 'vi'
+                                            ? isDark
+                                                ? 'bg-cyan-500/20 text-cyan-400'
+                                                : 'bg-cyan-50 text-cyan-600'
+                                            : isDark
+                                                ? 'hover:bg-[#252525] text-gray-300'
+                                                : 'hover:bg-gray-50 text-gray-700'
+                                            }`}
+                                    >
+                                        <span>🇻🇳</span>
+                                        <span>Tiếng Việt</span>
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            changeLanguage('en');
+                                            setShowLangDropdown(false);
+                                        }}
+                                        className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 transition-colors ${getCurrentLanguage() === 'en'
+                                            ? isDark
+                                                ? 'bg-cyan-500/20 text-cyan-400'
+                                                : 'bg-cyan-50 text-cyan-600'
+                                            : isDark
+                                                ? 'hover:bg-[#252525] text-gray-300'
+                                                : 'hover:bg-gray-50 text-gray-700'
+                                            }`}
+                                    >
+                                        <span>🇺🇸</span>
+                                        <span>English</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -1794,7 +2542,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                     </svg>
                                     <input
                                         type="text"
-                                        placeholder="Search nodes..."
+                                        placeholder={t('flows.editor.sidebar.search_placeholder')}
                                         className={`w-full pl-10 pr-3 py-2 text-sm rounded-lg border transition-colors ${isDark ? 'bg-[#1a1a1a] border-[#252525] text-white placeholder-gray-500 focus:border-indigo-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-indigo-500'} focus:outline-none focus:ring-2 focus:ring-indigo-500/20`}
                                     />
                                 </div>
@@ -1807,7 +2555,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                     <div className={`px-3 py-2.5 sticky top-0 z-10 backdrop-blur-sm ${isDark ? 'bg-[#0f0f0f]/90' : 'bg-white/90'}`}>
                                         <div className="flex items-center gap-2">
                                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                            <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Control Flow</span>
+                                            <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('flows.editor.categories.control_flow')}</span>
                                         </div>
                                     </div>
                                     <div className="px-3 pb-3 space-y-2">
@@ -1841,7 +2589,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                     <div className={`px-3 py-2.5 sticky top-0 z-10 backdrop-blur-sm ${isDark ? 'bg-[#0f0f0f]/90' : 'bg-white/90'}`}>
                                         <div className="flex items-center gap-2">
                                             <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                                            <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Recorded Actions</span>
+                                            <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('flows.editor.categories.recorded_actions')}</span>
                                             <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded ${isDark ? 'bg-red-500/10 text-red-400' : 'bg-red-50 text-red-600'}`}>REC</span>
                                         </div>
                                     </div>
@@ -1876,7 +2624,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                     <div className={`px-3 py-2.5 sticky top-0 z-10 backdrop-blur-sm ${isDark ? 'bg-[#0f0f0f]/90' : 'bg-white/90'}`}>
                                         <div className="flex items-center gap-2">
                                             <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-                                            <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Logic & Control</span>
+                                            <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('flows.editor.categories.logic_control')}</span>
                                         </div>
                                     </div>
                                     <div className="px-3 pb-3 space-y-2">
@@ -1910,7 +2658,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                     <div className={`px-3 py-2.5 sticky top-0 z-10 backdrop-blur-sm ${isDark ? 'bg-[#0f0f0f]/90' : 'bg-white/90'}`}>
                                         <div className="flex items-center gap-2">
                                             <div className="w-1.5 h-1.5 rounded-full bg-pink-500" />
-                                            <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Resources</span>
+                                            <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('flows.editor.categories.resources')}</span>
                                         </div>
                                     </div>
                                     <div className="px-3 pb-3 space-y-2">
@@ -1976,7 +2724,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
                             {/* Sidebar Footer - Keyboard Shortcuts */}
                             <div className={`p-3 border-t ${isDark ? 'border-[#1e1e1e] bg-[#0a0a0a]' : 'border-gray-200 bg-gray-50'}`}>
-                                <p className={`text-[10px] font-semibold mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>SHORTCUTS</p>
+                                <p className={`text-[10px] font-semibold mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('flows.editor.sidebar.shortcuts').toUpperCase()}</p>
                                 <div className="space-y-1.5 text-[10px]">
                                     <div className={`flex items-center justify-between ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                                         <span>Delete</span>
@@ -2176,7 +2924,8 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 selectionOnDrag={true}
                                 selectionMode="partial"
                                 multiSelectionKeyCode="Shift"
-                                deleteKeyCode={null}
+                                deleteKeyCode={['Delete', 'Backspace']}
+                                edgesSelectable={true}
                                 proOptions={{ hideAttribution: true }}
                                 className={`transition-colors duration-300 ${isDark ? '!bg-[#0a0a0a]' : '!bg-gray-50'}`}
                             >
@@ -2190,6 +2939,35 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 {/* Custom Controls */}
                                 <Panel position="bottom-left" className="!m-4">
                                     <div className={`flex items-center rounded-xl overflow-hidden shadow-xl border ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a]' : 'bg-white border-gray-200'}`}>
+                                        {/* Undo Button */}
+                                        <button
+                                            onClick={undo}
+                                            disabled={!canUndo}
+                                            className={`w-10 h-10 flex items-center justify-center transition-all ${canUndo
+                                                ? isDark ? 'text-gray-400 hover:text-white hover:bg-[#252525]' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'
+                                                : isDark ? 'text-gray-600 cursor-not-allowed' : 'text-gray-300 cursor-not-allowed'
+                                                }`}
+                                            title="Undo (Ctrl+Z)"
+                                        >
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                            </svg>
+                                        </button>
+                                        {/* Redo Button */}
+                                        <button
+                                            onClick={redo}
+                                            disabled={!canRedo}
+                                            className={`w-10 h-10 flex items-center justify-center transition-all ${canRedo
+                                                ? isDark ? 'text-gray-400 hover:text-white hover:bg-[#252525]' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'
+                                                : isDark ? 'text-gray-600 cursor-not-allowed' : 'text-gray-300 cursor-not-allowed'
+                                                }`}
+                                            title="Redo (Ctrl+Shift+Z)"
+                                        >
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
+                                            </svg>
+                                        </button>
+                                        <div className={`w-px h-6 ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-200'}`} />
                                         <button
                                             onClick={() => zoomOut()}
                                             className={`w-10 h-10 flex items-center justify-center transition-all ${isDark ? 'text-gray-400 hover:text-white hover:bg-[#252525]' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'}`}
@@ -2222,6 +3000,263 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                     </div>
                                 </Panel>
 
+                                {/* Quick Action Bar - Only show when device is connected */}
+                                {selectedDevice && (
+                                    <Panel position="bottom-center" className="!m-4">
+                                        <div className={`flex items-center gap-1 px-2 py-2 rounded-2xl shadow-2xl border backdrop-blur-xl ${isDark
+                                            ? 'bg-[#1a1a1a]/90 border-[#2a2a2a]'
+                                            : 'bg-white/90 border-gray-200'
+                                            }`}
+                                            style={{
+                                                boxShadow: isDark
+                                                    ? '0 20px 60px rgba(0, 0, 0, 0.5)'
+                                                    : '0 20px 60px rgba(0, 0, 0, 0.15)'
+                                            }}
+                                        >
+                                            {/* Label */}
+                                            <div className={`px-3 py-1 flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                <span className="text-xs font-medium">Quick Actions</span>
+                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                            </div>
+
+                                            <div className={`w-px h-6 ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-200'}`} />
+
+                                            {/* Tap Action */}
+                                            <button
+                                                onClick={() => {
+                                                    const newNode = {
+                                                        id: `quick-tap-${Date.now()}`,
+                                                        type: 'tap',
+                                                        position: { x: 200 + Math.random() * 100, y: 200 + Math.random() * 100 },
+                                                        data: { label: 'Quick Tap', actionType: 'tap' },
+                                                    };
+                                                    setNodes(nds => [...nds, newNode]);
+                                                    setSelectedNode(newNode);
+                                                    addToast('👆 Added Tap node - configure element', 'info');
+                                                }}
+                                                className={`group flex flex-col items-center justify-center w-14 h-14 rounded-xl transition-all hover:scale-105 ${isDark ? 'hover:bg-blue-500/20' : 'hover:bg-blue-50'
+                                                    }`}
+                                                title="Add Tap action"
+                                            >
+                                                <svg className={`w-5 h-5 ${isDark ? 'text-blue-400' : 'text-blue-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <circle cx="12" cy="12" r="3" strokeWidth={2} />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2v2m0 16v2m10-10h-2M4 12H2" />
+                                                </svg>
+                                                <span className={`text-[10px] mt-0.5 font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Tap</span>
+                                            </button>
+
+                                            {/* Type Action */}
+                                            <button
+                                                onClick={() => {
+                                                    const newNode = {
+                                                        id: `quick-type-${Date.now()}`,
+                                                        type: 'text_input',
+                                                        position: { x: 200 + Math.random() * 100, y: 200 + Math.random() * 100 },
+                                                        data: { label: 'Quick Type', actionType: 'text_input', text: '' },
+                                                    };
+                                                    setNodes(nds => [...nds, newNode]);
+                                                    setSelectedNode(newNode);
+                                                    addToast('⌨️ Added Type node - enter text', 'info');
+                                                }}
+                                                className={`group flex flex-col items-center justify-center w-14 h-14 rounded-xl transition-all hover:scale-105 ${isDark ? 'hover:bg-purple-500/20' : 'hover:bg-purple-50'
+                                                    }`}
+                                                title="Add Type Text action"
+                                            >
+                                                <svg className={`w-5 h-5 ${isDark ? 'text-purple-400' : 'text-purple-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                                <span className={`text-[10px] mt-0.5 font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Type</span>
+                                            </button>
+
+                                            <div className={`w-px h-6 ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-200'}`} />
+
+                                            {/* Scroll Up */}
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        await axios.post('/devices/send-action', {
+                                                            device_id: selectedDevice.device_id,
+                                                            action: { type: 'scroll', direction: 'up', amount: 500 }
+                                                        });
+                                                        addToast('⬆️ Scroll Up sent', 'success');
+                                                    } catch (e) {
+                                                        addToast('Failed to send scroll', 'error');
+                                                    }
+                                                }}
+                                                className={`group flex flex-col items-center justify-center w-12 h-14 rounded-xl transition-all hover:scale-105 ${isDark ? 'hover:bg-amber-500/20' : 'hover:bg-amber-50'
+                                                    }`}
+                                                title="Scroll Up on device"
+                                            >
+                                                <svg className={`w-5 h-5 ${isDark ? 'text-amber-400' : 'text-amber-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                                </svg>
+                                                <span className={`text-[10px] mt-0.5 font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Up</span>
+                                            </button>
+
+                                            {/* Scroll Down */}
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        await axios.post('/devices/send-action', {
+                                                            device_id: selectedDevice.device_id,
+                                                            action: { type: 'scroll', direction: 'down', amount: 500 }
+                                                        });
+                                                        addToast('⬇️ Scroll Down sent', 'success');
+                                                    } catch (e) {
+                                                        addToast('Failed to send scroll', 'error');
+                                                    }
+                                                }}
+                                                className={`group flex flex-col items-center justify-center w-12 h-14 rounded-xl transition-all hover:scale-105 ${isDark ? 'hover:bg-amber-500/20' : 'hover:bg-amber-50'
+                                                    }`}
+                                                title="Scroll Down on device"
+                                            >
+                                                <svg className={`w-5 h-5 ${isDark ? 'text-amber-400' : 'text-amber-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                                <span className={`text-[10px] mt-0.5 font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Down</span>
+                                            </button>
+
+                                            <div className={`w-px h-6 ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-200'}`} />
+
+                                            {/* Back Key */}
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        await axios.post('/devices/send-action', {
+                                                            device_id: selectedDevice.device_id,
+                                                            action: { type: 'key_event', keyCode: 'KEYCODE_BACK' }
+                                                        });
+                                                        addToast('◀️ Back key sent', 'success');
+                                                    } catch (e) {
+                                                        addToast('Failed to send key', 'error');
+                                                    }
+                                                }}
+                                                className={`group flex flex-col items-center justify-center w-12 h-14 rounded-xl transition-all hover:scale-105 ${isDark ? 'hover:bg-pink-500/20' : 'hover:bg-pink-50'
+                                                    }`}
+                                                title="Send Back key to device"
+                                            >
+                                                <svg className={`w-5 h-5 ${isDark ? 'text-pink-400' : 'text-pink-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                                </svg>
+                                                <span className={`text-[10px] mt-0.5 font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Back</span>
+                                            </button>
+
+                                            {/* Home Key */}
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        await axios.post('/devices/send-action', {
+                                                            device_id: selectedDevice.device_id,
+                                                            action: { type: 'key_event', keyCode: 'KEYCODE_HOME' }
+                                                        });
+                                                        addToast('🏠 Home key sent', 'success');
+                                                    } catch (e) {
+                                                        addToast('Failed to send key', 'error');
+                                                    }
+                                                }}
+                                                className={`group flex flex-col items-center justify-center w-12 h-14 rounded-xl transition-all hover:scale-105 ${isDark ? 'hover:bg-teal-500/20' : 'hover:bg-teal-50'
+                                                    }`}
+                                                title="Send Home key to device"
+                                            >
+                                                <svg className={`w-5 h-5 ${isDark ? 'text-teal-400' : 'text-teal-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                                </svg>
+                                                <span className={`text-[10px] mt-0.5 font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Home</span>
+                                            </button>
+
+                                            <div className={`w-px h-6 ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-200'}`} />
+
+                                            {/* Element Picker Shortcut */}
+                                            <button
+                                                onClick={() => setShowElementPicker(true)}
+                                                className={`group flex flex-col items-center justify-center w-14 h-14 rounded-xl transition-all hover:scale-105 ${isDark ? 'hover:bg-cyan-500/20' : 'hover:bg-cyan-50'
+                                                    }`}
+                                                title="Open Element Picker"
+                                            >
+                                                <svg className={`w-5 h-5 ${isDark ? 'text-cyan-400' : 'text-cyan-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                                                </svg>
+                                                <span className={`text-[10px] mt-0.5 font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Picker</span>
+                                            </button>
+                                        </div>
+                                    </Panel>
+                                )}
+
+                                {/* Multi-Selection Floating Toolbar - Premium Design */}
+                                {selectedNodes.length > 1 && (
+                                    <Panel position="top-center" className="!m-4 !mt-20 animate-in fade-in slide-in-from-top-2 duration-200">
+                                        <div
+                                            className={`flex items-center gap-1.5 p-1.5 rounded-full shadow-2xl border backdrop-blur-xl ${isDark ? 'bg-[#0a0a0a]/95 border-[#2a2a2a]' : 'bg-white/95 border-gray-200/80'}`}
+                                            style={{
+                                                boxShadow: isDark
+                                                    ? '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255,255,255,0.05)'
+                                                    : '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0,0,0,0.05)'
+                                            }}
+                                        >
+                                            {/* Selection Badge - Animated */}
+                                            <div className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full ${isDark ? 'bg-purple-500/20' : 'bg-purple-100'}`}>
+                                                <div className={`absolute inset-0 rounded-full ${isDark ? 'bg-purple-500/10' : 'bg-purple-200/50'} animate-pulse`} />
+                                                <div className={`relative w-2 h-2 rounded-full ${isDark ? 'bg-purple-400' : 'bg-purple-500'}`}>
+                                                    <div className={`absolute inset-0 rounded-full ${isDark ? 'bg-purple-400' : 'bg-purple-500'} animate-ping`} />
+                                                </div>
+                                                <span className={`relative text-xs font-bold tabular-nums ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
+                                                    {selectedNodes.length}
+                                                </span>
+                                            </div>
+
+                                            {/* Primary Action: Wrap in Loop */}
+                                            <button
+                                                onClick={wrapSelectedNodesInLoop}
+                                                className={`group relative flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm transition-all duration-200 ${isDark
+                                                    ? 'bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500 text-white'
+                                                    : 'bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500 text-white'
+                                                    }`}
+                                                style={{
+                                                    boxShadow: isDark
+                                                        ? '0 4px 20px rgba(139, 92, 246, 0.4), inset 0 1px 0 rgba(255,255,255,0.1)'
+                                                        : '0 4px 20px rgba(139, 92, 246, 0.35), inset 0 1px 0 rgba(255,255,255,0.2)'
+                                                }}
+                                                title="Wrap in Loop (⌘L)"
+                                            >
+                                                <svg className="w-4 h-4 transition-transform group-hover:rotate-180 duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                </svg>
+                                                <span>Loop</span>
+                                            </button>
+
+                                            {/* Divider */}
+                                            <div className={`w-px h-6 ${isDark ? 'bg-white/10' : 'bg-gray-200'}`} />
+
+                                            {/* Secondary Action: Delete */}
+                                            <button
+                                                onClick={deleteSelectedNodes}
+                                                className={`group flex items-center justify-center w-9 h-9 rounded-full transition-all duration-200 ${isDark
+                                                    ? 'hover:bg-red-500/20 text-gray-500 hover:text-red-400'
+                                                    : 'hover:bg-red-50 text-gray-400 hover:text-red-500'
+                                                    }`}
+                                                title="Delete (⌫)"
+                                            >
+                                                <svg className="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+
+                                            {/* Close/Deselect Button */}
+                                            <button
+                                                onClick={() => setSelectedNodes([])}
+                                                className={`flex items-center justify-center w-9 h-9 rounded-full transition-all duration-200 ${isDark
+                                                    ? 'hover:bg-white/10 text-gray-600 hover:text-gray-300'
+                                                    : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600'
+                                                    }`}
+                                                title="Deselect all (Esc)"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </Panel>
+                                )}
                                 {/* Mini Map */}
                                 <Panel position="bottom-right" className="!m-4">
                                     <div className={`rounded-xl overflow-hidden shadow-xl border ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a]' : 'bg-white border-gray-200'}`}>
@@ -2250,9 +3285,9 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                                 </svg>
                                             </div>
-                                            <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Start Building</h3>
+                                            <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('flows.editor.sidebar.start_building')}</h3>
                                             <p className={`text-sm max-w-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                Drag nodes from the left panel to create your workflow
+                                                {t('flows.editor.sidebar.start_building_desc')}
                                             </p>
                                         </div>
                                     </Panel>
@@ -2286,20 +3321,43 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                         </div>
                                     )}
 
-                                    {/* Screenshot Preview */}
+                                    {/* Screenshot Preview with Tap Indicator */}
                                     {selectedNode.data?.screenshotUrl && (
                                         <div>
-                                            <label className={`block text-xs font-semibold uppercase tracking-wider mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Screenshot</label>
-                                            <div className="relative aspect-video w-full rounded-lg overflow-hidden border border-gray-500/20 cursor-pointer group">
+                                            <label className={`block text-xs font-semibold uppercase tracking-wider mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                Interaction Screenshot
+                                            </label>
+                                            <div className="relative w-full rounded-lg overflow-hidden border border-gray-500/20 cursor-pointer group"
+                                                style={{ aspectRatio: '9/16' }}>
                                                 <img
                                                     src={selectedNode.data.screenshotUrl}
                                                     alt="Action screenshot"
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                                                 />
+                                                {/* Tap Position Indicator */}
+                                                {selectedNode.data?.coordinates && (selectedNode.data.coordinates.x || selectedNode.data.coordinates.y) && (
+                                                    <div
+                                                        className="absolute w-6 h-6 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                                                        style={{
+                                                            left: `${(selectedNode.data.coordinates.x / 1080) * 100}%`,
+                                                            top: `${(selectedNode.data.coordinates.y / 2400) * 100}%`,
+                                                        }}
+                                                    >
+                                                        <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-75" />
+                                                        <div className="absolute inset-1 bg-red-500 rounded-full border-2 border-white shadow-lg" />
+                                                    </div>
+                                                )}
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-2">
                                                     <span className="text-white text-xs font-medium">Click to expand</span>
                                                 </div>
                                             </div>
+                                            {/* Coordinates display below image */}
+                                            {selectedNode.data?.coordinates && (
+                                                <div className={`flex justify-center gap-4 mt-2 text-[10px] font-mono ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                    <span>X: {selectedNode.data.coordinates.x}</span>
+                                                    <span>Y: {selectedNode.data.coordinates.y}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 
@@ -2417,7 +3475,9 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                                             <span className="text-[10px] font-semibold uppercase">Element Bounds</span>
                                                         </div>
                                                         <div className={`text-xs font-mono rounded-lg px-3 py-2 border break-all ${isDark ? 'text-gray-300 bg-[#1a1a1a] border-[#2a2a2a]' : 'text-gray-700 bg-gray-50 border-gray-200'}`}>
-                                                            {selectedNode.data.bounds}
+                                                            {typeof selectedNode.data.bounds === 'object' && selectedNode.data.bounds !== null
+                                                                ? `${selectedNode.data.bounds.width ?? 0}×${selectedNode.data.bounds.height ?? 0} @ (${selectedNode.data.bounds.left ?? 0}, ${selectedNode.data.bounds.top ?? 0})`
+                                                                : typeof selectedNode.data.bounds === 'string' ? selectedNode.data.bounds : 'N/A'}
                                                         </div>
                                                     </div>
                                                 )}
@@ -2451,6 +3511,73 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                                         </div>
                                                     </div>
                                                 )}
+
+                                                {/* Content Description - Important for accessibility-based replay */}
+                                                {selectedNode.data?.contentDescription && (
+                                                    <div className="mb-3">
+                                                        <div className={`flex items-center gap-1.5 mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                            </svg>
+                                                            <span className="text-[10px] font-semibold uppercase">Content Description</span>
+                                                        </div>
+                                                        <div className={`text-xs rounded-lg px-3 py-2 border break-all ${isDark ? 'text-green-300/90 bg-green-900/20 border-green-800/30' : 'text-green-700 bg-green-50 border-green-200'}`}>
+                                                            "{selectedNode.data.contentDescription}"
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Input Text - For text_input actions */}
+                                                {selectedNode.data?.inputText && (
+                                                    <div className="mb-3">
+                                                        <div className={`flex items-center gap-1.5 mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                            </svg>
+                                                            <span className="text-[10px] font-semibold uppercase">Input Text</span>
+                                                        </div>
+                                                        <div className={`text-xs font-mono rounded-lg px-3 py-2 border ${isDark ? 'text-purple-300 bg-purple-900/20 border-purple-800/30' : 'text-purple-700 bg-purple-50 border-purple-200'}`}>
+                                                            "{selectedNode.data.inputText}"
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Accessibility Flags */}
+                                                {(selectedNode.data?.isClickable !== undefined ||
+                                                    selectedNode.data?.isEditable !== undefined ||
+                                                    selectedNode.data?.isScrollable !== undefined) && (
+                                                        <div className="mb-3">
+                                                            <div className={`flex items-center gap-1.5 mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                </svg>
+                                                                <span className="text-[10px] font-semibold uppercase">Element Flags</span>
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-1.5">
+                                                                {selectedNode.data?.isClickable && (
+                                                                    <span className={`text-[10px] font-medium px-2 py-1 rounded-full ${isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-700'}`}>
+                                                                        Clickable
+                                                                    </span>
+                                                                )}
+                                                                {selectedNode.data?.isEditable && (
+                                                                    <span className={`text-[10px] font-medium px-2 py-1 rounded-full ${isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-700'}`}>
+                                                                        Editable
+                                                                    </span>
+                                                                )}
+                                                                {selectedNode.data?.isScrollable && (
+                                                                    <span className={`text-[10px] font-medium px-2 py-1 rounded-full ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'}`}>
+                                                                        Scrollable
+                                                                    </span>
+                                                                )}
+                                                                {!selectedNode.data?.isClickable && !selectedNode.data?.isEditable && !selectedNode.data?.isScrollable && (
+                                                                    <span className={`text-[10px] font-medium px-2 py-1 rounded-full ${isDark ? 'bg-gray-500/20 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
+                                                                        No special flags
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
                                             </div>
                                         </>
                                     )}
@@ -2564,6 +3691,9 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                     onClose={() => setSelectedNode(null)}
                     upstreamVariables={[]}
                     loopContext={null}
+                    selectedDevice={selectedDevice}
+                    userId={props.auth?.user?.id}
+                    dataSourceNodes={nodes.filter(n => n.type === 'data_source' && n.data?.collectionId)}
                 />
             )}
 
@@ -2618,6 +3748,16 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                     ));
                     debouncedSave(nodes, edges, viewport);
                 }}
+                selectedDevice={selectedDevice}
+                userId={props.auth?.user?.id}
+            />
+
+            {/* Workflow Preview Modal */}
+            <WorkflowPreviewModal
+                isOpen={showPreviewModal}
+                onClose={() => setShowPreviewModal(false)}
+                nodes={nodes}
+                workflowName={flowName}
             />
 
             {/* Debug Panel for APK Events */}
@@ -2746,7 +3886,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                         </tr>
                                         <tr>
                                             <td style={{ color: '#2dd4bf' }}>bounds:</td>
-                                            <td>{event.raw?.bounds || '-'}</td>
+                                            <td>{typeof event.raw?.bounds === 'object' && event.raw?.bounds ? `${event.raw.bounds.width ?? 0}×${event.raw.bounds.height ?? 0}` : (event.raw?.bounds || '-')}</td>
                                         </tr>
                                         <tr>
                                             <td style={{ color: '#fb923c' }}>x, y:</td>
@@ -2782,23 +3922,74 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                 style={{
                     position: 'fixed',
                     bottom: showDebugPanel ? '310px' : '10px',
-                    right: '10px',
+                    right: selectedNode ? '340px' : '10px', // Move left when config panel is open
                     padding: '8px 12px',
                     background: showDebugPanel ? 'rgba(139, 92, 246, 0.8)' : 'rgba(30, 41, 59, 0.9)',
                     color: showDebugPanel ? '#fff' : '#a78bfa',
                     border: '1px solid rgba(139, 92, 246, 0.5)',
                     borderRadius: '8px',
                     cursor: 'pointer',
-                    zIndex: 1001,
+                    zIndex: 55, // Below config panel (z-60)
                     fontSize: '12px',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                    transition: 'right 0.3s ease'
                 }}
             >
                 🔍 Debug {debugEvents.length > 0 && `(${debugEvents.length})`}
             </button>
+
+            {/* Clear All Confirmation Modal */}
+            {showClearConfirm && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+                    {/* Backdrop */}
+                    <div
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        onClick={() => setShowClearConfirm(false)}
+                    />
+                    {/* Modal */}
+                    <div className={`relative z-10 w-full max-w-md mx-4 rounded-2xl shadow-2xl overflow-hidden ${isDark ? 'bg-[#1a1a1a]' : 'bg-white'}`}>
+                        {/* Header */}
+                        <div className={`px-6 py-4 border-b ${isDark ? 'border-[#2a2a2a]' : 'border-gray-200'}`}>
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Clear All Nodes</h3>
+                                    <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>This action cannot be undone</p>
+                                </div>
+                            </div>
+                        </div>
+                        {/* Content */}
+                        <div className="px-6 py-4">
+                            <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                                Are you sure you want to delete <span className="font-bold text-red-500">{nodes.length}</span> node{nodes.length !== 1 ? 's' : ''}?
+                                All workflow data will be permanently removed.
+                            </p>
+                        </div>
+                        {/* Actions */}
+                        <div className={`px-6 py-4 flex gap-3 border-t ${isDark ? 'border-[#2a2a2a]' : 'border-gray-200'}`}>
+                            <button
+                                onClick={() => setShowClearConfirm(false)}
+                                className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition-colors ${isDark ? 'bg-[#252525] hover:bg-[#2a2a2a] text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmClearAllNodes}
+                                className="flex-1 py-2.5 rounded-lg font-medium text-sm bg-red-500 hover:bg-red-600 text-white transition-colors"
+                            >
+                                Delete All
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

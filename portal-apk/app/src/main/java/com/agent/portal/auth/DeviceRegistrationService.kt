@@ -107,12 +107,32 @@ class DeviceRegistrationService(private val context: Context) {
     
     /**
      * Get unique device ID
+     * Uses a persistent UUID to ensure uniqueness across emulator instances
+     * and devices with the same ANDROID_ID
      */
     private fun getDeviceId(): String {
-        return Settings.Secure.getString(
-            context.contentResolver,
-            Settings.Secure.ANDROID_ID
-        ) ?: "unknown"
+        val prefs = context.getSharedPreferences("portal_device", Context.MODE_PRIVATE)
+        
+        // Check if we already have a saved unique device ID
+        var uniqueDeviceId = prefs.getString("unique_device_id", null)
+        
+        if (uniqueDeviceId == null) {
+            // Generate new unique ID: ANDROID_ID + timestamp + random suffix
+            val androidId = Settings.Secure.getString(
+                context.contentResolver,
+                Settings.Secure.ANDROID_ID
+            ) ?: "unknown"
+            
+            // Create unique suffix using random UUID
+            val uniqueSuffix = java.util.UUID.randomUUID().toString().take(8)
+            uniqueDeviceId = "${androidId}_$uniqueSuffix"
+            
+            // Save for future use
+            prefs.edit().putString("unique_device_id", uniqueDeviceId).apply()
+            Log.i(TAG, "Generated new unique device ID: $uniqueDeviceId")
+        }
+        
+        return uniqueDeviceId
     }
     
     /**

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import LandingLayout from '../../Layouts/LandingLayout';
+import SeoHead from '../../Components/SeoHead';
 
 export default function Index({ features }) {
     const { t } = useTranslation();
@@ -8,6 +9,12 @@ export default function Index({ features }) {
 
     return (
         <LandingLayout>
+            <SeoHead
+                title="Tính năng CLICKAI - Workflow Automation & Device Management"
+                description="Khám phá các tính năng mạnh mẽ của CLICKAI: Quản lý thiết bị thông minh, workflow automation, AI Studio, lên lịch tự động và báo cáo phân tích realtime."
+                keywords="tính năng clickai, workflow automation, device management, ai studio, automation platform"
+                url="https://clickai.vn/features"
+            />
             {/* Hero */}
             <section className="relative bg-gradient-to-b from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-24">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

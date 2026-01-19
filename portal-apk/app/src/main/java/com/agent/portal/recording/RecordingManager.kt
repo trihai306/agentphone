@@ -2,11 +2,13 @@ package com.agent.portal.recording
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
+import com.agent.portal.overlay.OverlayService
 import java.lang.ref.WeakReference
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
@@ -63,6 +65,17 @@ object RecordingManager {
     // Recording listeners for UI callbacks
     private val listeners = CopyOnWriteArrayList<RecordingListener>()
     private val mainHandler = Handler(Looper.getMainLooper())
+
+    // Timer for flushing pending debounced events (scroll, text)
+    private const val PENDING_EVENT_FLUSH_INTERVAL_MS = 500L
+    private val pendingEventFlushRunnable = object : Runnable {
+        override fun run() {
+            if (isActivelyRecording()) {
+                flushPendingEventsIfReady()
+                mainHandler.postDelayed(this, PENDING_EVENT_FLUSH_INTERVAL_MS)
+            }
+        }
+    }
 
     // Metrics tracking
     private var metricsStartTime = 0L
@@ -253,6 +266,10 @@ object RecordingManager {
 
             val duration = System.currentTimeMillis() - startTime
             Log.i(TAG, "[${formatTimestamp()}] Recording started successfully: $recordingId (took ${duration}ms)")
+
+            // NOTE: Index overlay disabled during recording to avoid blocking the floating bubble
+            // Users can enable indexes manually via Developer Tools if needed
+            // Indexes are shown in Frontend Element Picker instead
             
             // Publish recording:started event to Pusher
             try {
@@ -272,6 +289,10 @@ object RecordingManager {
             
             // Notify listeners
             notifyRecordingStarted(recordingId!!, appPackage)
+
+            // Start periodic timer to flush pending events
+            mainHandler.postDelayed(pendingEventFlushRunnable, PENDING_EVENT_FLUSH_INTERVAL_MS)
+            Log.i(TAG, "Pending event flush timer started")
 
             return RecordingResult(
                 success = true,
@@ -315,6 +336,10 @@ object RecordingManager {
             Log.i(TAG, "Setting isRecording = false...")
             isRecording.set(false)
             isPaused.set(false)
+
+            // Stop pending event flush timer
+            mainHandler.removeCallbacks(pendingEventFlushRunnable)
+            Log.i(TAG, "Pending event flush timer stopped")
 
             // Flush any pending scroll event before stopping
             try {
@@ -703,6 +728,64 @@ object RecordingManager {
             durationMs = duration,
             eventsPerSecond = if (duration > 0) (totalEventsProcessed * 1000.0 / duration) else 0.0
         )
+    }
+
+    /**
+     * Check and flush any pending debounced events (scroll, text input).
+     * Called periodically by the timer during recording.
+     */
+    private fun flushPendingEventsIfReady() {
+        try {
+            // Check pending scroll - gestureDetector.checkScrollTimeout() checks if 400ms elapsed
+            val pendingScroll = EventCapture.checkPendingScrollEvent(targetAppPackage ?: "", "")
+            if (pendingScroll != null) {
+                val eventWithSequence = pendingScroll.copy(
+                    sequenceNumber = eventSequence.incrementAndGet(),
+                    relativeTimestamp = System.currentTimeMillis() - recordingStartTime.get()
+                )
+                eventBuffer.add(eventWithSequence)
+                totalEventsProcessed++
+                eventTypeCountMap[pendingScroll.eventType] = (eventTypeCountMap[pendingScroll.eventType] ?: 0) + 1
+                Log.i(TAG, "✓ Timer flushed scroll: ${pendingScroll.eventType} (${eventBuffer.size} total)")
+                
+                // Notify and publish
+                notifyEventAdded(eventWithSequence, eventBuffer.size)
+                try {
+                    com.agent.portal.socket.SocketJobManager.publishActionEvent(
+                        recordingId ?: "unknown",
+                        eventWithSequence
+                    )
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to publish flushed scroll event", e)
+                }
+            }
+            
+            // Check pending text input - 700ms debounce timeout
+            val pendingText = EventCapture.checkPendingTextInput()
+            if (pendingText != null) {
+                val eventWithSequence = pendingText.copy(
+                    sequenceNumber = eventSequence.incrementAndGet(),
+                    relativeTimestamp = System.currentTimeMillis() - recordingStartTime.get()
+                )
+                eventBuffer.add(eventWithSequence)
+                totalEventsProcessed++
+                eventTypeCountMap[pendingText.eventType] = (eventTypeCountMap[pendingText.eventType] ?: 0) + 1
+                Log.i(TAG, "✓ Timer flushed text: ${pendingText.eventType} (${eventBuffer.size} total)")
+                
+                // Notify and publish
+                notifyEventAdded(eventWithSequence, eventBuffer.size)
+                try {
+                    com.agent.portal.socket.SocketJobManager.publishActionEvent(
+                        recordingId ?: "unknown",
+                        eventWithSequence
+                    )
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to publish flushed text event", e)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in flushPendingEventsIfReady", e)
+        }
     }
 
     // ========== Private Helper Methods ==========

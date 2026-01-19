@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Smart Pill Recording Bubble v2 
+     Features:
+     - Minimized dot state (just pulsing red dot)
+     - Expanded pill state (full controls)
+     - Modern glassmorphic design
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/bubbleContainer"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="4dp">
+
+    <!-- ======= MINIMIZED STATE: Just the dot ======= -->
+    <FrameLayout
+        android:id="@+id/minimizedContainer"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:visibility="gone"
+        android:background="@drawable/bg_bubble_pill"
+        android:clickable="true"
+        android:focusable="true">
+
+        <!-- Outer glow ring (animated) -->
+        <View
+            android:id="@+id/minimizedGlowRing"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center"
+            android:background="@drawable/recording_pulse_ring"
+            android:alpha="0.6" />
+
+        <!-- Core recording dot -->
+        <View
+            android:id="@+id/minimizedDot"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_minimized_dot" />
+
+    </FrameLayout>
+
+    <!-- ======= EXPANDED STATE: Full pill with controls ======= -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/expandedContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="visible"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:cardCornerRadius="28dp"
+        app:cardElevation="8dp"
+        app:strokeWidth="0dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="12dp"
+            android:paddingEnd="8dp"
+            android:background="@drawable/bg_bubble_pill">
+
+            <!-- Recording Indicator with pulse -->
+            <FrameLayout
+                android:id="@+id/recordingIndicator"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center_vertical">
+
+                <!-- Outer pulse ring -->
+                <View
+                    android:id="@+id/pulseRing"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/recording_pulse_ring"
+                    android:alpha="0.5" />
+
+                <!-- Inner recording dot -->
+                <View
+                    android:id="@+id/recordingDot"
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/recording_dot_glow" />
+
+            </FrameLayout>
+
+            <!-- Stats Container -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginStart="10dp"
+                android:gravity="start">
+
+                <!-- Event Count -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/tvEventCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textSize="18sp"
+                        android:textColor="#FFFFFF"
+                        android:fontFamily="sans-serif-medium"
+                        android:letterSpacing="0.02" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:text="events"
+                        android:textSize="11sp"
+                        android:textColor="#80FFFFFF"
+                        android:fontFamily="sans-serif" />
+
+                </LinearLayout>
+
+                <!-- Duration -->
+                <TextView
+                    android:id="@+id/tvDuration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="00:00"
+                    android:textSize="11sp"
+                    android:textColor="#66FFFFFF"
+                    android:fontFamily="sans-serif-mono"
+                    android:letterSpacing="0.05" />
+
+            </LinearLayout>
+
+            <!-- Divider -->
+            <View
+                android:layout_width="1dp"
+                android:layout_height="28dp"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="8dp"
+                android:background="#26FFFFFF" />
+
+            <!-- Pause Button -->
+            <FrameLayout
+                android:id="@+id/btnPause"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_pause_button_circular"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                <ImageView
+                    android:id="@+id/ivPause"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_pause"
+                    android:contentDescription="Pause recording"
+                    app:tint="#FFCC00" />
+
+            </FrameLayout>
+
+            <!-- Stop Button -->
+            <FrameLayout
+                android:id="@+id/btnStop"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_stop_button_circular"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                <ImageView
+                    android:id="@+id/ivStop"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_stop_circle"
+                    android:contentDescription="Stop recording"
+                    app:tint="#FF3B30" />
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+</FrameLayout>

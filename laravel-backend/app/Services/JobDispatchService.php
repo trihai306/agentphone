@@ -156,14 +156,32 @@ class JobDispatchService
         $tasks = $job->tasks()->orderBy('sequence')->get();
 
         $actions = $tasks->map(function (JobTask $task, $index) {
+            $inputData = $task->input_data ?? [];
+
+            // Determine action type - special handling for condition nodes with element check
+            $actionType = $this->mapNodeTypeToAction($task->node_type);
+
+            // If this is a condition node with element conditionType, use element_check
+            if ($task->node_type === 'condition' && ($inputData['conditionType'] ?? 'variable') === 'element') {
+                $actionType = 'element_check';
+
+                // Map elementOperator to checkType for APK
+                $inputData['checkType'] = $inputData['elementOperator'] ?? 'exists';
+
+                // For text checks, copy assertType as well
+                if (in_array($inputData['checkType'], ['text_equals', 'text_contains'])) {
+                    $inputData['assertType'] = $inputData['checkType'];
+                }
+            }
+
             return [
                 'id' => $task->node_id,
-                'type' => $this->mapNodeTypeToAction($task->node_type),
-                'params' => $task->input_data ?? [],
-                'wait_before' => $task->input_data['wait_before'] ?? 0,
-                'wait_after' => $task->input_data['wait_after'] ?? 500,
-                'retry_on_fail' => $task->input_data['retry'] ?? 0,
-                'optional' => $task->input_data['optional'] ?? false,
+                'type' => $actionType,
+                'params' => $inputData,
+                'wait_before' => $inputData['wait_before'] ?? 0,
+                'wait_after' => $inputData['wait_after'] ?? 500,
+                'retry_on_fail' => $inputData['retry'] ?? 0,
+                'optional' => $inputData['optional'] ?? false,
                 'condition' => null,
             ];
         })->toArray();
@@ -181,6 +199,18 @@ class JobDispatchService
                 $variables = array_merge($variables, $recordData);
             }
         }
+
+        // Interpolate variables in action params (replace {{field}} with values)
+        $actions = array_map(function ($action) use ($variables) {
+            $action['params'] = $this->interpolateActionParams($action['params'], $variables);
+            return $action;
+        }, $actions);
+
+        Log::debug("Generated action config with interpolated variables", [
+            'job_id' => $job->id,
+            'variables_count' => count($variables),
+            'actions_count' => count($actions),
+        ]);
 
         return [
             'version' => '1.0',
@@ -229,29 +259,104 @@ class JobDispatchService
     }
 
     /**
+     * Interpolate {{variable}} placeholders in text with actual values
+     * 
+     * @param string $text Text containing {{variable}} placeholders
+     * @param array $variables Key-value pairs of variables
+     * @return string Text with placeholders replaced by values
+     */
+    protected function interpolateVariables(string $text, array $variables): string
+    {
+        return preg_replace_callback('/\{\{(\w+)\}\}/', function ($matches) use ($variables) {
+            $key = $matches[1];
+            return $variables[$key] ?? $matches[0]; // Keep original if not found
+        }, $text);
+    }
+
+    /**
+     * Recursively interpolate all string values in action params
+     * 
+     * @param array $params Action parameters
+     * @param array $variables Variables to interpolate
+     * @return array Params with all {{field}} replaced
+     */
+    protected function interpolateActionParams(array $params, array $variables): array
+    {
+        foreach ($params as $key => $value) {
+            if (is_string($value)) {
+                $params[$key] = $this->interpolateVariables($value, $variables);
+            } elseif (is_array($value)) {
+                $params[$key] = $this->interpolateActionParams($value, $variables);
+            }
+        }
+        return $params;
+    }
+
+    /**
      * Map flow node type to APK action type
      */
     protected function mapNodeTypeToAction(string $nodeType): string
     {
         $mapping = [
+            // Tap actions
             'tap' => 'tap',
             'click' => 'tap',
             'doubleTap' => 'double_tap',
+            'double_tap' => 'double_tap',
             'longPress' => 'long_press',
+            'long_press' => 'long_press',
+            'long_tap' => 'long_press',
+
+            // Swipe actions
             'swipe' => 'swipe',
+            'swipe_left' => 'swipe',
+            'swipe_right' => 'swipe',
+            'swipe_up' => 'swipe',
+            'swipe_down' => 'swipe',
+
+            // Scroll actions
             'scroll' => 'scroll',
+            'scroll_up' => 'scroll',
+            'scroll_down' => 'scroll',
+            'scroll_left' => 'scroll',
+            'scroll_right' => 'scroll',
+
+            // Input actions
             'input' => 'text_input',
             'textInput' => 'text_input',
+            'text_input' => 'text_input',
             'pressKey' => 'press_key',
+            'press_key' => 'press_key',
+            'key_event' => 'press_key',
+
+            // App actions
             'startApp' => 'start_app',
             'openApp' => 'start_app',
+            'open_app' => 'start_app',
+            'start_app' => 'start_app',
+
+            // Wait actions
             'wait' => 'wait',
             'delay' => 'wait',
+
+            // Screenshot
             'screenshot' => 'screenshot',
+
+            // Assertion & Verification
             'assert' => 'assert',
+            'element_check' => 'element_check',
+            'wait_for_element' => 'wait_for_element',
+
+            // Data extraction
             'extract' => 'extract',
+
+            // Control flow (handled specially)
             'condition' => 'custom',
             'loop' => 'custom',
+
+            // Smart action nodes (recorded)
+            'recorded_action' => 'tap',
+            'smart_action' => 'tap',
         ];
 
         return $mapping[$nodeType] ?? 'custom';

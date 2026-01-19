@@ -4,26 +4,34 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Device;
+use App\Services\DevicePresenceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class PresenceWebhookController extends Controller
 {
+    public function __construct(
+        private DevicePresenceService $presenceService
+    ) {
+    }
+
     /**
      * Handle Pusher/Soketi webhook for presence events
      * 
      * Events: member_added, member_removed, channel_occupied, channel_vacated
+     * 
+     * OPTIMIZED: Uses Redis instead of DB writes for each event.
+     * DB sync happens every minute via scheduler.
      */
     public function handle(Request $request)
     {
         $events = $request->input('events', []);
 
-        Log::info('Presence webhook received:', ['events' => $events]);
+        Log::debug('Presence webhook received:', ['count' => count($events)]);
 
         foreach ($events as $event) {
             $eventName = $event['name'] ?? null;
             $channel = $event['channel'] ?? null;
-            $userId = $event['user_id'] ?? null;
 
             // Only process presence-devices channels
             if (!str_starts_with($channel, 'presence-devices.')) {
@@ -31,20 +39,20 @@ class PresenceWebhookController extends Controller
             }
 
             // Extract user ID from channel name
-            $channelUserId = str_replace('presence-devices.', '', $channel);
+            $userId = (int) str_replace('presence-devices.', '', $channel);
 
             switch ($eventName) {
                 case 'member_added':
-                    $this->handleMemberAdded($event, $channelUserId);
+                    $this->handleMemberAdded($event, $userId);
                     break;
 
                 case 'member_removed':
-                    $this->handleMemberRemoved($event, $channelUserId);
+                    $this->handleMemberRemoved($event, $userId);
                     break;
 
                 case 'channel_vacated':
                     // All members left - mark all devices offline for this user
-                    $this->handleChannelVacated($channelUserId);
+                    $this->handleChannelVacated($userId);
                     break;
             }
         }
@@ -53,77 +61,71 @@ class PresenceWebhookController extends Controller
     }
 
     /**
-     * Device connected - mark as online
+     * Device connected - mark as online in Redis
+     * 
+     * No DB write here - synced every minute by scheduler
      */
-    private function handleMemberAdded(array $event, string $userId): void
+    private function handleMemberAdded(array $event, int $userId): void
     {
         $userInfo = $event['user_info'] ?? [];
         $deviceId = $userInfo['device_id'] ?? null;
         $deviceDbId = $userInfo['device_db_id'] ?? null;
 
-        if ($deviceDbId) {
-            $device = Device::find($deviceDbId);
-        } elseif ($deviceId) {
-            $device = Device::where('user_id', $userId)
-                ->where('device_id', $deviceId)
-                ->first();
+        if (!$deviceId) {
+            // Try to find device by DB ID if device_id not provided
+            if ($deviceDbId) {
+                $device = Device::find($deviceDbId);
+                $deviceId = $device?->device_id;
+            }
+
+            if (!$deviceId) {
+                Log::warning("Presence webhook: No device_id in member_added", $userInfo);
+                return;
+            }
         }
 
-        if ($device) {
-            $device->update([
-                'status' => 'active',
-                'last_active_at' => now(),
-                'socket_connected' => true,
-            ]);
+        // Mark online in Redis (O(1) operation, no DB write)
+        $this->presenceService->markOnline($userId, $deviceId, $deviceDbId);
 
-            Log::info("Device online via presence: {$device->name}");
+        Log::info("Device online via Redis: {$deviceId}");
 
-            // Broadcast device online event to frontend
-            broadcast(new \App\Events\DeviceStatusChanged($device, 'online'))->toOthers();
-        }
+        // NOTE: We don't broadcast here anymore to reduce socket traffic
+        // Frontend will poll /devices/online-status every 45s
     }
 
     /**
-     * Device disconnected - mark as offline
+     * Device disconnected - mark as offline in Redis
      */
-    private function handleMemberRemoved(array $event, string $userId): void
+    private function handleMemberRemoved(array $event, int $userId): void
     {
         $userInfo = $event['user_info'] ?? [];
         $deviceId = $userInfo['device_id'] ?? null;
         $deviceDbId = $userInfo['device_db_id'] ?? null;
 
-        if ($deviceDbId) {
+        if (!$deviceId && $deviceDbId) {
             $device = Device::find($deviceDbId);
-        } elseif ($deviceId) {
-            $device = Device::where('user_id', $userId)
-                ->where('device_id', $deviceId)
-                ->first();
+            $deviceId = $device?->device_id;
         }
 
-        if ($device) {
-            $device->update([
-                'socket_connected' => false,
-                'status' => 'inactive',  // Mark as inactive immediately
-            ]);
-
-            Log::info("Device offline via presence: {$device->name}");
-
-            // Broadcast device offline event to frontend
-            broadcast(new \App\Events\DeviceStatusChanged($device, 'offline'))->toOthers();
+        if (!$deviceId) {
+            Log::warning("Presence webhook: No device_id in member_removed", $userInfo);
+            return;
         }
+
+        // Mark offline in Redis
+        $this->presenceService->markOffline($userId, $deviceId);
+
+        Log::info("Device offline via Redis: {$deviceId}");
     }
 
     /**
-     * All members left channel - mark all devices offline
+     * All members left channel - mark all devices offline in Redis
      */
-    private function handleChannelVacated(string $userId): void
+    private function handleChannelVacated(int $userId): void
     {
-        Device::where('user_id', $userId)
-            ->update([
-                'socket_connected' => false,
-                'status' => 'inactive',
-            ]);
+        $this->presenceService->markAllOffline($userId);
 
         Log::info("All devices offline for user: {$userId}");
     }
 }
+

@@ -12,6 +12,7 @@ class JobTask extends Model
 
     protected $fillable = [
         'workflow_job_id',
+        'job_workflow_item_id',
         'flow_node_id',
         'node_id',
         'node_type',
@@ -46,6 +47,11 @@ class JobTask extends Model
     public function workflowJob(): BelongsTo
     {
         return $this->belongsTo(WorkflowJob::class, 'workflow_job_id');
+    }
+
+    public function workflowItem(): BelongsTo
+    {
+        return $this->belongsTo(JobWorkflowItem::class, 'job_workflow_item_id');
     }
 
     public function flowNode(): BelongsTo
@@ -125,7 +131,7 @@ class JobTask extends Model
     /**
      * Mark task as skipped
      */
-    public function markAsSkipped(string $reason = null): void
+    public function markAsSkipped(?string $reason = null): void
     {
         $this->update([
             'status' => self::STATUS_SKIPPED,

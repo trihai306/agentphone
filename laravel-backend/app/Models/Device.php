@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Redis;
 
 class Device extends Model
 {
@@ -17,12 +18,16 @@ class Device extends Model
         'status',
         'socket_url',
         'socket_connected',
+        'accessibility_enabled',
+        'accessibility_checked_at',
         'last_active_at',
     ];
 
     protected $casts = [
         'last_active_at' => 'datetime',
+        'accessibility_checked_at' => 'datetime',
         'socket_connected' => 'boolean',
+        'accessibility_enabled' => 'boolean',
     ];
 
     // Status constants
@@ -38,6 +43,11 @@ class Device extends Model
     public function activityLogs(): HasMany
     {
         return $this->hasMany(DeviceActivityLog::class);
+    }
+
+    public function jobs(): HasMany
+    {
+        return $this->hasMany(WorkflowJob::class);
     }
 
     /**
@@ -80,20 +90,65 @@ class Device extends Model
     }
 
     /**
-     * Check if device is currently online
-     * Device is online if socket is connected OR was active in last X minutes
+     * Check if device is currently online via Redis (preferred)
+     * Falls back to DB-based check if Redis unavailable
      */
     public function isOnline(int $minutes = 5): bool
     {
-        // Socket connected is most accurate
+        // Try Redis first (O(1) operation)
+        try {
+            $key = sprintf('device:online:%d', $this->user_id);
+            if (Redis::sismember($key, $this->device_id)) {
+                return true;
+            }
+        } catch (\Exception $e) {
+            // Redis unavailable, fall back to DB check
+        }
+
+        // Fallback: Socket connected flag
         if ($this->socket_connected) {
             return true;
         }
 
-        // Fallback to activity-based check
+        // Fallback: Activity-based check
         return $this->status === self::STATUS_ACTIVE
             && $this->last_active_at
             && $this->last_active_at->gte(now()->subMinutes($minutes));
+    }
+
+    /**
+     * Check if device is online via Redis only (fast path)
+     */
+    public function isOnlineViaRedis(): bool
+    {
+        try {
+            $key = sprintf('device:online:%d', $this->user_id);
+            return (bool) Redis::sismember($key, $this->device_id);
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Get all online devices for a user via Redis
+     */
+    public static function getOnlineForUser(int $userId): \Illuminate\Database\Eloquent\Collection
+    {
+        try {
+            $key = sprintf('device:online:%d', $userId);
+            $onlineIds = Redis::smembers($key) ?: [];
+
+            if (!empty($onlineIds)) {
+                return static::where('user_id', $userId)
+                    ->whereIn('device_id', $onlineIds)
+                    ->get();
+            }
+        } catch (\Exception $e) {
+            // Fall back to DB-based check
+        }
+
+        // Fallback: Use DB scope
+        return static::where('user_id', $userId)->online()->get();
     }
 
     /**
@@ -119,3 +174,4 @@ class Device extends Model
         ]);
     }
 }
+

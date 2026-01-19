@@ -1,60 +1,61 @@
 import { createContext, useContext, useState, useCallback } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
-import { useTranslation } from 'react-i18next';
 
-const ConfirmContext = createContext();
+// Context for confirm modal
+const ConfirmContext = createContext(null);
 
 export function ConfirmProvider({ children }) {
     const [confirmState, setConfirmState] = useState({
         isOpen: false,
-        title: '',
-        message: '',
-        type: 'warning', // 'warning' | 'danger' | 'info'
-        confirmText: '',
-        cancelText: '',
-        onConfirm: null,
-        onCancel: null,
+        title: 'Xác nhận',
+        message: 'Bạn có chắc chắn?',
+        confirmText: 'Xác nhận',
+        cancelText: 'Hủy',
+        type: 'danger',
+        resolve: null,
     });
 
-    const showConfirm = useCallback(({
-        title = 'Xác nhận',
-        message,
-        type = 'warning',
-        confirmText = 'Xác nhận',
-        cancelText = 'Hủy',
-        onConfirm,
-        onCancel,
-    }) => {
+    const showConfirm = useCallback((options) => {
         return new Promise((resolve) => {
             setConfirmState({
                 isOpen: true,
-                title,
-                message,
-                type,
-                confirmText,
-                cancelText,
-                onConfirm: () => {
-                    setConfirmState(prev => ({ ...prev, isOpen: false }));
-                    onConfirm?.();
-                    resolve(true);
-                },
-                onCancel: () => {
-                    setConfirmState(prev => ({ ...prev, isOpen: false }));
-                    onCancel?.();
-                    resolve(false);
-                },
+                title: options.title || 'Xác nhận',
+                message: options.message || 'Bạn có chắc chắn?',
+                confirmText: options.confirmText || 'Xác nhận',
+                cancelText: options.cancelText || 'Hủy',
+                type: options.type || 'danger',
+                resolve,
             });
         });
     }, []);
 
-    const hideConfirm = useCallback(() => {
+    const handleConfirm = useCallback(() => {
+        if (confirmState.resolve) {
+            confirmState.resolve(true);
+        }
         setConfirmState(prev => ({ ...prev, isOpen: false }));
-    }, []);
+    }, [confirmState.resolve]);
+
+    const handleCancel = useCallback(() => {
+        if (confirmState.resolve) {
+            confirmState.resolve(false);
+        }
+        setConfirmState(prev => ({ ...prev, isOpen: false }));
+    }, [confirmState.resolve]);
 
     return (
-        <ConfirmContext.Provider value={{ showConfirm, hideConfirm }}>
+        <ConfirmContext.Provider value={{ showConfirm }}>
             {children}
-            <ConfirmModal {...confirmState} />
+            <ConfirmModal
+                isOpen={confirmState.isOpen}
+                onClose={handleCancel}
+                onConfirm={handleConfirm}
+                title={confirmState.title}
+                message={confirmState.message}
+                confirmText={confirmState.confirmText}
+                cancelText={confirmState.cancelText}
+                type={confirmState.type}
+            />
         </ConfirmContext.Provider>
     );
 }
@@ -62,117 +63,150 @@ export function ConfirmProvider({ children }) {
 export function useConfirm() {
     const context = useContext(ConfirmContext);
     if (!context) {
-        throw new Error('useConfirm must be used within ConfirmProvider');
+        throw new Error('useConfirm must be used within a ConfirmProvider');
     }
     return context;
 }
 
-function ConfirmModal({
+/**
+ * Professional Confirm Modal
+ * Thay thế window.confirm() với UI đẹp hơn
+ */
+export default function ConfirmModal({
     isOpen,
-    title,
-    message,
-    type,
-    confirmText,
-    cancelText,
+    onClose,
     onConfirm,
-    onCancel,
+    title = 'Xác nhận',
+    message = 'Bạn có chắc chắn?',
+    confirmText = 'Xác nhận',
+    cancelText = 'Hủy',
+    type = 'danger', // 'danger' | 'warning' | 'info' | 'success'
+    icon = null,
+    isLoading = false,
 }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
-    const { t } = useTranslation();
 
     if (!isOpen) return null;
 
     const typeConfig = {
-        warning: {
-            icon: (
-                <svg className="w-6 h-6 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-            ),
-            iconBg: 'bg-amber-100 dark:bg-amber-900/30',
-            confirmBg: 'from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600',
-            confirmShadow: 'shadow-amber-500/30',
-        },
         danger: {
-            icon: (
-                <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-            ),
-            iconBg: 'bg-red-100 dark:bg-red-900/30',
-            confirmBg: 'from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600',
-            confirmShadow: 'shadow-red-500/30',
+            bg: 'from-red-500 to-rose-600',
+            iconBg: isDark ? 'bg-red-500/20' : 'bg-red-100',
+            iconColor: 'text-red-500',
+            buttonBg: 'from-red-500 to-rose-600',
+            shadow: 'shadow-red-500/25',
+            defaultIcon: '🗑️',
+        },
+        warning: {
+            bg: 'from-amber-500 to-orange-600',
+            iconBg: isDark ? 'bg-amber-500/20' : 'bg-amber-100',
+            iconColor: 'text-amber-500',
+            buttonBg: 'from-amber-500 to-orange-600',
+            shadow: 'shadow-amber-500/25',
+            defaultIcon: '⚠️',
         },
         info: {
-            icon: (
-                <svg className="w-6 h-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            ),
-            iconBg: 'bg-blue-100 dark:bg-blue-900/30',
-            confirmBg: 'from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600',
-            confirmShadow: 'shadow-blue-500/30',
+            bg: 'from-blue-500 to-cyan-600',
+            iconBg: isDark ? 'bg-blue-500/20' : 'bg-blue-100',
+            iconColor: 'text-blue-500',
+            buttonBg: 'from-blue-500 to-cyan-600',
+            shadow: 'shadow-blue-500/25',
+            defaultIcon: 'ℹ️',
+        },
+        success: {
+            bg: 'from-emerald-500 to-teal-600',
+            iconBg: isDark ? 'bg-emerald-500/20' : 'bg-emerald-100',
+            iconColor: 'text-emerald-500',
+            buttonBg: 'from-emerald-500 to-teal-600',
+            shadow: 'shadow-emerald-500/25',
+            defaultIcon: '✓',
         },
     };
 
-    const config = typeConfig[type] || typeConfig.warning;
+    const config = typeConfig[type] || typeConfig.danger;
+    const displayIcon = icon || config.defaultIcon;
+
+    const handleConfirm = () => {
+        if (!isLoading) {
+            onConfirm();
+        }
+    };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fadeIn">
+        <>
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                onClick={onCancel}
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] transition-opacity"
+                onClick={onClose}
             />
 
             {/* Modal */}
-            <div
-                className={`relative w-full max-w-md p-6 rounded-2xl shadow-2xl transform transition-all animate-scaleIn
-                    ${isDark
-                        ? 'bg-gradient-to-b from-[#1a1a1a] to-[#0f0f0f] border border-[#2a2a2a]'
-                        : 'bg-white border border-gray-200'
-                    }`}
-            >
-                {/* Icon */}
-                <div className="flex justify-center mb-4">
-                    <div className={`p-3 rounded-full ${config.iconBg}`}>
-                        {config.icon}
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                <div
+                    className={`w-full max-w-md rounded-2xl overflow-hidden shadow-2xl transform transition-all
+                        ${isDark ? 'bg-[#1a1a1a]' : 'bg-white'}`}
+                    onClick={e => e.stopPropagation()}
+                >
+                    {/* Header */}
+                    <div className={`px-6 py-5 flex items-center gap-4 border-b ${isDark ? 'border-white/10' : 'border-gray-100'}`}>
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${config.iconBg}`}>
+                            {displayIcon}
+                        </div>
+                        <div className="flex-1">
+                            <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                {title}
+                            </h3>
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors
+                                ${isDark ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
+                        >
+                            ✕
+                        </button>
+                    </div>
+
+                    {/* Content */}
+                    <div className="px-6 py-5">
+                        <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                            {message}
+                        </p>
+                    </div>
+
+                    {/* Footer */}
+                    <div className={`px-6 py-4 flex items-center justify-end gap-3 border-t ${isDark ? 'border-white/10 bg-white/5' : 'border-gray-100 bg-gray-50'}`}>
+                        <button
+                            onClick={onClose}
+                            disabled={isLoading}
+                            className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all
+                                ${isDark
+                                    ? 'text-gray-400 hover:bg-white/10'
+                                    : 'text-gray-500 hover:bg-gray-100'
+                                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            {cancelText}
+                        </button>
+                        <button
+                            onClick={handleConfirm}
+                            disabled={isLoading}
+                            className={`px-5 py-2.5 rounded-xl text-sm font-semibold text-white 
+                                bg-gradient-to-r ${config.buttonBg} shadow-lg ${config.shadow}
+                                hover:scale-[1.02] active:scale-[0.98] transition-all
+                                flex items-center gap-2
+                                ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        >
+                            {isLoading && (
+                                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                </svg>
+                            )}
+                            {confirmText}
+                        </button>
                     </div>
                 </div>
-
-                {/* Title */}
-                <h3 className={`text-xl font-bold text-center mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    {title}
-                </h3>
-
-                {/* Message */}
-                <p className={`text-center mb-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {message}
-                </p>
-
-                {/* Buttons */}
-                <div className="flex gap-3">
-                    <button
-                        onClick={onCancel}
-                        className={`flex-1 px-4 py-2.5 rounded-xl font-medium transition-all
-                            ${isDark
-                                ? 'bg-[#252525] hover:bg-[#303030] text-gray-300'
-                                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                            }`}
-                    >
-                        {cancelText || t('common.cancel', { defaultValue: 'Hủy' })}
-                    </button>
-                    <button
-                        onClick={onConfirm}
-                        className={`flex-1 px-4 py-2.5 rounded-xl font-medium text-white transition-all
-                            bg-gradient-to-r ${config.confirmBg} shadow-lg ${config.confirmShadow}
-                            hover:scale-[1.02] active:scale-[0.98]`}
-                    >
-                        {confirmText || t('common.confirm', { defaultValue: 'Xác nhận' })}
-                    </button>
-                </div>
             </div>
-        </div>
+        </>
     );
 }

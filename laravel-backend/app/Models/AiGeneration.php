@@ -11,9 +11,14 @@ class AiGeneration extends Model
         'user_id',
         'type',
         'model',
+        'provider',
         'prompt',
         'negative_prompt',
         'parameters',
+        'aspect_ratio',
+        'resolution',
+        'source_image_path',
+        'has_audio',
         'credits_used',
         'status',
         'result_url',
@@ -29,7 +34,9 @@ class AiGeneration extends Model
         'provider_metadata' => 'array',
         'credits_used' => 'integer',
         'processing_time' => 'integer',
+        'has_audio' => 'boolean',
     ];
+
 
     // Status constants
     const STATUS_PENDING = 'pending';

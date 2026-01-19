@@ -165,6 +165,12 @@ enum class ActionType(val value: String) {
     @SerializedName("extract")
     EXTRACT("extract"),
 
+    @SerializedName("element_check")
+    ELEMENT_CHECK("element_check"),
+
+    @SerializedName("wait_for_element")
+    WAIT_FOR_ELEMENT("wait_for_element"),
+
     @SerializedName("custom")
     CUSTOM("custom")
 }

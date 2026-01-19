@@ -3,17 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreMediaRequest;
+use App\Models\AiGeneration;
 use App\Models\UserMedia;
+use App\Services\MediaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
-use Intervention\Image\Laravel\Facades\Image;
 
 class MediaController extends Controller
 {
+    public function __construct(
+        protected MediaService $mediaService
+    ) {
+    }
+
     /**
      * Display a listing of the user's media
      */
@@ -28,6 +33,7 @@ class MediaController extends Controller
             match ($request->type) {
                 'image' => $query->images(),
                 'video' => $query->videos(),
+                'ai' => $query->where('source', 'ai_generated'),
                 default => null,
             };
         }
@@ -49,38 +55,22 @@ class MediaController extends Controller
 
         $media = $query->paginate(24)->withQueryString();
 
-        // Get stats
-        $stats = [
-            'total' => UserMedia::where('user_id', $user->id)->count(),
-            'images' => UserMedia::where('user_id', $user->id)->images()->count(),
-            'videos' => UserMedia::where('user_id', $user->id)->videos()->count(),
-            'storage_used' => UserMedia::where('user_id', $user->id)->sum('file_size'),
-        ];
-
-        // Get folders
-        $folders = UserMedia::where('user_id', $user->id)
-            ->select('folder')
-            ->distinct()
-            ->pluck('folder')
-            ->filter(fn($f) => $f !== '/')
-            ->values();
+        // Get stats and folders via service
+        $stats = $this->mediaService->getStorageStats($user);
+        $folders = $this->mediaService->getUserFolders($user);
 
         // Get storage plan info
         $storagePlan = $user->getOrCreateStoragePlan();
-        $storagePlanInfo = null;
-
-        if ($storagePlan) {
-            $storagePlanInfo = [
-                'id' => $storagePlan->id,
-                'name' => $storagePlan->name,
-                'slug' => $storagePlan->slug,
-                'max_storage_bytes' => $storagePlan->max_storage_bytes,
-                'max_files' => $storagePlan->max_files,
-                'formatted_storage' => $storagePlan->formatted_storage,
-                'usage_percentage' => $storagePlan->getUsagePercentage($user),
-                'current_usage' => $storagePlan->getCurrentUsage($user),
-            ];
-        }
+        $storagePlanInfo = $storagePlan ? [
+            'id' => $storagePlan->id,
+            'name' => $storagePlan->name,
+            'slug' => $storagePlan->slug,
+            'max_storage_bytes' => $storagePlan->max_storage_bytes,
+            'max_files' => $storagePlan->max_files,
+            'formatted_storage' => $storagePlan->formatted_storage,
+            'usage_percentage' => $storagePlan->getUsagePercentage($user),
+            'current_usage' => $storagePlan->getCurrentUsage($user),
+        ] : null;
 
         return Inertia::render('Media/Index', [
             'media' => $media,
@@ -97,8 +87,6 @@ class MediaController extends Controller
     public function store(StoreMediaRequest $request): RedirectResponse
     {
         $user = $request->user();
-
-        // Get or create storage plan
         $storagePlan = $user->getOrCreateStoragePlan();
 
         if (!$storagePlan) {
@@ -110,67 +98,15 @@ class MediaController extends Controller
         $failedFiles = [];
 
         foreach ($request->file('files') as $file) {
-            $originalName = $file->getClientOriginalName();
-            $fileSize = $file->getSize();
-
             // Check quota before upload
-            $quotaCheck = $storagePlan->canUploadFile($user, $fileSize);
+            $quotaCheck = $storagePlan->canUploadFile($user, $file->getSize());
 
             if (!$quotaCheck['can_upload']) {
-                $failedFiles[] = $originalName;
-                continue; // Skip this file
+                $failedFiles[] = $file->getClientOriginalName();
+                continue;
             }
 
-            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-            $mimeType = $file->getMimeType();
-
-            // Store the file
-            $path = $file->store(
-                'media/' . $user->id,
-                $filename,
-                'public'
-            );
-
-            // Generate thumbnail for images
-            $thumbnailPath = null;
-            $metadata = [];
-
-            if (str_starts_with($mimeType, 'image/')) {
-                try {
-                    // Get image dimensions
-                    $image = Image::read($file->path());
-                    $metadata['width'] = $image->width();
-                    $metadata['height'] = $image->height();
-
-                    // Create thumbnail
-                    $thumbnailFilename = 'thumb_' . $filename;
-                    $image->scale(width: 400);
-                    $thumbnailFullPath = storage_path('app/public/media/' . $user->id . '/thumbnails');
-
-                    if (!file_exists($thumbnailFullPath)) {
-                        mkdir($thumbnailFullPath, 0755, true);
-                    }
-
-                    $image->save($thumbnailFullPath . '/' . $thumbnailFilename);
-                    $thumbnailPath = 'media/' . $user->id . '/thumbnails/' . $thumbnailFilename;
-                } catch (\Exception $e) {
-                    // Thumbnail creation failed, continue without it
-                }
-            }
-
-            // Create media record
-            UserMedia::create([
-                'user_id' => $user->id,
-                'filename' => $filename,
-                'original_name' => $originalName,
-                'mime_type' => $mimeType,
-                'file_size' => $fileSize,
-                'path' => $path,
-                'thumbnail_path' => $thumbnailPath,
-                'folder' => $folder,
-                'metadata' => $metadata,
-            ]);
-
+            $this->mediaService->uploadFile($user, $file, $folder);
             $uploadedCount++;
         }
 
@@ -181,7 +117,6 @@ class MediaController extends Controller
             $failedCount = count($failedFiles);
             $message .= " {$failedCount} file bị từ chối do vượt quá giới hạn.";
 
-            // Get quota info for error message
             $quotaCheck = $storagePlan->canUploadFile($user, 0);
             if (!$quotaCheck['can_upload']) {
                 return back()
@@ -201,9 +136,7 @@ class MediaController extends Controller
     {
         $this->authorize('view', $medium);
 
-        return Inertia::render('Media/Show', [
-            'media' => $medium,
-        ]);
+        return Inertia::render('Media/Show', ['media' => $medium]);
     }
 
     /**
@@ -234,13 +167,7 @@ class MediaController extends Controller
     {
         $this->authorize('delete', $medium);
 
-        // Delete files from storage
-        Storage::disk('public')->delete($medium->path);
-        if ($medium->thumbnail_path) {
-            Storage::disk('public')->delete($medium->thumbnail_path);
-        }
-
-        $medium->forceDelete();
+        $this->mediaService->deleteMedia($medium);
 
         return back()->with('success', 'File đã được xóa.');
     }
@@ -264,11 +191,7 @@ class MediaController extends Controller
                 ->first();
 
             if ($media) {
-                Storage::disk('public')->delete($media->path);
-                if ($media->thumbnail_path) {
-                    Storage::disk('public')->delete($media->thumbnail_path);
-                }
-                $media->forceDelete();
+                $this->mediaService->deleteMedia($media);
                 $count++;
             }
         }
@@ -283,9 +206,7 @@ class MediaController extends Controller
     {
         $this->authorize('update', $medium);
 
-        $request->validate([
-            'folder' => 'required|string|max:255',
-        ]);
+        $request->validate(['folder' => 'required|string|max:255']);
 
         $medium->update(['folder' => $request->folder]);
 
@@ -293,7 +214,7 @@ class MediaController extends Controller
     }
 
     /**
-     * Create a new folder
+     * Create a new folder (virtual)
      */
     public function createFolder(Request $request): RedirectResponse
     {
@@ -301,9 +222,96 @@ class MediaController extends Controller
             'name' => 'required|string|max:255|regex:/^[a-zA-Z0-9_\-\s]+$/',
         ]);
 
-        // Folders are virtual - just return success
-        // The folder will be created when a file is moved to it
-
         return back()->with('success', 'Thư mục đã được tạo.');
+    }
+
+    /**
+     * Save AI generation result to user's media library
+     */
+    public function saveAiToMedia(Request $request, AiGeneration $generation): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($generation->user_id !== $user->id) {
+            abort(403, 'Bạn không có quyền truy cập.');
+        }
+
+        if (!$generation->isCompleted() || !$generation->result_path) {
+            return back()->withErrors(['error' => 'Generation chưa hoàn thành hoặc không có kết quả.']);
+        }
+
+        // Check quota
+        $storagePlan = $user->getOrCreateStoragePlan();
+        $aiDisk = config('ai-generation.storage.disk', 'public');
+        $fileSize = Storage::disk($aiDisk)->size($generation->result_path);
+
+        $quotaCheck = $storagePlan->canUploadFile($user, $fileSize);
+        if (!$quotaCheck['can_upload']) {
+            return back()->withErrors(['error' => $quotaCheck['message']]);
+        }
+
+        $media = $this->mediaService->saveAiGenerationToMedia($user, $generation);
+
+        if (!$media) {
+            return back()->with('info', 'File này đã được lưu vào thư viện.');
+        }
+
+        return back()->with('success', 'Đã lưu vào thư viện Media.');
+    }
+
+    /**
+     * Display storage plans page
+     */
+    public function storagePlans(Request $request): Response
+    {
+        $user = $request->user();
+        $currentPlan = $user->getOrCreateStoragePlan();
+        $plans = \App\Models\MediaStoragePlan::active()->ordered()->get();
+
+        $usage = [
+            'storage_used' => UserMedia::where('user_id', $user->id)->sum('file_size'),
+            'file_count' => UserMedia::where('user_id', $user->id)->count(),
+        ];
+
+        return Inertia::render('Media/StoragePlans', [
+            'currentPlan' => $currentPlan,
+            'plans' => $plans,
+            'usage' => $usage,
+        ]);
+    }
+
+    /**
+     * Upgrade user's storage plan
+     */
+    public function upgradeStoragePlan(Request $request): RedirectResponse
+    {
+        $request->validate(['plan_id' => 'required|exists:media_storage_plans,id']);
+
+        $user = $request->user();
+        $newPlan = \App\Models\MediaStoragePlan::findOrFail($request->plan_id);
+        $currentPlan = $user->getOrCreateStoragePlan();
+
+        if ($newPlan->price <= ($currentPlan->price ?? 0)) {
+            return back()->with('error', 'Chỉ có thể nâng cấp lên gói cao hơn.');
+        }
+
+        $wallet = $user->wallet;
+        if (!$wallet || $wallet->balance < $newPlan->price) {
+            return back()->with('error', 'Số dư ví không đủ. Vui lòng nạp thêm tiền.');
+        }
+
+        $wallet->decrement('balance', $newPlan->price);
+        $user->update(['storage_plan_id' => $newPlan->id]);
+
+        \App\Models\WalletTransaction::create([
+            'wallet_id' => $wallet->id,
+            'type' => 'debit',
+            'amount' => $newPlan->price,
+            'description' => 'Nâng cấp gói lưu trữ: ' . $newPlan->name,
+            'reference_type' => 'storage_plan_upgrade',
+            'reference_id' => $newPlan->id,
+        ]);
+
+        return back()->with('success', 'Đã nâng cấp lên gói ' . $newPlan->name . ' thành công!');
     }
 }

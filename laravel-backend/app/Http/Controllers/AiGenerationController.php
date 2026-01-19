@@ -97,8 +97,11 @@ class AiGenerationController extends Controller
         $request->validate([
             'model' => 'required|string',
             'prompt' => 'required|string|min:3|max:1000',
+            'negative_prompt' => 'nullable|string|max:500',
             'duration' => 'nullable|integer|min:1|max:10',
-            'resolution' => 'nullable|string|in:720p,1080p,576p',
+            'resolution' => 'nullable|string|in:720p,1080p,576p,4k',
+            'aspect_ratio' => 'nullable|string|in:16:9,9:16,1:1',
+            'generate_audio' => 'nullable|boolean',
         ]);
 
         try {
@@ -109,6 +112,38 @@ class AiGenerationController extends Controller
                 'success' => true,
                 'generation' => $this->formatGeneration($generation),
                 'message' => 'Video generation started successfully',
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
+     * Generate video from image (image-to-video)
+     */
+    public function generateVideoFromImage(Request $request)
+    {
+        $request->validate([
+            'model' => 'required|string',
+            'prompt' => 'required|string|min:3|max:1000',
+            'source_image' => 'required|string', // Storage path or uploaded file
+            'duration' => 'nullable|integer|min:1|max:10',
+            'resolution' => 'nullable|string|in:720p,1080p,4k',
+            'aspect_ratio' => 'nullable|string|in:16:9,9:16',
+        ]);
+
+        try {
+            $user = Auth::user();
+            $generation = $this->aiService->generateVideoFromImage($user, $request->all());
+
+            return response()->json([
+                'success' => true,
+                'generation' => $this->formatGeneration($generation),
+                'message' => 'Image-to-video generation started successfully',
             ]);
 
         } catch (\Exception $e) {
@@ -240,9 +275,13 @@ class AiGenerationController extends Controller
             'id' => $generation->id,
             'type' => $generation->type,
             'model' => $generation->model,
+            'provider' => $generation->provider,
             'prompt' => $generation->prompt,
             'negative_prompt' => $generation->negative_prompt,
             'parameters' => $generation->parameters,
+            'aspect_ratio' => $generation->aspect_ratio,
+            'resolution' => $generation->resolution,
+            'has_audio' => $generation->has_audio,
             'credits_used' => $generation->credits_used,
             'status' => $generation->status,
             'status_color' => $generation->status_color,
@@ -257,8 +296,10 @@ class AiGenerationController extends Controller
         // Add result URLs if completed
         if ($generation->isCompleted() && $generation->result_path) {
             $disk = config('ai-generation.storage.disk');
-            $data['result_url'] = Storage::disk($disk)->url($generation->result_path);
-            $data['download_url'] = Storage::disk($disk)->url($generation->result_path);
+            $url = Storage::disk($disk)->url($generation->result_path);
+            $data['result_url'] = $url;
+            $data['output_url'] = $url; // Alias for frontend compatibility
+            $data['download_url'] = $url;
         }
 
         return $data;

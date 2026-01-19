@@ -29,6 +29,9 @@ use Illuminate\Support\Facades\Route;
 Route::post('/locale/{locale}', [LocaleController::class, 'setLocale'])->name('locale.set');
 Route::get('/locale/{locale}', [LocaleController::class, 'setLocaleGet'])->name('locale.set.get');
 
+// SEO Routes
+Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+
 // Landing Pages
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 Route::get('/features', [FeaturesController::class, 'index'])->name('features');
@@ -120,11 +123,33 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/recording-sessions/start', [\App\Http\Controllers\Api\RecordingEventController::class, 'startSession'])->name('recording.start');
     Route::post('/recording-sessions/{sessionId}/stop', [\App\Http\Controllers\Api\RecordingEventController::class, 'stopSession'])->name('recording.stop');
 
+    // Element Inspector Routes (Web auth for Flow Editor)
+    Route::post('/devices/inspect', [\App\Http\Controllers\DeviceController::class, 'inspectElements'])->name('devices.inspect');
+    Route::post('/devices/visual-inspect', [\App\Http\Controllers\DeviceController::class, 'visualInspect'])->name('devices.visualInspect');
+    Route::post('/devices/inspect-result', [\App\Http\Controllers\DeviceController::class, 'inspectElementsResult'])->name('devices.inspectResult');
+
+    // Accessibility Check Routes (Web auth for Flow Editor)
+    Route::post('/devices/check-accessibility', [\App\Http\Controllers\DeviceController::class, 'checkAccessibility'])->name('devices.checkAccessibility');
+
+    // Quick Action Routes (send real-time actions to device)
+    Route::post('/devices/send-action', [\App\Http\Controllers\DeviceController::class, 'sendAction'])->name('devices.sendAction');
+
+    // Device Online Status Polling (Redis-based, poll every 45s)
+    Route::get('/devices/online-status', [\App\Http\Controllers\DeviceController::class, 'getOnlineStatus'])->name('devices.onlineStatus');
+
+    // Workflow Listener Routes (Web auth for Flow Editor registration)
+    Route::post('/recording-listener/register', [\App\Http\Controllers\Api\RecordingEventController::class, 'registerListener'])->name('recording.listener.register');
+    Route::post('/recording-listener/unregister', [\App\Http\Controllers\Api\RecordingEventController::class, 'unregisterListener'])->name('recording.listener.unregister');
+
     // Media Library Routes
-    Route::resource('media', MediaController::class)->except(['create', 'edit']);
+    // Note: specific routes must come before resource route to avoid conflicts
+    Route::get('/media/storage-plans', [MediaController::class, 'storagePlans'])->name('media.storagePlans');
+    Route::post('/media/storage-plans/upgrade', [MediaController::class, 'upgradeStoragePlan'])->name('media.upgradePlan');
     Route::post('/media/bulk-delete', [MediaController::class, 'bulkDelete'])->name('media.bulkDelete');
-    Route::post('/media/{medium}/move', [MediaController::class, 'move'])->name('media.move');
     Route::post('/media/create-folder', [MediaController::class, 'createFolder'])->name('media.createFolder');
+    Route::post('/media/save-from-ai/{generation}', [MediaController::class, 'saveAiToMedia'])->name('media.saveFromAi');
+    Route::resource('media', MediaController::class)->except(['create', 'edit']);
+    Route::post('/media/{medium}/move', [MediaController::class, 'move'])->name('media.move');
 
     // AI Credits Management
     Route::prefix('ai-credits')->name('ai-credits.')->group(function () {
@@ -140,12 +165,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/models', [AiGenerationController::class, 'models'])->name('models');
         Route::post('/generate/image', [AiGenerationController::class, 'generateImage'])->name('generate.image');
         Route::post('/generate/video', [AiGenerationController::class, 'generateVideo'])->name('generate.video');
+        Route::post('/generate/image-to-video', [AiGenerationController::class, 'generateVideoFromImage'])->name('generate.image-to-video');
         Route::post('/estimate-cost', [AiGenerationController::class, 'estimateCost'])->name('estimate-cost');
         Route::get('/generations', [AiGenerationController::class, 'myGenerations'])->name('generations');
         Route::get('/generations/{generation}', [AiGenerationController::class, 'show'])->name('generations.show');
         Route::get('/generations/{generation}/status', [AiGenerationController::class, 'checkStatus'])->name('generations.status');
         Route::delete('/generations/{generation}', [AiGenerationController::class, 'delete'])->name('generations.delete');
     });
+
 
     // Data Collections (No-Code Data Management)
     Route::resource('data-collections', \App\Http\Controllers\DataCollectionController::class);
@@ -165,5 +192,15 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/jobs/{job}/retry', [WorkflowJobController::class, 'retry'])->name('jobs.retry');
     Route::get('/jobs/{job}/logs', [WorkflowJobController::class, 'logs'])->name('jobs.logs');
     Route::delete('/jobs/{job}', [WorkflowJobController::class, 'destroy'])->name('jobs.destroy');
+
+    // Campaigns (Account Farming)
+    Route::get('/campaigns', [\App\Http\Controllers\CampaignController::class, 'index'])->name('campaigns.index');
+    Route::get('/campaigns/create', [\App\Http\Controllers\CampaignController::class, 'create'])->name('campaigns.create');
+    Route::post('/campaigns', [\App\Http\Controllers\CampaignController::class, 'store'])->name('campaigns.store');
+    Route::get('/campaigns/{campaign}', [\App\Http\Controllers\CampaignController::class, 'show'])->name('campaigns.show');
+    Route::put('/campaigns/{campaign}', [\App\Http\Controllers\CampaignController::class, 'update'])->name('campaigns.update');
+    Route::delete('/campaigns/{campaign}', [\App\Http\Controllers\CampaignController::class, 'destroy'])->name('campaigns.destroy');
+    Route::post('/campaigns/{campaign}/run', [\App\Http\Controllers\CampaignController::class, 'run'])->name('campaigns.run');
+    Route::post('/campaigns/{campaign}/pause', [\App\Http\Controllers\CampaignController::class, 'pause'])->name('campaigns.pause');
 });
 

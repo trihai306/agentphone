@@ -23,6 +23,7 @@ export default {
                 'slide-up': 'slideUp 0.3s ease-out',
                 'fade-in': 'fadeIn 0.5s ease-out',
                 'scale-in': 'scaleIn 0.3s ease-out',
+                'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
             },
             animationDelay: {
                 '2000': '2s',

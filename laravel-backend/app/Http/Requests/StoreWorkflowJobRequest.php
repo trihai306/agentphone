@@ -16,12 +16,17 @@ class StoreWorkflowJobRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
+     * Supports both single workflow (flow_id) and multi-workflow (flow_ids)
      */
     public function rules(): array
     {
         return [
             'name' => 'required|string|max:255',
-            'flow_id' => 'required|exists:flows,id',
+            // Single workflow (backward compatibility)
+            'flow_id' => 'required_without:flow_ids|nullable|exists:flows,id',
+            // Multi-workflow mode
+            'flow_ids' => 'required_without:flow_id|nullable|array|min:1',
+            'flow_ids.*' => 'exists:flows,id',
             'device_id' => 'required|exists:devices,id',
             'data_collection_id' => 'nullable|exists:data_collections,id',
             'data_record_ids' => 'nullable|array',

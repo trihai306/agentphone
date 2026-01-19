@@ -29,6 +29,8 @@ class UserMedia extends Model
         'description',
         'is_public',
         'download_count',
+        'source',
+        'ai_generation_id',
     ];
 
     protected $casts = [

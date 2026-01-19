@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class WorkflowJob extends Model
@@ -17,6 +18,7 @@ class WorkflowJob extends Model
         'user_id',
         'flow_id',
         'device_id',
+        'campaign_id',
         'data_collection_id',
         'data_record_ids',
         'execution_mode',
@@ -38,6 +40,7 @@ class WorkflowJob extends Model
         'total_tasks',
         'completed_tasks',
         'failed_tasks',
+        'current_workflow_index',
     ];
 
     protected $casts = [
@@ -57,6 +60,7 @@ class WorkflowJob extends Model
         'total_records_to_process' => 'integer',
         'records_processed' => 'integer',
         'records_failed' => 'integer',
+        'current_workflow_index' => 'integer',
     ];
 
     // Status constants
@@ -73,9 +77,47 @@ class WorkflowJob extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Single flow (backward compatibility)
+     */
     public function flow(): BelongsTo
     {
         return $this->belongsTo(Flow::class);
+    }
+
+    /**
+     * Multiple workflow items (new multi-workflow support)
+     */
+    public function workflowItems(): HasMany
+    {
+        return $this->hasMany(JobWorkflowItem::class)->orderBy('sequence');
+    }
+
+    /**
+     * Multiple workflows via pivot table
+     */
+    public function workflows(): BelongsToMany
+    {
+        return $this->belongsToMany(Flow::class, 'job_workflow_items')
+            ->withPivot(['sequence', 'status', 'started_at', 'completed_at', 'error_message', 'config'])
+            ->orderByPivot('sequence');
+    }
+
+    /**
+     * Get current running or next pending workflow item
+     */
+    public function getCurrentWorkflowItem(): ?JobWorkflowItem
+    {
+        return $this->workflowItems()->where('status', JobWorkflowItem::STATUS_RUNNING)->first()
+            ?? $this->workflowItems()->where('status', JobWorkflowItem::STATUS_PENDING)->first();
+    }
+
+    /**
+     * Check if this job uses multi-workflow mode
+     */
+    public function isMultiWorkflow(): bool
+    {
+        return $this->workflowItems()->count() > 0;
     }
 
     public function device(): BelongsTo
@@ -88,6 +130,11 @@ class WorkflowJob extends Model
         return $this->belongsTo(DataCollection::class);
     }
 
+    public function campaign(): BelongsTo
+    {
+        return $this->belongsTo(Campaign::class);
+    }
+
     public function tasks(): HasMany
     {
         return $this->hasMany(JobTask::class, 'workflow_job_id')->orderBy('sequence');
@@ -97,6 +144,7 @@ class WorkflowJob extends Model
     {
         return $this->hasMany(JobLog::class, 'workflow_job_id')->orderBy('created_at');
     }
+
 
     // Scopes
     public function scopePending($query)

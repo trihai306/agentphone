@@ -136,14 +136,63 @@ class HttpServerService : Service() {
         if (server == null || !server!!.isAlive) {
             startServer()
         }
+        
+        // Initialize and connect SocketJobManager in foreground service
+        // This ensures socket stays connected even when app is in background
+        initSocketConnection()
 
         return START_STICKY
+    }
+    
+    /**
+     * Initialize Socket connection in foreground service context
+     * This keeps the socket alive when app goes to background
+     */
+    private fun initSocketConnection() {
+        try {
+            val sessionManager = com.agent.portal.auth.SessionManager(this)
+            val session = sessionManager.getSession()
+            
+            if (session != null && !com.agent.portal.socket.SocketJobManager.isConnected()) {
+                // Get Soketi config
+                val soketiHost = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
+                    "10.0.2.2"
+                } else {
+                    "192.168.1.11" // Your local machine IP
+                }
+                val soketiPort = 6001
+                val soketiKey = "app-key"
+                
+                // Initialize and connect
+                com.agent.portal.socket.SocketJobManager.init(
+                    this,
+                    soketiKey,
+                    soketiHost,
+                    soketiPort,
+                    false
+                )
+                com.agent.portal.socket.SocketJobManager.connect()
+                
+                Log.i(TAG, "✅ Socket connection initialized in foreground service")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to init socket in foreground service", e)
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
         super.onDestroy()
+        
+        // Disconnect socket when service is stopped
+        try {
+            com.agent.portal.socket.SocketJobManager.disconnect()
+            Log.i(TAG, "Socket disconnected on service destroy")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error disconnecting socket", e)
+        }
+        
         stopServer()
         instance = null
     }

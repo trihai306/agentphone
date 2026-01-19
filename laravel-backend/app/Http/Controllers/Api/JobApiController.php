@@ -156,4 +156,137 @@ class JobApiController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    /**
+     * Get today's job statistics for APK dashboard
+     * Returns counts by status for the authenticated user's devices
+     */
+    public function getTodayStats(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        // Get user's device IDs
+        $deviceIds = $user->devices()->pluck('id')->toArray();
+
+        // Get today's jobs for user's devices
+        $today = now()->startOfDay();
+
+        $query = WorkflowJob::whereIn('device_id', $deviceIds)
+            ->where('created_at', '>=', $today);
+
+        $stats = [
+            'pending' => (clone $query)->where('status', 'pending')->count(),
+            'running' => (clone $query)->where('status', 'running')->count(),
+            'completed' => (clone $query)->where('status', 'completed')->count(),
+            'failed' => (clone $query)->where('status', 'failed')->count(),
+        ];
+
+        $stats['total'] = array_sum($stats);
+        $stats['date'] = now()->toDateString();
+
+        return response()->json([
+            'success' => true,
+            'data' => $stats
+        ]);
+    }
+
+    /**
+     * Get pending jobs for device (APK polling)
+     * Device can call this to check for jobs if WebSocket is unavailable
+     * 
+     * @param Request $request Must include device_id parameter
+     * @return JsonResponse List of pending/queued jobs for the device
+     */
+    public function getPendingJobs(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $deviceId = $request->input('device_id');
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        if (!$deviceId) {
+            return response()->json(['error' => 'device_id required'], 400);
+        }
+
+        // Verify device belongs to user
+        $device = $user->devices()->where('device_id', $deviceId)->first();
+        if (!$device) {
+            return response()->json(['error' => 'Device not found'], 404);
+        }
+
+        // Get pending/queued jobs for this device that are ready to execute
+        $jobs = WorkflowJob::where('device_id', $device->id)
+            ->whereIn('status', [WorkflowJob::STATUS_PENDING, WorkflowJob::STATUS_QUEUED])
+            ->where(function ($q) {
+                // No schedule OR schedule is due
+                $q->whereNull('scheduled_at')
+                    ->orWhere('scheduled_at', '<=', now());
+            })
+            ->orderBy('priority', 'desc')
+            ->orderBy('created_at')
+            ->limit(10)
+            ->get(['id', 'name', 'priority', 'status', 'scheduled_at', 'created_at']);
+
+        return response()->json([
+            'success' => true,
+            'device_id' => $deviceId,
+            'jobs' => $jobs,
+            'count' => $jobs->count(),
+        ]);
+    }
+
+    /**
+     * Claim a pending job for execution (APK calls this before starting)
+     * This prevents the same job from being picked up by multiple devices
+     * 
+     * @param WorkflowJob $job The job to claim
+     * @return JsonResponse Job config or error
+     */
+    public function claimJob(Request $request, WorkflowJob $job): JsonResponse
+    {
+        $user = $request->user();
+        $deviceId = $request->input('device_id');
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        // Verify device matches
+        $device = $user->devices()->where('device_id', $deviceId)->first();
+        if (!$device || $job->device_id !== $device->id) {
+            return response()->json(['error' => 'Job not assigned to this device'], 403);
+        }
+
+        // Check if job is still pending
+        if (!in_array($job->status, [WorkflowJob::STATUS_PENDING, WorkflowJob::STATUS_QUEUED])) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Job is no longer available',
+                'current_status' => $job->status,
+            ], 409);
+        }
+
+        // Mark as queued (claimed)
+        $job->update(['status' => WorkflowJob::STATUS_QUEUED]);
+        JobLog::info($job, 'Job claimed by device via polling');
+
+        // Return config for execution
+        $config = $this->dispatchService->generateActionConfig($job);
+
+        return response()->json([
+            'success' => true,
+            'job_id' => $job->id,
+            'config' => $config,
+        ]);
+    }
 }
+

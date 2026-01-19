@@ -1,14 +1,16 @@
-import { memo } from 'react';
+import { memo, useState, useCallback } from 'react';
 import { Handle, Position } from 'reactflow';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { NodeStatus } from '@/hooks/useExecutionState';
 
 /**
  * GlassDataSourceNode - Premium glassmorphic data source node
+ * Now with Named Output Variables for multi-datasource workflows
  */
 function GlassDataSourceNode({ id, data, selected }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const [isEditingName, setIsEditingName] = useState(false);
 
     const executionState = data?.executionState || NodeStatus.IDLE;
     const isRunning = executionState === NodeStatus.RUNNING;
@@ -20,25 +22,28 @@ function GlassDataSourceNode({ id, data, selected }) {
     const recordCount = data?.recordCount || 0;
     const schema = data?.schema || [];
 
+    // Named output variable (default to collection name or 'records')
+    const outputName = data?.outputName ||
+        (data?.collectionName ? data.collectionName.toLowerCase().replace(/\s+/g, '_') : 'records');
+
     const color = '#f59e0b'; // Amber
+
+    const handleOutputNameChange = useCallback((e) => {
+        const newName = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+        data?.onUpdateData?.(id, 'outputName', newName);
+    }, [id, data?.onUpdateData]);
+
+    const handleOutputNameBlur = useCallback(() => {
+        setIsEditingName(false);
+    }, []);
 
     return (
         <div className={`group transition-all duration-300 ${selected ? 'scale-[1.02]' : ''} ${isRunning ? 'animate-pulse' : ''}`}>
-            {/* Top Handle */}
-            <Handle
-                type="target"
-                position={Position.Top}
-                className="!w-4 !h-4 !border-[3px] !-top-2 transition-all duration-300 group-hover:!scale-110"
-                style={{
-                    backgroundColor: isRunning ? '#6366f1' : isSuccess ? '#10b981' : color,
-                    borderColor: isDark ? '#0a0a0a' : '#ffffff',
-                    boxShadow: `0 0 15px ${color}60`,
-                }}
-            />
+            {/* NO TOP HANDLE - This is a source-only node */}
 
             {/* Main Card */}
             <div
-                className={`relative min-w-[240px] max-w-[300px] rounded-2xl overflow-hidden ${selected ? 'ring-2 ring-offset-2' : ''}`}
+                className={`relative min-w-[260px] max-w-[320px] rounded-2xl overflow-hidden ${selected ? 'ring-2 ring-offset-2' : ''}`}
                 style={{
                     background: isDark
                         ? `linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.9) 100%)`
@@ -112,12 +117,61 @@ function GlassDataSourceNode({ id, data, selected }) {
                                 </div>
                             )}
 
-                            {/* Output Variables */}
-                            <div className="flex items-center gap-2 text-[10px]">
-                                <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>Output:</span>
-                                <code className="text-cyan-400">{`{{records}}`}</code>
-                                <span className={isDark ? 'text-gray-600' : 'text-gray-300'}>•</span>
-                                <code className="text-cyan-400">{`{{count}}`}</code>
+                            {/* Named Output Variable */}
+                            <div className={`p-3 rounded-xl mb-3 ${isDark ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-amber-50 border border-amber-200'}`}>
+                                <p className={`text-[10px] uppercase font-semibold mb-2 ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+                                    Output Variable Name
+                                </p>
+                                <div className="flex items-center gap-1">
+                                    <span className={`text-xs font-mono ${isDark ? 'text-cyan-500' : 'text-cyan-600'}`}>{'{{'}</span>
+                                    {isEditingName ? (
+                                        <input
+                                            type="text"
+                                            value={outputName}
+                                            onChange={handleOutputNameChange}
+                                            onBlur={handleOutputNameBlur}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleOutputNameBlur()}
+                                            autoFocus
+                                            className={`flex-1 px-2 py-1 text-xs font-mono rounded border ${isDark
+                                                ? 'bg-black/50 border-amber-500/50 text-amber-400'
+                                                : 'bg-white border-amber-300 text-amber-700'
+                                                } focus:outline-none focus:ring-1 focus:ring-amber-500`}
+                                            placeholder="variable_name"
+                                        />
+                                    ) : (
+                                        <button
+                                            onClick={() => setIsEditingName(true)}
+                                            className={`flex-1 px-2 py-1 text-xs font-mono text-left rounded transition-all ${isDark
+                                                ? 'text-amber-400 hover:bg-amber-500/20'
+                                                : 'text-amber-600 hover:bg-amber-100'
+                                                }`}
+                                        >
+                                            {outputName}
+                                            <span className={`ml-1 text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>✎</span>
+                                        </button>
+                                    )}
+                                    <span className={`text-xs font-mono ${isDark ? 'text-cyan-500' : 'text-cyan-600'}`}>{'}}'}</span>
+                                </div>
+                            </div>
+
+                            {/* Output Variables Preview */}
+                            <div className={`p-2 rounded-lg ${isDark ? 'bg-black/20' : 'bg-gray-50'}`}>
+                                <div className="flex flex-col gap-1 text-[10px]">
+                                    <div className="flex items-center gap-2">
+                                        <code className="text-cyan-400 font-mono">{`{{${outputName}}}`}</code>
+                                        <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>→ all records</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <code className="text-cyan-400 font-mono">{`{{${outputName}.count}}`}</code>
+                                        <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>→ record count</span>
+                                    </div>
+                                    {schema.length > 0 && (
+                                        <div className="flex items-center gap-2">
+                                            <code className="text-cyan-400 font-mono">{`{{item.${schema[0]?.name || 'field'}}}`}</code>
+                                            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>→ in loop</span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Change Button */}
@@ -147,17 +201,31 @@ function GlassDataSourceNode({ id, data, selected }) {
                 </div>
             </div>
 
-            {/* Bottom Handle */}
+            {/* Data Output Handle - RIGHT SIDE (prominent, amber color) */}
             <Handle
                 type="source"
-                position={Position.Bottom}
-                className="!w-4 !h-4 !border-[3px] !-bottom-2 transition-all duration-300 group-hover:!scale-110"
+                position={Position.Right}
+                id="data-output"
+                className="!w-5 !h-5 !border-[3px] transition-all duration-300 group-hover:!scale-125"
                 style={{
-                    backgroundColor: isSuccess ? '#10b981' : color,
+                    backgroundColor: color,
                     borderColor: isDark ? '#0a0a0a' : '#ffffff',
-                    boxShadow: `0 0 15px ${color}60`,
+                    boxShadow: `0 0 20px ${color}80`,
+                    right: '-10px',
                 }}
             />
+
+            {/* Data Output Label */}
+            {hasCollection && (
+                <div
+                    className="absolute right-[-8px] top-1/2 transform translate-x-full -translate-y-1/2 ml-2"
+                    style={{ pointerEvents: 'none' }}
+                >
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-mono whitespace-nowrap ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600'}`}>
+                        ▸ {`{{${outputName}}}`}
+                    </span>
+                </div>
+            )}
         </div>
     );
 }

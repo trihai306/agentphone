@@ -5,7 +5,11 @@ import android.content.Intent
 import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
 import com.agent.portal.accessibility.PortalAccessibilityService
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
 import java.lang.ref.WeakReference
 
 /**
@@ -22,6 +26,8 @@ class JobExecutor(context: Context) {
 
     private val TAG = "JobExecutor"
     private val contextRef = WeakReference(context.applicationContext)
+    private val context: Context
+        get() = contextRef.get() ?: throw IllegalStateException("Context is no longer available")
     private val actionResults = mutableListOf<ActionResult>()
 
     /**
@@ -137,6 +143,8 @@ class JobExecutor(context: Context) {
                     ActionType.SCREENSHOT -> executeScreenshot(action.params)
                     ActionType.ASSERT -> executeAssert(action.params)
                     ActionType.EXTRACT -> executeExtract(action.params)
+                    ActionType.ELEMENT_CHECK -> executeElementCheck(action.params)
+                    ActionType.WAIT_FOR_ELEMENT -> executeWaitForElement(action.params)
                     ActionType.CUSTOM -> executeCustom(action.params, jobParams)
                 }
 
@@ -174,16 +182,36 @@ class JobExecutor(context: Context) {
     suspend fun executeTestAction(actionType: String, params: Map<String, Any>): ActionResult {
         return try {
             when (actionType) {
+                // Tap/Click actions
                 "tap", "click" -> executeTap(params)
                 "double_tap" -> executeDoubleTap(params)
-                "long_press" -> executeLongPress(params)
+                "long_press", "long_tap" -> executeLongPress(params)
+                
+                // Swipe/Scroll actions
                 "swipe" -> executeSwipe(params)
                 "scroll" -> executeScroll(params)
-                "text_input" -> executeTextInput(params)
-                "press_key" -> executePressKey(params)
-                "start_app" -> executeStartApp(params)
-                "wait" -> executeWait(params)
+                "scroll_up" -> executeScroll(params + ("direction" to "up"))
+                "scroll_down" -> executeScroll(params + ("direction" to "down"))
+                "scroll_left" -> executeScroll(params + ("direction" to "left"))
+                "scroll_right" -> executeScroll(params + ("direction" to "right"))
+                
+                // Text input actions
+                "text_input", "set_text", "type_text" -> executeTextInput(params)
+                
+                // Key press actions  
+                "press_key", "key_event" -> executePressKey(params)
+                "back" -> executePressKey(mapOf("key" to "KEYCODE_BACK"))
+                "home" -> executePressKey(mapOf("key" to "KEYCODE_HOME"))
+                "enter" -> executePressKey(mapOf("key" to "KEYCODE_ENTER"))
+                
+                // App actions
+                "start_app", "open_app", "launch_app" -> executeStartApp(params)
+                
+                // Utility actions
+                "wait", "delay" -> executeWait(params)
                 "screenshot" -> executeScreenshot(params)
+                "file_input", "upload_file" -> executeFileInput(params)
+                
                 else -> ActionResult(
                     actionId = "unknown",
                     success = false,
@@ -220,128 +248,226 @@ class JobExecutor(context: Context) {
         val x = (params["x"] as? Number)?.toInt()
         val y = (params["y"] as? Number)?.toInt()
         
-        val rootNode = accessibilityService.rootInActiveWindow
+        // Smart Matching options (from FE NodeConfigPanel)
+        val fuzzyMatch = params["fuzzyMatch"] as? Boolean ?: false
+        val ignoreCase = params["ignoreCase"] as? Boolean ?: true
+        
+        // Selector Priority Mode: auto, id, text, coords
+        // - auto: Try ID → contentDesc → text → coords (default)
+        // - id: Only use resourceId, fail if not found
+        // - text: Only use text/contentDesc, fail if not found
+        // - coords: Only use coordinates
+        val selectorPriority = params["selectorPriority"] as? String ?: "auto"
+        
+        Log.d(TAG, "🎯 Smart Matching: fuzzy=$fuzzyMatch, ignoreCase=$ignoreCase, priority=$selectorPriority")
+        
+        // Wait a bit for UI to settle after previous actions (scroll, etc.)
+        // This ensures the accessibility tree is refreshed with new element positions
+        delay(100)
+        
+        // Get fresh root node - retry up to 3 times if null
+        var rootNode = accessibilityService.rootInActiveWindow
+        var retries = 0
+        while (rootNode == null && retries < 3) {
+            delay(200)
+            rootNode = accessibilityService.rootInActiveWindow
+            retries++
+            Log.d(TAG, "   RootNode retry #$retries")
+        }
         
         Log.d(TAG, "🔍 Tap selectors: resourceId=$resourceId, contentDesc=${contentDescription?.take(30)}, text=${text?.take(30)}, x=$x, y=$y")
-        Log.d(TAG, "   RootNode available: ${rootNode != null}")
+        Log.d(TAG, "   RootNode available: ${rootNode != null}, priority=$selectorPriority")
         
-        // Priority 1: Try resourceId (most stable)
-        if (!resourceId.isNullOrBlank() && rootNode != null) {
-            val nodes = rootNode.findAccessibilityNodeInfosByViewId(resourceId)
-            Log.d(TAG, "   [resourceId] Found ${nodes.size} nodes")
-            val node = nodes.firstOrNull()
-            if (node != null) {
-                try {
-                    val success = node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+        // Extract className if available
+        val className = params["className"] as? String
+        
+        // ========================================================================
+        // MODE-BASED ELEMENT MATCHING
+        // Each mode uses Smart Finder but with restricted criteria
+        // ========================================================================
+        
+        when (selectorPriority) {
+            "auto" -> {
+                // AUTO MODE: Use all selectors with scoring
+                val hasAnyCriteria = !resourceId.isNullOrBlank() || !contentDescription.isNullOrBlank() || !text.isNullOrBlank()
+                
+                if (hasAnyCriteria && rootNode != null) {
+                    Log.d(TAG, "   [auto] Using multi-selector matching...")
+                    val criteria = ElementCriteria(
+                        resourceId = resourceId,
+                        contentDescription = contentDescription,
+                        text = text,
+                        className = className,
+                        fuzzyMatch = fuzzyMatch,
+                        ignoreCase = ignoreCase
+                    )
+                    
+                    val bestNode = findBestMatchingNode(rootNode, criteria)
+                    if (bestNode != null) {
+                        val success = clickNodeWithFallback(bestNode)
+                        bestNode.recycle()
+                        
+                        if (success) {
+                            val matchedBy = listOfNotNull(
+                                if (!resourceId.isNullOrBlank()) "id" else null,
+                                if (!contentDescription.isNullOrBlank()) "desc" else null,
+                                if (!text.isNullOrBlank()) "text" else null
+                            ).joinToString("+")
+                            
+                            Log.d(TAG, "✓ Tap via AUTO ($matchedBy)")
+                            return ActionResult(
+                                actionId = "tap_auto",
+                                success = true,
+                                message = "Tap executed via auto matching: $matchedBy",
+                                data = mapOf("method" to "auto", "matched_by" to matchedBy)
+                            )
+                        }
+                    }
+                }
+                
+                // Fallback to coordinates if no element match
+                if (x != null && y != null) {
+                    Log.d(TAG, "   [auto] Fallback to coordinates: ($x, $y)")
+                    val success = accessibilityService.performTap(x, y)
+                    return ActionResult(
+                        actionId = "tap_coords",
+                        success = success,
+                        message = if (success) "Tap at ($x, $y)" else "Tap failed at ($x, $y)",
+                        data = mapOf("method" to "coordinates", "x" to x, "y" to y),
+                        error = if (!success) "Failed to perform tap" else null
+                    )
+                }
+                
+                throw Exception("No valid element or coordinates available")
+            }
+            
+            "id" -> {
+                // ID MODE: Only use resourceId + contentDescription for filtering
+                if (resourceId.isNullOrBlank()) {
+                    throw Exception("Resource ID is required in mode 'id' but not provided")
+                }
+                
+                Log.d(TAG, "   [id] Strict resourceId matching...")
+                val criteria = ElementCriteria(
+                    resourceId = resourceId,
+                    contentDescription = contentDescription, // For filtering multiple matches
+                    text = null, // Ignore text in id mode
+                    className = className,
+                    fuzzyMatch = false, // Exact match for id mode
+                    ignoreCase = ignoreCase
+                )
+                
+                val bestNode = findBestMatchingNode(rootNode!!, criteria)
+                if (bestNode != null) {
+                    val success = clickNodeWithFallback(bestNode)
+                    bestNode.recycle()
+                    
                     if (success) {
-                        Log.d(TAG, "✓ Tap via RESOURCE_ID: $resourceId")
+                        Log.d(TAG, "✓ Tap via ID: $resourceId")
                         return ActionResult(
-                            actionId = "tap_resourceId",
+                            actionId = "tap_id",
                             success = true,
                             message = "Tap executed via resourceId: $resourceId",
-                            data = mapOf("method" to "resourceId", "selector" to resourceId)
+                            data = mapOf("method" to "id", "resourceId" to resourceId)
                         )
-                    } else {
-                        Log.d(TAG, "   [resourceId] Node found but click failed")
                     }
-                } finally {
-                    node.recycle()
                 }
+                
+                throw Exception("Element with resourceId '$resourceId' not found or not clickable")
             }
-        } else if (resourceId.isNullOrBlank()) {
-            Log.d(TAG, "   [resourceId] SKIPPED - empty/null")
-        }
-        
-        // Priority 2: Try contentDescription (good for accessibility labels like "Share", "Like")
-        if (!contentDescription.isNullOrBlank() && rootNode != null) {
-            Log.d(TAG, "   [contentDesc] Searching for: ${contentDescription.take(40)}")
-            val node = findNodeByContentDescription(contentDescription, rootNode)
-            if (node != null) {
-                Log.d(TAG, "   [contentDesc] Node FOUND, attempting click")
-                try {
-                    val success = node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                    if (success) {
-                        Log.d(TAG, "✓ Tap via CONTENT_DESC: $contentDescription")
-                        return ActionResult(
-                            actionId = "tap_contentDesc",
-                            success = true,
-                            message = "Tap executed via contentDescription: $contentDescription",
-                            data = mapOf("method" to "contentDescription", "selector" to contentDescription)
-                        )
-                    } else {
-                        Log.d(TAG, "   [contentDesc] Node found but click FAILED")
-                    }
-                } finally {
-                    node.recycle()
+            
+            "text" -> {
+                // TEXT MODE: Only use text + contentDescription
+                val hasTextCriteria = !text.isNullOrBlank() || !contentDescription.isNullOrBlank()
+                if (!hasTextCriteria) {
+                    throw Exception("Text or contentDescription is required in mode 'text' but not provided")
                 }
-            } else {
-                Log.d(TAG, "   [contentDesc] Node NOT found in tree")
-            }
-        } else if (contentDescription.isNullOrBlank()) {
-            Log.d(TAG, "   [contentDesc] SKIPPED - empty/null")
-        }
-        
-        // Priority 3: Try text (good for buttons, labels)
-        if (!text.isNullOrBlank() && rootNode != null) {
-            Log.d(TAG, "   [text] Searching for: ${text.take(40)}")
-            val nodes = rootNode.findAccessibilityNodeInfosByText(text)
-            Log.d(TAG, "   [text] Found ${nodes.size} nodes containing text")
-            val node = nodes.firstOrNull { it.text?.toString() == text }
-            if (node != null) {
-                Log.d(TAG, "   [text] Exact match found, attempting click")
-                try {
-                    val success = node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                
+                Log.d(TAG, "   [text] Strict text/contentDesc matching...")
+                val criteria = ElementCriteria(
+                    resourceId = null, // Ignore resourceId in text mode
+                    contentDescription = contentDescription,
+                    text = text,
+                    className = className,
+                    fuzzyMatch = fuzzyMatch,
+                    ignoreCase = ignoreCase
+                )
+                
+                val bestNode = findBestMatchingNode(rootNode!!, criteria)
+                if (bestNode != null) {
+                    val success = clickNodeWithFallback(bestNode)
+                    bestNode.recycle()
+                    
                     if (success) {
-                        Log.d(TAG, "✓ Tap via TEXT: $text")
+                        val selector = contentDescription ?: text ?: "unknown"
+                        Log.d(TAG, "✓ Tap via TEXT: $selector")
                         return ActionResult(
                             actionId = "tap_text",
                             success = true,
-                            message = "Tap executed via text: $text",
-                            data = mapOf("method" to "text", "selector" to text)
+                            message = "Tap executed via text: $selector",
+                            data = mapOf("method" to "text", "selector" to selector)
                         )
-                    } else {
-                        Log.d(TAG, "   [text] Node found but click FAILED")
                     }
-                } finally {
-                    node.recycle()
                 }
-            } else {
-                Log.d(TAG, "   [text] No exact match found")
+                
+                throw Exception("Element with text/contentDesc not found or not clickable")
             }
-        } else if (text.isNullOrBlank()) {
-            Log.d(TAG, "   [text] SKIPPED - empty/null")
+            
+            "coords" -> {
+                // COORDS MODE: Only use coordinates, no element matching
+                if (x == null || y == null) {
+                    throw Exception("Coordinates (x, y) are required in mode 'coords' but not provided")
+                }
+                
+                Log.d(TAG, "   [coords] Coordinate-only tap: ($x, $y)")
+                val success = accessibilityService.performTap(x, y)
+                Log.d(TAG, "Tap via COORDINATES: ($x, $y) - ${if (success) "success" else "failed"}")
+                return ActionResult(
+                    actionId = "tap_${x}_${y}",
+                    success = success,
+                    message = if (success) "Tap executed at ($x, $y)" else "Tap failed at ($x, $y)",
+                    data = mapOf("method" to "coordinates", "x" to x, "y" to y),
+                    error = if (!success) "Failed to perform tap" else null
+                )
+            }
+            
+            else -> {
+                throw Exception("Unknown selector priority mode: $selectorPriority")
+            }
         }
-        
-        // Fallback: Use coordinates
-        if (x != null && y != null) {
-            val success = accessibilityService.performTap(x, y)
-            Log.d(TAG, "Tap via COORDINATES: ($x, $y) - ${if (success) "success" else "failed"}")
-            return ActionResult(
-                actionId = "tap_${x}_${y}",
-                success = success,
-                message = if (success) "Tap executed at ($x, $y)" else "Tap failed at ($x, $y)",
-                data = mapOf("method" to "coordinates", "x" to x, "y" to y),
-                error = if (!success) "Failed to perform tap" else null
-            )
-        }
-        
-        // No method available
-        throw Exception("No valid selector (resourceId/text/contentDescription) or coordinates available")
     }
     
     /**
      * Find node by content description recursively
+     * Supports exact match, fuzzy (contains) match, and case-insensitive matching
      */
-    private fun findNodeByContentDescription(desc: String, node: AccessibilityNodeInfo?): AccessibilityNodeInfo? {
+    private fun findNodeByContentDescription(
+        desc: String, 
+        node: AccessibilityNodeInfo?,
+        fuzzyMatch: Boolean = false,
+        ignoreCase: Boolean = true
+    ): AccessibilityNodeInfo? {
         if (node == null) return null
         
-        if (node.contentDescription?.toString() == desc) {
-            return node
+        val nodeDesc = node.contentDescription?.toString()
+        if (nodeDesc != null) {
+            val matches = when {
+                fuzzyMatch && ignoreCase -> nodeDesc.contains(desc, ignoreCase = true)
+                fuzzyMatch -> nodeDesc.contains(desc)
+                ignoreCase -> nodeDesc.equals(desc, ignoreCase = true)
+                else -> nodeDesc == desc
+            }
+            
+            if (matches) {
+                Log.d(TAG, "   [contentDesc] Match found: '$nodeDesc' (fuzzy=$fuzzyMatch, ignoreCase=$ignoreCase)")
+                return node
+            }
         }
         
+        // Search children
         for (i in 0 until node.childCount) {
             val child = node.getChild(i) ?: continue
-            val result = findNodeByContentDescription(desc, child)
+            val result = findNodeByContentDescription(desc, child, fuzzyMatch, ignoreCase)
             if (result != null) {
                 if (child != result) child.recycle()
                 return result
@@ -349,6 +475,40 @@ class JobExecutor(context: Context) {
             child.recycle()
         }
         
+        return null
+    }
+    
+    /**
+     * Find node by text with fuzzy/case-insensitive matching support
+     */
+    private fun findNodeByText(
+        text: String,
+        rootNode: AccessibilityNodeInfo,
+        fuzzyMatch: Boolean = false,
+        ignoreCase: Boolean = true
+    ): AccessibilityNodeInfo? {
+        // First try built-in search
+        val nodes = rootNode.findAccessibilityNodeInfosByText(text)
+        
+        for (node in nodes) {
+            val nodeText = node.text?.toString() ?: continue
+            val matches = when {
+                fuzzyMatch && ignoreCase -> nodeText.contains(text, ignoreCase = true)
+                fuzzyMatch -> nodeText.contains(text)
+                ignoreCase -> nodeText.equals(text, ignoreCase = true)
+                else -> nodeText == text
+            }
+            
+            if (matches) {
+                Log.d(TAG, "   [text] Match found: '$nodeText' (fuzzy=$fuzzyMatch, ignoreCase=$ignoreCase)")
+                // Recycle all other nodes
+                nodes.filter { it != node }.forEach { it.recycle() }
+                return node
+            }
+        }
+        
+        // Recycle all if no match
+        nodes.forEach { it.recycle() }
         return null
     }
 
@@ -449,13 +609,25 @@ class JobExecutor(context: Context) {
         
         Log.d(TAG, "Executing text input: text='${text.take(20)}...'")
         
-        val success = accessibilityService.inputText(text)
+        // Retry loop - wait for focused editable field (useful after tap opens keyboard)
+        var success = false
+        var retries = 0
+        val maxRetries = 4
+        
+        while (!success && retries < maxRetries) {
+            success = accessibilityService.inputText(text)
+            if (!success) {
+                retries++
+                Log.d(TAG, "   [text_input] Retry $retries/$maxRetries - no focused field, waiting 500ms...")
+                delay(500)
+            }
+        }
 
         return ActionResult(
             actionId = "text_input",
             success = success,
-            message = if (success) "Text input completed: '${text.take(20)}'" else "Text input failed - no focused editable field",
-            data = mapOf("text" to text, "method" to "accessibility"),
+            message = if (success) "Text input completed: '${text.take(20)}'" else "Text input failed - no focused editable field after $maxRetries retries",
+            data = mapOf("text" to text, "method" to "accessibility", "retries" to retries),
             error = if (!success) "No focused editable field found" else null
         )
     }
@@ -464,37 +636,143 @@ class JobExecutor(context: Context) {
         val accessibilityService = PortalAccessibilityService.instance
             ?: throw Exception("Accessibility service not available")
 
-        val keyCode = (params["key_code"] as? Number)?.toInt() ?: throw Exception("Missing key_code")
-        val success = accessibilityService.pressKey(keyCode)
+        // Support both key_code (number), key (string), and keyCode (camelCase)
+        val keyCode = when {
+            params["key_code"] != null -> (params["key_code"] as? Number)?.toInt()
+            params["keyCode"] != null -> {
+                val kc = params["keyCode"]
+                when (kc) {
+                    is Number -> kc.toInt()
+                    is String -> parseKeyCode(kc)
+                    else -> null
+                }
+            }
+            params["key"] != null -> parseKeyCode(params["key"] as? String ?: "")
+            else -> null
+        } ?: throw Exception("Missing key_code, keyCode, or key")
+
+        // Support repeatCount for multiple presses
+        val repeatCount = (params["repeatCount"] as? Number)?.toInt() 
+            ?: (params["repeat_count"] as? Number)?.toInt()
+            ?: 1
+        
+        Log.d(TAG, "Pressing key: $keyCode, repeat: $repeatCount (from params: ${params["key"]} or ${params["keyCode"]} or ${params["key_code"]})")
+        
+        var success = true
+        for (i in 1..repeatCount) {
+            val result = accessibilityService.pressKey(keyCode)
+            if (!result) {
+                success = false
+                break
+            }
+            if (i < repeatCount) {
+                delay(100) // Small delay between repeated presses
+            }
+        }
 
         return ActionResult(
             actionId = "press_key_$keyCode",
             success = success,
-            message = "Key press executed",
-            data = mapOf("key_code" to keyCode)
+            message = if (success) "Key press executed (${repeatCount}x)" else "Key press failed",
+            data = mapOf("key_code" to keyCode, "repeat_count" to repeatCount),
+            error = if (!success) "Failed to press key" else null
         )
+    }
+    
+    /**
+     * Parse key code string to Android KeyEvent code
+     * Supports all common hardware keys
+     */
+    private fun parseKeyCode(keyString: String): Int {
+        return when (keyString.uppercase()) {
+            // Navigation keys
+            "KEYCODE_BACK", "BACK" -> android.view.KeyEvent.KEYCODE_BACK
+            "KEYCODE_HOME", "HOME" -> android.view.KeyEvent.KEYCODE_HOME
+            "KEYCODE_MENU", "MENU" -> android.view.KeyEvent.KEYCODE_MENU
+            "KEYCODE_APP_SWITCH", "RECENTS", "APP_SWITCH" -> android.view.KeyEvent.KEYCODE_APP_SWITCH
+            
+            // Input keys
+            "KEYCODE_ENTER", "ENTER" -> android.view.KeyEvent.KEYCODE_ENTER
+            "KEYCODE_DEL", "DELETE", "DEL", "BACKSPACE" -> android.view.KeyEvent.KEYCODE_DEL
+            "KEYCODE_SPACE", "SPACE" -> android.view.KeyEvent.KEYCODE_SPACE
+            "KEYCODE_TAB", "TAB" -> android.view.KeyEvent.KEYCODE_TAB
+            "KEYCODE_ESCAPE", "ESCAPE", "ESC" -> android.view.KeyEvent.KEYCODE_ESCAPE
+            
+            // D-Pad keys
+            "KEYCODE_DPAD_UP", "DPAD_UP", "UP" -> android.view.KeyEvent.KEYCODE_DPAD_UP
+            "KEYCODE_DPAD_DOWN", "DPAD_DOWN", "DOWN" -> android.view.KeyEvent.KEYCODE_DPAD_DOWN
+            "KEYCODE_DPAD_LEFT", "DPAD_LEFT", "LEFT" -> android.view.KeyEvent.KEYCODE_DPAD_LEFT
+            "KEYCODE_DPAD_RIGHT", "DPAD_RIGHT", "RIGHT" -> android.view.KeyEvent.KEYCODE_DPAD_RIGHT
+            "KEYCODE_DPAD_CENTER", "DPAD_CENTER", "CENTER" -> android.view.KeyEvent.KEYCODE_DPAD_CENTER
+            
+            // Volume keys
+            "KEYCODE_VOLUME_UP", "VOLUME_UP" -> android.view.KeyEvent.KEYCODE_VOLUME_UP
+            "KEYCODE_VOLUME_DOWN", "VOLUME_DOWN" -> android.view.KeyEvent.KEYCODE_VOLUME_DOWN
+            "KEYCODE_VOLUME_MUTE", "VOLUME_MUTE", "MUTE" -> android.view.KeyEvent.KEYCODE_VOLUME_MUTE
+            
+            // Media keys
+            "KEYCODE_MEDIA_PLAY_PAUSE", "MEDIA_PLAY_PAUSE", "PLAY_PAUSE" -> android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
+            "KEYCODE_MEDIA_NEXT", "MEDIA_NEXT", "NEXT" -> android.view.KeyEvent.KEYCODE_MEDIA_NEXT
+            "KEYCODE_MEDIA_PREVIOUS", "MEDIA_PREVIOUS", "PREVIOUS" -> android.view.KeyEvent.KEYCODE_MEDIA_PREVIOUS
+            "KEYCODE_MEDIA_STOP", "MEDIA_STOP", "STOP" -> android.view.KeyEvent.KEYCODE_MEDIA_STOP
+            
+            // System keys
+            "KEYCODE_POWER", "POWER" -> android.view.KeyEvent.KEYCODE_POWER
+            "KEYCODE_CAMERA", "CAMERA" -> android.view.KeyEvent.KEYCODE_CAMERA
+            "KEYCODE_SEARCH", "SEARCH" -> android.view.KeyEvent.KEYCODE_SEARCH
+            
+            // Try to parse as number, fallback to BACK
+            else -> keyString.toIntOrNull() ?: android.view.KeyEvent.KEYCODE_BACK
+        }
     }
 
     private suspend fun executeStartApp(params: Map<String, Any>): ActionResult {
         val context = contextRef.get() ?: throw Exception("Context is null")
-        val packageName = params["package_name"] as? String ?: throw Exception("Missing package_name")
+        // Support both snake_case and camelCase parameter names
+        val packageName = (params["package_name"] as? String)
+            ?: (params["packageName"] as? String)
+            ?: (params["app_package"] as? String)
+            ?: throw Exception("Missing package_name or packageName")
 
         try {
+            // ========================================================================
+            // STEP 1: Force close app if already running (for fresh start)
+            // ========================================================================
+            val accessibilityService = PortalAccessibilityService.instance
+            if (accessibilityService != null) {
+                // Check if app is currently in foreground
+                val currentPackage = try {
+                    accessibilityService.rootInActiveWindow?.packageName?.toString() ?: ""
+                } catch (e: Exception) { "" }
+                
+                if (currentPackage == packageName) {
+                    Log.d(TAG, "App $packageName is already in foreground, closing first...")
+                    
+                    // Use FORCE_STOP via Recents + swipe, or just press Home first
+                    accessibilityService.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_HOME)
+                    delay(500)
+                }
+            }
+            
+            // ========================================================================
+            // STEP 2: Launch app fresh
+            // ========================================================================
             val intent = context.packageManager.getLaunchIntentForPackage(packageName)
             if (intent != null) {
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                // Clear task to start fresh
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                 context.startActivity(intent)
                 
                 // Wait for app to start - minimal delay, main wait handled by wait_after
                 delay(2000)
                 
-                Log.d(TAG, "App started: $packageName")
+                Log.d(TAG, "App started fresh: $packageName")
 
                 return ActionResult(
                     actionId = "start_app_$packageName",
                     success = true,
                     message = "App started: $packageName",
-                    data = mapOf("package_name" to packageName, "method" to "launch_intent")
+                    data = mapOf("package_name" to packageName, "method" to "launch_intent_fresh")
                 )
             } else {
                 throw Exception("Package not found: $packageName")
@@ -531,17 +809,285 @@ class JobExecutor(context: Context) {
         )
     }
 
-    private suspend fun executeAssert(params: Map<String, Any>): ActionResult {
-        // Assertion logic - check if condition is true
-        val condition = params["condition"] as? String ?: "true"
-        val success = evaluateCondition(condition)
-
+    /**
+     * Execute File Input action - Select and prepare a file for use
+     * 
+     * Params:
+     * - files: List of file objects with { id, name, url, path, type }
+     * - selectionMode: 'sequential' or 'random'
+     * - currentIndex: Current index for sequential mode
+     * - outputVariable: Variable name to store file path
+     */
+    private suspend fun executeFileInput(params: Map<String, Any>): ActionResult {
+        val filesRaw = params["files"] as? List<*> ?: emptyList<Any>()
+        val selectionMode = params["selectionMode"] as? String ?: "sequential"
+        val currentIndex = (params["currentIndex"] as? Number)?.toInt() ?: 0
+        val outputVariable = params["outputVariable"] as? String ?: "filePath"
+        
+        Log.d(TAG, "[file_input] files=${filesRaw.size}, mode=$selectionMode, index=$currentIndex")
+        
+        if (filesRaw.isEmpty()) {
+            return ActionResult(
+                actionId = "file_input",
+                success = false,
+                message = "No files configured",
+                error = "File list is empty"
+            )
+        }
+        
+        // Parse files list
+        val files = filesRaw.mapNotNull { it as? Map<*, *> }
+        if (files.isEmpty()) {
+            return ActionResult(
+                actionId = "file_input",
+                success = false,
+                message = "Invalid file list format",
+                error = "Could not parse files"
+            )
+        }
+        
+        // Select file based on mode
+        val selectedIndex = when (selectionMode) {
+            "random" -> (0 until files.size).random()
+            else -> currentIndex % files.size
+        }
+        val selectedFile = files[selectedIndex]
+        
+        val fileUrl = selectedFile["url"] as? String ?: selectedFile["path"] as? String
+        val fileName = selectedFile["name"] as? String ?: "file_${System.currentTimeMillis()}"
+        val fileType = selectedFile["type"] as? String ?: "file"
+        
+        Log.d(TAG, "[file_input] Selected: $fileName (index=$selectedIndex)")
+        
+        if (fileUrl.isNullOrEmpty()) {
+            return ActionResult(
+                actionId = "file_input",
+                success = false,
+                message = "File URL is empty",
+                error = "Selected file has no URL"
+            )
+        }
+        
+        // Download file to device cache
+        val localPath = try {
+            downloadFileToCache(fileUrl, fileName)
+        } catch (e: Exception) {
+            Log.e(TAG, "[file_input] Download failed: ${e.message}")
+            return ActionResult(
+                actionId = "file_input",
+                success = false,
+                message = "Failed to download file: ${e.message}",
+                error = e.message
+            )
+        }
+        
+        // Calculate next index for sequential mode
+        val nextIndex = (selectedIndex + 1) % files.size
+        
+        Log.d(TAG, "[file_input] File ready: $localPath (next index=$nextIndex)")
+        
         return ActionResult(
-            actionId = "assert",
+            actionId = "file_input",
+            success = true,
+            message = "File ready: $fileName",
+            data = mapOf(
+                outputVariable to localPath,
+                "fileName" to fileName,
+                "fileType" to fileType,
+                "selectedIndex" to selectedIndex,
+                "nextIndex" to nextIndex,
+                "totalFiles" to files.size
+            )
+        )
+    }
+    
+    /**
+     * Download a file from URL to device cache directory
+     */
+    private suspend fun downloadFileToCache(url: String, fileName: String): String {
+        return withContext(Dispatchers.IO) {
+            val cacheDir = context.cacheDir
+            val targetFile = java.io.File(cacheDir, "workflow_files/$fileName")
+            targetFile.parentFile?.mkdirs()
+            
+            // Check if already cached
+            if (targetFile.exists() && targetFile.length() > 0) {
+                Log.d(TAG, "[download] Using cached: ${targetFile.absolutePath}")
+                return@withContext targetFile.absolutePath
+            }
+            
+            Log.d(TAG, "[download] Downloading: $url -> ${targetFile.absolutePath}")
+            
+            val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+            connection.connectTimeout = 30000
+            connection.readTimeout = 30000
+            connection.connect()
+            
+            if (connection.responseCode != 200) {
+                throw Exception("HTTP ${connection.responseCode}")
+            }
+            
+            connection.inputStream.use { input ->
+                java.io.FileOutputStream(targetFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+            
+            Log.d(TAG, "[download] Complete: ${targetFile.length()} bytes")
+            targetFile.absolutePath
+        }
+    }
+
+    /**
+     * Execute Assert action - Verify element exists or has expected value
+     * 
+     * Supported assertTypes:
+     * - exists: Check if element exists
+     * - not_exists: Check if element does NOT exist
+     * - text_equals: Check if element text exactly matches expectedValue
+     * - text_contains: Check if element text contains expectedValue
+     * 
+     * Params:
+     * - assertType: exists/not_exists/text_equals/text_contains
+     * - targetSelector: resourceId or text to find element (from FE)
+     * - resourceId: Android resource ID (from Element Picker)
+     * - text: Text content (from Element Picker)
+     * - expectedValue: Expected text for text assertions
+     * - timeout: How long to wait for element (ms, default 5000)
+     * - onFailure: stop/continue/skip (handled by action.optional)
+     */
+    private suspend fun executeAssert(params: Map<String, Any>): ActionResult {
+        val accessibilityService = PortalAccessibilityService.instance
+            ?: return ActionResult(
+                actionId = "assert",
+                success = false,
+                message = "Accessibility service not available",
+                error = "Service not running"
+            )
+        
+        val assertType = params["assertType"] as? String ?: "exists"
+        val targetSelector = params["targetSelector"] as? String
+        val resourceId = params["resourceId"] as? String
+        val text = params["text"] as? String
+        val contentDescription = params["contentDescription"] as? String
+        val expectedValue = params["expectedValue"] as? String
+        val timeout = (params["timeout"] as? Number)?.toLong() ?: 5000L
+        
+        Log.d(TAG, "🔍 Assert: type=$assertType, selector=$targetSelector, resourceId=$resourceId, text=$text")
+        Log.d(TAG, "   expectedValue=$expectedValue, timeout=${timeout}ms")
+        
+        // Determine which selector to use (priority: resourceId > targetSelector > text > contentDescription)
+        val selector = resourceId?.takeIf { it.isNotBlank() }
+            ?: targetSelector?.takeIf { it.isNotBlank() }
+            ?: text?.takeIf { it.isNotBlank() }
+            ?: contentDescription?.takeIf { it.isNotBlank() }
+        
+        if (selector.isNullOrBlank() && assertType != "exists") {
+            return ActionResult(
+                actionId = "assert",
+                success = false,
+                message = "No selector provided for assertion",
+                error = "Missing targetSelector, resourceId, text, or contentDescription"
+            )
+        }
+        
+        val startTime = System.currentTimeMillis()
+        var foundNode: AccessibilityNodeInfo? = null
+        var foundNodeText: String? = null
+        
+        // Poll for element until timeout
+        while (System.currentTimeMillis() - startTime < timeout) {
+            val rootNode = accessibilityService.rootInActiveWindow
+            if (rootNode != null) {
+                // Try to find element by resourceId first
+                if (!resourceId.isNullOrBlank()) {
+                    val nodes = rootNode.findAccessibilityNodeInfosByViewId(resourceId)
+                    foundNode = nodes.firstOrNull()
+                    foundNodeText = foundNode?.text?.toString()
+                    if (foundNode != null && assertType != "not_exists") break
+                }
+                
+                // Try by text if no resourceId match
+                if (foundNode == null && !text.isNullOrBlank()) {
+                    val nodes = rootNode.findAccessibilityNodeInfosByText(text)
+                    foundNode = nodes.firstOrNull { it.text?.toString()?.equals(text, ignoreCase = true) == true }
+                    foundNodeText = foundNode?.text?.toString()
+                    if (foundNode != null && assertType != "not_exists") break
+                }
+                
+                // Try by targetSelector as text
+                if (foundNode == null && !targetSelector.isNullOrBlank() && targetSelector != resourceId && targetSelector != text) {
+                    val nodes = rootNode.findAccessibilityNodeInfosByText(targetSelector)
+                    foundNode = nodes.firstOrNull()
+                    foundNodeText = foundNode?.text?.toString()
+                    if (foundNode != null && assertType != "not_exists") break
+                }
+                
+                // For not_exists, break immediately if not found
+                if (assertType == "not_exists" && foundNode == null) {
+                    break
+                }
+            }
+            
+            delay(200) // Poll interval
+        }
+        
+        // Evaluate assertion based on type
+        val (success, message) = when (assertType) {
+            "exists" -> {
+                if (foundNode != null) {
+                    Pair(true, "Element found: $selector")
+                } else {
+                    Pair(false, "Element not found within ${timeout}ms: $selector")
+                }
+            }
+            "not_exists" -> {
+                if (foundNode == null) {
+                    Pair(true, "Element correctly does not exist: $selector")
+                } else {
+                    Pair(false, "Element unexpectedly exists: $selector")
+                }
+            }
+            "text_equals" -> {
+                if (foundNode == null) {
+                    Pair(false, "Element not found: $selector")
+                } else if (foundNodeText == expectedValue) {
+                    Pair(true, "Text matches: '$foundNodeText' == '$expectedValue'")
+                } else {
+                    Pair(false, "Text mismatch: '$foundNodeText' != '$expectedValue'")
+                }
+            }
+            "text_contains" -> {
+                if (foundNode == null) {
+                    Pair(false, "Element not found: $selector")
+                } else if (foundNodeText?.contains(expectedValue ?: "", ignoreCase = true) == true) {
+                    Pair(true, "Text contains: '$foundNodeText' contains '$expectedValue'")
+                } else {
+                    Pair(false, "Text does not contain: '$foundNodeText' does not contain '$expectedValue'")
+                }
+            }
+            else -> {
+                Pair(false, "Unknown assertType: $assertType")
+            }
+        }
+        
+        // Clean up
+        foundNode?.recycle()
+        
+        Log.d(TAG, "Assert result: success=$success, message=$message")
+        
+        return ActionResult(
+            actionId = "assert_$assertType",
             success = success,
-            message = if (success) "Assertion passed" else "Assertion failed",
-            data = params,
-            error = if (!success) "Condition not met: $condition" else null
+            message = message,
+            data = mapOf(
+                "assertType" to assertType,
+                "selector" to (selector ?: ""),
+                "expectedValue" to (expectedValue ?: ""),
+                "actualValue" to (foundNodeText ?: ""),
+                "timeSpent" to (System.currentTimeMillis() - startTime)
+            ),
+            error = if (!success) message else null
         )
     }
 
@@ -556,6 +1102,204 @@ class JobExecutor(context: Context) {
             data = mapOf("selector" to selector, "value" to "extracted_value")
         )
     }
+
+    /**
+     * Execute Element Check - Check if element exists/visible/enabled
+     * Returns success=true if element matches condition (for true branch)
+     * Returns success=false if element doesn't match (for false branch)
+     * 
+     * Params:
+     * - checkType: exists/not_exists/visible/enabled
+     * - resourceId: Android resource ID
+     * - text: Text content to find
+     * - timeout: How long to wait (ms, default 3000)
+     */
+    private suspend fun executeElementCheck(params: Map<String, Any>): ActionResult {
+        val accessibilityService = PortalAccessibilityService.instance
+            ?: return ActionResult(
+                actionId = "element_check",
+                success = false,
+                message = "Accessibility service not available",
+                error = "Service not running"
+            )
+        
+        val checkType = params["checkType"] as? String ?: "exists"
+        val resourceId = params["resourceId"] as? String
+        val text = params["text"] as? String
+        val timeout = (params["timeout"] as? Number)?.toLong() ?: 3000L
+        
+        Log.d(TAG, "🔍 ElementCheck: type=$checkType, resourceId=$resourceId, text=$text, timeout=${timeout}ms")
+        
+        val startTime = System.currentTimeMillis()
+        var foundNode: AccessibilityNodeInfo? = null
+        
+        // Poll for element
+        while (System.currentTimeMillis() - startTime < timeout) {
+            val rootNode = accessibilityService.rootInActiveWindow
+            if (rootNode != null) {
+                // Try resourceId first
+                if (!resourceId.isNullOrBlank()) {
+                    val nodes = rootNode.findAccessibilityNodeInfosByViewId(resourceId)
+                    foundNode = nodes.firstOrNull()
+                    if (foundNode != null) break
+                }
+                
+                // Try text
+                if (foundNode == null && !text.isNullOrBlank()) {
+                    val nodes = rootNode.findAccessibilityNodeInfosByText(text)
+                    foundNode = nodes.firstOrNull { it.text?.toString()?.equals(text, ignoreCase = true) == true }
+                    if (foundNode != null) break
+                }
+            }
+            delay(200)
+        }
+        
+        // Evaluate check
+        val (success, message) = when (checkType) {
+            "exists" -> {
+                if (foundNode != null) {
+                    Pair(true, "Element exists")
+                } else {
+                    Pair(false, "Element not found")
+                }
+            }
+            "not_exists" -> {
+                if (foundNode == null) {
+                    Pair(true, "Element does not exist")
+                } else {
+                    Pair(false, "Element exists unexpectedly")
+                }
+            }
+            "visible" -> {
+                if (foundNode != null && foundNode.isVisibleToUser) {
+                    Pair(true, "Element is visible")
+                } else {
+                    Pair(false, "Element not visible")
+                }
+            }
+            "enabled" -> {
+                if (foundNode != null && foundNode.isEnabled) {
+                    Pair(true, "Element is enabled")
+                } else {
+                    Pair(false, "Element not enabled")
+                }
+            }
+            else -> Pair(false, "Unknown checkType: $checkType")
+        }
+        
+        foundNode?.recycle()
+        Log.d(TAG, "ElementCheck result: success=$success (for branching)")
+        
+        return ActionResult(
+            actionId = "element_check_$checkType",
+            success = success,
+            message = message,
+            data = mapOf(
+                "checkType" to checkType,
+                "resourceId" to (resourceId ?: ""),
+                "text" to (text ?: ""),
+                "timeSpent" to (System.currentTimeMillis() - startTime)
+            )
+        )
+    }
+
+    /**
+     * Execute Wait For Element - Wait until element appears
+     * 
+     * Params:
+     * - resourceId: Android resource ID
+     * - text: Text content to find
+     * - timeout: Maximum wait time (ms, default 10000)
+     * - pollInterval: Check interval (ms, default 500)
+     */
+    private suspend fun executeWaitForElement(params: Map<String, Any>): ActionResult {
+        val accessibilityService = PortalAccessibilityService.instance
+            ?: return ActionResult(
+                actionId = "wait_for_element",
+                success = false,
+                message = "Accessibility service not available",
+                error = "Service not running"
+            )
+        
+        val resourceId = params["resourceId"] as? String
+        val text = params["text"] as? String
+        val contentDescription = params["contentDescription"] as? String
+        val timeout = (params["timeout"] as? Number)?.toLong() ?: 10000L
+        val pollInterval = (params["pollInterval"] as? Number)?.toLong() ?: 500L
+        
+        Log.d(TAG, "⏳ WaitForElement: resourceId=$resourceId, text=$text, timeout=${timeout}ms")
+        
+        if (resourceId.isNullOrBlank() && text.isNullOrBlank() && contentDescription.isNullOrBlank()) {
+            return ActionResult(
+                actionId = "wait_for_element",
+                success = false,
+                message = "No selector provided",
+                error = "Missing resourceId, text, or contentDescription"
+            )
+        }
+        
+        val startTime = System.currentTimeMillis()
+        var foundNode: AccessibilityNodeInfo? = null
+        
+        // Poll for element until timeout
+        while (System.currentTimeMillis() - startTime < timeout) {
+            val rootNode = accessibilityService.rootInActiveWindow
+            if (rootNode != null) {
+                // Try resourceId
+                if (!resourceId.isNullOrBlank()) {
+                    val nodes = rootNode.findAccessibilityNodeInfosByViewId(resourceId)
+                    foundNode = nodes.firstOrNull()
+                    if (foundNode != null) break
+                }
+                
+                // Try text
+                if (foundNode == null && !text.isNullOrBlank()) {
+                    val nodes = rootNode.findAccessibilityNodeInfosByText(text)
+                    foundNode = nodes.firstOrNull { it.text?.toString()?.equals(text, ignoreCase = true) == true }
+                    if (foundNode != null) break
+                }
+                
+                // Try contentDescription
+                if (foundNode == null && !contentDescription.isNullOrBlank()) {
+                    foundNode = findNodeByContentDescription(contentDescription, rootNode, fuzzyMatch = false, ignoreCase = true)
+                    if (foundNode != null) break
+                }
+            }
+            
+            delay(pollInterval)
+        }
+        
+        val timeSpent = System.currentTimeMillis() - startTime
+        
+        if (foundNode != null) {
+            foundNode.recycle()
+            Log.d(TAG, "WaitForElement: Element found after ${timeSpent}ms")
+            return ActionResult(
+                actionId = "wait_for_element",
+                success = true,
+                message = "Element appeared after ${timeSpent}ms",
+                data = mapOf(
+                    "resourceId" to (resourceId ?: ""),
+                    "text" to (text ?: ""),
+                    "timeSpent" to timeSpent
+                )
+            )
+        } else {
+            Log.d(TAG, "WaitForElement: Timeout after ${timeSpent}ms")
+            return ActionResult(
+                actionId = "wait_for_element",
+                success = false,
+                message = "Element not found within ${timeout}ms",
+                data = mapOf(
+                    "resourceId" to (resourceId ?: ""),
+                    "text" to (text ?: ""),
+                    "timeSpent" to timeSpent
+                ),
+                error = "Timeout waiting for element"
+            )
+        }
+    }
+
 
     private suspend fun executeCustom(params: Map<String, Any>, jobParams: Map<String, Any>?): ActionResult {
         // Custom action implementation
@@ -586,5 +1330,204 @@ class JobExecutor(context: Context) {
     private fun evaluateCondition(condition: String): Boolean {
         // Simple condition evaluation
         return condition.lowercase() == "true"
+    }
+    
+    // ================================================================================
+    // SMART ELEMENT FINDER - Multi-selector matching with scoring
+    // ================================================================================
+    
+    /**
+     * Data class to hold element matching criteria
+     */
+    data class ElementCriteria(
+        val resourceId: String? = null,
+        val contentDescription: String? = null,
+        val text: String? = null,
+        val className: String? = null,
+        val fuzzyMatch: Boolean = false,
+        val ignoreCase: Boolean = true
+    )
+    
+    /**
+     * Find the best matching node based on multiple selectors.
+     * Each matching selector adds to the score. Returns the highest-scoring node.
+     * 
+     * Scoring:
+     * - resourceId exact match: +40 points
+     * - contentDescription exact match: +30 points
+     * - text exact match: +20 points
+     * - className match: +10 points
+     * - fuzzy matches get half points
+     */
+    private fun findBestMatchingNode(
+        rootNode: AccessibilityNodeInfo,
+        criteria: ElementCriteria
+    ): AccessibilityNodeInfo? {
+        data class ScoredNode(val node: AccessibilityNodeInfo, val score: Int)
+        val candidates = mutableListOf<ScoredNode>()
+        
+        fun scoreNode(node: AccessibilityNodeInfo): Int {
+            var score = 0
+            
+            // ResourceId matching (+40 for exact)
+            if (!criteria.resourceId.isNullOrBlank()) {
+                val nodeId = node.viewIdResourceName
+                if (nodeId == criteria.resourceId) {
+                    score += 40
+                }
+            }
+            
+            // ContentDescription matching (+30 for exact, +15 for fuzzy)
+            if (!criteria.contentDescription.isNullOrBlank()) {
+                val nodeDesc = node.contentDescription?.toString()
+                if (nodeDesc != null) {
+                    val exactMatch = if (criteria.ignoreCase) {
+                        nodeDesc.equals(criteria.contentDescription, ignoreCase = true)
+                    } else {
+                        nodeDesc == criteria.contentDescription
+                    }
+                    
+                    if (exactMatch) {
+                        score += 30
+                    } else if (criteria.fuzzyMatch && nodeDesc.contains(criteria.contentDescription, ignoreCase = criteria.ignoreCase)) {
+                        score += 15
+                    }
+                }
+            }
+            
+            // Text matching (+20 for exact, +10 for fuzzy)
+            if (!criteria.text.isNullOrBlank()) {
+                val nodeText = node.text?.toString()
+                if (nodeText != null) {
+                    val exactMatch = if (criteria.ignoreCase) {
+                        nodeText.equals(criteria.text, ignoreCase = true)
+                    } else {
+                        nodeText == criteria.text
+                    }
+                    
+                    if (exactMatch) {
+                        score += 20
+                    } else if (criteria.fuzzyMatch && nodeText.contains(criteria.text, ignoreCase = criteria.ignoreCase)) {
+                        score += 10
+                    }
+                }
+            }
+            
+            // ClassName matching (+10)
+            if (!criteria.className.isNullOrBlank()) {
+                val nodeClass = node.className?.toString()
+                if (nodeClass != null) {
+                    if (nodeClass.endsWith(criteria.className) || nodeClass == criteria.className) {
+                        score += 10
+                    }
+                }
+            }
+            
+            return score
+        }
+        
+        fun searchTree(node: AccessibilityNodeInfo, depth: Int = 0) {
+            if (depth > 20) return // Max depth
+            
+            val score = scoreNode(node)
+            if (score > 0) {
+                Log.d(TAG, "   [smart] Found candidate with score $score: id=${node.viewIdResourceName?.takeLast(20)}, text=${node.text?.take(20)}")
+                candidates.add(ScoredNode(node, score))
+            }
+            
+            // Search children
+            for (i in 0 until node.childCount) {
+                val child = node.getChild(i) ?: continue
+                searchTree(child, depth + 1)
+            }
+        }
+        
+        // Start search
+        searchTree(rootNode)
+        
+        if (candidates.isEmpty()) {
+            Log.d(TAG, "   [smart] No matching candidates found")
+            return null
+        }
+        
+        // Sort by score (highest first), return best match
+        val best = candidates.maxByOrNull { it.score }
+        Log.d(TAG, "   [smart] Best match: score=${best?.score}, id=${best?.node?.viewIdResourceName?.takeLast(30)}")
+        
+        // Recycle non-selected candidates
+        candidates.filter { it != best }.forEach { 
+            // Note: we can't recycle here as nodes may be parents of each other
+        }
+        
+        return best?.node
+    }
+    
+    /**
+     * Click node with multiple fallback strategies:
+     * Priority order (most reliable first):
+     * 1. Tap at center of bounds (use clickable parent's bounds if node is not clickable)
+     * 2. Direct ACTION_CLICK on node or parent
+     */
+    private fun clickNodeWithFallback(node: AccessibilityNodeInfo): Boolean {
+        val rect = android.graphics.Rect()
+        node.getBoundsInScreen(rect)
+        var centerX = (rect.left + rect.right) / 2
+        var centerY = (rect.top + rect.bottom) / 2
+        
+        Log.d(TAG, "   [click] Node: clickable=${node.isClickable}, bounds=${rect.left},${rect.top}-${rect.right},${rect.bottom}, center=($centerX,$centerY)")
+        Log.d(TAG, "   [click] Node id=${node.viewIdResourceName?.takeLast(30)}, desc=${node.contentDescription?.take(30)}")
+        
+        // If node is not clickable, find clickable parent and use ITS bounds
+        var targetNode: AccessibilityNodeInfo? = null
+        var targetRect = rect
+        
+        if (!node.isClickable) {
+            Log.d(TAG, "   [click] Node not clickable, finding clickable parent for bounds...")
+            var parent = node.parent
+            var depth = 0
+            while (parent != null && depth < 5) {
+                if (parent.isClickable) {
+                    targetNode = parent
+                    val parentRect = android.graphics.Rect()
+                    parent.getBoundsInScreen(parentRect)
+                    targetRect = parentRect
+                    centerX = (parentRect.left + parentRect.right) / 2
+                    centerY = (parentRect.top + parentRect.bottom) / 2
+                    Log.d(TAG, "   [click] Found clickable parent at depth $depth, bounds=${parentRect.left},${parentRect.top}-${parentRect.right},${parentRect.bottom}, center=($centerX,$centerY)")
+                    break
+                }
+                val oldParent = parent
+                parent = parent.parent
+                oldParent.recycle()
+                depth++
+            }
+            if (targetNode == null) {
+                parent?.recycle()
+            }
+        }
+        
+        // Strategy 1: Tap at center of bounds (parent's bounds if non-clickable)
+        if (centerX > 0 && centerY > 0 && targetRect.width() > 0 && targetRect.height() > 0) {
+            Log.d(TAG, "   [click] Strategy 1 (bounds tap): ($centerX, $centerY)")
+            val accessibilityService = PortalAccessibilityService.instance
+            if (accessibilityService != null) {
+                val success = accessibilityService.performTap(centerX, centerY)
+                Log.d(TAG, "   [click] Bounds tap result: $success")
+                targetNode?.recycle()
+                if (success) return true
+            }
+        }
+        
+        // Strategy 2: Direct click on clickable node/parent
+        val clickableNode = targetNode ?: if (node.isClickable) node else null
+        if (clickableNode != null) {
+            val success = clickableNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            Log.d(TAG, "   [click] Strategy 2 (accessibility click): $success")
+            if (targetNode != null && targetNode != node) targetNode.recycle()
+            if (success) return true
+        }
+        
+        Log.d(TAG, "   [click] All strategies failed")
+        return false
     }
 }

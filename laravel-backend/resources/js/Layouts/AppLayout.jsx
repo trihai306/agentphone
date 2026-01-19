@@ -81,8 +81,8 @@ export default function AppLayout({ children, title, breadcrumbs }) {
                     {flash?.success && flashVisible.success && (
                         <div className="animate-slide-down">
                             <div className={`p-4 rounded-xl shadow-lg backdrop-blur-xl border ${isDark
-                                    ? 'bg-emerald-900/90 border-emerald-700/50 text-emerald-100'
-                                    : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                                ? 'bg-emerald-900/90 border-emerald-700/50 text-emerald-100'
+                                : 'bg-emerald-50 border-emerald-200 text-emerald-800'
                                 }`}>
                                 <div className="flex items-start gap-3">
                                     <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-emerald-800' : 'bg-emerald-100'
@@ -110,8 +110,8 @@ export default function AppLayout({ children, title, breadcrumbs }) {
                     {flash?.error && flashVisible.error && (
                         <div className="animate-slide-down">
                             <div className={`p-4 rounded-xl shadow-lg backdrop-blur-xl border ${isDark
-                                    ? 'bg-red-900/90 border-red-700/50 text-red-100'
-                                    : 'bg-red-50 border-red-200 text-red-800'
+                                ? 'bg-red-900/90 border-red-700/50 text-red-100'
+                                : 'bg-red-50 border-red-200 text-red-800'
                                 }`}>
                                 <div className="flex items-start gap-3">
                                     <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-red-800' : 'bg-red-100'
@@ -142,21 +142,6 @@ export default function AppLayout({ children, title, breadcrumbs }) {
                     {children}
                 </main>
 
-                {/* Keyboard Shortcuts Hint */}
-                <div className={`fixed bottom-4 right-4 hidden lg:block z-10 transition-all duration-300 ${collapsed ? 'lg:left-[88px]' : 'lg:left-[272px]'} lg:right-auto`}>
-                    <div className={`px-3 py-2 rounded-xl border backdrop-blur-sm text-xs ${isDark
-                            ? 'bg-[#1a1a1a]/80 border-[#2a2a2a] text-gray-500'
-                            : 'bg-white/80 border-gray-200 text-gray-400'
-                        }`}>
-                        <div className="flex items-center gap-2">
-                            <kbd className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${isDark ? 'bg-[#2a2a2a] text-gray-400' : 'bg-gray-100 text-gray-500'
-                                }`}>
-                                ⌘K
-                            </kbd>
-                            <span>Quick search</span>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     );

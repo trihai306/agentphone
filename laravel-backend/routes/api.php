@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Route;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+// Heartbeat route (needs auth) - alias for backwards compatibility
+Route::middleware('auth:sanctum')->post('/heartbeat', [DeviceController::class, 'heartbeat']);
+
 // Public package listing (no auth required to view packages)
 Route::get('/packages', [ServicePackageController::class, 'index']);
 Route::get('/packages/{package}', [ServicePackageController::class, 'show']);
@@ -43,9 +46,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/devices/register', [DeviceController::class, 'store']); // Alias for compatibility
     Route::get('/devices', [DeviceController::class, 'index']);
     Route::get('/devices/{id}', [DeviceController::class, 'show']);
-    // Note: ping and status routes removed - now using Soketi presence webhooks
+    Route::post('/devices/{id}/status', [DeviceController::class, 'updateStatusById']); // APK status update with ID
+    Route::post('/devices/status', [DeviceController::class, 'updateStatusByDeviceId']); // APK status update (no ID in route)
+    Route::post('/devices/heartbeat', [DeviceController::class, 'heartbeat']); // APK heartbeat
     Route::delete('/devices/{id}', [DeviceController::class, 'destroy']);
     Route::post('/devices/logout-all', [DeviceController::class, 'logoutAll']);
+
+    // Element Inspector - request elements from device and receive results
+    Route::post('/devices/inspect', [DeviceController::class, 'inspectElements']);
+    Route::post('/devices/inspect-result', [DeviceController::class, 'inspectElementsResult']);
+
+    // Realtime accessibility check - request status from device via socket
+    Route::post('/devices/check-accessibility', [DeviceController::class, 'checkAccessibility']);
+    Route::post('/devices/check-accessibility-result', [DeviceController::class, 'checkAccessibilityResult']);
 
     // Subscription management
     Route::prefix('subscriptions')->group(function () {
@@ -102,6 +115,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Batch job creation
     Route::post('/flows/{flow}/jobs/batch', [\App\Http\Controllers\WorkflowJobController::class, 'storeBatch']);
+
+    // Workflow test-run progress reporting (APK sends real-time action status)
+    Route::prefix('workflow')->group(function () {
+        Route::post('/test-run/progress', [\App\Http\Controllers\FlowController::class, 'reportTestRunProgress']);
+    });
+
+    // Workflow listener management (for APK recording prerequisite check)
+    Route::prefix('recording-listener')->group(function () {
+        Route::post('/check', [\App\Http\Controllers\Api\RecordingEventController::class, 'checkListener']);
+        Route::post('/register', [\App\Http\Controllers\Api\RecordingEventController::class, 'registerListener']);
+        Route::post('/unregister', [\App\Http\Controllers\Api\RecordingEventController::class, 'unregisterListener']);
+    });
 });
 
 // Pusher/Soketi auth endpoint for presence channels (requires auth)
@@ -118,6 +143,13 @@ Route::prefix('jobs')->group(function () {
 
     // APK reports job progress
     Route::middleware('auth:sanctum')->group(function () {
+        // Today's job statistics for APK dashboard
+        Route::get('/stats/today', [\App\Http\Controllers\Api\JobApiController::class, 'getTodayStats']);
+
+        // Polling endpoints for APK (fallback when WebSocket unavailable)
+        Route::get('/pending', [\App\Http\Controllers\Api\JobApiController::class, 'getPendingJobs']);
+        Route::post('/{job}/claim', [\App\Http\Controllers\Api\JobApiController::class, 'claimJob']);
+
         Route::post('/{job}/started', [\App\Http\Controllers\Api\JobApiController::class, 'reportStarted']);
         Route::post('/{job}/task-progress', [\App\Http\Controllers\Api\JobApiController::class, 'reportTaskProgress']);
         Route::post('/{job}/completed', [\App\Http\Controllers\Api\JobApiController::class, 'reportCompleted']);

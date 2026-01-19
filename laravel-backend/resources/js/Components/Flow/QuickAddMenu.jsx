@@ -28,12 +28,14 @@ function QuickAddMenu({
                     { type: 'http', icon: '🌐', label: 'HTTP Request', description: 'API call' },
                     { type: 'ai_process', icon: '🤖', label: 'AI Process', description: 'AI transformation' },
                     { type: 'condition', icon: '❓', label: 'Condition', description: 'Branch logic' },
+                    { type: 'element_check', icon: '🔍', label: 'Element Check', description: 'Check element exists' },
                     { type: 'text_data', icon: '📝', label: 'Text Data', description: 'Static text' },
                 ];
             case 'condition':
                 return [
                     { type: 'http', icon: '🌐', label: 'HTTP Request', description: 'API call' },
-                    { type: 'text_data', icon: '📝', label: 'Text Data', description: 'Static text' },
+                    { type: 'element_check', icon: '🔍', label: 'Element Check', description: 'Kiểm tra element' },
+                    { type: 'wait_for_element', icon: '⏳', label: 'Wait For', description: 'Chờ element' },
                     { type: 'wait', icon: '⏱️', label: 'Wait', description: 'Delay execution' },
                 ];
             case 'http':
@@ -42,8 +44,20 @@ function QuickAddMenu({
                     { type: 'ai_process', icon: '🤖', label: 'AI Process', description: 'Process response' },
                     { type: 'wait', icon: '⏱️', label: 'Wait', description: 'Rate limiting' },
                 ];
+            case 'click':
+            case 'tap':
+            case 'smart_action':
+            case 'recorded_action':
+                return [
+                    { type: 'element_check', icon: '🔍', label: 'Element Check', description: 'Check popup/dialog' },
+                    { type: 'wait_for_element', icon: '⏳', label: 'Wait For', description: 'Chờ element xuất hiện' },
+                    { type: 'wait', icon: '⏱️', label: 'Wait', description: 'Delay' },
+                    { type: 'condition', icon: '❓', label: 'Condition', description: 'Branch logic' },
+                ];
             default:
                 return [
+                    { type: 'element_check', icon: '🔍', label: 'Element Check', description: 'Kiểm tra element/text', highlight: true },
+                    { type: 'wait_for_element', icon: '⏳', label: 'Wait For Element', description: 'Chờ element', highlight: true },
                     { type: 'data_source', icon: '📊', label: 'Data Source', description: 'Fetch data' },
                     { type: 'loop', icon: '🔄', label: 'Loop', description: 'Iterate' },
                     { type: 'condition', icon: '❓', label: 'Condition', description: 'Branch' },

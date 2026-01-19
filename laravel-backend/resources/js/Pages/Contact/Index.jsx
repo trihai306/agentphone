@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useForm, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import LandingLayout from '../../Layouts/LandingLayout';
+import SeoHead from '../../Components/SeoHead';
 
 export default function Index() {
     const { t } = useTranslation();
@@ -28,6 +29,12 @@ export default function Index() {
 
     return (
         <LandingLayout>
+            <SeoHead
+                title="Liên Hệ CLICKAI - Hỗ trợ 24/7"
+                description="Liên hệ với đội ngũ hỗ trợ CLICKAI qua email, điện thoại hoặc form. Hỗ trợ kỹ thuật 24/7, tư vấn giải pháp automation cho doanh nghiệp."
+                keywords="liên hệ clickai, contact, hỗ trợ, support, tư vấn"
+                url="https://clickai.vn/contact"
+            />
             {/* Hero */}
             <section className="relative bg-gradient-to-b from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-24 overflow-hidden">
                 {/* Background Pattern */}

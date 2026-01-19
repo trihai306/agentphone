@@ -44,11 +44,18 @@ class HeartbeatWorker(
             return
         }
         
-        // Get device ID
-        val deviceId = android.provider.Settings.Secure.getString(
-            applicationContext.contentResolver,
-            android.provider.Settings.Secure.ANDROID_ID
-        )
+        // Get unique device ID from SharedPreferences
+        val prefs = applicationContext.getSharedPreferences("portal_device", Context.MODE_PRIVATE)
+        val deviceId = prefs.getString("unique_device_id", null) ?: run {
+            val androidId = android.provider.Settings.Secure.getString(
+                applicationContext.contentResolver,
+                android.provider.Settings.Secure.ANDROID_ID
+            )
+            val uniqueSuffix = java.util.UUID.randomUUID().toString().take(8)
+            val newDeviceId = "${androidId}_$uniqueSuffix"
+            prefs.edit().putString("unique_device_id", newDeviceId).apply()
+            newDeviceId
+        }
         
         // Determine API URL
         val apiUrl = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {

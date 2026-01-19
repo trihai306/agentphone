@@ -31,11 +31,21 @@ function SmartActionNode({ data, selected, id }) {
     const resourceId = data?.resourceId || data?.resource_id || '';
     const text = data?.text || '';
     const coordinates = data?.x && data?.y ? { x: data.x, y: data.y } : null;
-    const bounds = data?.bounds || '';
+    const boundsRaw = data?.bounds;
+    const bounds = typeof boundsRaw === 'object' && boundsRaw !== null
+        ? `${boundsRaw.width ?? 0}×${boundsRaw.height ?? 0} @ (${boundsRaw.left ?? 0}, ${boundsRaw.top ?? 0})`
+        : (typeof boundsRaw === 'string' ? boundsRaw : '');
     const timeout = data?.timeout || 5000;
     const retryCount = data?.retryCount || 0;
     const inputVariable = data?.inputVariable || '';
     const outputVariable = data?.outputVariable || '';
+
+    // Connected data source info (from data wire)
+    const connectedDataSource = data?.connectedDataSource || null;
+    const connectedVariable = data?.connectedVariable || '';
+
+    // Check if this node type supports data input (text_input, set_text)
+    const supportsDataInput = ['text_input', 'set_text'].includes(actionType);
 
     // Smart selector - priority display
     const selector = useMemo(() => {
@@ -53,14 +63,22 @@ function SmartActionNode({ data, selected, id }) {
             launch_app: { primary: '#10b981', name: 'emerald', label: 'Launch App' },
             tap: { primary: '#3b82f6', name: 'blue', label: 'Tap' },
             click: { primary: '#3b82f6', name: 'blue', label: 'Click' },
+            long_tap: { primary: '#6366f1', name: 'indigo', label: 'Long Tap' },
             long_press: { primary: '#6366f1', name: 'indigo', label: 'Long Press' },
             long_click: { primary: '#6366f1', name: 'indigo', label: 'Long Click' },
+            double_tap: { primary: '#8b5cf6', name: 'violet', label: 'Double Tap' },
             text_input: { primary: '#a855f7', name: 'purple', label: 'Type Text' },
             set_text: { primary: '#a855f7', name: 'purple', label: 'Set Text' },
             scroll: { primary: '#f59e0b', name: 'amber', label: 'Scroll' },
             scroll_up: { primary: '#f59e0b', name: 'amber', label: 'Scroll Up' },
             scroll_down: { primary: '#f59e0b', name: 'amber', label: 'Scroll Down' },
+            scroll_left: { primary: '#f59e0b', name: 'amber', label: 'Scroll Left' },
+            scroll_right: { primary: '#f59e0b', name: 'amber', label: 'Scroll Right' },
             swipe: { primary: '#06b6d4', name: 'cyan', label: 'Swipe' },
+            swipe_left: { primary: '#06b6d4', name: 'cyan', label: 'Swipe Left' },
+            swipe_right: { primary: '#06b6d4', name: 'cyan', label: 'Swipe Right' },
+            swipe_up: { primary: '#06b6d4', name: 'cyan', label: 'Swipe Up' },
+            swipe_down: { primary: '#06b6d4', name: 'cyan', label: 'Swipe Down' },
             back: { primary: '#ec4899', name: 'pink', label: 'Back' },
             home: { primary: '#ec4899', name: 'pink', label: 'Home' },
             focus: { primary: '#8b5cf6', name: 'violet', label: 'Focus' },
@@ -85,6 +103,24 @@ function SmartActionNode({ data, selected, id }) {
                     <circle cx="12" cy="12" r="8" strokeDasharray="4 2" />
                 </svg>
             ),
+            long_tap: (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <circle cx="12" cy="12" r="4" />
+                    <circle cx="12" cy="12" r="9" strokeDasharray="2 3" />
+                </svg>
+            ),
+            long_press: (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <circle cx="12" cy="12" r="4" />
+                    <circle cx="12" cy="12" r="9" strokeDasharray="2 3" />
+                </svg>
+            ),
+            double_tap: (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <circle cx="9" cy="12" r="3" />
+                    <circle cx="15" cy="12" r="3" />
+                </svg>
+            ),
             text_input: (
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
@@ -93,6 +129,51 @@ function SmartActionNode({ data, selected, id }) {
             scroll: (
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+            ),
+            scroll_up: (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+                </svg>
+            ),
+            scroll_down: (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+            ),
+            scroll_left: (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+            ),
+            scroll_right: (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+            ),
+            swipe: (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+            ),
+            swipe_left: (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+            ),
+            swipe_right: (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+            ),
+            swipe_up: (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
+            ),
+            swipe_down: (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                 </svg>
             ),
             open_app: (
@@ -106,6 +187,11 @@ function SmartActionNode({ data, selected, id }) {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
             ),
+            home: (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+            ),
         };
         return icons[actionType] || icons.tap;
     }, [actionType]);
@@ -115,7 +201,7 @@ function SmartActionNode({ data, selected, id }) {
 
     return (
         <div className={`transition-all duration-300 ${selected ? 'scale-[1.02]' : ''} ${isPending ? 'opacity-60' : ''}`}>
-            {/* Input Handle - Data & Flow */}
+            {/* Input Handle - Flow Control (Top) */}
             <Handle
                 type="target"
                 position={Position.Top}
@@ -127,6 +213,23 @@ function SmartActionNode({ data, selected, id }) {
                     boxShadow: isRunning ? `0 0 10px ${statusColor}` : 'none'
                 }}
             />
+
+            {/* Data Input Handle - Left side (only for nodes that support data input) */}
+            {supportsDataInput && (
+                <Handle
+                    type="target"
+                    position={Position.Left}
+                    id="data-input"
+                    className="!w-4 !h-4 !border-2 !-left-2 !rounded-lg transition-all"
+                    style={{
+                        backgroundColor: connectedDataSource ? '#f59e0b' : (isDark ? '#1a1a1a' : '#fff'),
+                        borderColor: '#f59e0b',
+                        boxShadow: connectedDataSource ? '0 0 10px rgba(245, 158, 11, 0.5)' : 'none',
+                        top: '50%',
+                        transform: 'translateY(-50%)'
+                    }}
+                />
+            )}
 
             {/* Main Node Container */}
             <div
@@ -196,6 +299,11 @@ function SmartActionNode({ data, selected, id }) {
                                 REC
                             </span>
                         )}
+                        {connectedDataSource && (
+                            <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-amber-500/20 text-amber-400">
+                                DATA
+                            </span>
+                        )}
                         {inputVariable && (
                             <span className="px-1.5 py-0.5 rounded-md text-[9px] font-medium bg-violet-500/20 text-violet-400">
                                 IN
@@ -242,6 +350,21 @@ function SmartActionNode({ data, selected, id }) {
                             </div>
                             <p className={`text-xs font-mono ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
                                 "{text}"
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Connected Data Source Visual (data wire connection) */}
+                    {connectedVariable && (
+                        <div className={`px-2.5 py-2 rounded-lg border ${isDark ? 'bg-amber-500/5 border-amber-500/20' : 'bg-amber-50 border-amber-200'}`}>
+                            <div className="flex items-center gap-1 mb-1">
+                                <svg className="w-3 h-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                                </svg>
+                                <span className="text-[10px] text-amber-400 font-medium">Data Binding</span>
+                            </div>
+                            <p className={`text-xs font-mono ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
+                                {connectedVariable}
                             </p>
                         </div>
                     )}

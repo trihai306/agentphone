@@ -71,13 +71,6 @@ class LoginActivity : AppCompatActivity() {
             }
         }
         
-        // Skip login button (for testing - REMOVE in production)
-        binding.btnSkipLogin.setOnClickListener {
-            Log.w(TAG, "⚠️ Skipping login (debug mode)")
-            Toast.makeText(this, "Skipping login (debug mode)", Toast.LENGTH_SHORT).show()
-            navigateToMain()
-        }
-        
         // Enter key on password field submits login
         binding.etPassword.setOnEditorActionListener { _, _, _ ->
             binding.btnLogin.performClick()
@@ -240,7 +233,6 @@ class LoginActivity : AppCompatActivity() {
         binding.btnLogin.isEnabled = !loading
         binding.etEmail.isEnabled = !loading
         binding.etPassword.isEnabled = !loading
-        binding.btnSkipLogin.isEnabled = !loading
         
         if (loading) {
             binding.btnLogin.text = "Signing in..."

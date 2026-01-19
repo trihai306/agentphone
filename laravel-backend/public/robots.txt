@@ -1,2 +1,36 @@
+# CLICKAI - AI-Powered Automation Platform
+# https://clickai.vn
+
 User-agent: *
-Disallow:
+Allow: /
+
+# Public pages
+Allow: /features
+Allow: /pricing
+Allow: /about
+Allow: /contact
+
+# Disallow authenticated/private areas
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /devices
+Disallow: /flows
+Disallow: /jobs
+Disallow: /campaigns
+Disallow: /data-collections
+Disallow: /media
+Disallow: /ai-studio
+Disallow: /ai-credits
+Disallow: /packages
+Disallow: /topup
+Disallow: /notifications
+Disallow: /error-reports
+
+# Disallow auth pages from indexing (duplicate content)
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+
+# Sitemap location
+Sitemap: https://clickai.vn/sitemap.xml

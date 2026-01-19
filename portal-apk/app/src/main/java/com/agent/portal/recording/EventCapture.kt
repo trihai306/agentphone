@@ -47,8 +47,8 @@ object EventCapture {
     private const val EVENT_UNKNOWN = "unknown"
 
     // ========== SMART FILTERING CONSTANTS ==========
-    // Minimum scroll delta threshold (skip micro-scrolls < 50px)
-    private const val MIN_SCROLL_DELTA_THRESHOLD = 50
+    // Minimum scroll delta threshold (skip micro-scrolls < 100px)
+    private const val MIN_SCROLL_DELTA_THRESHOLD = 100
     
     // Focus event suppression window (skip focus if tap/text within 500ms)
     private const val FOCUS_SUPPRESSION_WINDOW_MS = 500L
@@ -86,6 +86,13 @@ object EventCapture {
     // Track last focus event for suppression
     private var lastFocusResourceId: String = ""
     private var lastFocusTimestamp: Long = 0L
+    
+    // ========== TEXT DEDUPLICATION ==========
+    // Track last flushed text to prevent duplicates
+    private var lastFlushedTextResourceId: String = ""
+    private var lastFlushedTextValue: String = ""
+    private var lastFlushedTextTimestamp: Long = 0L
+    private const val DEDUP_WINDOW_MS = 1000L  // 1 second dedup window
 
     // Advanced gesture detector instance
     private val gestureDetector = AdvancedGestureDetector()
@@ -214,19 +221,67 @@ object EventCapture {
         }
         
         // Handle focus events with suppression logic
-        // Skip focus events that are likely to be followed by tap/text on same element
+        // IMPORTANT: Some apps (YouTube, etc.) don't send VIEW_CLICKED but do send focus events
+        // Convert focus-on-clickable-element to tap when user recently touched
         if (eventType == EVENT_FOCUS) {
             val node = event.source
-            val resourceId = node?.viewIdResourceName ?: ""
-            node?.recycle()
+            if (node == null) {
+                return null
+            }
+            
+            val resourceId = node.viewIdResourceName ?: ""
+            val isClickable = node.isClickable
+            val timeSinceTouchEnd = System.currentTimeMillis() - touchEndTimestamp
+            val recentlyTouched = isUserTouching() || timeSinceTouchEnd < 500 // 500ms window
+            
+            // IMPORTANT: If focus moves to a DIFFERENT element, flush any pending text
+            if (resourceId != pendingTextResourceId && pendingTextValue.isNotEmpty()) {
+                val flushedEvent = flushPendingTextInput()
+                if (flushedEvent != null) {
+                    Log.d(TAG, "✓ Focus changed - flushed pending text: '${flushedEvent.text.take(30)}...'")
+                    RecordingManager.addEvent(flushedEvent)
+                }
+            }
+            
+            // NEW: Convert focus-on-clickable to tap for apps that don't send VIEW_CLICKED
+            // Conditions: clickable element + user recently touched + different from last focus
+            if (isClickable && recentlyTouched && resourceId != lastFocusResourceId) {
+                Log.i(TAG, "🎯 Converting focus-on-clickable to tap: ${resourceId.takeLast(40)} (touched ${timeSinceTouchEnd}ms ago)")
+                
+                val elementData = extractElementData(node)
+                node.recycle()
+                
+                // Track this focus to avoid duplicate recording
+                lastFocusResourceId = resourceId
+                lastFocusTimestamp = System.currentTimeMillis()
+                
+                // Create tap event from this focus
+                return RecordedEvent(
+                    eventType = EVENT_TAP,
+                    timestamp = System.currentTimeMillis(),
+                    packageName = event.packageName?.toString() ?: "",
+                    className = event.className?.toString() ?: "",
+                    resourceId = elementData.resourceId,
+                    contentDescription = elementData.contentDescription,
+                    text = elementData.text,
+                    bounds = elementData.bounds,
+                    isClickable = elementData.isClickable,
+                    isEditable = elementData.isEditable,
+                    isScrollable = elementData.isScrollable,
+                    actionData = mapOf("inferred_from" to "focus_on_clickable"),
+                    x = elementData.centerX,
+                    y = elementData.centerY
+                )
+            }
+            
+            node.recycle()
             
             // Track this focus event
             lastFocusResourceId = resourceId
             lastFocusTimestamp = System.currentTimeMillis()
             
-            // Skip focus events - they add noise without value
-            // The actual action (tap, text input) will be recorded anyway
-            Log.d(TAG, "Skipping focus event (resource: ${resourceId.takeLast(30)})")
+            // Skip regular focus events - they add noise without value
+            Log.d(TAG, "Skipping focus event (resource: ${resourceId.takeLast(30)}, clickable: $isClickable, recentTouch: $recentlyTouched)")
             return null
         }
 
@@ -235,8 +290,21 @@ object EventCapture {
 
         return try {
             if (node != null) {
-                // Extract element properties from node
-                val elementData = extractElementData(node)
+                // For tap events, find the best element with most identifying info
+                // This handles cases where multiple overlapping elements exist at tap point
+                val targetNode = if (eventType == EVENT_TAP || eventType == EVENT_LONG_TAP) {
+                    findBestNodeWithInfo(node)
+                } else {
+                    node
+                }
+                
+                // Extract element properties from the selected node
+                val elementData = extractElementData(targetNode)
+                
+                // Recycle the better node if it's different from source
+                if (targetNode != node) {
+                    try { targetNode.recycle() } catch (e: Exception) { }
+                }
 
                 // Build action-specific data (may be enhanced with gesture detection)
                 var actionData = extractActionData(event)
@@ -424,6 +492,22 @@ object EventCapture {
     fun flushPendingTextInput(): RecordedEvent? {
         if (pendingTextValue.isEmpty()) return null
         
+        // ========== DEDUPLICATION CHECK ==========
+        // Skip if we just flushed the exact same text within dedup window
+        val now = System.currentTimeMillis()
+        if (pendingTextValue == lastFlushedTextValue &&
+            pendingTextResourceId == lastFlushedTextResourceId &&
+            (now - lastFlushedTextTimestamp) < DEDUP_WINDOW_MS) {
+            Log.d(TAG, "⚠️ Skipping duplicate flush: '${pendingTextValue.take(20)}...' (within ${now - lastFlushedTextTimestamp}ms)")
+            pendingTextValue = ""
+            pendingTextResourceId = ""
+            pendingTextTimestamp = 0
+            try { pendingTextNode?.recycle() } catch (_: Exception) {}
+            pendingTextNode = null
+            return null
+        }
+        // ========== END DEDUPLICATION CHECK ==========
+        
         Log.d(TAG, "✓ Flushing pending text input: '${pendingTextValue.take(20)}...'")
         
         val recordedEvent = RecordedEvent(
@@ -446,6 +530,11 @@ object EventCapture {
             y = pendingTextCenterY,
             nodeIndex = null
         )
+        
+        // Track this flush for deduplication
+        lastFlushedTextResourceId = pendingTextResourceId
+        lastFlushedTextValue = pendingTextValue
+        lastFlushedTextTimestamp = now
         
         // Clear pending state
         pendingTextValue = ""
@@ -500,43 +589,59 @@ object EventCapture {
         val className = event.className?.toString() ?: ""
         val currentTime = System.currentTimeMillis()
 
-        // ========== HYBRID USER-INITIATED SCROLL DETECTION ==========
-        // Uses Touch Exploration Mode if available, falls back to timing heuristics
+        // ========== USER-INITIATED SCROLL DETECTION ==========
+        // Uses timing-based heuristics to filter out animation/programmatic scrolls
+        // Touch Exploration Mode data is used as ADDITIONAL signal, not required
         
         // Check if we have touch exploration data (touchStartTimestamp > 0 means we've received touch events)
         val hasTouchExplorationData = touchStartTimestamp > 0 || touchEndTimestamp > 0
         
-        if (hasTouchExplorationData) {
-            // PRIMARY: Use Touch Exploration Mode (most accurate)
-            if (!isUserTouching()) {
-                Log.d(TAG, "Ignoring scroll: user NOT touching (Touch Exploration Mode)")
-                return null
-            }
+        // PRIMARY CHECK: If Touch Exploration is active AND user is currently touching, allow immediately
+        if (hasTouchExplorationData && isUserTouching()) {
             Log.d(TAG, "✓ Scroll allowed: user IS touching (Touch Exploration Mode)")
+            // Update timestamp for subsequent checks
+            lastUserTouchTimestamp = currentTime
         } else {
-            // FALLBACK: Use timing-based heuristics
-            // This handles devices/apps where Touch Exploration events aren't available
+            // FALLBACK: Use timing-based heuristics for all other cases
+            // This is the DEFAULT path for most devices where Touch Exploration is not enabled
             
-            // Check 1: Time since last tap/click (which updates lastUserTouchTimestamp)
-            val timeSinceUserTouch = currentTime - lastUserTouchTimestamp
-            if (timeSinceUserTouch > USER_TOUCH_TIMEOUT_MS && lastUserTouchTimestamp > 0) {
-                Log.d(TAG, "Ignoring scroll: no recent user touch (${timeSinceUserTouch}ms ago, fallback mode)")
-                return null
-            }
-            
-            // Check 2: Rapid consecutive scrolls (likely animation)
+            // Check 1: Rapid consecutive scrolls (likely animation) - MOST IMPORTANT FILTER
             val timeSinceLastScroll = currentTime - lastScrollTimestamp
             if (timeSinceLastScroll < MIN_USER_SCROLL_INTERVAL_MS && lastScrollTimestamp > 0) {
                 rapidScrollCounter++
                 if (rapidScrollCounter > MAX_RAPID_SCROLLS_ALLOWED) {
-                    Log.d(TAG, "Ignoring rapid scroll: ${rapidScrollCounter} consecutive (likely animation)")
+                    Log.d(TAG, "Ignoring rapid scroll: ${rapidScrollCounter} consecutive (likely animation, ${timeSinceLastScroll}ms apart)")
                     lastScrollTimestamp = currentTime
                     return null
                 }
             } else {
+                // Reset counter - this scroll is spaced out enough to be user-initiated
                 rapidScrollCounter = 0
             }
             lastScrollTimestamp = currentTime
+            
+            // Check 2: If we have prior touch history, verify it's recent
+            // BUT: Allow scroll if no prior touch (first interaction = scroll is valid)
+            if (lastUserTouchTimestamp > 0) {
+                val timeSinceUserTouch = currentTime - lastUserTouchTimestamp
+                if (timeSinceUserTouch > USER_TOUCH_TIMEOUT_MS) {
+                    // Exception: If this is a slow, isolated scroll (not rapid), it's likely user-initiated
+                    // Only block if we're in a rapid scroll sequence from animation
+                    if (rapidScrollCounter > 0) {
+                        Log.d(TAG, "Ignoring scroll: no recent user touch (${timeSinceUserTouch}ms ago) and rapid sequence")
+                        return null
+                    }
+                    // Otherwise, treat as new user touch and allow
+                    Log.d(TAG, "✓ Scroll allowed: slow isolated scroll treated as new user interaction")
+                }
+            } else {
+                // No prior touch history - this is the FIRST interaction
+                // Allow it - user might start with a scroll without tapping first
+                Log.d(TAG, "✓ Scroll allowed: first interaction (no prior touch history)")
+            }
+            
+            // Update touch timestamp for subsequent checks
+            lastUserTouchTimestamp = currentTime
         }
         
         // SECONDARY: Activity change detection - skip scroll during screen transitions
@@ -908,6 +1013,151 @@ object EventCapture {
         }
 
         return ""
+    }
+
+    /**
+     * Find the best node with identifying information by traversing up the tree.
+     * Scores each node based on the presence of text, resourceId, and contentDescription.
+     * Returns the node with the highest score (most identifying info).
+     * 
+     * @param sourceNode The initial node from event.source
+     * @return The best node with most info (never null, returns sourceNode if nothing better found)
+     */
+    private fun findBestNodeWithInfo(sourceNode: AccessibilityNodeInfo): AccessibilityNodeInfo {
+        var bestNode = sourceNode
+        var bestScore = scoreNode(sourceNode)
+        
+        // Traverse up to find a better parent with more info
+        var currentNode: AccessibilityNodeInfo? = sourceNode
+        var depth = 0
+        val maxDepth = 5  // Don't go too far up
+        
+        val nodesToRecycle = mutableListOf<AccessibilityNodeInfo>()
+        
+        try {
+            while (currentNode != null && depth < maxDepth) {
+                val parentNode = currentNode.parent
+                if (parentNode == null) break
+                
+                // Only consider clickable or focusable parents
+                if (parentNode.isClickable || parentNode.isFocusable || parentNode.isLongClickable) {
+                    val parentScore = scoreNode(parentNode)
+                    
+                    // Prefer parent if it has more info
+                    if (parentScore > bestScore) {
+                        // Recycle old best if it's not the source
+                        if (bestNode != sourceNode) {
+                            nodesToRecycle.add(bestNode)
+                        }
+                        bestNode = parentNode
+                        bestScore = parentScore
+                        Log.d(TAG, "🎯 Found better parent: score=$parentScore, id=${parentNode.viewIdResourceName?.takeLast(30)}")
+                    } else {
+                        nodesToRecycle.add(parentNode)
+                    }
+                } else {
+                    nodesToRecycle.add(parentNode)
+                }
+                
+                currentNode = parentNode
+                depth++
+            }
+            
+            // Also check children of sourceNode for elements with text
+            if (bestScore < 3) {  // If current best doesn't have much info
+                val childWithInfo = findChildWithInfo(sourceNode)
+                if (childWithInfo != null) {
+                    val childScore = scoreNode(childWithInfo)
+                    if (childScore > bestScore) {
+                        // Keep the bounds of parent but use child's info
+                        Log.d(TAG, "🎯 Using child info: score=$childScore, text=${childWithInfo.text?.take(20)}")
+                        // We don't replace bestNode here, but we'll merge info later
+                    }
+                    childWithInfo.recycle()
+                }
+            }
+            
+        } catch (e: Exception) {
+            Log.w(TAG, "Error finding best node: ${e.message}")
+        } finally {
+            // Recycle nodes we don't need
+            nodesToRecycle.forEach { 
+                try { it.recycle() } catch (e: Exception) { }
+            }
+        }
+        
+        if (bestNode != sourceNode) {
+            Log.i(TAG, "✓ Selected better element: score=$bestScore vs original=${scoreNode(sourceNode)}")
+        }
+        
+        return bestNode
+    }
+    
+    /**
+     * Score a node based on how much identifying information it has.
+     * Higher score = more info = better for element selection.
+     */
+    private fun scoreNode(node: AccessibilityNodeInfo): Int {
+        var score = 0
+        
+        // Text is most valuable (direct label)
+        if (!node.text.isNullOrBlank()) {
+            score += 3
+        }
+        
+        // Content description (accessibility label)
+        if (!node.contentDescription.isNullOrBlank()) {
+            score += 2
+        }
+        
+        // Resource ID (dev identifier)
+        if (!node.viewIdResourceName.isNullOrBlank()) {
+            score += 2
+        }
+        
+        // Bonus for being clickable (actionable element)
+        if (node.isClickable) {
+            score += 1
+        }
+        
+        // Bonus for being editable (input field)
+        if (node.isEditable) {
+            score += 1
+        }
+        
+        return score
+    }
+    
+    /**
+     * Find a child node that has text or content description.
+     * Useful when parent is clickable but label is in a child TextView.
+     */
+    private fun findChildWithInfo(parent: AccessibilityNodeInfo): AccessibilityNodeInfo? {
+        try {
+            for (i in 0 until parent.childCount) {
+                val child = parent.getChild(i) ?: continue
+                
+                // Check if this child has info
+                if (!child.text.isNullOrBlank() || !child.contentDescription.isNullOrBlank()) {
+                    return child
+                }
+                
+                // Check grandchildren (1 level deeper)
+                for (j in 0 until child.childCount) {
+                    val grandchild = child.getChild(j) ?: continue
+                    if (!grandchild.text.isNullOrBlank() || !grandchild.contentDescription.isNullOrBlank()) {
+                        child.recycle()
+                        return grandchild
+                    }
+                    grandchild.recycle()
+                }
+                
+                child.recycle()
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error finding child with info: ${e.message}")
+        }
+        return null
     }
 
     /**

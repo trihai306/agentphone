@@ -46,6 +46,8 @@ class DeviceStatusChanged implements ShouldBroadcast
                 'model' => $this->device->model,
                 'status' => $this->status,
                 'is_online' => $this->status === 'online',
+                'accessibility_enabled' => $this->device->accessibility_enabled ?? false,
+                'socket_connected' => $this->device->socket_connected ?? false,
             ],
             'status' => $this->status,
             'timestamp' => now()->toISOString(),

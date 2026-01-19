@@ -19,12 +19,12 @@ export default function LandingLayout({ children }) {
                     <div className="flex items-center justify-between h-16">
                         {/* Logo */}
                         <Link href="/" className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
                                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                 </svg>
                             </div>
-                            <span className="text-xl font-bold text-gray-900 dark:text-white">DeviceHub</span>
+                            <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">CLICKAI</span>
                         </Link>
 
                         {/* Desktop Navigation */}
@@ -171,15 +171,15 @@ export default function LandingLayout({ children }) {
                         {/* Company Info */}
                         <div className="col-span-1 md:col-span-2">
                             <div className="flex items-center space-x-2 mb-4">
-                                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
                                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                     </svg>
                                 </div>
-                                <span className="text-xl font-bold text-gray-900 dark:text-white">DeviceHub</span>
+                                <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">CLICKAI</span>
                             </div>
                             <p className="text-gray-600 dark:text-gray-400 mb-4">
-                                Manage your devices efficiently with our powerful platform. Monitor, control, and optimize your device fleet.
+                                Nền tảng tự động hoá phone farm chuyên nghiệp. Kéo thả workflow, nuôi nick tự động, chạy 24/7.
                             </p>
                             <div className="flex space-x-4">
                                 <SocialLink href="#" icon="twitter" />
@@ -218,7 +218,7 @@ export default function LandingLayout({ children }) {
                     {/* Bottom Bar */}
                     <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
                         <p className="text-center text-gray-500 dark:text-gray-400 text-sm">
-                            © {new Date().getFullYear()} DeviceHub. All rights reserved.
+                            © {new Date().getFullYear()} CLICKAI. All rights reserved.
                         </p>
                     </div>
                 </div>
@@ -231,11 +231,10 @@ function NavLink({ href, children, active = false }) {
     return (
         <Link
             href={href}
-            className={`font-medium transition-all ${
-                active
+            className={`font-medium transition-all ${active
                     ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
                     : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
-            }`}
+                }`}
         >
             {children}
         </Link>

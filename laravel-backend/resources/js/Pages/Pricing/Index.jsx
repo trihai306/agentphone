@@ -2,11 +2,19 @@ import { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import LandingLayout from '../../Layouts/LandingLayout';
+import SeoHead, { schemas } from '../../Components/SeoHead';
 
 export default function Index({ packages = [], auth }) {
     const { t } = useTranslation();
     const [billingPeriod, setBillingPeriod] = useState('monthly');
     const [selectedType, setSelectedType] = useState('all');
+
+    // FAQ data for structured data
+    const faqs = [
+        { question: 'Tôi có thể thay đổi gói sau khi đăng ký không?', answer: 'Có, bạn có thể nâng cấp hoặc hạ cấp gói bất cứ lúc nào.' },
+        { question: 'Phương thức thanh toán nào được chấp nhận?', answer: 'Chúng tôi chấp nhận thanh toán qua thẻ tín dụng/ghi nợ, chuyển khoản ngân hàng, và ví điện tử.' },
+        { question: 'Có thời gian dùng thử miễn phí không?', answer: 'Có! Tất cả các gói đều có 14 ngày dùng thử miễn phí.' },
+    ];
 
     const packageTypes = [
         { key: 'all', label: t('pricing.all', { defaultValue: 'Tất cả' }), icon: 'grid' },
@@ -29,6 +37,13 @@ export default function Index({ packages = [], auth }) {
 
     return (
         <LandingLayout>
+            <SeoHead
+                title="Bảng giá CLICKAI - Plans phù hợp mọi quy mô doanh nghiệp"
+                description="Lựa chọn gói dịch vụ CLICKAI phù hợp với nhu cầu. Dùng thử miễn phí 14 ngày, hỗ trợ 24/7, nâng cấp bất cứ lúc nào. Giá minh bạch, không phí ẩn."
+                keywords="bảng giá clickai, pricing, gói dịch vụ, subscription, automation pricing"
+                url="https://clickai.vn/pricing"
+                structuredData={schemas.faqPage(faqs)}
+            />
             {/* Hero Section */}
             <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
                 {/* Animated Background */}
@@ -63,8 +78,8 @@ export default function Index({ packages = [], auth }) {
                             <button
                                 onClick={() => setBillingPeriod('monthly')}
                                 className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${billingPeriod === 'monthly'
-                                        ? 'bg-white text-gray-900 shadow-lg'
-                                        : 'text-gray-300 hover:text-white'
+                                    ? 'bg-white text-gray-900 shadow-lg'
+                                    : 'text-gray-300 hover:text-white'
                                     }`}
                             >
                                 {t('pricing.monthly', { defaultValue: 'Hàng tháng' })}
@@ -72,8 +87,8 @@ export default function Index({ packages = [], auth }) {
                             <button
                                 onClick={() => setBillingPeriod('yearly')}
                                 className={`relative px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${billingPeriod === 'yearly'
-                                        ? 'bg-white text-gray-900 shadow-lg'
-                                        : 'text-gray-300 hover:text-white'
+                                    ? 'bg-white text-gray-900 shadow-lg'
+                                    : 'text-gray-300 hover:text-white'
                                     }`}
                             >
                                 {t('pricing.yearly', { defaultValue: 'Hàng năm' })}
@@ -95,8 +110,8 @@ export default function Index({ packages = [], auth }) {
                                 key={type.key}
                                 onClick={() => setSelectedType(type.key)}
                                 className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl font-medium transition-all duration-300 whitespace-nowrap ${selectedType === type.key
-                                        ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30'
-                                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+                                    ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30'
+                                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
                                     }`}
                             >
                                 <TypeIcon type={type.icon} />
@@ -267,11 +282,22 @@ function PricingCard({ package: pkg, billingPeriod, onSelect, index }) {
 
     const typeInfo = typeLabels[pkg.type] || typeLabels.subscription;
 
+    // Format price in a more compact way for large VNĐ amounts
+    const formatCompactPrice = (amount) => {
+        if (amount >= 1000000) {
+            return `${(amount / 1000000).toFixed(amount % 1000000 === 0 ? 0 : 1)}tr`;
+        }
+        if (amount >= 1000) {
+            return `${(amount / 1000).toFixed(0)}k`;
+        }
+        return amount.toLocaleString('vi-VN');
+    };
+
     return (
         <div
-            className={`group relative flex flex-col rounded-3xl transition-all duration-500 hover:-translate-y-2 ${pkg.is_featured
-                    ? 'bg-gradient-to-br from-purple-600 via-pink-600 to-blue-600 p-[2px] shadow-2xl shadow-purple-500/30'
-                    : 'bg-white dark:bg-gray-800 shadow-xl hover:shadow-2xl border border-gray-200 dark:border-gray-700'
+            className={`group relative flex flex-col h-full rounded-3xl transition-all duration-500 hover:-translate-y-2 ${pkg.is_featured
+                ? 'bg-gradient-to-br from-purple-600 via-pink-600 to-blue-600 p-[2px] shadow-2xl shadow-purple-500/30'
+                : 'bg-white dark:bg-gray-800 shadow-xl hover:shadow-2xl border border-gray-200 dark:border-gray-700'
                 }`}
             style={{ animationDelay: `${index * 100}ms` }}
         >
@@ -279,9 +305,9 @@ function PricingCard({ package: pkg, billingPeriod, onSelect, index }) {
             <div className={`flex flex-col h-full rounded-[22px] ${pkg.is_featured ? 'bg-white dark:bg-gray-800' : ''}`}>
                 {/* Badge */}
                 {pkg.badge && (
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
                         <span
-                            className="px-4 py-1.5 rounded-full text-sm font-bold text-white shadow-lg"
+                            className="px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg whitespace-nowrap"
                             style={{ backgroundColor: pkg.badge_color || '#8B5CF6' }}
                         >
                             {pkg.badge}
@@ -289,21 +315,21 @@ function PricingCard({ package: pkg, billingPeriod, onSelect, index }) {
                     </div>
                 )}
 
-                <div className="flex-1 p-8">
+                <div className="flex-1 p-6">
                     {/* Header */}
-                    <div className="flex items-start justify-between mb-6">
-                        <div>
-                            <span className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold ${typeInfo.color}`}>
+                    <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1 min-w-0">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold ${typeInfo.color}`}>
                                 {typeInfo.label}
                             </span>
-                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-3">
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-2 truncate">
                                 {pkg.name}
                             </h3>
                         </div>
                         {pkg.icon && (
-                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${pkg.is_featured
-                                    ? 'bg-gradient-to-br from-purple-500 to-pink-500'
-                                    : 'bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600'
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ml-3 ${pkg.is_featured
+                                ? 'bg-gradient-to-br from-purple-500 to-pink-500'
+                                : 'bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600'
                                 }`}>
                                 <PackageIcon icon={pkg.icon} className={pkg.is_featured ? 'text-white' : 'text-gray-600 dark:text-gray-300'} />
                             </div>
@@ -311,28 +337,29 @@ function PricingCard({ package: pkg, billingPeriod, onSelect, index }) {
                     </div>
 
                     {/* Description */}
-                    <p className="text-gray-600 dark:text-gray-400 mb-6 line-clamp-2">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2 min-h-[2.5rem]">
                         {pkg.description}
                     </p>
 
                     {/* Price */}
-                    <div className="mb-6">
-                        <div className="flex items-baseline gap-2">
+                    <div className="mb-5">
+                        <div className="flex items-baseline gap-2 flex-wrap">
                             {pkg.original_price && pkg.original_price > pkg.price && (
-                                <span className="text-lg text-gray-400 line-through">
-                                    {formatCurrency(pkg.original_price)}
+                                <span className="text-sm text-gray-400 line-through">
+                                    {formatCompactPrice(pkg.original_price)}đ
                                 </span>
                             )}
-                            <span className="text-4xl font-extrabold text-gray-900 dark:text-white">
-                                {formatCurrency(price)}
+                            <span className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white">
+                                {formatCompactPrice(price)}
                             </span>
+                            <span className="text-lg font-bold text-gray-600 dark:text-gray-400">đ</span>
                         </div>
-                        <div className="flex items-center gap-2 mt-1">
-                            <span className="text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <span className="text-sm text-gray-500 dark:text-gray-400">
                                 {pkg.type === 'subscription'
-                                    ? `/${billingPeriod === 'yearly' ? 'tháng' : 'tháng'}`
+                                    ? '/tháng'
                                     : pkg.type === 'credits'
-                                        ? `cho ${pkg.credits} credits`
+                                        ? `cho ${pkg.credits?.toLocaleString()} credits`
                                         : 'trọn đời'
                                 }
                             </span>
@@ -343,51 +370,51 @@ function PricingCard({ package: pkg, billingPeriod, onSelect, index }) {
                             )}
                         </div>
                         {yearlyTotal && (
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                {formatCurrency(yearlyTotal)}/năm khi thanh toán hàng năm
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Tiết kiệm {formatCompactPrice(yearlyTotal * 0.25)}đ/năm
                             </p>
                         )}
                     </div>
 
                     {/* Key Stats */}
-                    <div className="grid grid-cols-2 gap-3 mb-6">
+                    <div className="grid grid-cols-2 gap-2 mb-5">
                         {pkg.max_devices && (
-                            <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                                <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="flex items-center gap-2 p-2.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <svg className="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                 </svg>
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {pkg.max_devices === -1 ? 'Không giới hạn' : `${pkg.max_devices} thiết bị`}
+                                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
+                                    {pkg.max_devices === -1 ? 'Unlimited' : `${pkg.max_devices} thiết bị`}
                                 </span>
                             </div>
                         )}
                         {pkg.duration_days && pkg.type === 'subscription' && (
-                            <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="flex items-center gap-2 p-2.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
                                     {pkg.duration_days} ngày
                                 </span>
                             </div>
                         )}
                         {pkg.credits && (
-                            <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                                <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="flex items-center gap-2 p-2.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <svg className="w-4 h-4 text-purple-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                 </svg>
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {pkg.credits.toLocaleString()} credits
+                                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
+                                    {pkg.credits >= 1000 ? `${(pkg.credits / 1000).toFixed(0)}k` : pkg.credits} credits
                                 </span>
                             </div>
                         )}
                         {pkg.is_trial && (
-                            <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
-                                <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="flex items-center gap-2 p-2.5 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                                <svg className="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                <span className="text-sm font-medium text-amber-700 dark:text-amber-400">
-                                    {pkg.trial_days} ngày dùng thử
+                                <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
+                                    {pkg.trial_days} ngày thử
                                 </span>
                             </div>
                         )}
@@ -395,31 +422,31 @@ function PricingCard({ package: pkg, billingPeriod, onSelect, index }) {
 
                     {/* Features */}
                     {pkg.features && pkg.features.length > 0 && (
-                        <div className="space-y-3 mb-6">
-                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wide">
+                        <div className="space-y-2">
+                            <h4 className="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wide">
                                 Tính năng bao gồm
                             </h4>
-                            <ul className="space-y-2">
-                                {(showAllFeatures ? pkg.features : pkg.features.slice(0, 5)).map((feature, idx) => (
-                                    <li key={idx} className="flex items-start gap-3">
-                                        <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <ul className="space-y-1.5">
+                                {(showAllFeatures ? pkg.features : pkg.features.slice(0, 4)).map((feature, idx) => (
+                                    <li key={idx} className="flex items-start gap-2">
+                                        <svg className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                         </svg>
-                                        <span className="text-sm text-gray-600 dark:text-gray-400">{feature}</span>
+                                        <span className="text-xs text-gray-600 dark:text-gray-400 line-clamp-1">{feature}</span>
                                     </li>
                                 ))}
                             </ul>
-                            {pkg.features.length > 5 && (
+                            {pkg.features.length > 4 && (
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         setShowAllFeatures(!showAllFeatures);
                                     }}
-                                    className="flex items-center gap-1.5 ml-8 text-sm text-purple-600 dark:text-purple-400 font-medium hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
+                                    className="flex items-center gap-1 ml-6 text-xs text-purple-600 dark:text-purple-400 font-medium hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
                                 >
-                                    <span>{showAllFeatures ? 'Ẩn bớt' : `+${pkg.features.length - 5} tính năng khác`}</span>
+                                    <span>{showAllFeatures ? 'Ẩn bớt' : `+${pkg.features.length - 4} tính năng`}</span>
                                     <svg
-                                        className={`w-4 h-4 transition-transform duration-300 ${showAllFeatures ? 'rotate-180' : ''}`}
+                                        className={`w-3 h-3 transition-transform duration-300 ${showAllFeatures ? 'rotate-180' : ''}`}
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -433,20 +460,20 @@ function PricingCard({ package: pkg, billingPeriod, onSelect, index }) {
                 </div>
 
                 {/* CTA Button */}
-                <div className="p-8 pt-0">
+                <div className="p-6 pt-0 mt-auto">
                     <button
                         onClick={onSelect}
-                        className={`w-full py-4 px-6 rounded-2xl font-bold text-center transition-all duration-300 ${pkg.is_featured
-                                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 hover:-translate-y-0.5'
-                                : 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100'
+                        className={`w-full py-3 px-4 rounded-xl font-bold text-sm text-center transition-all duration-300 ${pkg.is_featured
+                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 hover:-translate-y-0.5'
+                            : 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100'
                             }`}
                     >
-                        {pkg.is_trial ? 'Bắt đầu dùng thử' : pkg.price === 0 ? 'Bắt đầu miễn phí' : 'Chọn gói này'}
+                        {pkg.is_trial ? 'Dùng thử' : pkg.price === 0 ? 'Miễn phí' : 'Chọn gói này'}
                     </button>
 
                     {pkg.active_subscribers > 0 && (
-                        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-3">
-                            <span className="font-medium text-gray-700 dark:text-gray-300">{pkg.active_subscribers}</span> người đang sử dụng
+                        <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">
+                            <span className="font-medium text-gray-700 dark:text-gray-300">{pkg.active_subscribers}</span> người đang dùng
                         </p>
                     )}
                 </div>

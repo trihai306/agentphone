@@ -27,9 +27,12 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
         },
         {
             title: t('navigation.automation', { defaultValue: 'Automation' }),
+            highlight: true, // Make this section stand out
             items: [
-                { href: '/flows', icon: 'flow', label: t('navigation.workflows'), active: url?.startsWith('/flows'), highlight: true },
-                { href: '/data-collections', icon: 'database', label: t('navigation.data_collections'), active: url?.startsWith('/data-collections') },
+                { href: '/flows', icon: 'flow', label: t('navigation.workflows'), active: url?.startsWith('/flows'), highlight: true, description: 'Tạo kịch bản' },
+                { href: '/campaigns', icon: 'seed', label: 'Campaigns', active: url?.startsWith('/campaigns'), highlight: true, description: 'Nuôi tài khoản' },
+                { href: '/jobs', icon: 'play', label: 'Jobs', active: url?.startsWith('/jobs'), description: 'Lịch sử chạy' },
+                { href: '/data-collections', icon: 'database', label: t('navigation.data_collections'), active: url?.startsWith('/data-collections'), description: 'Quản lý dữ liệu' },
             ]
         },
         {
@@ -146,12 +149,19 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
                 {/* Navigation */}
                 <nav className="flex-1 px-3 py-2 space-y-6 overflow-y-auto scrollbar-thin">
                     {navSections.map((section, sectionIndex) => (
-                        <div key={sectionIndex}>
+                        <div key={sectionIndex} className={section.highlight && !collapsed ? `p-2 rounded-2xl ${isDark ? 'bg-gradient-to-br from-violet-500/10 to-purple-500/5 border border-violet-500/20' : 'bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-200/50'}` : ''}>
                             {!collapsed && (
-                                <p className={`px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider ${isDark ? 'text-gray-600' : 'text-gray-400'
-                                    }`}>
-                                    {section.title}
-                                </p>
+                                <div className={`flex items-center gap-2 px-2 mb-2 ${section.highlight ? '' : ''}`}>
+                                    {section.highlight && (
+                                        <span className="text-xs">🤖</span>
+                                    )}
+                                    <p className={`text-[10px] font-semibold uppercase tracking-wider ${section.highlight
+                                            ? isDark ? 'text-violet-400' : 'text-violet-600'
+                                            : isDark ? 'text-gray-600' : 'text-gray-400'
+                                        }`}>
+                                        {section.title}
+                                    </p>
+                                </div>
                             )}
                             <div className="space-y-1">
                                 {section.items.map((item, itemIndex) => (

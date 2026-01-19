@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import LandingLayout from '../../Layouts/LandingLayout';
+import SeoHead from '../../Components/SeoHead';
 
 export default function Index({ stats, team }) {
     const { t } = useTranslation();
@@ -17,6 +18,12 @@ export default function Index({ stats, team }) {
 
     return (
         <LandingLayout>
+            <SeoHead
+                title="Về Chúng Tôi - CLICKAI"
+                description="Tìm hiểu về CLICKAI - đội ngũ và sứ mệnh của chúng tôi. Kiến tạo tương lai số, đơn giản hoá quản lý thiết bị cho mọi doanh nghiệp từ năm 2020."
+                keywords="về clickai, about us, đội ngũ, sứ mệnh, lịch sử phát triển"
+                url="https://clickai.vn/about"
+            />
             {/* Hero Section - Premium Glassmorphic Design */}
             <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900">
                 {/* Animated Background Orbs */}

@@ -6,6 +6,53 @@ import AppLayout from '../../Layouts/AppLayout';
 import { useToast } from '@/Components/Layout/ToastProvider';
 import { useTheme } from '@/Contexts/ThemeContext';
 
+// Provider badge colors - professional palette
+const providerColors = {
+    'gemini': {
+        dark: { bg: 'bg-violet-500/15', text: 'text-violet-400', border: 'border-violet-500/30' },
+        light: { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200' },
+        label: 'Google'
+    },
+    'gemini-veo': {
+        dark: { bg: 'bg-violet-500/15', text: 'text-violet-400', border: 'border-violet-500/30' },
+        light: { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200' },
+        label: 'Google'
+    },
+    'kling': {
+        dark: { bg: 'bg-sky-500/15', text: 'text-sky-400', border: 'border-sky-500/30' },
+        light: { bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200' },
+        label: 'Kling AI'
+    },
+    'replicate': {
+        dark: { bg: 'bg-slate-500/15', text: 'text-slate-400', border: 'border-slate-500/30' },
+        light: { bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-200' },
+        label: 'Replicate'
+    },
+};
+
+const badgeStyles = {
+    'purple': {
+        dark: 'bg-violet-500/20 text-violet-300 border border-violet-500/30',
+        light: 'bg-violet-100 text-violet-700 border border-violet-200',
+    },
+    'blue': {
+        dark: 'bg-sky-500/20 text-sky-300 border border-sky-500/30',
+        light: 'bg-sky-100 text-sky-700 border border-sky-200',
+    },
+    'green': {
+        dark: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30',
+        light: 'bg-emerald-100 text-emerald-700 border border-emerald-200',
+    },
+    'yellow': {
+        dark: 'bg-amber-500/20 text-amber-300 border border-amber-500/30',
+        light: 'bg-amber-100 text-amber-700 border border-amber-200',
+    },
+    'red': {
+        dark: 'bg-rose-500/20 text-rose-300 border border-rose-500/30',
+        light: 'bg-rose-100 text-rose-700 border border-rose-200',
+    },
+};
+
 export default function AiStudioIndex({ currentCredits = 0, imageModels = [], videoModels = [], recentGenerations = [] }) {
     const { t } = useTranslation();
     const { auth } = usePage().props;
@@ -14,28 +61,100 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
     const isDark = theme === 'dark';
     const textareaRef = useRef(null);
 
-    const [type, setType] = useState('image');
+    const [type, setType] = useState('video');
     const [model, setModel] = useState('');
     const [prompt, setPrompt] = useState('');
     const [negativePrompt, setNegativePrompt] = useState('');
-    const [params, setParams] = useState({ width: 1024, height: 1024 });
+    const [params, setParams] = useState({
+        width: 1024,
+        height: 1024,
+        duration: 6,
+        resolution: '1080p',
+        aspect_ratio: '16:9',
+        generate_audio: true,
+    });
     const [generating, setGenerating] = useState(false);
     const [currentGeneration, setCurrentGeneration] = useState(null);
     const [history, setHistory] = useState(recentGenerations);
-    const [showSettings, setShowSettings] = useState(false);
+    const [showSettings, setShowSettings] = useState(true);
+    const [generationMode, setGenerationMode] = useState('text');
+    const [sourceImage, setSourceImage] = useState(null);
+    const [sourceImagePreview, setSourceImagePreview] = useState(null);
 
     const models = type === 'image' ? imageModels : videoModels;
     const selectedModel = models.find(m => m.id === model);
 
-    useEffect(() => {
-        if (models.length > 0 && !model) {
-            setModel(models[0].id);
-        }
-    }, [models]);
+    // Elapsed time for current generation
+    const [elapsedTime, setElapsedTime] = useState(0);
+
+    // Theme-aware class helpers
+    const themeClasses = {
+        // Backgrounds - match AppLayout's bg colors
+        pageBg: isDark ? 'bg-[#0a0a0a]' : 'bg-[#fafafa]',
+        cardBg: isDark ? 'bg-[#1a1a1a]' : 'bg-white',
+        cardBgHover: isDark ? 'hover:bg-[#2a2a2a]' : 'hover:bg-slate-50',
+        cardBgActive: isDark ? 'bg-[#2a2a2a]' : 'bg-slate-100',
+        inputBg: isDark ? 'bg-[#1a1a1a]' : 'bg-white',
+
+        // Borders
+        border: isDark ? 'border-[#2a2a2a]' : 'border-slate-200',
+        borderHover: isDark ? 'hover:border-[#3a3a3a]' : 'hover:border-slate-300',
+        borderActive: isDark ? 'border-violet-500/50' : 'border-violet-400',
+
+        // Text
+        textPrimary: isDark ? 'text-white' : 'text-slate-900',
+        textSecondary: isDark ? 'text-slate-400' : 'text-slate-500',
+        textMuted: isDark ? 'text-slate-500' : 'text-slate-400',
+        textPlaceholder: isDark ? 'placeholder-slate-500' : 'placeholder-slate-400',
+
+        // Interactive states
+        focusRing: isDark ? 'focus:ring-violet-500/30 focus:border-violet-500' : 'focus:ring-violet-500/20 focus:border-violet-400',
+    };
 
     useEffect(() => {
+        if (models.length > 0 && !model) {
+            const defaultModel = type === 'video'
+                ? models.find(m => m.id === 'veo-3.1') || models[0]
+                : models.find(m => m.id === 'flux-1.1-pro') || models[0];
+            setModel(defaultModel.id);
+        }
+    }, [models, type]);
+
+    // Restore pending generation on page load
+    useEffect(() => {
+        const pendingGen = recentGenerations.find(g => g.status === 'pending' || g.status === 'processing');
+        if (pendingGen) {
+            setCurrentGeneration(pendingGen);
+            setGenerating(true);
+        }
+    }, []);
+
+    // Elapsed time timer
+    useEffect(() => {
+        if (!currentGeneration || !currentGeneration.created_at) return;
+        if (currentGeneration.status === 'completed' || currentGeneration.status === 'failed') {
+            return;
+        }
+
+        // Calculate initial elapsed time
+        const createdAt = new Date(currentGeneration.created_at).getTime();
+        const updateElapsed = () => {
+            const now = Date.now();
+            setElapsedTime(Math.floor((now - createdAt) / 1000));
+        };
+
+        updateElapsed();
+        const timer = setInterval(updateElapsed, 1000);
+        return () => clearInterval(timer);
+    }, [currentGeneration?.id, currentGeneration?.status]);
+
+    // Poll for status updates
+    useEffect(() => {
         if (!currentGeneration || !currentGeneration.id) return;
-        if (currentGeneration.status === 'completed' || currentGeneration.status === 'failed') return;
+        if (currentGeneration.status === 'completed' || currentGeneration.status === 'failed') {
+            setGenerating(false);
+            return;
+        }
 
         const interval = setInterval(async () => {
             try {
@@ -43,6 +162,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                 setCurrentGeneration(response.data.generation);
                 if (response.data.generation.status === 'completed' || response.data.generation.status === 'failed') {
                     setHistory(prev => [response.data.generation, ...prev.filter(g => g.id !== currentGeneration.id)]);
+                    setGenerating(false);
                 }
             } catch (error) {
                 console.error('Failed to check status:', error);
@@ -58,20 +178,27 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
             return;
         }
 
-        if (currentCredits < (selectedModel?.credits_cost || 0)) {
+        const estimatedCost = calculateEstimatedCost();
+        if (currentCredits < estimatedCost) {
             addToast('Insufficient credits', 'warning');
             return;
         }
 
         setGenerating(true);
         try {
-            const endpoint = type === 'image' ? '/ai-studio/generate/image' : '/ai-studio/generate/video';
-            const response = await axios.post(endpoint, {
+            let endpoint = type === 'image' ? '/ai-studio/generate/image' : '/ai-studio/generate/video';
+            let payload = {
                 model,
                 prompt,
                 negative_prompt: negativePrompt,
                 ...params,
-            });
+            };
+
+            if (type === 'video' && generationMode === 'image' && sourceImage) {
+                payload.source_image = sourceImage;
+            }
+
+            const response = await axios.post(endpoint, payload);
 
             setCurrentGeneration(response.data.generation);
             setHistory(prev => [response.data.generation, ...prev]);
@@ -86,71 +213,136 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
     const handleTypeChange = (newType) => {
         setType(newType);
         setModel('');
-        setParams(newType === 'image' ? { width: 1024, height: 1024 } : { duration: 5 });
+        setGenerationMode('text');
+        setSourceImage(null);
+        setSourceImagePreview(null);
+        if (newType === 'image') {
+            setParams({ width: 1024, height: 1024, aspect_ratio: '1:1' });
+        } else {
+            setParams({
+                duration: 6,
+                resolution: '1080p',
+                aspect_ratio: '16:9',
+                generate_audio: true,
+            });
+        }
     };
 
-    const aspectRatios = [
-        { label: '1:1', w: 1024, h: 1024 },
-        { label: '16:9', w: 1920, h: 1080 },
-        { label: '9:16', w: 1080, h: 1920 },
-        { label: '4:3', w: 1024, h: 768 },
-    ];
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setSourceImage(file);
+            setSourceImagePreview(URL.createObjectURL(file));
+        }
+    };
+
+    const calculateEstimatedCost = () => {
+        if (!selectedModel) return 0;
+        if (type === 'image') {
+            return selectedModel.credits_cost;
+        }
+        const duration = params.duration || 5;
+        let cost = selectedModel.credits_cost * duration;
+        if (params.resolution === '1080p') cost *= 1.5;
+        if (params.resolution === '4k') cost *= 2.0;
+        return Math.ceil(cost);
+    };
+
+    const aspectRatios = type === 'image'
+        ? [
+            { label: '1:1', w: 1024, h: 1024, icon: '⬜' },
+            { label: '16:9', w: 1920, h: 1080, icon: '🖥️' },
+            { label: '9:16', w: 1080, h: 1920, icon: '📱' },
+            { label: '4:3', w: 1024, h: 768, icon: '📺' },
+        ]
+        : [
+            { label: '16:9', value: '16:9', icon: '🖥️' },
+            { label: '9:16', value: '9:16', icon: '📱' },
+        ];
+
+    const resolutions = selectedModel?.resolutions
+        ? Object.keys(selectedModel.resolutions)
+        : ['720p', '1080p'];
+
+    const getProviderStyle = (provider) => {
+        const p = providerColors[provider] || providerColors['replicate'];
+        return isDark ? p.dark : p.light;
+    };
+
+    const getBadgeStyle = (color) => {
+        const style = badgeStyles[color] || badgeStyles['purple'];
+        return isDark ? style.dark : style.light;
+    };
+
+    // Format elapsed time as MM:SS
+    const formatElapsedTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
 
     return (
         <AppLayout title="AI Studio">
-            <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
+            <div className={`min-h-screen transition-colors duration-300 ${themeClasses.pageBg}`}>
                 <div className="max-w-[1600px] mx-auto">
-                    {/* Clean Header */}
-                    <div className={`sticky top-0 z-20 px-6 py-4 border-b ${isDark ? 'bg-[#0d0d0d]/95 border-[#1a1a1a]' : 'bg-[#fafafa]/95 border-gray-200'} backdrop-blur-sm`}>
+                    {/* Header */}
+                    <div className={`sticky top-0 z-20 px-6 py-4 border-b backdrop-blur-xl transition-colors duration-300 ${isDark ? 'bg-[#0a0a0a]/90 border-[#1a1a1a]' : 'bg-white/90 border-slate-200'
+                        }`}>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-6">
-                                <h1 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    AI Studio
-                                </h1>
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-violet-600 to-indigo-600' : 'bg-gradient-to-br from-violet-500 to-indigo-500'
+                                        }`}>
+                                        <span className="text-white text-lg">✨</span>
+                                    </div>
+                                    <h1 className={`text-xl font-bold ${themeClasses.textPrimary}`}>
+                                        AI Studio
+                                    </h1>
+                                </div>
 
                                 {/* Type Tabs */}
-                                <div className={`flex p-1 rounded-lg ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-100'}`}>
-                                    {['image', 'video'].map((t) => (
+                                <div className={`flex p-1 rounded-xl transition-colors ${isDark ? 'bg-[#1a1a1a]' : 'bg-slate-100'
+                                    }`}>
+                                    {['video', 'image'].map((t) => (
                                         <button
                                             key={t}
                                             onClick={() => handleTypeChange(t)}
-                                            className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${type === t
-                                                    ? isDark
-                                                        ? 'bg-white text-black'
-                                                        : 'bg-white text-gray-900 shadow-sm'
-                                                    : isDark
-                                                        ? 'text-gray-400 hover:text-white'
-                                                        : 'text-gray-500 hover:text-gray-900'
+                                            className={`px-5 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${type === t
+                                                ? isDark
+                                                    ? 'bg-[#2a2a2a] text-white shadow-lg'
+                                                    : 'bg-white text-slate-900 shadow-md'
+                                                : isDark
+                                                    ? 'text-slate-400 hover:text-white hover:bg-[#2a2a2a]/50'
+                                                    : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'
                                                 }`}
                                         >
-                                            {t === 'image' ? 'Image' : 'Video'}
+                                            {t === 'image' ? '🖼️ Image' : '🎬 Video'}
                                         </button>
                                     ))}
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-3">
                                 {/* Credits */}
-                                <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
-                                    <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Credits:</span>
-                                    <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{currentCredits}</span>
+                                <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-colors ${isDark ? 'bg-[#1a1a1a] border border-[#2a2a2a]' : 'bg-slate-50 border border-slate-200'
+                                    }`}>
+                                    <span className="text-lg">✨</span>
+                                    <span className={`font-bold ${themeClasses.textPrimary}`}>{currentCredits.toLocaleString()}</span>
+                                    <span className={`text-sm ${themeClasses.textMuted}`}>credits</span>
                                 </div>
 
                                 <Link
                                     href="/ai-credits"
-                                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${isDark
-                                            ? 'bg-white text-black hover:bg-gray-100'
-                                            : 'bg-gray-900 text-white hover:bg-gray-800'
-                                        }`}
+                                    className="px-5 py-2.5 text-sm font-semibold rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 transition-all duration-200 shadow-lg shadow-violet-500/25"
                                 >
                                     Buy Credits
                                 </Link>
 
                                 <Link
                                     href="/ai-studio/generations"
-                                    className={`px-4 py-2 text-sm font-medium rounded-lg ${isDark
-                                            ? 'text-gray-400 hover:text-white'
-                                            : 'text-gray-600 hover:text-gray-900'
+                                    className={`px-4 py-2.5 text-sm font-medium rounded-xl transition-colors ${isDark
+                                        ? 'text-slate-400 hover:text-white hover:bg-[#1a1a1a]'
+                                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                                         }`}
                                 >
                                     Gallery
@@ -161,65 +353,172 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
 
                     <div className="flex">
                         {/* Left Panel - Input */}
-                        <div className={`w-[400px] flex-shrink-0 border-r ${isDark ? 'border-[#1a1a1a]' : 'border-gray-200'}`}>
+                        <div className={`w-[420px] flex-shrink-0 border-r transition-colors ${themeClasses.border}`}>
                             <div className="p-6 space-y-6">
+                                {/* Generation Mode for Video */}
+                                {type === 'video' && (
+                                    <div>
+                                        <label className={`block text-sm font-semibold mb-3 ${themeClasses.textPrimary}`}>
+                                            Generation Mode
+                                        </label>
+                                        <div className={`flex p-1 rounded-xl transition-colors ${isDark ? 'bg-[#1a1a1a]' : 'bg-slate-100'
+                                            }`}>
+                                            <button
+                                                onClick={() => { setGenerationMode('text'); setSourceImage(null); setSourceImagePreview(null); }}
+                                                className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${generationMode === 'text'
+                                                    ? isDark ? 'bg-[#2a2a2a] text-white shadow' : 'bg-white text-slate-900 shadow-md'
+                                                    : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+                                                    }`}
+                                            >
+                                                📝 Text to Video
+                                            </button>
+                                            <button
+                                                onClick={() => setGenerationMode('image')}
+                                                className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${generationMode === 'image'
+                                                    ? isDark ? 'bg-[#2a2a2a] text-white shadow' : 'bg-white text-slate-900 shadow-md'
+                                                    : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+                                                    }`}
+                                            >
+                                                🖼️ Image to Video
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Source Image Upload */}
+                                {type === 'video' && generationMode === 'image' && (
+                                    <div>
+                                        <label className={`block text-sm font-semibold mb-3 ${themeClasses.textPrimary}`}>
+                                            Source Image
+                                        </label>
+                                        <div
+                                            className={`relative border-2 border-dashed rounded-xl p-4 text-center transition-all duration-200 ${sourceImagePreview
+                                                ? isDark ? 'border-violet-500/50 bg-violet-500/5' : 'border-violet-400 bg-violet-50'
+                                                : isDark ? 'border-[#2a2a2a] hover:border-[#3a3a3a] hover:bg-[#1a1a1a]/50' : 'border-slate-300 hover:border-slate-400 hover:bg-slate-50'
+                                                }`}
+                                        >
+                                            {sourceImagePreview ? (
+                                                <div className="relative">
+                                                    <img src={sourceImagePreview} alt="Source" className="w-full h-32 object-cover rounded-lg" />
+                                                    <button
+                                                        onClick={() => { setSourceImage(null); setSourceImagePreview(null); }}
+                                                        className="absolute top-2 right-2 w-7 h-7 bg-rose-500 text-white rounded-full flex items-center justify-center text-sm font-medium shadow-lg hover:bg-rose-600 transition-colors"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <label className="cursor-pointer block">
+                                                    <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                                                    <div className={`py-6 ${themeClasses.textMuted}`}>
+                                                        <span className="text-3xl block mb-3">📷</span>
+                                                        <span className="text-sm font-medium">Click to upload or drag image</span>
+                                                    </div>
+                                                </label>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Prompt */}
                                 <div>
-                                    <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                        Prompt
+                                    <label className={`block text-sm font-semibold mb-3 ${themeClasses.textPrimary}`}>
+                                        {generationMode === 'image' ? 'Motion Description' : 'Prompt'}
                                     </label>
                                     <textarea
                                         ref={textareaRef}
                                         value={prompt}
                                         onChange={(e) => setPrompt(e.target.value)}
-                                        placeholder="Describe what you want to create..."
+                                        placeholder={generationMode === 'image'
+                                            ? "Describe how the image should animate..."
+                                            : "Describe what you want to create..."
+                                        }
                                         disabled={generating}
                                         rows={4}
-                                        className={`w-full px-4 py-3 rounded-lg resize-none text-sm transition-colors ${isDark
-                                                ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-gray-500 focus:border-gray-600'
-                                                : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-gray-400'
-                                            } border focus:outline-none`}
+                                        className={`w-full px-4 py-3 rounded-xl resize-none text-sm transition-all duration-200 border focus:outline-none focus:ring-2 ${isDark
+                                            ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-slate-500 focus:border-violet-500 focus:ring-violet-500/20'
+                                            : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-violet-400 focus:ring-violet-400/20'
+                                            }`}
                                     />
                                 </div>
 
                                 {/* Model Selection */}
                                 <div>
-                                    <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    <label className={`block text-sm font-semibold mb-3 ${themeClasses.textPrimary}`}>
                                         Model
                                     </label>
-                                    <div className="space-y-2">
-                                        {models.map((m) => (
-                                            <button
-                                                key={m.id}
-                                                onClick={() => setModel(m.id)}
-                                                className={`w-full p-3 rounded-lg text-left transition-all ${model === m.id
+                                    <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                                        {models.map((m) => {
+                                            const providerStyle = getProviderStyle(m.provider);
+                                            const isSelected = model === m.id;
+                                            const isDisabled = !m.enabled || m.coming_soon;
+                                            return (
+                                                <button
+                                                    key={m.id}
+                                                    onClick={() => !isDisabled && setModel(m.id)}
+                                                    disabled={isDisabled}
+                                                    className={`w-full p-4 rounded-xl text-left transition-all duration-200 border ${isDisabled
                                                         ? isDark
-                                                            ? 'bg-white/10 border-white/20'
-                                                            : 'bg-gray-900 text-white'
-                                                        : isDark
-                                                            ? 'bg-[#1a1a1a] border-transparent hover:bg-[#222]'
-                                                            : 'bg-white border-gray-200 hover:border-gray-300'
-                                                    } border`}
-                                            >
-                                                <div className="flex items-center justify-between">
-                                                    <div>
-                                                        <p className={`text-sm font-medium ${model === m.id && !isDark ? 'text-white' : ''
-                                                            }`}>
-                                                            {m.name}
-                                                        </p>
-                                                        <p className={`text-xs mt-0.5 ${model === m.id
-                                                                ? isDark ? 'text-gray-400' : 'text-gray-300'
-                                                                : isDark ? 'text-gray-500' : 'text-gray-400'
-                                                            }`}>
-                                                            {m.credits_cost} credits / {type}
-                                                        </p>
+                                                            ? 'bg-slate-900/50 border-slate-800 cursor-not-allowed opacity-60'
+                                                            : 'bg-slate-50 border-slate-200 cursor-not-allowed opacity-60'
+                                                        : isSelected
+                                                            ? isDark
+                                                                ? 'bg-gradient-to-r from-violet-600/20 to-indigo-600/20 border-violet-500/50'
+                                                                : 'bg-gradient-to-r from-violet-50 to-indigo-50 border-violet-300'
+                                                            : isDark
+                                                                ? 'bg-[#1a1a1a] border-[#2a2a2a] hover:bg-[#2a2a2a] hover:border-[#3a3a3a]'
+                                                                : 'bg-white border-slate-200 hover:bg-slate-50 hover:border-slate-300'
+                                                        }`}
+                                                >
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-2 flex-wrap">
+                                                                <p className={`text-sm font-semibold truncate ${isDisabled
+                                                                    ? themeClasses.textMuted
+                                                                    : isSelected
+                                                                        ? isDark ? 'text-violet-300' : 'text-violet-700'
+                                                                        : themeClasses.textPrimary
+                                                                    }`}>
+                                                                    {m.name}
+                                                                </p>
+                                                                {m.coming_soon && (
+                                                                    <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-md ${isDark
+                                                                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                                                        : 'bg-amber-100 text-amber-700 border border-amber-200'
+                                                                        }`}>
+                                                                        Coming Soon
+                                                                    </span>
+                                                                )}
+                                                                {m.badge && !m.coming_soon && (
+                                                                    <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-md ${getBadgeStyle(m.badge_color)}`}>
+                                                                        {m.badge}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <p className={`text-xs mt-1 line-clamp-2 ${themeClasses.textMuted}`}>
+                                                                {m.description}
+                                                            </p>
+                                                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                                                <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-md border ${providerStyle.bg} ${providerStyle.text} ${providerStyle.border}`}>
+                                                                    {providerColors[m.provider]?.label || 'AI'}
+                                                                </span>
+                                                                <span className={`text-xs font-medium ${themeClasses.textSecondary}`}>
+                                                                    {m.credits_cost} credits/{type === 'video' ? 'sec' : 'image'}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        {isSelected && !isDisabled && (
+                                                            <div className={`w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${isDark ? 'bg-violet-500' : 'bg-violet-500'
+                                                                }`}>
+                                                                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                                </svg>
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                    {model === m.id && (
-                                                        <div className={`w-2 h-2 rounded-full ${isDark ? 'bg-white' : 'bg-white'}`} />
-                                                    )}
-                                                </div>
-                                            </button>
-                                        ))}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
 
@@ -227,35 +526,99 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                 <div>
                                     <button
                                         onClick={() => setShowSettings(!showSettings)}
-                                        className={`flex items-center gap-2 text-sm ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
+                                        className={`flex items-center gap-2 text-sm font-medium transition-colors ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+                                            }`}
                                     >
-                                        <svg className={`w-4 h-4 transition-transform ${showSettings ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className={`w-4 h-4 transition-transform duration-200 ${showSettings ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                         </svg>
                                         Advanced Settings
                                     </button>
 
                                     {showSettings && (
-                                        <div className="mt-4 space-y-4">
+                                        <div className="mt-4 space-y-5">
+                                            {type === 'video' && (
+                                                <>
+                                                    {/* NOTE: Aspect Ratio and Resolution are NOT supported by preview models */}
+                                                    {/* They will be re-enabled when using stable/GA model versions */}
+
+                                                    {/* Duration */}
+                                                    <div>
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <label className={`text-xs font-semibold uppercase tracking-wide ${themeClasses.textMuted}`}>
+                                                                Duration
+                                                            </label>
+                                                            <span className={`text-sm font-bold ${themeClasses.textPrimary}`}>
+                                                                {params.duration}s
+                                                            </span>
+                                                        </div>
+                                                        <input
+                                                            type="range"
+                                                            min={4}
+                                                            max={selectedModel?.max_duration || 8}
+                                                            value={params.duration || 6}
+                                                            onChange={(e) => setParams(p => ({ ...p, duration: parseInt(e.target.value) }))}
+                                                            className={`w-full h-2 rounded-full appearance-none cursor-pointer ${isDark ? 'bg-[#2a2a2a]' : 'bg-slate-200'
+                                                                }`}
+                                                            style={{
+                                                                background: `linear-gradient(to right, ${isDark ? '#8b5cf6' : '#7c3aed'} 0%, ${isDark ? '#8b5cf6' : '#7c3aed'} ${((params.duration - 4) / ((selectedModel?.max_duration || 8) - 4)) * 100}%, ${isDark ? '#334155' : '#e2e8f0'} ${((params.duration - 4) / ((selectedModel?.max_duration || 8) - 4)) * 100}%, ${isDark ? '#334155' : '#e2e8f0'} 100%)`
+                                                            }}
+                                                        />
+                                                        <div className={`flex justify-between text-xs mt-1 ${themeClasses.textMuted}`}>
+                                                            <span>4s</span>
+                                                            <span>{selectedModel?.max_duration || 8}s</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Audio Toggle */}
+                                                    {selectedModel?.features?.includes('audio-generation') && (
+                                                        <div className={`flex items-center justify-between p-4 rounded-xl transition-colors ${isDark ? 'bg-[#1a1a1a] border border-[#2a2a2a]' : 'bg-slate-50 border border-slate-200'
+                                                            }`}>
+                                                            <div>
+                                                                <p className={`text-sm font-semibold ${themeClasses.textPrimary}`}>
+                                                                    🔊 Generate Audio
+                                                                </p>
+                                                                <p className={`text-xs mt-0.5 ${themeClasses.textMuted}`}>
+                                                                    Include dialogue and sound effects
+                                                                </p>
+                                                            </div>
+                                                            <button
+                                                                onClick={() => setParams(p => ({ ...p, generate_audio: !p.generate_audio }))}
+                                                                className={`relative w-12 h-7 rounded-full transition-colors duration-200 ${params.generate_audio
+                                                                    ? 'bg-violet-600'
+                                                                    : isDark ? 'bg-[#2a2a2a]' : 'bg-slate-300'
+                                                                    }`}
+                                                            >
+                                                                <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${params.generate_audio ? 'translate-x-5' : 'translate-x-0'
+                                                                    }`} />
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+
                                             {type === 'image' && (
                                                 <>
-                                                    {/* Aspect Ratio */}
+                                                    {/* Aspect Ratio for Images */}
                                                     <div>
-                                                        <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                        <label className={`block text-xs font-semibold mb-2 uppercase tracking-wide ${themeClasses.textMuted}`}>
                                                             Aspect Ratio
                                                         </label>
-                                                        <div className="flex gap-2">
+                                                        <div className="grid grid-cols-4 gap-2">
                                                             {aspectRatios.map((ar) => (
                                                                 <button
                                                                     key={ar.label}
-                                                                    onClick={() => setParams(p => ({ ...p, width: ar.w, height: ar.h }))}
-                                                                    className={`flex-1 py-2 text-xs font-medium rounded-md transition-all ${params.width === ar.w && params.height === ar.h
-                                                                            ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
-                                                                            : isDark
-                                                                                ? 'bg-[#1a1a1a] text-gray-400 hover:text-white'
-                                                                                : 'bg-gray-100 text-gray-600 hover:text-gray-900'
+                                                                    onClick={() => setParams(p => ({ ...p, width: ar.w, height: ar.h, aspect_ratio: ar.label }))}
+                                                                    className={`py-2.5 text-xs font-semibold rounded-lg transition-all duration-200 border ${params.width === ar.w && params.height === ar.h
+                                                                        ? isDark
+                                                                            ? 'bg-violet-600/30 text-violet-300 border-violet-500/50'
+                                                                            : 'bg-violet-100 text-violet-700 border-violet-300'
+                                                                        : isDark
+                                                                            ? 'bg-[#1a1a1a] text-slate-400 border-[#2a2a2a] hover:text-white hover:border-[#3a3a3a]'
+                                                                            : 'bg-white text-slate-600 border-slate-200 hover:text-slate-900 hover:border-slate-300'
                                                                         }`}
                                                                 >
+                                                                    <span className="block text-base mb-0.5">{ar.icon}</span>
                                                                     {ar.label}
                                                                 </button>
                                                             ))}
@@ -264,7 +627,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
 
                                                     {/* Negative Prompt */}
                                                     <div>
-                                                        <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                        <label className={`block text-xs font-semibold mb-2 uppercase tracking-wide ${themeClasses.textMuted}`}>
                                                             Negative Prompt
                                                         </label>
                                                         <textarea
@@ -272,29 +635,13 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                             onChange={(e) => setNegativePrompt(e.target.value)}
                                                             placeholder="What to avoid..."
                                                             rows={2}
-                                                            className={`w-full px-3 py-2 rounded-lg resize-none text-sm ${isDark
-                                                                    ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-gray-600'
-                                                                    : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'
-                                                                } border focus:outline-none`}
+                                                            className={`w-full px-4 py-3 rounded-xl resize-none text-sm transition-all duration-200 border focus:outline-none focus:ring-2 ${isDark
+                                                                ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-slate-500 focus:border-violet-500 focus:ring-violet-500/20'
+                                                                : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-violet-400 focus:ring-violet-400/20'
+                                                                }`}
                                                         />
                                                     </div>
                                                 </>
-                                            )}
-
-                                            {type === 'video' && (
-                                                <div>
-                                                    <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                                        Duration: {params.duration || 5}s
-                                                    </label>
-                                                    <input
-                                                        type="range"
-                                                        min={2}
-                                                        max={10}
-                                                        value={params.duration || 5}
-                                                        onChange={(e) => setParams(p => ({ ...p, duration: parseInt(e.target.value) }))}
-                                                        className="w-full accent-gray-900 dark:accent-white"
-                                                    />
-                                                </div>
                                             )}
                                         </div>
                                     )}
@@ -304,25 +651,23 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                 <button
                                     onClick={handleGenerate}
                                     disabled={!prompt.trim() || !model || generating}
-                                    className={`w-full py-3 rounded-lg font-medium transition-all ${prompt.trim() && model && !generating
-                                            ? isDark
-                                                ? 'bg-white text-black hover:bg-gray-100'
-                                                : 'bg-gray-900 text-white hover:bg-gray-800'
-                                            : isDark
-                                                ? 'bg-[#1a1a1a] text-gray-600 cursor-not-allowed'
-                                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    className={`w-full py-4 rounded-xl font-semibold text-base transition-all duration-200 ${prompt.trim() && model && !generating
+                                        ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-500/30 active:scale-[0.98]'
+                                        : isDark
+                                            ? 'bg-[#1a1a1a] text-slate-500 cursor-not-allowed'
+                                            : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                         }`}
                                 >
                                     {generating ? (
                                         <span className="flex items-center justify-center gap-2">
-                                            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                                            <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
                                             Generating...
                                         </span>
                                     ) : (
-                                        <>Generate {selectedModel ? `· ${selectedModel.credits_cost} credits` : ''}</>
+                                        <>✨ Generate · {calculateEstimatedCost()} credits</>
                                     )}
                                 </button>
                             </div>
@@ -330,14 +675,15 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
 
                         {/* Right Panel - Preview */}
                         <div className="flex-1 p-6">
-                            <div className={`h-full min-h-[600px] rounded-xl overflow-hidden ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-100'}`}>
+                            <div className={`h-full min-h-[600px] rounded-2xl overflow-hidden transition-colors ${isDark ? 'bg-slate-900 border border-slate-800' : 'bg-white border border-slate-200 shadow-sm'
+                                }`}>
                                 {currentGeneration?.status === 'completed' && currentGeneration.result_url ? (
-                                    <div className="relative h-full flex items-center justify-center">
-                                        {type === 'image' ? (
+                                    <div className="relative h-full flex items-center justify-center p-4">
+                                        {currentGeneration.type === 'image' ? (
                                             <img
                                                 src={currentGeneration.result_url}
                                                 alt=""
-                                                className="max-w-full max-h-full object-contain"
+                                                className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
                                             />
                                         ) : (
                                             <video
@@ -345,108 +691,127 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                 controls
                                                 autoPlay
                                                 loop
-                                                className="max-w-full max-h-full"
+                                                className="max-w-full max-h-full rounded-xl shadow-2xl"
                                             />
                                         )}
 
                                         {/* Actions */}
-                                        <div className="absolute bottom-4 right-4 flex gap-2">
+                                        <div className="absolute bottom-6 right-6 flex gap-2">
                                             <a
                                                 href={currentGeneration.download_url || currentGeneration.result_url}
                                                 download
-                                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${isDark
-                                                        ? 'bg-white text-black hover:bg-gray-100'
-                                                        : 'bg-gray-900 text-white hover:bg-gray-800'
+                                                className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${isDark
+                                                    ? 'bg-[#1a1a1a] text-white hover:bg-[#2a2a2a] border border-[#2a2a2a]'
+                                                    : 'bg-white text-slate-900 hover:bg-slate-50 border border-slate-200 shadow-lg'
                                                     }`}
                                             >
-                                                Download
+                                                ⬇️ Download
                                             </a>
+                                            <Link
+                                                href={`/media/save-from-ai/${currentGeneration.id}`}
+                                                method="post"
+                                                as="button"
+                                                className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-violet-600 text-white hover:bg-violet-500 transition-colors shadow-lg shadow-violet-500/25"
+                                            >
+                                                💾 Save to Media
+                                            </Link>
                                         </div>
                                     </div>
                                 ) : currentGeneration?.status === 'processing' || currentGeneration?.status === 'pending' ? (
                                     <div className="h-full flex flex-col items-center justify-center">
-                                        <div className={`w-12 h-12 rounded-full border-2 border-t-transparent animate-spin ${isDark ? 'border-white/20 border-t-white' : 'border-gray-300 border-t-gray-900'}`} />
-                                        <p className={`mt-4 text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                            Generating your {type}...
+                                        <div className="relative">
+                                            <div className={`w-20 h-20 rounded-full border-4 border-t-transparent animate-spin ${isDark ? 'border-violet-500/30 border-t-violet-500' : 'border-violet-200 border-t-violet-500'
+                                                }`} />
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                <span className="text-3xl">{type === 'video' ? '🎬' : '🖼️'}</span>
+                                            </div>
+                                        </div>
+                                        <p className={`mt-6 text-base font-semibold ${themeClasses.textPrimary}`}>
+                                            Creating your {type}...
                                         </p>
-                                        <p className={`mt-2 text-xs max-w-md text-center ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                            {currentGeneration.prompt}
+
+                                        {/* Elapsed Time Timer */}
+                                        <div className={`mt-4 flex items-center gap-3 px-5 py-3 rounded-xl ${isDark ? 'bg-[#1a1a1a] border border-[#2a2a2a]' : 'bg-slate-50 border border-slate-200'}`}>
+                                            <div className={`text-2xl font-mono font-bold ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
+                                                {formatElapsedTime(elapsedTime)}
+                                            </div>
+                                            <div className={`text-xs ${themeClasses.textMuted}`}>
+                                                elapsed
+                                            </div>
+                                        </div>
+
+                                        <p className={`mt-4 text-sm max-w-md text-center ${themeClasses.textMuted}`}>
+                                            {currentGeneration.prompt?.substring(0, 100)}...
+                                        </p>
+                                        <div className={`mt-3 px-3 py-1.5 rounded-full text-xs font-semibold ${isDark ? 'bg-violet-500/20 text-violet-300' : 'bg-violet-100 text-violet-600'
+                                            }`}>
+                                            {providerColors[currentGeneration.provider]?.label || 'Processing'}
+                                        </div>
+
+                                        {/* Tip message */}
+                                        <p className={`mt-6 text-xs ${themeClasses.textMuted}`}>
+                                            💡 Video generation may take 1-3 minutes. Page refresh won't lose progress.
                                         </p>
                                     </div>
                                 ) : currentGeneration?.status === 'failed' ? (
                                     <div className="h-full flex flex-col items-center justify-center">
-                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDark ? 'bg-red-500/10' : 'bg-red-50'}`}>
-                                            <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
+                                        <div className={`w-20 h-20 rounded-full flex items-center justify-center ${isDark ? 'bg-rose-500/10' : 'bg-rose-50'
+                                            }`}>
+                                            <span className="text-4xl">❌</span>
                                         </div>
-                                        <p className={`mt-4 text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                        <p className={`mt-6 text-base font-semibold ${themeClasses.textPrimary}`}>
                                             Generation failed
                                         </p>
-                                        <p className={`mt-2 text-xs max-w-md text-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                        <p className={`mt-2 text-sm max-w-md text-center ${themeClasses.textMuted}`}>
                                             {currentGeneration.error_message || 'Something went wrong. Please try again.'}
+                                        </p>
+                                        <p className={`mt-3 text-sm font-medium ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                                            ✓ Credits have been refunded
                                         </p>
                                     </div>
                                 ) : (
                                     <div className="h-full flex flex-col items-center justify-center">
-                                        <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${isDark ? 'bg-[#222]' : 'bg-white'}`}>
-                                            <svg className={`w-8 h-8 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                            </svg>
+                                        <div className={`w-24 h-24 rounded-2xl flex items-center justify-center ${isDark
+                                            ? 'bg-gradient-to-br from-violet-600/20 to-indigo-600/20 border border-violet-500/20'
+                                            : 'bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100'
+                                            }`}>
+                                            <span className="text-5xl">{type === 'video' ? '🎬' : '🖼️'}</span>
                                         </div>
-                                        <p className={`mt-4 text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                            Your creation will appear here
+                                        <p className={`mt-6 text-base font-semibold ${themeClasses.textPrimary}`}>
+                                            Ready to create
+                                        </p>
+                                        <p className={`mt-2 text-sm ${themeClasses.textMuted}`}>
+                                            Your {type} will appear here
                                         </p>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Recent History */}
-                            {history.length > 0 && (
-                                <div className="mt-6">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h3 className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                            Recent
-                                        </h3>
-                                        <Link
-                                            href="/ai-studio/generations"
-                                            className={`text-xs ${isDark ? 'text-gray-500 hover:text-white' : 'text-gray-400 hover:text-gray-900'}`}
-                                        >
-                                            View all
-                                        </Link>
-                                    </div>
-                                    <div className="flex gap-3 overflow-x-auto pb-2">
-                                        {history.slice(0, 6).map((gen) => (
-                                            <button
-                                                key={gen.id}
-                                                onClick={() => setCurrentGeneration(gen)}
-                                                className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden transition-all ${currentGeneration?.id === gen.id
-                                                        ? 'ring-2 ring-offset-2 ring-gray-900 dark:ring-white dark:ring-offset-[#0d0d0d]'
-                                                        : 'hover:opacity-80'
-                                                    }`}
-                                            >
-                                                {gen.result_url && gen.status === 'completed' ? (
-                                                    <img src={gen.result_url} alt="" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className={`w-full h-full flex items-center justify-center ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-100'}`}>
-                                                        {gen.status === 'processing' || gen.status === 'pending' ? (
-                                                            <div className={`w-5 h-5 rounded-full border-2 border-t-transparent animate-spin ${isDark ? 'border-gray-600 border-t-white' : 'border-gray-300 border-t-gray-900'}`} />
-                                                        ) : (
-                                                            <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                            </svg>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+
                         </div>
                     </div>
                 </div>
             </div>
+
+            <style jsx global>{`
+                /* Force dark background on body when in dark mode */
+                body {
+                    background-color: ${isDark ? '#0a0a0a' : '#fafafa'} !important;
+                }
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: ${isDark ? '#475569' : '#cbd5e1'};
+                    border-radius: 3px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: ${isDark ? '#64748b' : '#94a3b8'};
+                }
+            `}</style>
         </AppLayout>
     );
 }

@@ -1,12 +1,18 @@
 package com.agent.portal
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatActivity
+import com.agent.portal.accessibility.PortalAccessibilityService
 import com.agent.portal.databinding.ActivitySettingsBinding
+import com.agent.portal.overlay.OverlayService
 import com.agent.portal.recording.RecordingManager
 import com.agent.portal.recording.ScreenshotManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -222,6 +228,72 @@ class SettingsActivity : AppCompatActivity() {
         // Reset to Defaults Button
         binding.btnResetDefaults.setOnClickListener {
             confirmResetDefaults()
+        }
+
+        // Debug Tools - Show Element Bounds Toggle
+        binding.switchBounds.isChecked = OverlayService.showBounds
+        binding.switchBounds.setOnCheckedChangeListener { view, isChecked ->
+            if (view.isPressed) {
+                if (!checkOverlayPrerequisites()) {
+                    binding.switchBounds.isChecked = false
+                    return@setOnCheckedChangeListener
+                }
+                
+                if (isChecked) {
+                    startOverlayService(OverlayService.Actions.SHOW_BOUNDS)
+                } else {
+                    startOverlayService(OverlayService.Actions.HIDE_BOUNDS)
+                }
+                animateToggle(view)
+            }
+        }
+
+        // Debug Tools - Show Element Indexes Toggle
+        binding.switchIndexes.isChecked = OverlayService.showIndexes
+        binding.switchIndexes.setOnCheckedChangeListener { view, isChecked ->
+            if (view.isPressed) {
+                if (!checkOverlayPrerequisites()) {
+                    binding.switchIndexes.isChecked = false
+                    return@setOnCheckedChangeListener
+                }
+                
+                if (isChecked) {
+                    startOverlayService(OverlayService.Actions.SHOW_INDEXES)
+                } else {
+                    startOverlayService(OverlayService.Actions.HIDE_INDEXES)
+                }
+                animateToggle(view)
+            }
+        }
+    }
+
+    private fun checkOverlayPrerequisites(): Boolean {
+        if (!PortalAccessibilityService.isRunning()) {
+            Toast.makeText(this, "Please enable Accessibility Service first", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        if (!Settings.canDrawOverlays(this)) {
+            Toast.makeText(this, "Please grant Overlay permission first", Toast.LENGTH_SHORT).show()
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:$packageName")
+            )
+            startActivity(intent)
+            return false
+        }
+
+        return true
+    }
+
+    private fun startOverlayService(action: String) {
+        val intent = Intent(this, OverlayService::class.java).apply {
+            this.action = action
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
         }
     }
 

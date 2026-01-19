@@ -55,16 +55,6 @@
             android:launchMode="singleTop">
         </activity>
 
-        <!-- History Activity -->
-        <activity
-            android:name=".HistoryActivity"
-            android:exported="false"
-            android:parentActivityName=".MainActivity"
-            android:theme="@style/Theme.AgentPortal">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
-        </activity>
 
         <!-- Settings Activity -->
         <activity
@@ -150,6 +140,16 @@
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="quick_actions" />
+        </service>
+
+        <!-- Job Progress Overlay Service -->
+        <service
+            android:name=".overlay.FloatingJobProgressService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="job_progress" />
         </service>
 
         <!-- Touch Capture Overlay Service (for capturing swipes on home screen) -->

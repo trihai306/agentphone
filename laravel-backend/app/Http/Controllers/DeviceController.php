@@ -5,174 +5,93 @@ namespace App\Http\Controllers;
 use App\Http\Requests\DeviceRequest;
 use App\Http\Resources\DeviceResource;
 use App\Models\Device;
-use App\Models\DeviceActivityLog;
+use App\Services\DevicePresenceService;
+use App\Services\DeviceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 
 class DeviceController extends Controller
 {
-    // Maximum devices per user
-    private const MAX_DEVICES_PER_USER = 10;
+    public function __construct(
+        protected DeviceService $deviceService,
+        protected DevicePresenceService $presenceService
+    ) {
+    }
 
     /**
      * Register or update a device.
-     *
-     * @param DeviceRequest $request
-     * @return JsonResponse
+     * Also marks device as online in Redis (APK is now active)
      */
     public function store(DeviceRequest $request): JsonResponse
     {
-        $user = $request->user();
-        $ipAddress = $request->ip();
+        $result = $this->deviceService->registerOrUpdateDevice(
+            $request->user(),
+            $request->validated(),
+            $request->ip()
+        );
 
-        // Normalize field names (support both 'name' and 'device_name')
-        $deviceName = $request->input('name') ?? $request->input('device_name') ?? 'Unknown Device';
-        $deviceId = $request->input('device_id');
-        $model = $request->input('model');
-
-        // Find existing device - priority:
-        // 1. By device_id (exact match)
-        // 2. By model + user_id (for emulators that change device_id)
-        $existingDevice = Device::where('device_id', $deviceId)->first();
-
-        // If not found by device_id, check by model + user_id (prevents duplicates for same model)
-        $isModelMatch = false;
-        if (!$existingDevice && $model) {
-            $existingDevice = Device::where('user_id', $user->id)
-                ->where('model', $model)
-                ->first();
-            $isModelMatch = (bool) $existingDevice;
-        }
-
-        if (!$existingDevice) {
-            // Check device limit for new devices
-            $deviceCount = Device::where('user_id', $user->id)->count();
-
-            if ($deviceCount >= self::MAX_DEVICES_PER_USER) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Bạn đã đạt giới hạn tối đa ' . self::MAX_DEVICES_PER_USER . ' thiết bị.',
-                    'error' => 'device_limit_exceeded',
-                ], 422);
-            }
-        }
-
-        DB::beginTransaction();
-        try {
-            if ($existingDevice) {
-                // Update existing device (including device_id if it changed)
-                $existingDevice->update([
-                    'device_id' => $deviceId, // Update device_id in case it changed
-                    'user_id' => $user->id,
-                    'name' => $deviceName,
-                    'model' => $model,
-                    'android_version' => $request->input('android_version'),
-                    'status' => Device::STATUS_ACTIVE,
-                    'last_active_at' => now(),
-                ]);
-                $device = $existingDevice;
-            } else {
-                // Create new device
-                $device = Device::create([
-                    'device_id' => $deviceId,
-                    'user_id' => $user->id,
-                    'name' => $deviceName,
-                    'model' => $model,
-                    'android_version' => $request->input('android_version'),
-                    'status' => Device::STATUS_ACTIVE,
-                    'last_active_at' => now(),
-                ]);
-            }
-
-            // Log the activity
-            $event = $existingDevice ? ($isModelMatch ? 'device_id_updated' : 'device_updated') : 'device_registered';
-            $device->logActivity($event, $ipAddress, [
-                'user_agent' => $request->userAgent(),
-                'name' => $deviceName,
-                'model' => $model,
-                'android_version' => $request->input('android_version'),
-                'device_id_changed' => $isModelMatch,
-            ]);
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => $existingDevice
-                    ? ($isModelMatch ? 'Thiết bị đã được nhận diện lại' : 'Thiết bị đã được cập nhật thành công')
-                    : 'Thiết bị đã được đăng ký thành công',
-                'device' => new DeviceResource($device),
-            ], $existingDevice ? 200 : 201);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
+        if (!$result['success']) {
             return response()->json([
                 'success' => false,
-                'message' => 'Đã xảy ra lỗi khi đăng ký thiết bị',
-                'error' => $e->getMessage(),
-            ], 500);
+                'message' => $result['message'],
+                'error' => $result['error'],
+            ], 422);
         }
+
+        $device = $result['device'];
+        $isNew = $result['is_new'];
+        $isModelMatch = $result['is_model_match'];
+
+        // Mark device online in Redis (APK just opened/registered)
+        $this->deviceService->markDeviceOnlineAfterRegister($device);
+
+        return response()->json([
+            'success' => true,
+            'message' => $isNew
+                ? 'Thiết bị đã được đăng ký thành công'
+                : ($isModelMatch ? 'Thiết bị đã được nhận diện lại' : 'Thiết bị đã được cập nhật thành công'),
+            'device' => new DeviceResource($device),
+        ], $isNew ? 201 : 200);
     }
 
     /**
      * List all devices for the authenticated user.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
-        $devices = Device::where('user_id', $request->user()->id)
-            ->orderBy('last_active_at', 'desc')
-            ->get();
+        $devices = $this->deviceService->getUserDevices($request->user());
 
         return response()->json([
             'data' => DeviceResource::collection($devices),
             'meta' => [
                 'total' => $devices->count(),
-                'max_devices' => self::MAX_DEVICES_PER_USER,
+                'max_devices' => DeviceService::MAX_DEVICES_PER_USER,
             ],
         ]);
     }
 
     /**
      * Show a specific device with activity logs.
-     *
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
      */
     public function show(Request $request, int $id): JsonResponse
     {
         $device = Device::where('user_id', $request->user()->id)
             ->where('id', $id)
             ->with([
-                'activityLogs' => function ($query) {
-                    $query->orderBy('created_at', 'desc')->limit(50);
-                }
+                'activityLogs' => fn($q) => $q->orderBy('created_at', 'desc')->limit(50)
             ])
             ->first();
 
         if (!$device) {
-            return response()->json([
-                'message' => 'Thiết bị không tồn tại',
-            ], 404);
+            return response()->json(['message' => 'Thiết bị không tồn tại'], 404);
         }
 
-        return response()->json([
-            'data' => new DeviceResource($device),
-        ]);
+        return response()->json(['data' => new DeviceResource($device)]);
     }
 
     /**
      * Device heartbeat/ping to update last active time.
-     *
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
      */
     public function ping(Request $request, int $id): JsonResponse
     {
@@ -181,22 +100,10 @@ class DeviceController extends Controller
             ->first();
 
         if (!$device) {
-            return response()->json([
-                'message' => 'Thiết bị không tồn tại',
-            ], 404);
+            return response()->json(['message' => 'Thiết bị không tồn tại'], 404);
         }
 
-        $device->markAsActive();
-
-        // Log heartbeat periodically (only every 5 minutes to avoid spam)
-        $lastHeartbeat = DeviceActivityLog::where('device_id', $device->id)
-            ->where('event', DeviceActivityLog::EVENT_HEARTBEAT)
-            ->latest()
-            ->first();
-
-        if (!$lastHeartbeat || $lastHeartbeat->created_at->diffInMinutes(now()) >= 5) {
-            $device->logActivity(DeviceActivityLog::EVENT_HEARTBEAT, $request->ip());
-        }
+        $this->deviceService->handleHeartbeat($device, $request->ip());
 
         return response()->json([
             'message' => 'Device is active',
@@ -206,10 +113,6 @@ class DeviceController extends Controller
 
     /**
      * Delete a device.
-     *
-     * @param Request $request
-     * @param int $id
-     * @return Response|JsonResponse
      */
     public function destroy(Request $request, int $id): Response|JsonResponse
     {
@@ -218,14 +121,10 @@ class DeviceController extends Controller
             ->first();
 
         if (!$device) {
-            return response()->json([
-                'message' => 'Thiết bị không tồn tại',
-            ], 404);
+            return response()->json(['message' => 'Thiết bị không tồn tại'], 404);
         }
 
-        // Log before deletion
         $device->logActivity('device_deleted', $request->ip());
-
         $device->delete();
 
         return response()->noContent();
@@ -233,42 +132,49 @@ class DeviceController extends Controller
 
     /**
      * Revoke all device tokens except the current one.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function logoutAll(Request $request): JsonResponse
     {
         $currentTokenId = $request->user()->currentAccessToken()->id;
-
         $request->user()->tokens()->where('id', '!=', $currentTokenId)->delete();
 
-        return response()->json([
-            'message' => 'Đã đăng xuất khỏi tất cả các thiết bị khác',
-        ]);
+        return response()->json(['message' => 'Đã đăng xuất khỏi tất cả các thiết bị khác']);
     }
 
     /**
-     * Update device socket connection status (online/offline)
-     * Called by Android app when socket connects/disconnects
-     *
-     * @param Request $request
-     * @return JsonResponse
+     * Update device socket connection status - by route parameter
      */
-    public function updateStatus(Request $request): JsonResponse
+    public function updateStatusById(Request $request, string $id): JsonResponse
+    {
+        $request->validate([
+            'status' => 'required|string|in:online,offline',
+            'socket_connected' => 'sometimes|boolean',
+        ]);
+
+        return $this->doUpdateStatus($request, $id);
+    }
+
+    /**
+     * Update device socket connection status - by body device_id
+     */
+    public function updateStatusByDeviceId(Request $request): JsonResponse
     {
         $request->validate([
             'device_id' => 'required|string',
             'status' => 'required|string|in:online,offline',
-            'socket_connected' => 'required|boolean',
+            'socket_connected' => 'sometimes|boolean',
+            'accessibility_enabled' => 'sometimes|boolean',
         ]);
 
-        $user = $request->user();
-        $deviceId = $request->input('device_id');
+        return $this->doUpdateStatus($request, $request->input('device_id'));
+    }
 
-        $device = Device::where('user_id', $user->id)
-            ->where('device_id', $deviceId)
-            ->first();
+    /**
+     * Common logic for updating device status
+     */
+    private function doUpdateStatus(Request $request, string $deviceId): JsonResponse
+    {
+        $device = $this->deviceService->findByDeviceId($request->user(), $deviceId);
 
         if (!$device) {
             return response()->json([
@@ -277,18 +183,11 @@ class DeviceController extends Controller
             ], 404);
         }
 
-        $device->update([
+        $device = $this->deviceService->updateDeviceStatus($device, [
+            'status' => $request->input('status'),
             'socket_connected' => $request->input('socket_connected'),
-            'last_active_at' => now(),
+            'accessibility_enabled' => $request->input('accessibility_enabled'),
         ]);
-
-        // Broadcast status change to frontend
-        broadcast(new \App\Events\DeviceStatusChanged(
-            $device,
-            $request->input('status')
-        ))->toOthers();
-
-        \Log::info("Device status updated via socket: {$device->name} -> {$request->input('status')}");
 
         return response()->json([
             'success' => true,
@@ -298,8 +197,231 @@ class DeviceController extends Controller
                 'name' => $device->name,
                 'status' => $request->input('status'),
                 'socket_connected' => $device->socket_connected,
+                'accessibility_enabled' => $device->accessibility_enabled,
             ],
         ]);
     }
-}
 
+    /**
+     * Heartbeat endpoint for APK to report alive status
+     */
+    public function heartbeat(Request $request): JsonResponse
+    {
+        $request->validate(['device_id' => 'required|string']);
+
+        $device = $this->deviceService->findByDeviceId($request->user(), $request->input('device_id'));
+
+        if (!$device) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Heartbeat received (device not registered)',
+            ]);
+        }
+
+        $this->deviceService->handleHeartbeat($device, $request->ip());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Heartbeat received',
+            'last_active_at' => $device->last_active_at->toIso8601String(),
+        ]);
+    }
+
+    /**
+     * Request element inspection from device
+     */
+    public function inspectElements(Request $request): JsonResponse
+    {
+        $request->validate(['device_id' => 'required|string']);
+
+        $device = $this->deviceService->findByDeviceId($request->user(), $request->input('device_id'));
+
+        if (!$device) {
+            return response()->json(['success' => false, 'message' => 'Device not found'], 404);
+        }
+
+        if (!$this->deviceService->requestElementInspection($device, $request->user()->id)) {
+            return response()->json(['success' => false, 'message' => 'Device is offline'], 400);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Inspection request sent to device',
+            'device_id' => $device->device_id,
+        ]);
+    }
+
+    /**
+     * Request visual inspection (OCR text detection) from device
+     */
+    public function visualInspect(Request $request): JsonResponse
+    {
+        $request->validate(['device_id' => 'required|string']);
+
+        $device = $this->deviceService->findByDeviceId($request->user(), $request->input('device_id'));
+
+        if (!$device) {
+            return response()->json(['success' => false, 'message' => 'Device not found'], 404);
+        }
+
+        if (!$this->deviceService->requestVisualInspection($device, $request->user()->id)) {
+            return response()->json(['success' => false, 'message' => 'Device is offline'], 400);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Visual inspection (OCR) request sent to device',
+            'device_id' => $device->device_id,
+        ]);
+    }
+
+    /**
+     * Receive element inspection results from device
+     */
+    public function inspectElementsResult(Request $request): JsonResponse
+    {
+        $request->validate([
+            'device_id' => 'required|string',
+            'success' => 'required|boolean',
+            'elements' => 'sometimes|array',
+            'package_name' => 'sometimes|string',
+            'error' => 'sometimes|string',
+        ]);
+
+        $this->deviceService->broadcastInspectionResults(
+            $request->user()->id,
+            $request->input('device_id'),
+            $request->input('success'),
+            $request->input('elements', []),
+            $request->input('package_name'),
+            $request->input('error')
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Inspection result received',
+            'element_count' => count($request->input('elements', [])),
+        ]);
+    }
+
+    /**
+     * Request realtime accessibility check from device via socket
+     */
+    public function checkAccessibility(Request $request): JsonResponse
+    {
+        $request->validate(['device_id' => 'required|string']);
+
+        $device = $this->deviceService->findByDeviceId($request->user(), $request->input('device_id'));
+
+        if (!$device) {
+            return response()->json(['success' => false, 'message' => 'Device not found'], 404);
+        }
+
+        if (!$this->deviceService->requestAccessibilityCheck($device, $request->user()->id)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Device is offline',
+                'accessibility_enabled' => $device->accessibility_enabled ?? false,
+            ], 400);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Accessibility check request sent to device',
+            'device_id' => $device->device_id,
+            'current_status' => $device->accessibility_enabled ?? false,
+        ]);
+    }
+
+    /**
+     * Receive accessibility check result from device
+     */
+    public function checkAccessibilityResult(Request $request): JsonResponse
+    {
+        $request->validate([
+            'device_id' => 'required|string',
+            'accessibility_enabled' => 'required|boolean',
+        ]);
+
+        $device = $this->deviceService->findByDeviceId($request->user(), $request->input('device_id'));
+
+        if (!$device) {
+            return response()->json(['success' => false, 'message' => 'Device not found'], 404);
+        }
+
+        $this->deviceService->broadcastAccessibilityStatus($device, $request->input('accessibility_enabled'));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Accessibility status broadcast',
+            'accessibility_enabled' => $request->input('accessibility_enabled'),
+        ]);
+    }
+
+    /**
+     * Send quick action to device via websocket
+     * Used by Quick Action Bar in workflow editor
+     */
+    public function sendAction(Request $request): JsonResponse
+    {
+        $request->validate([
+            'device_id' => 'required|string',
+            'action' => 'required|array',
+            'action.type' => 'required|string|in:scroll,key_event,tap,swipe',
+        ]);
+
+        $device = $this->deviceService->findByDeviceId($request->user(), $request->input('device_id'));
+
+        if (!$device) {
+            return response()->json(['success' => false, 'message' => 'Device not found'], 404);
+        }
+
+        $action = $request->input('action');
+
+        // Broadcast action to device via websocket
+        $success = $this->deviceService->sendQuickActionToDevice($device, $action, $request->user()->id);
+
+        if (!$success) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Device is offline or action failed to send',
+            ], 400);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Action '{$action['type']}' sent to device",
+            'device_id' => $device->device_id,
+            'action' => $action,
+        ]);
+    }
+
+    /**
+     * Get online status for all user's devices
+     * 
+     * OPTIMIZED: Uses Redis for O(1) lookup
+     * Frontend should poll this every 45s instead of using sockets
+     */
+    public function getOnlineStatus(Request $request): JsonResponse
+    {
+        $userId = $request->user()->id;
+        $onlineDeviceIds = $this->presenceService->getOnlineDevices($userId);
+
+        // Get device details for online devices
+        $onlineDevices = [];
+        if (!empty($onlineDeviceIds)) {
+            $onlineDevices = Device::where('user_id', $userId)
+                ->whereIn('device_id', $onlineDeviceIds)
+                ->get(['id', 'device_id', 'name', 'model', 'accessibility_enabled'])
+                ->toArray();
+        }
+
+        return response()->json([
+            'success' => true,
+            'online_device_ids' => $onlineDeviceIds,
+            'online_devices' => $onlineDevices,
+            'count' => count($onlineDeviceIds),
+            'checked_at' => now()->toISOString(),
+        ]);
+    }
+}

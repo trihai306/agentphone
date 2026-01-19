@@ -28,14 +28,14 @@ class RecordingManagerTest {
         assertEquals(RecordingManager.RecordingState.IDLE, RecordingManager.getState())
 
         // Start recording
-        val started = RecordingManager.startRecording()
-        assertTrue(started)
+        val result = RecordingManager.startRecording()
+        assertTrue(result.success)
         assertEquals(RecordingManager.RecordingState.RECORDING, RecordingManager.getState())
         assertTrue(RecordingManager.isActivelyRecording())
 
         // Stop recording
-        val stopped = RecordingManager.stopRecording()
-        assertTrue(stopped)
+        val stopResult = RecordingManager.stopRecording()
+        assertTrue(stopResult.success)
         assertEquals(RecordingManager.RecordingState.IDLE, RecordingManager.getState())
         assertFalse(RecordingManager.isActivelyRecording())
     }

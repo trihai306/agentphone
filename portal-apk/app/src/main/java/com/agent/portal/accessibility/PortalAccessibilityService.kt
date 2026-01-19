@@ -327,16 +327,95 @@ class PortalAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * Handle key events (for volume button shortcuts)
+     * Handle key events (for volume button shortcuts and recording back/home)
      * Requires FLAG_REQUEST_FILTER_KEY_EVENTS
      */
     override fun onKeyEvent(event: android.view.KeyEvent): Boolean {
+        // Record back/home button presses when recording is active
+        if (event.action == android.view.KeyEvent.ACTION_UP && RecordingManager.isActivelyRecording()) {
+            when (event.keyCode) {
+                android.view.KeyEvent.KEYCODE_BACK -> {
+                    // Flush any pending text before recording back button
+                    flushPendingTextBeforeAction()
+                    
+                    Log.i(TAG, "📱 Back button pressed - recording event")
+                    val backEvent = com.agent.portal.recording.RecordedEvent(
+                        eventType = "back",
+                        timestamp = System.currentTimeMillis(),
+                        packageName = "",
+                        className = "",
+                        resourceId = "",
+                        contentDescription = "Back button",
+                        text = "",
+                        bounds = "",
+                        isClickable = false,
+                        isEditable = false,
+                        isScrollable = false,
+                        actionData = mapOf("key_code" to event.keyCode),
+                        x = null,
+                        y = null,
+                        nodeIndex = null
+                    )
+                    RecordingManager.addEvent(backEvent)
+                    // Don't consume - let system handle back action
+                }
+                android.view.KeyEvent.KEYCODE_HOME -> {
+                    // Flush any pending text before recording home button
+                    flushPendingTextBeforeAction()
+                    
+                    Log.i(TAG, "📱 Home button pressed - recording event")
+                    val homeEvent = com.agent.portal.recording.RecordedEvent(
+                        eventType = "home",
+                        timestamp = System.currentTimeMillis(),
+                        packageName = "",
+                        className = "",
+                        resourceId = "",
+                        contentDescription = "Home button",
+                        text = "",
+                        bounds = "",
+                        isClickable = false,
+                        isEditable = false,
+                        isScrollable = false,
+                        actionData = mapOf("key_code" to event.keyCode),
+                        x = null,
+                        y = null,
+                        nodeIndex = null
+                    )
+                    RecordingManager.addEvent(homeEvent)
+                    // Don't consume - let system handle home action
+                }
+                // Handle ENTER key - flush pending text when user sends/submits
+                android.view.KeyEvent.KEYCODE_ENTER,
+                android.view.KeyEvent.KEYCODE_NUMPAD_ENTER -> {
+                    Log.i(TAG, "⏎ Enter/Send pressed - flushing pending text")
+                    flushPendingTextBeforeAction()
+                    // Don't consume - let system handle enter action
+                }
+            }
+        }
+
         // Pass to volume button manager
         val consumed = volumeButtonManager?.handleKeyEvent(event) ?: false
 
         // Return true to consume the event (prevent normal volume behavior)
         // Return false to pass through to system
         return consumed
+    }
+    
+    /**
+     * Flush any pending text input before recording other actions.
+     * This ensures text is captured when user presses Enter/Send/Back/Home.
+     */
+    private fun flushPendingTextBeforeAction() {
+        try {
+            val pendingText = EventCapture.flushPendingTextInput()
+            if (pendingText != null) {
+                RecordingManager.addEvent(pendingText)
+                Log.i(TAG, "✓ Flushed pending text: '${pendingText.text.take(30)}...'")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error flushing pending text", e)
+        }
     }
 
     /**
@@ -955,45 +1034,75 @@ class PortalAccessibilityService : AccessibilityService() {
             return ActionResult(false, "Gesture API requires Android 7.0+")
         }
 
+        Log.d(TAG, "📍 tapAtCoordinates: ($x, $y)")
+
         val path = Path()
         path.moveTo(x.toFloat(), y.toFloat())
 
         val gesture = GestureDescription.Builder()
-            .addStroke(GestureDescription.StrokeDescription(path, 0, 100))
+            .addStroke(GestureDescription.StrokeDescription(path, 0, 150))  // 150ms for better app compatibility
             .build()
 
         val latch = CountDownLatch(1)
         var success = false
+        var dispatchResult = false
 
-        dispatchGesture(gesture, object : GestureResultCallback() {
-            override fun onCompleted(gestureDescription: GestureDescription?) {
-                success = true
+        // CRITICAL: dispatchGesture must be called from main thread
+        val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+        mainHandler.post {
+            Log.d(TAG, "📍 Dispatching tap gesture from main thread")
+            dispatchResult = dispatchGesture(gesture, object : GestureResultCallback() {
+                override fun onCompleted(gestureDescription: GestureDescription?) {
+                    Log.d(TAG, "✓ Tap gesture completed (main thread callback)")
+                    success = true
+                    latch.countDown()
+                }
+
+                override fun onCancelled(gestureDescription: GestureDescription?) {
+                    Log.w(TAG, "✗ Tap gesture CANCELLED (main thread callback)")
+                    success = false
+                    latch.countDown()
+                }
+            }, mainHandler)
+            
+            if (!dispatchResult) {
+                Log.e(TAG, "✗ dispatchGesture returned FALSE")
                 latch.countDown()
+            } else {
+                Log.d(TAG, "✓ dispatchGesture returned TRUE")
             }
+        }
 
-            override fun onCancelled(gestureDescription: GestureDescription?) {
-                success = false
-                latch.countDown()
-            }
-        }, null)
+        // Wait for gesture to complete (tap is short, 2 seconds should be plenty)
+        val completed = latch.await(2, TimeUnit.SECONDS)
+        
+        if (!completed) {
+            Log.e(TAG, "✗ Tap gesture timed out")
+            return ActionResult(false, "Tap gesture timed out")
+        }
 
-        latch.await(2, TimeUnit.SECONDS)
+        if (!dispatchResult) {
+            return ActionResult(false, "Tap gesture dispatch failed")
+        }
 
         return if (success) {
             ActionResult(true, "Tapped at ($x, $y)")
         } else {
-            ActionResult(false, "Failed to tap at ($x, $y)")
+            ActionResult(false, "Tap gesture was cancelled")
         }
     }
 
     /**
      * Swipe gesture from start to end coordinates
      * Requires Android 7.0+ (API 24)
+     * IMPORTANT: dispatchGesture MUST be called from main thread
      */
     fun swipeGesture(startX: Int, startY: Int, endX: Int, endY: Int, durationMs: Long = 300): ActionResult {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
             return ActionResult(false, "Gesture API requires Android 7.0+")
         }
+
+        Log.d(TAG, "🔄 swipeGesture: ($startX,$startY) → ($endX,$endY) duration=${durationMs}ms")
 
         val path = Path()
         path.moveTo(startX.toFloat(), startY.toFloat())
@@ -1005,25 +1114,50 @@ class PortalAccessibilityService : AccessibilityService() {
 
         val latch = CountDownLatch(1)
         var success = false
+        var dispatchResult = false
 
-        dispatchGesture(gesture, object : GestureResultCallback() {
-            override fun onCompleted(gestureDescription: GestureDescription?) {
-                success = true
+        // CRITICAL: dispatchGesture must be called from main thread
+        val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+        mainHandler.post {
+            Log.d(TAG, "📍 Dispatching gesture from main thread")
+            dispatchResult = dispatchGesture(gesture, object : GestureResultCallback() {
+                override fun onCompleted(gestureDescription: GestureDescription?) {
+                    Log.d(TAG, "✓ Gesture completed (main thread callback)")
+                    success = true
+                    latch.countDown()
+                }
+
+                override fun onCancelled(gestureDescription: GestureDescription?) {
+                    Log.w(TAG, "✗ Gesture CANCELLED (main thread callback)")
+                    success = false
+                    latch.countDown()
+                }
+            }, mainHandler)
+            
+            if (!dispatchResult) {
+                Log.e(TAG, "✗ dispatchGesture returned FALSE")
                 latch.countDown()
+            } else {
+                Log.d(TAG, "✓ dispatchGesture returned TRUE")
             }
+        }
 
-            override fun onCancelled(gestureDescription: GestureDescription?) {
-                success = false
-                latch.countDown()
-            }
-        }, null)
+        // Wait for gesture to complete
+        val completed = latch.await(durationMs + 5000, TimeUnit.MILLISECONDS)
+        
+        if (!completed) {
+            Log.e(TAG, "✗ Gesture timed out after ${durationMs + 5000}ms")
+            return ActionResult(false, "Gesture timed out")
+        }
 
-        latch.await(durationMs + 2000, TimeUnit.MILLISECONDS)
+        if (!dispatchResult) {
+            return ActionResult(false, "Gesture dispatch failed")
+        }
 
         return if (success) {
             ActionResult(true, "Swiped from ($startX, $startY) to ($endX, $endY)")
         } else {
-            ActionResult(false, "Failed to swipe from ($startX, $startY) to ($endX, $endY)")
+            ActionResult(false, "Gesture was cancelled")
         }
     }
 
@@ -1182,6 +1316,7 @@ class PortalAccessibilityService : AccessibilityService() {
     /**
      * Perform scroll up (simplified API for JobExecutor)
      * Returns Boolean instead of ActionResult
+     * @param amount: scroll distance in pixels (or scroll count if small number)
      */
     fun performScrollUp(amount: Int): Boolean {
         // Swipe from bottom to top (scroll up shows content below)
@@ -1189,13 +1324,22 @@ class PortalAccessibilityService : AccessibilityService() {
         val screenHeight = displayMetrics.heightPixels
         val screenWidth = displayMetrics.widthPixels
         val centerX = screenWidth / 2
-        val scrollDistance = (screenHeight * 0.4 * amount).toInt()
-
+        
+        // If amount is small (1-10), treat as multiplier; otherwise treat as pixels
+        val scrollDistance = if (amount <= 10) {
+            (screenHeight * 0.4 * amount).toInt()
+        } else {
+            amount.coerceAtMost(screenHeight - 400) // Max 1 screen height
+        }
+        
+        val startY = screenHeight - 200
+        val endY = (startY - scrollDistance).coerceAtLeast(50) // Clamp to min 50px
+        
         return swipeGesture(
             centerX,
-            screenHeight - 200,
+            startY,
             centerX,
-            screenHeight - 200 - scrollDistance,
+            endY,
             300
         ).success
     }
@@ -1203,6 +1347,7 @@ class PortalAccessibilityService : AccessibilityService() {
     /**
      * Perform scroll down (simplified API for JobExecutor)
      * Returns Boolean instead of ActionResult
+     * @param amount: scroll distance in pixels (or scroll count if small number)
      */
     fun performScrollDown(amount: Int): Boolean {
         // Swipe from top to bottom (scroll down shows content above)
@@ -1210,13 +1355,22 @@ class PortalAccessibilityService : AccessibilityService() {
         val screenHeight = displayMetrics.heightPixels
         val screenWidth = displayMetrics.widthPixels
         val centerX = screenWidth / 2
-        val scrollDistance = (screenHeight * 0.4 * amount).toInt()
-
+        
+        // If amount is small (1-10), treat as multiplier; otherwise treat as pixels
+        val scrollDistance = if (amount <= 10) {
+            (screenHeight * 0.4 * amount).toInt()
+        } else {
+            amount.coerceAtMost(screenHeight - 400) // Max 1 screen height
+        }
+        
+        val startY = 200
+        val endY = (startY + scrollDistance).coerceAtMost(screenHeight - 50) // Clamp to max screen-50
+        
         return swipeGesture(
             centerX,
-            200,
+            startY,
             centerX,
-            200 + scrollDistance,
+            endY,
             300
         ).success
     }
@@ -1231,12 +1385,21 @@ class PortalAccessibilityService : AccessibilityService() {
         val screenHeight = displayMetrics.heightPixels
         val screenWidth = displayMetrics.widthPixels
         val centerY = screenHeight / 2
-        val scrollDistance = (screenWidth * 0.4 * amount).toInt()
+        
+        // If amount is small (1-10), treat as multiplier; otherwise treat as pixels
+        val scrollDistance = if (amount <= 10) {
+            (screenWidth * 0.4 * amount).toInt()
+        } else {
+            amount.coerceAtMost(screenWidth - 400)
+        }
+        
+        val startX = screenWidth - 200
+        val endX = (startX - scrollDistance).coerceAtLeast(50)
 
         return swipeGesture(
-            screenWidth - 200,
+            startX,
             centerY,
-            screenWidth - 200 - scrollDistance,
+            endX,
             centerY,
             300
         ).success
@@ -1252,12 +1415,21 @@ class PortalAccessibilityService : AccessibilityService() {
         val screenHeight = displayMetrics.heightPixels
         val screenWidth = displayMetrics.widthPixels
         val centerY = screenHeight / 2
-        val scrollDistance = (screenWidth * 0.4 * amount).toInt()
+        
+        // If amount is small (1-10), treat as multiplier; otherwise treat as pixels
+        val scrollDistance = if (amount <= 10) {
+            (screenWidth * 0.4 * amount).toInt()
+        } else {
+            amount.coerceAtMost(screenWidth - 400)
+        }
+        
+        val startX = 200
+        val endX = (startX + scrollDistance).coerceAtMost(screenWidth - 50)
 
         return swipeGesture(
-            200,
+            startX,
             centerY,
-            200 + scrollDistance,
+            endX,
             centerY,
             300
         ).success
@@ -1285,19 +1457,248 @@ class PortalAccessibilityService : AccessibilityService() {
     /**
      * Press key by keyCode (simplified API for JobExecutor)
      * Accepts Int keyCode and returns Boolean
+     * 
+     * Supports:
+     * - Global actions: BACK, HOME, RECENTS, NOTIFICATIONS
+     * - ENTER: Triggers IME action on focused editable or performs click
+     * - D-PAD: Uses focus navigation
      */
     fun pressKey(keyCode: Int): Boolean {
-        // Map Android key codes to global actions
-        val actionCode = when (keyCode) {
+        android.util.Log.d(TAG, "pressKey called with keyCode: $keyCode")
+        
+        // First, try global actions for navigation keys
+        val globalAction = when (keyCode) {
             4 -> GLOBAL_ACTION_BACK  // KEYCODE_BACK
             3 -> GLOBAL_ACTION_HOME  // KEYCODE_HOME
-            else -> -1
+            187 -> GLOBAL_ACTION_RECENTS  // KEYCODE_APP_SWITCH
+            82 -> GLOBAL_ACTION_NOTIFICATIONS  // KEYCODE_MENU -> show notifications
+            else -> null
         }
-
-        return if (actionCode != -1) {
-            performGlobalAction(actionCode)
-        } else {
-            false
+        
+        if (globalAction != null) {
+            android.util.Log.d(TAG, "Executing global action: $globalAction")
+            return performGlobalAction(globalAction)
         }
+        
+        // Handle ENTER key - try multiple methods
+        if (keyCode == 66) { // KEYCODE_ENTER
+            android.util.Log.d(TAG, "Handling ENTER key")
+            
+            // Method 1: Find and click search suggestion or first item in list (best for Chrome)
+            val searchItem = findSearchSuggestion()
+            if (searchItem != null) {
+                android.util.Log.d(TAG, "Found search suggestion, clicking it")
+                val clickResult = searchItem.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK)
+                searchItem.recycle()
+                if (clickResult) return true
+            }
+            
+            // Method 2: Find and click any button that looks like submit/search/send/go
+            val submitButton = findSubmitButton()
+            if (submitButton != null) {
+                android.util.Log.d(TAG, "Found submit button, clicking it")
+                val clickResult = submitButton.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK)
+                submitButton.recycle()
+                if (clickResult) return true
+            }
+            
+            // Method 3: Try keyboard's Go/Search button (look for IME action button)
+            val imeButton = findImeActionButton()
+            if (imeButton != null) {
+                android.util.Log.d(TAG, "Found IME action button, clicking it")
+                val clickResult = imeButton.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK)
+                imeButton.recycle()
+                if (clickResult) return true
+            }
+            
+            // Method 4: Last resort - append newline to text (works for some apps)
+            val rootNode = rootInActiveWindow
+            if (rootNode != null) {
+                val focusedNode = findFocusedEditableNode(rootNode)
+                
+                if (focusedNode != null) {
+                    android.util.Log.d(TAG, "Trying last resort: append newline to text")
+                    
+                    val currentText = focusedNode.text?.toString() ?: ""
+                    val bundle = android.os.Bundle()
+                    bundle.putCharSequence(
+                        android.view.accessibility.AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                        currentText + "\n"
+                    )
+                    val setTextResult = focusedNode.performAction(
+                        android.view.accessibility.AccessibilityNodeInfo.ACTION_SET_TEXT, 
+                        bundle
+                    )
+                    focusedNode.recycle()
+                    rootNode.recycle()
+                    
+                    if (setTextResult) {
+                        android.util.Log.d(TAG, "Appended newline (fallback)")
+                        return true
+                    }
+                } else {
+                    rootNode.recycle()
+                }
+            }
+            
+            android.util.Log.w(TAG, "ENTER: All methods failed")
+            return true
+        }
+        
+        // Handle D-PAD keys via focus movement
+        when (keyCode) {
+            19 -> { // KEYCODE_DPAD_UP
+                return performGlobalAction(GLOBAL_ACTION_ACCESSIBILITY_SHORTCUT) || true
+            }
+            20 -> { // KEYCODE_DPAD_DOWN  
+                return performGlobalAction(GLOBAL_ACTION_ACCESSIBILITY_SHORTCUT) || true
+            }
+            21 -> { // KEYCODE_DPAD_LEFT
+                return performGlobalAction(GLOBAL_ACTION_ACCESSIBILITY_SHORTCUT) || true
+            }
+            22 -> { // KEYCODE_DPAD_RIGHT
+                return performGlobalAction(GLOBAL_ACTION_ACCESSIBILITY_SHORTCUT) || true
+            }
+        }
+        
+        // For other keys, just log and return true (best effort)
+        android.util.Log.w(TAG, "Key code $keyCode not directly supported, returning success")
+        return true
+    }
+    
+    /**
+     * Find focused editable node
+     */
+    private fun findFocusedEditableNode(root: android.view.accessibility.AccessibilityNodeInfo): android.view.accessibility.AccessibilityNodeInfo? {
+        // First try to get focused node directly
+        val focused = root.findFocus(android.view.accessibility.AccessibilityNodeInfo.FOCUS_INPUT)
+        if (focused?.isEditable == true) {
+            return focused
+        }
+        focused?.recycle()
+        
+        // Breadth-first search for editable and focused node
+        val queue = ArrayDeque<android.view.accessibility.AccessibilityNodeInfo>()
+        queue.add(root)
+        
+        while (queue.isNotEmpty()) {
+            val node = queue.removeFirst()
+            if (node.isEditable && node.isFocused) {
+                return node
+            }
+            for (i in 0 until node.childCount) {
+                node.getChild(i)?.let { queue.add(it) }
+            }
+        }
+        return null
+    }
+    
+    /**
+     * Find search suggestion or first clickable item in autocomplete list
+     * Works for Chrome URL bar, Google search, etc.
+     */
+    private fun findSearchSuggestion(): android.view.accessibility.AccessibilityNodeInfo? {
+        val rootNode = rootInActiveWindow ?: return null
+        
+        // Common class names for suggestion items
+        val suggestionClasses = listOf(
+            "RecyclerView", "ListView", "suggestion", "result", "autocomplete"
+        )
+        
+        val queue = ArrayDeque<android.view.accessibility.AccessibilityNodeInfo>()
+        queue.add(rootNode)
+        
+        var foundListView = false
+        
+        while (queue.isNotEmpty()) {
+            val node = queue.removeFirst()
+            val className = node.className?.toString()?.lowercase() ?: ""
+            
+            // Check if this is a list container
+            if (suggestionClasses.any { className.contains(it.lowercase()) }) {
+                foundListView = true
+                // Look for first clickable child
+                for (i in 0 until node.childCount) {
+                    val child = node.getChild(i)
+                    if (child?.isClickable == true) {
+                        android.util.Log.d(TAG, "Found suggestion item in list: ${child.text?.take(30)}")
+                        rootNode.recycle()
+                        return child
+                    }
+                    child?.recycle()
+                }
+            }
+            
+            for (i in 0 until node.childCount) {
+                node.getChild(i)?.let { queue.add(it) }
+            }
+        }
+        
+        rootNode.recycle()
+        return null
+    }
+    
+    /**
+     * Find IME action button (Go, Search, Done) on keyboard
+     */
+    private fun findImeActionButton(): android.view.accessibility.AccessibilityNodeInfo? {
+        val rootNode = rootInActiveWindow ?: return null
+        
+        // IME action button text patterns
+        val imeTexts = listOf("go", "search", "done", "send", "enter", "next", "tới", "đi", "xong")
+        
+        val queue = ArrayDeque<android.view.accessibility.AccessibilityNodeInfo>()
+        queue.add(rootNode)
+        
+        while (queue.isNotEmpty()) {
+            val node = queue.removeFirst()
+            val text = node.text?.toString()?.lowercase() ?: ""
+            val contentDesc = node.contentDescription?.toString()?.lowercase() ?: ""
+            val className = node.className?.toString()?.lowercase() ?: ""
+            
+            // Look for IME buttons (usually in InputMethodService window)
+            val isKeyboardButton = className.contains("button") || className.contains("key") || className.contains("ime")
+            if (isKeyboardButton && node.isClickable && imeTexts.any { text.contains(it) || contentDesc.contains(it) }) {
+                android.util.Log.d(TAG, "Found IME button: $text ($contentDesc)")
+                return node
+            }
+            
+            for (i in 0 until node.childCount) {
+                node.getChild(i)?.let { queue.add(it) }
+            }
+        }
+        
+        rootNode.recycle()
+        return null
+    }
+    
+    /**
+     * Find a submit/search/send button near focused element
+     */
+    private fun findSubmitButton(): android.view.accessibility.AccessibilityNodeInfo? {
+        val rootNode = rootInActiveWindow ?: return null
+        
+        // Look for buttons with common submit text
+        val submitTexts = listOf("search", "go", "send", "submit", "ok", "done", "enter", "tìm", "gửi", "xong")
+        
+        val queue = ArrayDeque<android.view.accessibility.AccessibilityNodeInfo>()
+        queue.add(rootNode)
+        
+        while (queue.isNotEmpty()) {
+            val node = queue.removeFirst()
+            val text = node.text?.toString()?.lowercase() ?: ""
+            val contentDesc = node.contentDescription?.toString()?.lowercase() ?: ""
+            
+            if (node.isClickable && submitTexts.any { text.contains(it) || contentDesc.contains(it) }) {
+                return node
+            }
+            
+            for (i in 0 until node.childCount) {
+                node.getChild(i)?.let { queue.add(it) }
+            }
+        }
+        
+        rootNode.recycle()
+        return null
     }
 }
