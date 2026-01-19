@@ -2,12 +2,21 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Wallet extends Model
 {
+    use LogsActivity;
+
+    protected array $dontLogColumns = [
+        'updated_at',
+        'created_at',
+        'balance',
+        'locked_balance', // Balance changes frequently via transactions
+    ];
     protected $fillable = [
         'user_id',
         'balance',

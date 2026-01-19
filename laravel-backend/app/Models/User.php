@@ -219,6 +219,54 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Get user's workflows (flows)
+     */
+    public function flows()
+    {
+        return $this->hasMany(Flow::class);
+    }
+
+    /**
+     * Get user's campaigns
+     */
+    public function campaigns()
+    {
+        return $this->hasMany(Campaign::class);
+    }
+
+    /**
+     * Get user's workflow jobs
+     */
+    public function workflowJobs()
+    {
+        return $this->hasMany(WorkflowJob::class);
+    }
+
+    /**
+     * Get user's error reports
+     */
+    public function errorReports()
+    {
+        return $this->hasMany(ErrorReport::class);
+    }
+
+    /**
+     * Get user's recording sessions
+     */
+    public function recordingSessions()
+    {
+        return $this->hasMany(RecordingSession::class);
+    }
+
+    /**
+     * Get user's activity logs
+     */
+    public function activityLogs()
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
+
+    /**
      * Add AI credits to user account
      */
     public function addAiCredits(int $amount): void

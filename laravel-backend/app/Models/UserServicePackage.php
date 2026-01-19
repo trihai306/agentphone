@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -9,7 +10,15 @@ use Illuminate\Support\Str;
 
 class UserServicePackage extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, LogsActivity;
+
+    protected array $dontLogColumns = [
+        'updated_at',
+        'created_at',
+        'credits_remaining',
+        'credits_used', // Usage updates frequently
+        'usage_stats',
+    ];
 
     protected $fillable = [
         'order_code',
@@ -204,7 +213,7 @@ class UserServicePackage extends Model
 
     public function getStatusColorAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_PENDING => 'warning',
             self::STATUS_ACTIVE => 'success',
             self::STATUS_EXPIRED => 'secondary',
@@ -216,7 +225,7 @@ class UserServicePackage extends Model
 
     public function getPaymentStatusColorAttribute(): string
     {
-        return match($this->payment_status) {
+        return match ($this->payment_status) {
             self::PAYMENT_STATUS_PENDING => 'warning',
             self::PAYMENT_STATUS_PAID => 'success',
             self::PAYMENT_STATUS_FAILED => 'danger',

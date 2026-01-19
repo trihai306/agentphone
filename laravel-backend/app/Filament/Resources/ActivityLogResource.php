@@ -88,6 +88,28 @@ class ActivityLogResource extends Resource
                     ->searchable()
                     ->preload(),
 
+                Tables\Filters\SelectFilter::make('period')
+                    ->label('Thời gian')
+                    ->options([
+                        'today' => 'Hôm nay',
+                        'week' => 'Tuần này',
+                        'month' => 'Tháng này',
+                        'quarter' => 'Quý này',
+                    ])
+                    ->query(function ($query, array $data) {
+                        $value = $data['value'] ?? null;
+                        if (!$value)
+                            return $query;
+
+                        return match ($value) {
+                            'today' => $query->whereDate('created_at', today()),
+                            'week' => $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]),
+                            'month' => $query->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()]),
+                            'quarter' => $query->whereBetween('created_at', [now()->startOfQuarter(), now()->endOfQuarter()]),
+                            default => $query,
+                        };
+                    }),
+
                 Tables\Filters\Filter::make('created_at')
                     ->form([
                         Forms\Components\DatePicker::make('from')->label('Từ ngày'),
@@ -99,9 +121,75 @@ class ActivityLogResource extends Resource
                             ->when($data['until'], fn($q, $date) => $q->whereDate('created_at', '<=', $date));
                     }),
             ])
+            ->headerActions([
+                Tables\Actions\Action::make('clearOldLogs')
+                    ->label('Dọn dẹp logs cũ')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->form([
+                        Forms\Components\Select::make('period')
+                            ->label('Xóa logs cũ hơn')
+                            ->options([
+                                'week' => '1 tuần trước',
+                                'month' => '1 tháng trước',
+                                'quarter' => '3 tháng trước',
+                                'half_year' => '6 tháng trước',
+                                'year' => '1 năm trước',
+                            ])
+                            ->required(),
+                    ])
+                    ->requiresConfirmation()
+                    ->modalHeading('Xóa logs cũ')
+                    ->modalDescription('Hành động này không thể hoàn tác. Bạn có chắc chắn?')
+                    ->action(function (array $data) {
+                        $cutoffDate = match ($data['period']) {
+                            'week' => now()->subWeek(),
+                            'month' => now()->subMonth(),
+                            'quarter' => now()->subQuarter(),
+                            'half_year' => now()->subMonths(6),
+                            'year' => now()->subYear(),
+                            default => now()->subMonth(),
+                        };
+
+                        $deleted = ActivityLog::where('created_at', '<', $cutoffDate)->delete();
+
+                        \Filament\Notifications\Notification::make()
+                            ->success()
+                            ->title('Đã xóa logs cũ')
+                            ->body("Đã xóa {$deleted} logs cũ hơn " . $cutoffDate->format('d/m/Y'))
+                            ->send();
+                    }),
+            ])
             ->actions([
                 Tables\Actions\ViewAction::make()
                     ->modalContent(fn(ActivityLog $record) => view('filament.resources.activity-log.view', ['record' => $record])),
+
+                Tables\Actions\Action::make('restore')
+                    ->label('Khôi phục')
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->modalHeading('Khôi phục dữ liệu gốc')
+                    ->modalDescription(fn(ActivityLog $record) => "Bạn có chắc muốn khôi phục {$record->model_name} về giá trị cũ?")
+                    ->modalSubmitActionLabel('Khôi phục')
+                    ->visible(fn(ActivityLog $record): bool => $record->canRestore())
+                    ->action(function (ActivityLog $record) {
+                        $result = $record->restoreOldValues();
+
+                        if ($result) {
+                            \Filament\Notifications\Notification::make()
+                                ->success()
+                                ->title('Đã khôi phục thành công')
+                                ->body("Dữ liệu đã được khôi phục về giá trị gốc.")
+                                ->send();
+                        } else {
+                            \Filament\Notifications\Notification::make()
+                                ->danger()
+                                ->title('Không thể khôi phục')
+                                ->body("Đối tượng không tồn tại hoặc đã bị xóa.")
+                                ->send();
+                        }
+                    }),
             ])
             ->bulkActions([])
             ->defaultSort('created_at', 'desc')

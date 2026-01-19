@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,13 @@ use Illuminate\Support\Facades\Storage;
 
 class UserMedia extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity;
+
+    protected array $dontLogColumns = [
+        'updated_at',
+        'created_at',
+        'download_count', // Increments on each download
+    ];
 
     protected $table = 'user_media';
 

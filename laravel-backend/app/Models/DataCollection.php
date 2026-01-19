@@ -2,12 +2,19 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class DataCollection extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
+
+    protected array $dontLogColumns = [
+        'updated_at',
+        'created_at',
+        'total_records', // Updated frequently when records change
+    ];
 
     protected $fillable = [
         'user_id',

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
+use App\Filament\Resources\UserResource\Widgets\UserStatsWidget;
 use App\Models\User;
 use Filament\Actions;
 use Filament\Notifications\Notification;
@@ -28,6 +29,28 @@ class EditUser extends EditRecord
                     }
                 }),
         ];
+    }
+
+    public function getContentTabLabel(): ?string
+    {
+        return 'Thông tin cơ bản';
+    }
+
+    public function hasCombinedRelationManagerTabsWithContent(): bool
+    {
+        return true;
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            UserStatsWidget::class,
+        ];
+    }
+
+    public function getHeaderWidgetsColumns(): int|array
+    {
+        return 4;
     }
 
     protected function getRedirectUrl(): string

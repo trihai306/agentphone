@@ -145,14 +145,27 @@ object SocketJobManager {
                     "${com.agent.portal.utils.NetworkUtils.getApiBaseUrl()}/pusher/auth"
                 }
                 
+                // Refresh auth token from session (may have changed since init)
+                val context = contextRef?.get()
+                if (context != null) {
+                    val sessionManager = com.agent.portal.auth.SessionManager(context)
+                    val session = sessionManager.getSession()
+                    this@SocketJobManager.authToken = session?.token
+                    this@SocketJobManager.userId = session?.userId?.toString()
+                    Log.d(TAG, "Auth token refreshed: ${authToken?.take(20) ?: "null"}...")
+                }
+                
                 val authorizer = HttpChannelAuthorizer(authUrl)
                 // Add auth headers
-                authToken?.let { token ->
+                if (authToken != null) {
                     authorizer.setHeaders(mapOf(
-                        "Authorization" to "Bearer $token",
+                        "Authorization" to "Bearer $authToken",
                         "Accept" to "application/json",
                         "Content-Type" to "application/x-www-form-urlencoded"
                     ))
+                    Log.i(TAG, "✓ Auth header set for Pusher authorizer")
+                } else {
+                    Log.w(TAG, "⚠️ No auth token available for Pusher auth!")
                 }
 
                 val options = PusherOptions().apply {

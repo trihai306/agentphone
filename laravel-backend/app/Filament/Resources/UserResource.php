@@ -3,6 +3,10 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
+use App\Filament\Resources\UserResource\RelationManagers\DevicesRelationManager;
+use App\Filament\Resources\UserResource\RelationManagers\FlowsRelationManager;
+use App\Filament\Resources\UserResource\RelationManagers\ServicePackagesRelationManager;
+use App\Filament\Resources\UserResource\RelationManagers\TransactionsRelationManager;
 use App\Filament\Resources\UserResource\RelationManagers\WalletsRelationManager;
 use App\Models\User;
 use App\Models\UserServicePackage;
@@ -159,6 +163,54 @@ class UserResource extends Resource
                     })
                     ->badge()
                     ->color('info'),
+
+                Tables\Columns\TextColumn::make('devices_count')
+                    ->label('Thiết bị')
+                    ->counts('devices')
+                    ->badge()
+                    ->color('primary'),
+
+                Tables\Columns\TextColumn::make('flows_count')
+                    ->label('Workflows')
+                    ->counts('flows')
+                    ->badge()
+                    ->color('warning'),
+
+                Tables\Columns\TextColumn::make('jobs_stats')
+                    ->label('Jobs (✓/✗)')
+                    ->getStateUsing(function (User $record): string {
+                        $completed = $record->workflowJobs()->where('status', 'completed')->count();
+                        $failed = $record->workflowJobs()->where('status', 'failed')->count();
+                        return "{$completed}/{$failed}";
+                    })
+                    ->badge()
+                    ->color(fn($state): string => str_contains($state, '/0') ? 'success' : 'danger'),
+
+                Tables\Columns\TextColumn::make('ai_usage')
+                    ->label('AI (dùng/còn)')
+                    ->getStateUsing(function (User $record): string {
+                        $used = $record->aiGenerations()->count();
+                        $remaining = UserServicePackage::where('user_id', $record->id)
+                            ->where('status', 'active')
+                            ->sum('credits_remaining');
+                        return "{$used}/{$remaining}";
+                    })
+                    ->badge()
+                    ->color('info'),
+
+                Tables\Columns\TextColumn::make('storage_usage')
+                    ->label('Dung lượng')
+                    ->getStateUsing(function (User $record): string {
+                        $bytes = $record->mediaFiles()->sum('file_size');
+                        if ($bytes >= 1073741824) {
+                            return number_format($bytes / 1073741824, 1) . ' GB';
+                        } elseif ($bytes >= 1048576) {
+                            return number_format($bytes / 1048576, 1) . ' MB';
+                        }
+                        return number_format($bytes / 1024, 0) . ' KB';
+                    })
+                    ->badge()
+                    ->color('gray'),
 
                 Tables\Columns\TextColumn::make('email_verified_at')
                     ->dateTime()
@@ -338,6 +390,10 @@ class UserResource extends Resource
     {
         return [
             WalletsRelationManager::class,
+            DevicesRelationManager::class,
+            FlowsRelationManager::class,
+            TransactionsRelationManager::class,
+            ServicePackagesRelationManager::class,
         ];
     }
 

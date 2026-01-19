@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,6 +10,20 @@ use Illuminate\Support\Facades\Redis;
 
 class Device extends Model
 {
+    use LogsActivity;
+
+    /**
+     * Columns to exclude from activity logging (noisy heartbeat data)
+     */
+    protected array $dontLogColumns = [
+        'updated_at',
+        'created_at',
+        'last_active_at',
+        'socket_connected',
+        'accessibility_enabled',
+        'accessibility_checked_at',
+    ];
+
     protected $fillable = [
         'user_id',
         'device_id',

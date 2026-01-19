@@ -315,21 +315,21 @@ class UserServicePackageResource extends Resource
                         '<div class="grid grid-cols-2 gap-4">' .
                         '<div class="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20">' .
                         '<p class="text-sm text-gray-500 dark:text-gray-400">Khách hàng</p>' .
-                        '<p class="font-semibold text-blue-700 dark:text-blue-300">' . $record->user->name . '</p>' .
+                        '<p class="font-semibold text-blue-700 dark:text-blue-300">' . ($record->user?->name ?? 'N/A') . '</p>' .
                         '</div>' .
                         '<div class="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20">' .
                         '<p class="text-sm text-gray-500 dark:text-gray-400">Gói dịch vụ</p>' .
-                        '<p class="font-semibold text-purple-700 dark:text-purple-300">' . $record->servicePackage->name . '</p>' .
+                        '<p class="font-semibold text-purple-700 dark:text-purple-300">' . ($record->servicePackage?->name ?? 'N/A') . '</p>' .
                         '</div>' .
                         '</div>' .
                         '<div class="grid grid-cols-2 gap-4">' .
                         '<div class="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20">' .
                         '<p class="text-sm text-gray-500 dark:text-gray-400">Credits sẽ cấp</p>' .
-                        '<p class="font-semibold text-amber-700 dark:text-amber-300">' . number_format($record->servicePackage->credits ?? 0, 0, ',', '.') . ' credits</p>' .
+                        '<p class="font-semibold text-amber-700 dark:text-amber-300">' . number_format($record->servicePackage?->credits ?? 0, 0, ',', '.') . ' credits</p>' .
                         '</div>' .
                         '<div class="p-3 rounded-lg bg-cyan-50 dark:bg-cyan-900/20">' .
                         '<p class="text-sm text-gray-500 dark:text-gray-400">Thời hạn</p>' .
-                        '<p class="font-semibold text-cyan-700 dark:text-cyan-300">' . ($record->servicePackage->duration_days ?? 30) . ' ngày</p>' .
+                        '<p class="font-semibold text-cyan-700 dark:text-cyan-300">' . ($record->servicePackage?->duration_days ?? 30) . ' ngày</p>' .
                         '</div>' .
                         '</div>' .
                         '<p class="text-xs text-center text-gray-400 dark:text-gray-500">⚠️ Gói sẽ được kích hoạt ngay lập tức</p>' .
@@ -348,7 +348,7 @@ class UserServicePackageResource extends Resource
                         Notification::make()
                             ->success()
                             ->title('🚀 Kích hoạt thành công!')
-                            ->body("Gói {$record->servicePackage->name} đã được kích hoạt cho {$record->user->name}.\nHết hạn: {$expiresAt}")
+                            ->body("Gói " . ($record->servicePackage?->name ?? 'N/A') . " đã được kích hoạt cho " . ($record->user?->name ?? 'N/A') . ".\nHết hạn: {$expiresAt}")
                             ->duration(5000)
                             ->send();
                     }),
@@ -368,16 +368,16 @@ class UserServicePackageResource extends Resource
                         '<div class="grid grid-cols-2 gap-4">' .
                         '<div class="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20">' .
                         '<p class="text-sm text-gray-500 dark:text-gray-400">Khách hàng</p>' .
-                        '<p class="font-semibold text-blue-700 dark:text-blue-300">' . $record->user->name . '</p>' .
+                        '<p class="font-semibold text-blue-700 dark:text-blue-300">' . ($record->user?->name ?? 'N/A') . '</p>' .
                         '</div>' .
                         '<div class="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20">' .
                         '<p class="text-sm text-gray-500 dark:text-gray-400">Gói dịch vụ</p>' .
-                        '<p class="font-semibold text-purple-700 dark:text-purple-300">' . $record->servicePackage->name . '</p>' .
+                        '<p class="font-semibold text-purple-700 dark:text-purple-300">' . ($record->servicePackage?->name ?? 'N/A') . '</p>' .
                         '</div>' .
                         '</div>' .
                         '<div class="p-4 rounded-lg border-2 border-green-500 bg-green-50 dark:bg-green-900/20">' .
                         '<p class="text-sm text-gray-500 dark:text-gray-400">Số tiền thanh toán</p>' .
-                        '<p class="text-2xl font-bold text-green-600 dark:text-green-400">' . number_format($record->price_paid, 0, ',', '.') . ' ₫</p>' .
+                        '<p class="text-2xl font-bold text-green-600 dark:text-green-400">' . number_format($record->price_paid ?? 0, 0, ',', '.') . ' ₫</p>' .
                         '</div>' .
                         '<p class="text-xs text-center text-gray-400 dark:text-gray-500">⚠️ Hành động này sẽ đánh dấu đơn hàng đã thanh toán</p>' .
                         '</div>'
@@ -410,7 +410,7 @@ class UserServicePackageResource extends Resource
                         Notification::make()
                             ->success()
                             ->title('✅ Xác nhận thanh toán thành công!')
-                            ->body("Đã xác nhận thanh toán cho đơn hàng {$record->order_code} của {$record->user->name}.")
+                            ->body("Đã xác nhận thanh toán cho đơn hàng {$record->order_code} của " . ($record->user?->name ?? 'N/A') . ".")
                             ->duration(5000)
                             ->send();
                     }),

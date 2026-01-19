@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class WorkflowJob extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
+
+    protected array $dontLogColumns = [
+        'updated_at',
+        'created_at',
+        'completed_tasks',
+        'failed_tasks',
+        'total_tasks', // Progress updates frequently
+        'current_record_index',
+        'records_processed',
+        'records_failed',
+        'current_workflow_index',
+        'retry_count',
+        'started_at',
+        'completed_at', // Managed by markAs* methods
+    ];
 
     protected $table = 'workflow_jobs';
 

@@ -2,11 +2,20 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AiGeneration extends Model
 {
+    use LogsActivity;
+
+    protected array $dontLogColumns = [
+        'updated_at',
+        'created_at',
+        'provider_metadata',
+        'processing_time', // Updated during processing
+    ];
     protected $fillable = [
         'user_id',
         'type',

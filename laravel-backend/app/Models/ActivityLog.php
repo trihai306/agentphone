@@ -136,4 +136,82 @@ class ActivityLog extends Model
         }
         return $query;
     }
+
+    /**
+     * Check if this log entry can be restored
+     */
+    public function canRestore(): bool
+    {
+        // Can only restore update actions that have old_values
+        if ($this->action !== self::ACTION_UPDATE) {
+            return false;
+        }
+
+        if (empty($this->old_values)) {
+            return false;
+        }
+
+        // Check if model exists
+        if (!$this->model_type || !$this->model_id) {
+            return false;
+        }
+
+        // Check if model class exists
+        if (!class_exists($this->model_type)) {
+            return false;
+        }
+
+        // Check if record still exists
+        return $this->model_type::find($this->model_id) !== null;
+    }
+
+    /**
+     * Restore the model to its old values
+     */
+    public function restoreOldValues(): bool
+    {
+        if (!$this->canRestore()) {
+            return false;
+        }
+
+        $model = $this->model_type::find($this->model_id);
+        if (!$model) {
+            return false;
+        }
+
+        try {
+            // Only restore fields that exist in old_values and are fillable
+            $restoreData = [];
+            $fillable = $model->getFillable();
+
+            foreach ($this->old_values as $key => $value) {
+                if (in_array($key, $fillable) || empty($fillable)) {
+                    $restoreData[$key] = $value;
+                }
+            }
+
+            if (empty($restoreData)) {
+                return false;
+            }
+
+            $model->update($restoreData);
+
+            // Log the restore action
+            self::log(
+                'restore',
+                "Khôi phục " . class_basename($model) . " #{$model->getKey()} từ nhật ký #{$this->id}",
+                $model,
+                $this->new_values,
+                $restoreData
+            );
+
+            return true;
+        } catch (\Exception $e) {
+            \Log::error('Failed to restore from activity log', [
+                'log_id' => $this->id,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
 }
