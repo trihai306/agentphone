@@ -11,17 +11,17 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
     const { notifications: notificationData } = usePage().props;
     const unreadCount = notificationData?.unread_count || 0;
 
-    // Simplified navigation - 3 main sections
+    // Simplified navigation - 5 main sections
     const navSections = [
         {
-            title: t('navigation.main', { defaultValue: 'Main' }),
+            title: t('navigation.main', { defaultValue: 'Chính' }),
             items: [
                 { href: '/dashboard', icon: 'home', label: t('navigation.dashboard'), active: url === '/dashboard' },
                 { href: '/devices', icon: 'device', label: t('navigation.devices'), active: url?.startsWith('/devices') },
             ]
         },
         {
-            title: t('navigation.automation', { defaultValue: 'Automation' }),
+            title: t('navigation.automation', { defaultValue: 'Tự động hóa' }),
             highlight: true,
             items: [
                 { href: '/flows', icon: 'flow', label: t('navigation.workflows'), active: url?.startsWith('/flows'), highlight: true },
@@ -31,19 +31,29 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
             ]
         },
         {
-            title: t('navigation.resources', { defaultValue: 'Resources' }),
+            title: t('navigation.resources', { defaultValue: 'Tài nguyên' }),
             items: [
                 { href: '/ai-studio', icon: 'ai', label: t('navigation.ai_studio', { defaultValue: 'AI Studio' }), active: url?.startsWith('/ai-studio'), highlight: true },
                 { href: '/marketplace', icon: 'shop', label: t('navigation.marketplace', { defaultValue: 'Marketplace' }), active: url?.startsWith('/marketplace') },
                 { href: '/media', icon: 'media', label: t('navigation.media'), active: url?.startsWith('/media') },
             ]
         },
+        {
+            title: t('navigation.finance', { defaultValue: 'Tài chính' }),
+            items: [
+                { href: '/wallet', icon: 'wallet', label: t('navigation.wallet', { defaultValue: 'Ví tiền' }), active: url === '/wallet' },
+                { href: '/topup', icon: 'plus', label: t('navigation.topup', { defaultValue: 'Nạp tiền' }), active: url?.startsWith('/topup') },
+                { href: '/withdraw', icon: 'withdraw', label: t('navigation.withdraw', { defaultValue: 'Rút tiền' }), active: url?.startsWith('/withdraw') },
+                { href: '/bank-accounts', icon: 'bank', label: t('navigation.bank_accounts', { defaultValue: 'Tài khoản NH' }), active: url?.startsWith('/bank-accounts') },
+                { href: '/packages', icon: 'package', label: t('navigation.packages', { defaultValue: 'Gói dịch vụ' }), active: url?.startsWith('/packages') },
+            ]
+        },
     ];
 
     // Quick access items for collapsed mode
     const quickAccessItems = [
-        { href: '/wallet', icon: 'wallet', label: t('navigation.wallet'), active: url === '/wallet' },
         { href: '/notifications', icon: 'bell', label: t('navigation.notifications'), active: url?.startsWith('/notifications'), badge: unreadCount > 0 ? (unreadCount > 99 ? '99+' : unreadCount) : null },
+        { href: '/error-reports', icon: 'bug', label: t('navigation.error_reports', { defaultValue: 'Báo lỗi' }), active: url?.startsWith('/error-reports') },
     ];
 
     return (
