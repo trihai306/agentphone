@@ -232,17 +232,25 @@ class DeviceController extends Controller
      */
     public function inspectElements(Request $request): JsonResponse
     {
+        \Log::info('📍 inspectElements called', ['device_id' => $request->input('device_id')]);
+
         $request->validate(['device_id' => 'required|string']);
 
         $device = $this->deviceService->findByDeviceId($request->user(), $request->input('device_id'));
 
         if (!$device) {
+            \Log::warning('❌ Device not found', ['device_id' => $request->input('device_id')]);
             return response()->json(['success' => false, 'message' => 'Device not found'], 404);
         }
 
+        \Log::info('✅ Device found', ['device_id' => $device->device_id, 'socket_connected' => $device->socket_connected]);
+
         if (!$this->deviceService->requestElementInspection($device, $request->user()->id)) {
+            \Log::warning('❌ Device offline', ['device_id' => $device->device_id]);
             return response()->json(['success' => false, 'message' => 'Device is offline'], 400);
         }
+
+        \Log::info('📤 Inspection request sent', ['device_id' => $device->device_id, 'user_id' => $request->user()->id]);
 
         return response()->json([
             'success' => true,
@@ -271,6 +279,42 @@ class DeviceController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Visual inspection (OCR) request sent to device',
+            'device_id' => $device->device_id,
+        ]);
+    }
+
+    /**
+     * Request icon template matching from device
+     * Sends template image to device, device returns coordinates if found
+     */
+    public function findIcon(Request $request): JsonResponse
+    {
+        $request->validate([
+            'device_id' => 'required|string',
+            'template' => 'required|string', // base64 icon image
+            'min_confidence' => 'sometimes|numeric|between:0,1',
+        ]);
+
+        $device = $this->deviceService->findByDeviceId($request->user(), $request->input('device_id'));
+
+        if (!$device) {
+            return response()->json(['success' => false, 'message' => 'Device not found'], 404);
+        }
+
+        if (
+            !$this->deviceService->requestFindIcon(
+                $device,
+                $request->user()->id,
+                $request->input('template'),
+                $request->input('min_confidence', 0.65)
+            )
+        ) {
+            return response()->json(['success' => false, 'message' => 'Device is offline'], 400);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Icon search request sent to device',
             'device_id' => $device->device_id,
         ]);
     }
@@ -349,11 +393,17 @@ class DeviceController extends Controller
             return response()->json(['success' => false, 'message' => 'Device not found'], 404);
         }
 
-        $this->deviceService->broadcastAccessibilityStatus($device, $request->input('accessibility_enabled'));
+        // Update device status which will broadcast accessibility change if it changed
+        // This avoids duplicate broadcasts since updateDeviceStatus handles the broadcast internally
+        $this->deviceService->updateDeviceStatus($device, [
+            'status' => 'online',
+            'socket_connected' => true,
+            'accessibility_enabled' => $request->input('accessibility_enabled'),
+        ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Accessibility status broadcast',
+            'message' => 'Accessibility status updated and broadcast',
             'accessibility_enabled' => $request->input('accessibility_enabled'),
         ]);
     }

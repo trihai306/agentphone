@@ -339,18 +339,27 @@ class UserServicePackageResource extends Resource
                     ->modalIcon('heroicon-o-rocket-launch')
                     ->modalIconColor('success')
                     ->visible(fn(UserServicePackage $record): bool =>
-                        $record->status === 'pending' && $record->payment_status === 'paid')
+                        $record->status === 'pending' && $record->payment_status === 'paid' && $record->servicePackage !== null)
                     ->action(function (UserServicePackage $record) {
-                        $record->activate();
+                        try {
+                            $record->activate();
 
-                        $expiresAt = $record->expires_at ? $record->expires_at->format('d/m/Y H:i') : 'Vô thời hạn';
+                            $expiresAt = $record->expires_at ? $record->expires_at->format('d/m/Y H:i') : 'Vô thời hạn';
 
-                        Notification::make()
-                            ->success()
-                            ->title('🚀 Kích hoạt thành công!')
-                            ->body("Gói " . ($record->servicePackage?->name ?? 'N/A') . " đã được kích hoạt cho " . ($record->user?->name ?? 'N/A') . ".\nHết hạn: {$expiresAt}")
-                            ->duration(5000)
-                            ->send();
+                            Notification::make()
+                                ->success()
+                                ->title('🚀 Kích hoạt thành công!')
+                                ->body("Gói " . ($record->servicePackage?->name ?? 'N/A') . " đã được kích hoạt cho " . ($record->user?->name ?? 'N/A') . ".\nHết hạn: {$expiresAt}")
+                                ->duration(5000)
+                                ->send();
+                        } catch (\RuntimeException $e) {
+                            Notification::make()
+                                ->danger()
+                                ->title('❌ Không thể kích hoạt')
+                                ->body($e->getMessage())
+                                ->duration(5000)
+                                ->send();
+                        }
                     }),
 
                 Tables\Actions\Action::make('approve_payment')

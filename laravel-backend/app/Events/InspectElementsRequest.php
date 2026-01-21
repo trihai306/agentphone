@@ -24,8 +24,8 @@ class InspectElementsRequest implements ShouldBroadcastNow
 
     public function broadcastOn(): Channel
     {
-        // Use presence channel - APK already subscribed to this
-        return new PresenceChannel("devices.{$this->userId}");
+        // Use private device channel - APK already subscribed and authenticated
+        return new \Illuminate\Broadcasting\PrivateChannel("device.{$this->deviceId}");
     }
 
     public function broadcastAs(): string

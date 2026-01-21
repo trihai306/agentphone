@@ -46,6 +46,7 @@ class UserNotification implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
+            // Use standard Laravel Echo user channel naming
             new PrivateChannel('user.' . $this->userId),
         ];
     }

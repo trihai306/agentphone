@@ -7,15 +7,23 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.google.mlkit.vision.objects.ObjectDetection
+import com.google.mlkit.vision.objects.ObjectDetector
+import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions
+import com.google.mlkit.vision.label.ImageLabeling
+import com.google.mlkit.vision.label.ImageLabeler
+import com.google.mlkit.vision.label.defaults.ImageLabelerOptions
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
 /**
- * Visual Inspection Service using ML Kit Text Recognition
+ * Visual Inspection Service using ML Kit
  * 
  * Features:
  * - OCR text detection with bounding boxes
- * - Returns coordinates for each detected text element
+ * - Object detection for icons/UI elements
+ * - Image labeling for classification
+ * - Returns coordinates for each detected element
  * - Supports Vietnamese and Latin characters
  */
 object VisualInspectionService {
@@ -25,6 +33,70 @@ object VisualInspectionService {
     // ML Kit Text Recognizer (Latin/Vietnamese)
     private val textRecognizer by lazy {
         TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+    }
+    
+    // ML Kit Object Detector for UI elements/icons
+    private val objectDetector: ObjectDetector by lazy {
+        val options = ObjectDetectorOptions.Builder()
+            .setDetectorMode(ObjectDetectorOptions.SINGLE_IMAGE_MODE)
+            .enableMultipleObjects()
+            .enableClassification()
+            .build()
+        ObjectDetection.getClient(options)
+    }
+    
+    // ML Kit Image Labeler for classification
+    private val imageLabeler: ImageLabeler by lazy {
+        val options = ImageLabelerOptions.Builder()
+            .setConfidenceThreshold(0.7f)
+            .build()
+        ImageLabeling.getClient(options)
+    }
+    
+    /**
+     * Crop a region from bitmap and encode to base64
+     * Returns null if cropping fails
+     */
+    private fun cropAndEncode(bitmap: Bitmap, bounds: Rect, maxSize: Int = 100): String? {
+        return try {
+            // Ensure bounds are within bitmap
+            val left = bounds.left.coerceIn(0, bitmap.width - 1)
+            val top = bounds.top.coerceIn(0, bitmap.height - 1)
+            val right = bounds.right.coerceIn(left + 1, bitmap.width)
+            val bottom = bounds.bottom.coerceIn(top + 1, bitmap.height)
+            val width = right - left
+            val height = bottom - top
+            
+            if (width <= 0 || height <= 0) return null
+            
+            // Crop the region
+            val cropped = Bitmap.createBitmap(bitmap, left, top, width, height)
+            
+            // Scale down if too large (for bandwidth)
+            val scaledBitmap = if (width > maxSize || height > maxSize) {
+                val scale = maxSize.toFloat() / maxOf(width, height)
+                val newWidth = (width * scale).toInt().coerceAtLeast(1)
+                val newHeight = (height * scale).toInt().coerceAtLeast(1)
+                Bitmap.createScaledBitmap(cropped, newWidth, newHeight, true).also {
+                    if (it != cropped) cropped.recycle()
+                }
+            } else {
+                cropped
+            }
+            
+            // Encode to base64
+            val outputStream = java.io.ByteArrayOutputStream()
+            scaledBitmap.compress(Bitmap.CompressFormat.PNG, 90, outputStream)
+            val result = android.util.Base64.encodeToString(outputStream.toByteArray(), android.util.Base64.NO_WRAP)
+            
+            // Cleanup
+            if (scaledBitmap != cropped) scaledBitmap.recycle()
+            
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to crop and encode image", e)
+            null
+        }
     }
 
     /**
@@ -50,7 +122,39 @@ object VisualInspectionService {
             ),
             "center" to mapOf("x" to centerX, "y" to centerY),
             "confidence" to confidence,
-            "language" to language
+            "language" to language,
+            "type" to "text"
+        )
+    }
+    
+    /**
+     * Detected object/icon element with cropped image
+     */
+    data class DetectedObject(
+        val label: String,
+        val bounds: Rect,
+        val centerX: Int,
+        val centerY: Int,
+        val confidence: Float,
+        val trackingId: Int? = null,
+        val imageBase64: String? = null  // Cropped icon image
+    ) {
+        fun toMap(): Map<String, Any?> = mapOf(
+            "text" to label,
+            "label" to label,
+            "bounds" to mapOf(
+                "left" to bounds.left,
+                "top" to bounds.top,
+                "right" to bounds.right,
+                "bottom" to bounds.bottom,
+                "width" to bounds.width(),
+                "height" to bounds.height()
+            ),
+            "center" to mapOf("x" to centerX, "y" to centerY),
+            "confidence" to confidence,
+            "trackingId" to trackingId,
+            "type" to "object",
+            "image" to imageBase64
         )
     }
 
@@ -60,6 +164,7 @@ object VisualInspectionService {
     data class InspectionResult(
         val success: Boolean,
         val textElements: List<TextElement>,
+        val objectElements: List<DetectedObject> = emptyList(),
         val screenshotWidth: Int,
         val screenshotHeight: Int,
         val processingTimeMs: Long,
@@ -68,11 +173,16 @@ object VisualInspectionService {
         fun toMap(): Map<String, Any?> = mapOf(
             "success" to success,
             "text_elements" to textElements.map { it.toMap() },
+            "object_elements" to objectElements.map { it.toMap() },
+            // Combined elements for unified frontend display
+            "all_elements" to (textElements.map { it.toMap() } + objectElements.map { it.toMap() }),
             "screenshot_width" to screenshotWidth,
             "screenshot_height" to screenshotHeight,
             "processing_time_ms" to processingTimeMs,
             "error" to error,
-            "total_elements" to textElements.size
+            "total_elements" to (textElements.size + objectElements.size),
+            "text_count" to textElements.size,
+            "object_count" to objectElements.size
         )
     }
 
@@ -164,6 +274,149 @@ object VisualInspectionService {
             )
         }
     }
+    
+    /**
+     * Detect objects/icons in bitmap using ML Kit Object Detection
+     */
+    suspend fun detectObjects(bitmap: Bitmap): List<DetectedObject> {
+        return try {
+            val inputImage = InputImage.fromBitmap(bitmap, 0)
+            
+            suspendCancellableCoroutine { continuation ->
+                objectDetector.process(inputImage)
+                    .addOnSuccessListener { detectedObjects ->
+                        val objects = detectedObjects.mapNotNull { obj ->
+                            val bounds = obj.boundingBox
+                            // Get label with highest confidence or use "Object"
+                            val label = obj.labels.maxByOrNull { it.confidence }?.text ?: "Object"
+                            val confidence = obj.labels.maxByOrNull { it.confidence }?.confidence ?: 0.5f
+                            
+                            // Crop and encode icon image
+                            val croppedImage = cropAndEncode(bitmap, bounds, maxSize = 80)
+                            
+                            DetectedObject(
+                                label = label,
+                                bounds = bounds,
+                                centerX = bounds.centerX(),
+                                centerY = bounds.centerY(),
+                                confidence = confidence,
+                                trackingId = obj.trackingId,
+                                imageBase64 = croppedImage
+                            )
+                        }
+                        Log.i(TAG, "✅ Object detection: ${objects.size} objects found")
+                        continuation.resume(objects)
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e(TAG, "Object detection failed", e)
+                        continuation.resume(emptyList())
+                    }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Object detection exception", e)
+            emptyList()
+        }
+    }
+    
+    /**
+     * Combined detection: OCR text + Object detection
+     * Best for unified element picker showing all interactive elements
+     */
+    suspend fun detectTextAndObjects(bitmap: Bitmap): InspectionResult {
+        val startTime = System.currentTimeMillis()
+        
+        return try {
+            val inputImage = InputImage.fromBitmap(bitmap, 0)
+            
+            // Run text and object detection in parallel using coroutines
+            val textElements = mutableListOf<TextElement>()
+            val objectElements = mutableListOf<DetectedObject>()
+            
+            // Text recognition
+            val textResult = suspendCancellableCoroutine<Text?> { continuation ->
+                textRecognizer.process(inputImage)
+                    .addOnSuccessListener { text -> continuation.resume(text) }
+                    .addOnFailureListener { e ->
+                        Log.e(TAG, "Text recognition failed", e)
+                        continuation.resume(null)
+                    }
+            }
+            
+            // Extract text elements
+            textResult?.let { text ->
+                for (block in text.textBlocks) {
+                    for (line in block.lines) {
+                        for (element in line.elements) {
+                            val bounds = element.boundingBox ?: continue
+                            textElements.add(TextElement(
+                                text = element.text,
+                                bounds = bounds,
+                                centerX = bounds.centerX(),
+                                centerY = bounds.centerY(),
+                                confidence = element.confidence ?: 0.9f,
+                                language = element.recognizedLanguage
+                            ))
+                        }
+                    }
+                }
+            }
+            
+            // Object detection with cropped images
+            val detectedObjs = suspendCancellableCoroutine<List<DetectedObject>> { continuation ->
+                objectDetector.process(inputImage)
+                    .addOnSuccessListener { objects ->
+                        val objList = objects.mapNotNull { obj ->
+                            val bounds = obj.boundingBox
+                            val label = obj.labels.maxByOrNull { it.confidence }?.text ?: "Object"
+                            val confidence = obj.labels.maxByOrNull { it.confidence }?.confidence ?: 0.5f
+                            
+                            // Crop and encode icon image
+                            val croppedImage = cropAndEncode(bitmap, bounds, maxSize = 80)
+                            
+                            DetectedObject(
+                                label = label,
+                                bounds = bounds,
+                                centerX = bounds.centerX(),
+                                centerY = bounds.centerY(),
+                                confidence = confidence,
+                                trackingId = obj.trackingId,
+                                imageBase64 = croppedImage
+                            )
+                        }
+                        continuation.resume(objList)
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e(TAG, "Object detection failed", e)
+                        continuation.resume(emptyList())
+                    }
+            }
+            objectElements.addAll(detectedObjs)
+            
+            val processingTime = System.currentTimeMillis() - startTime
+            Log.i(TAG, "✅ Combined detection: ${textElements.size} texts, ${objectElements.size} objects in ${processingTime}ms")
+            
+            InspectionResult(
+                success = true,
+                textElements = textElements,
+                objectElements = objectElements,
+                screenshotWidth = bitmap.width,
+                screenshotHeight = bitmap.height,
+                processingTimeMs = processingTime
+            )
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Combined detection failed", e)
+            InspectionResult(
+                success = false,
+                textElements = emptyList(),
+                objectElements = emptyList(),
+                screenshotWidth = bitmap.width,
+                screenshotHeight = bitmap.height,
+                processingTimeMs = System.currentTimeMillis() - startTime,
+                error = e.message
+            )
+        }
+    }
 
     /**
      * Find text element matching a query
@@ -210,5 +463,7 @@ object VisualInspectionService {
      */
     fun close() {
         textRecognizer.close()
+        objectDetector.close()
+        imageLabeler.close()
     }
 }

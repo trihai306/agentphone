@@ -66,7 +66,7 @@ class MediaService
     /**
      * Save AI generation result to user's media library
      */
-    public function saveAiGenerationToMedia(User $user, AiGeneration $generation): ?UserMedia
+    public function saveAiGenerationToMedia(User $user, AiGeneration $generation, string $folder = '/'): ?UserMedia
     {
         // Check if already saved
         $existing = UserMedia::where('user_id', $user->id)
@@ -109,7 +109,7 @@ class MediaService
             'file_size' => $fileSize,
             'path' => $newPath,
             'thumbnail_path' => $thumbnailPath,
-            'folder' => '/',
+            'folder' => $folder,
             'source' => 'ai_generated',
             'ai_generation_id' => $generation->id,
             'metadata' => [
@@ -172,11 +172,20 @@ class MediaService
      */
     public function getUserFolders(User $user): \Illuminate\Support\Collection
     {
-        return UserMedia::where('user_id', $user->id)
+        // Get folders from the dedicated table
+        $dbFolders = \App\Models\UserMediaFolder::where('user_id', $user->id)
+            ->orderBy('name')
+            ->pluck('name');
+
+        // Also get unique folders from media records (for backwards compatibility)
+        $mediaFolders = UserMedia::where('user_id', $user->id)
             ->select('folder')
             ->distinct()
             ->pluck('folder')
-            ->filter(fn($f) => $f !== '/')
-            ->values();
+            ->filter(fn($f) => $f && $f !== '/')
+            ->map(fn($f) => ltrim($f, '/'));
+
+        // Merge and deduplicate
+        return $dbFolders->merge($mediaFolders)->unique()->values();
     }
 }

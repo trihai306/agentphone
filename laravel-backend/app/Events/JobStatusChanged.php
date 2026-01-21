@@ -30,6 +30,7 @@ class JobStatusChanged implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
+            // Use standard Laravel Echo user channel naming
             new PrivateChannel('user.' . $this->job->user_id),
         ];
     }

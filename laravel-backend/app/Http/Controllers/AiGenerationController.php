@@ -36,11 +36,16 @@ class AiGenerationController extends Controller
             ->get()
             ->map(fn($gen) => $this->formatGeneration($gen));
 
+        // Get user's folders for save destination
+        $mediaService = app(\App\Services\MediaService::class);
+        $folders = $mediaService->getUserFolders($user)->values()->toArray();
+
         return Inertia::render('AiStudio/Index', [
             'currentCredits' => $user->ai_credits,
             'imageModels' => $imageModels,
             'videoModels' => $videoModels,
             'recentGenerations' => $recentGenerations,
+            'folders' => $folders,
         ]);
     }
 
@@ -185,10 +190,15 @@ class AiGenerationController extends Controller
 
         $generations->getCollection()->transform(fn($gen) => $this->formatGeneration($gen));
 
+        // Get user's folders for save destination
+        $mediaService = app(\App\Services\MediaService::class);
+        $folders = $mediaService->getUserFolders($user)->values()->toArray();
+
         return Inertia::render('AiStudio/Gallery', [
             'generations' => $generations,
             'filters' => $request->only(['type', 'model', 'status', 'search']),
             'currentCredits' => $user->ai_credits,
+            'folders' => $folders,
         ]);
     }
 

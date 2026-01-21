@@ -5,6 +5,7 @@ import axios from 'axios';
 import AppLayout from '../../Layouts/AppLayout';
 import { useToast } from '@/Components/Layout/ToastProvider';
 import { useTheme } from '@/Contexts/ThemeContext';
+import FolderSelectModal from '@/Components/Media/FolderSelectModal';
 
 // Provider badge colors - professional palette
 const providerColors = {
@@ -53,7 +54,7 @@ const badgeStyles = {
     },
 };
 
-export default function AiStudioIndex({ currentCredits = 0, imageModels = [], videoModels = [], recentGenerations = [] }) {
+export default function AiStudioIndex({ currentCredits = 0, imageModels = [], videoModels = [], recentGenerations = [], folders = [] }) {
     const { t } = useTranslation();
     const { auth } = usePage().props;
     const { addToast } = useToast();
@@ -80,6 +81,8 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
     const [generationMode, setGenerationMode] = useState('text');
     const [sourceImage, setSourceImage] = useState(null);
     const [sourceImagePreview, setSourceImagePreview] = useState(null);
+    const [showFolderModal, setShowFolderModal] = useState(false);
+    const [showSaveDropdown, setShowSaveDropdown] = useState(false);
 
     const models = type === 'image' ? imageModels : videoModels;
     const selectedModel = models.find(m => m.id === model);
@@ -707,14 +710,58 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                             >
                                                 ⬇️ Download
                                             </a>
-                                            <Link
-                                                href={`/media/save-from-ai/${currentGeneration.id}`}
-                                                method="post"
-                                                as="button"
-                                                className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-violet-600 text-white hover:bg-violet-500 transition-colors shadow-lg shadow-violet-500/25"
-                                            >
-                                                💾 Save to Media
-                                            </Link>
+
+                                            {/* Save to Media with Folder Selection */}
+                                            <div className="relative">
+                                                <button
+                                                    onClick={() => setShowSaveDropdown(!showSaveDropdown)}
+                                                    className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-violet-600 text-white hover:bg-violet-500 transition-colors shadow-lg shadow-violet-500/25 flex items-center gap-2"
+                                                >
+                                                    💾 Save to Media
+                                                    <svg className={`w-4 h-4 transition-transform ${showSaveDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </button>
+
+                                                {showSaveDropdown && (
+                                                    <div className={`absolute right-0 bottom-full mb-2 w-56 rounded-xl shadow-xl border overflow-hidden ${isDark
+                                                        ? 'bg-[#1a1a1a] border-[#2a2a2a]'
+                                                        : 'bg-white border-slate-200'
+                                                        }`}>
+                                                        <Link
+                                                            href={`/media/save-from-ai/${currentGeneration.id}`}
+                                                            method="post"
+                                                            data={{ folder: '/' }}
+                                                            as="button"
+                                                            onClick={() => setShowSaveDropdown(false)}
+                                                            className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all ${isDark
+                                                                ? 'text-white hover:bg-[#2a2a2a]'
+                                                                : 'text-slate-900 hover:bg-slate-50'
+                                                                }`}
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                                            </svg>
+                                                            <span>Save to Root</span>
+                                                        </Link>
+                                                        <button
+                                                            onClick={() => {
+                                                                setShowSaveDropdown(false);
+                                                                setShowFolderModal(true);
+                                                            }}
+                                                            className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all border-t ${isDark
+                                                                ? 'text-white hover:bg-[#2a2a2a] border-[#2a2a2a]'
+                                                                : 'text-slate-900 hover:bg-slate-50 border-slate-100'
+                                                                }`}
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                                            </svg>
+                                                            <span>Choose Folder...</span>
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 ) : currentGeneration?.status === 'processing' || currentGeneration?.status === 'pending' ? (
@@ -812,6 +859,20 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                     background: ${isDark ? '#64748b' : '#94a3b8'};
                 }
             `}</style>
+
+            {/* Folder Selection Modal */}
+            <FolderSelectModal
+                isOpen={showFolderModal}
+                onClose={() => setShowFolderModal(false)}
+                onSelect={(folder) => {
+                    if (currentGeneration) {
+                        router.post(`/media/save-from-ai/${currentGeneration.id}`, { folder });
+                    }
+                }}
+                folders={folders}
+                isDark={isDark}
+                title="Save to Folder"
+            />
         </AppLayout>
     );
 }

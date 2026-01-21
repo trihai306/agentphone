@@ -2,9 +2,11 @@ package com.agent.portal.socket
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
 import com.agent.portal.accessibility.PortalAccessibilityService
+import com.agent.portal.vision.TemplateMatchingService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -29,6 +31,7 @@ class JobExecutor(context: Context) {
     private val context: Context
         get() = contextRef.get() ?: throw IllegalStateException("Context is no longer available")
     private val actionResults = mutableListOf<ActionResult>()
+    private val templateMatcher = TemplateMatchingService()
 
     /**
      * Execute job with action configuration
@@ -238,6 +241,217 @@ class JobExecutor(context: Context) {
             ?: throw Exception("Accessibility service not available")
 
         // ========================================================================
+        // ICON/TEMPLATE MATCHING (Highest Priority)
+        // Supports both HTTP URLs and base64 encoded images
+        // ========================================================================
+        val iconData = params["iconUrl"] as? String 
+            ?: params["image"] as? String 
+            ?: params["iconTemplate"] as? String
+        val selectorPriority = params["selectorPriority"] as? String ?: "auto"
+        
+        // Use template matching if icon data is present AND (priority is "icon" OR icon is provided)
+        val shouldUseTemplateMatching = !iconData.isNullOrBlank() && 
+            (selectorPriority == "icon" || iconData.startsWith("http"))
+        
+        if (shouldUseTemplateMatching) {
+            Log.d(TAG, "🖼️ Template Matching: Attempting to find element by icon image (priority=$selectorPriority)")
+            try {
+                val template: android.graphics.Bitmap? = when {
+                    // HTTP URL - download image
+                    iconData!!.startsWith("http") -> {
+                        Log.d(TAG, "   [icon] Downloading template from URL...")
+                        templateMatcher.downloadImage(iconData)
+                    }
+                    // Base64 encoded image
+                    iconData.length > 100 -> {
+                        Log.d(TAG, "   [icon] Decoding base64 template (${iconData.length} chars)...")
+                        try {
+                            // Remove data URI prefix if present
+                            val base64Data = if (iconData.contains(",")) {
+                                iconData.substringAfter(",")
+                            } else {
+                                iconData
+                            }
+                            val decodedBytes = android.util.Base64.decode(base64Data, android.util.Base64.DEFAULT)
+                            val bitmap = android.graphics.BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+                            // Convert to SOFTWARE bitmap if needed for pixel access
+                            bitmap?.copy(android.graphics.Bitmap.Config.ARGB_8888, false)?.also {
+                                if (it != bitmap) bitmap.recycle()
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "   [icon] Failed to decode base64: ${e.message}")
+                            null
+                        }
+                    }
+                    else -> null
+                }
+                
+                if (template != null) {
+                    Log.d(TAG, "   [icon] Template ready: ${template.width}x${template.height}")
+                    
+                    // ========== SMART HINT CALCULATION (Cross-Device Compatible) ==========
+                    // Priority:
+                    // 1. Use percentage coordinates (xPercent, yPercent) if available → scale to current device
+                    // 2. Fallback to absolute (x, y) for old workflows
+                    
+                    val xPercent = (params["xPercent"] as? Number)?.toDouble()
+                    val yPercent = (params["yPercent"] as? Number)?.toDouble()
+                    
+                    // Get current device resolution
+                    val screenshot = accessibilityService.takeScreenshotBitmap()
+                    if (screenshot != null) {
+                        val currentWidth = screenshot.width
+                        val currentHeight = screenshot.height
+                        
+                        // Calculate hint position
+                        val (expectedX, expectedY, hintMode) = if (xPercent != null && yPercent != null) {
+                            // NEW: Calculate from percentage (cross-device compatible!)
+                            val scaledX = (xPercent / 100.0 * currentWidth).toInt()
+                            val scaledY = (yPercent / 100.0 * currentHeight).toInt()
+                            Log.d(TAG, "   [icon] Using percentage hint: ${"%.2f".format(xPercent)}%, ${"%.2f".format(yPercent)}% → ($scaledX, $scaledY) on ${currentWidth}×${currentHeight}")
+                            Triple(scaledX, scaledY, "percentage")
+                        } else {
+                            // FALLBACK: Use absolute (old workflows)
+                            val absX = (params["x"] as? Number)?.toInt() ?: 0
+                            val absY = (params["y"] as? Number)?.toInt() ?: 0
+                            Log.d(TAG, "   [icon] Using absolute hint: ($absX, $absY) [backward compat]")
+                            Triple(absX, absY, "absolute")
+                        }
+                        
+                        // Convert screenshot to SOFTWARE bitmap for pixel access
+                        val softwareScreenshot = screenshot.copy(android.graphics.Bitmap.Config.ARGB_8888, false)
+                        if (softwareScreenshot != screenshot) screenshot.recycle()
+                        
+                        // REGIONAL SEARCH: Only search within 150px radius around hint
+                        //
+                        // Why regional search:
+                        // - Prevents matching wrong icons far from expected position
+                        // - Faster than full-screen search
+                        // - Works with percentage-based coordinates (hint calculated from %)
+                        //
+                        // Example:
+                        // Hint (992, 1331) from recording
+                        // Only search region: (842-1142, 1181-1481)
+                        // Reject matches >150px away (like old match at 702px distance!)
+                        val matchResult = if (expectedX > 0 && expectedY > 0) {
+                            Log.d(TAG, "   [icon] Searching within 150px radius of hint ($expectedX, $expectedY)")
+                            templateMatcher.findTemplateNearPosition(
+                                softwareScreenshot, template,
+                                expectedX, expectedY,
+                                searchRadius = 150
+                            )
+                        } else {
+                            Log.d(TAG, "   [icon] No hint provided, searching full screen")
+                            templateMatcher.findTemplateWithHint(softwareScreenshot, template, null, null)
+                        }
+                        
+                        val minScore = (params["minConfidence"] as? Number)?.toDouble() ?: 0.65
+                        
+                        if (matchResult != null && matchResult.score >= minScore) {
+                            Log.d(TAG, "✅ Template match found! Score: ${"%.1f".format(matchResult.score * 100)}% at (${matchResult.x}, ${matchResult.y})")
+                            Log.d(TAG, "   Hint mode: $hintMode, distance: ${kotlin.math.sqrt(((matchResult.x - expectedX) * (matchResult.x - expectedX) + (matchResult.y - expectedY) * (matchResult.y - expectedY)).toDouble()).toInt()}px")
+                            
+                            // TAP AT MATCH CENTER (actual icon visual center)
+                            // NOT hint (which is element bounds center = icon + text)
+                            //
+                            // Example:
+                            // Element bounds: icon (top) + text "44.3K" (bottom)
+                            // Hint (992, 1229) = center of bounds (WRONG - might be below icon!)
+                            // Match (992, 1207) = center of icon visual (CORRECT!)
+                            val success = accessibilityService.performTap(matchResult.x, matchResult.y)
+                            
+                            if (success) {
+                                return ActionResult(
+                                    actionId = "tap_template",
+                                    success = true,
+                                    message = "Template matched and tapped at (${matchResult.x}, ${matchResult.y}), score: ${"%.1f".format(matchResult.score * 100)}%",
+                                    data = mapOf(
+                                        "method" to "template_matching", 
+                                        "x" to matchResult.x, 
+                                        "y" to matchResult.y,
+                                        "score" to matchResult.score
+                                    )
+                                )
+                            }
+                        } else {
+                            val scoreInfo = matchResult?.let { "score=${"%.1f".format(it.score * 100)}%" } ?: "no match"
+                            Log.d(TAG, "⚠️ Template match not found or score too low ($scoreInfo), min required: ${"%.0f".format(minScore * 100)}%")
+                            
+                            // If priority is "icon", try coordinates fallback
+                            if (selectorPriority == "icon") {
+                                val x = (params["x"] as? Number)?.toInt()
+                                val y = (params["y"] as? Number)?.toInt()
+                                if (x != null && y != null) {
+                                    Log.d(TAG, "   [icon] Falling back to coordinates: ($x, $y)")
+                                    softwareScreenshot.recycle()
+                                    template.recycle()
+                                    
+                                    val success = accessibilityService.performTap(x, y)
+                                    return ActionResult(
+                                        actionId = "tap_coords_fallback",
+                                        success = success,
+                                        message = if (success) "Template not found, tapped at fallback coords ($x, $y)" else "Tap failed",
+                                        data = mapOf("method" to "icon_fallback_coords", "x" to x, "y" to y),
+                                        error = if (!success) "Tap gesture failed" else null
+                                    )
+                                } else {
+                                    softwareScreenshot.recycle()
+                                    template.recycle()
+                                    throw Exception("Template not found (${scoreInfo}) and no fallback coordinates available")
+                                }
+                            }
+                        }
+                        softwareScreenshot.recycle()
+                    }
+                    template.recycle()
+                } else {
+                    Log.w(TAG, "   [icon] Failed to load template image")
+                    if (selectorPriority == "icon") {
+                        throw Exception("Failed to load icon template")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Template matching failed: ${e.message}")
+                if (selectorPriority == "icon") {
+                    // For icon priority, we can still try coordinates fallback
+                    val x = (params["x"] as? Number)?.toInt()
+                    val y = (params["y"] as? Number)?.toInt()
+                    if (x != null && y != null) {
+                        Log.d(TAG, "   [icon] Error fallback to coordinates: ($x, $y)")
+                        val success = accessibilityService.performTap(x, y)
+                        return ActionResult(
+                            actionId = "tap_coords_fallback",
+                            success = success,
+                            message = if (success) "Icon matching error, tapped at fallback coords ($x, $y): ${e.message}" else "Tap failed",
+                            data = mapOf("method" to "icon_error_fallback", "x" to x, "y" to y, "error" to (e.message ?: "")),
+                            error = if (!success) "Tap gesture failed" else null
+                        )
+                    }
+                    throw e
+                }
+            }
+        }
+        
+        // If selectorPriority is "icon" but we got here, it means template matching was attempted and failed/skipped
+        // Don't fall through to accessibility matching - the icon mode should only use template matching
+        if (selectorPriority == "icon") {
+            val x = (params["x"] as? Number)?.toInt()
+            val y = (params["y"] as? Number)?.toInt()
+            if (x != null && y != null) {
+                Log.d(TAG, "   [icon] No template data, using coordinates: ($x, $y)")
+                val success = accessibilityService.performTap(x, y)
+                return ActionResult(
+                    actionId = "tap_coords",
+                    success = success,
+                    message = if (success) "No icon template, tapped at coords ($x, $y)" else "Tap failed",
+                    data = mapOf("method" to "icon_coords_only", "x" to x, "y" to y),
+                    error = if (!success) "Tap gesture failed" else null
+                )
+            }
+            throw Exception("Icon mode requires either icon template or coordinates")
+        }
+
+        // ========================================================================
         // SMART SELECTOR SYSTEM: Try accessibility attributes first, coordinates as fallback
         // Priority: resourceId > text > contentDescription > coordinates
         // ========================================================================
@@ -252,12 +466,13 @@ class JobExecutor(context: Context) {
         val fuzzyMatch = params["fuzzyMatch"] as? Boolean ?: false
         val ignoreCase = params["ignoreCase"] as? Boolean ?: true
         
-        // Selector Priority Mode: auto, id, text, coords
+        // Selector Priority Mode: auto, id, text, coords, icon
         // - auto: Try ID → contentDesc → text → coords (default)
         // - id: Only use resourceId, fail if not found
         // - text: Only use text/contentDesc, fail if not found
         // - coords: Only use coordinates
-        val selectorPriority = params["selectorPriority"] as? String ?: "auto"
+        // - icon: Already handled above (template matching), won't reach here
+        // Note: selectorPriority is already declared above in template matching section
         
         Log.d(TAG, "🎯 Smart Matching: fuzzy=$fuzzyMatch, ignoreCase=$ignoreCase, priority=$selectorPriority")
         
@@ -812,17 +1027,58 @@ class JobExecutor(context: Context) {
     /**
      * Execute File Input action - Select and prepare a file for use
      * 
-     * Params:
+     * Supports two formats:
+     * NEW FORMAT (from VariableContextService):
+     * - filePath: Single resolved URL (random selected by backend)
+     * - outputVariable: Variable name to store file path
+     * 
+     * OLD FORMAT (backward compatibility):
      * - files: List of file objects with { id, name, url, path, type }
      * - selectionMode: 'sequential' or 'random'
      * - currentIndex: Current index for sequential mode
      * - outputVariable: Variable name to store file path
      */
     private suspend fun executeFileInput(params: Map<String, Any>): ActionResult {
+        val outputVariable = params["outputVariable"] as? String ?: "filePath"
+        
+        // NEW FORMAT: Single resolved filePath from backend (VariableContextService already resolved)
+        val directFilePath = params["filePath"] as? String
+        if (!directFilePath.isNullOrEmpty()) {
+            Log.d(TAG, "[file_input] Using pre-resolved filePath: $directFilePath")
+            
+            val fileName = directFilePath.substringAfterLast('/').substringBefore('?')
+            
+            // Download file to device cache
+            val localPath = try {
+                downloadFileToCache(directFilePath, fileName)
+            } catch (e: Exception) {
+                Log.e(TAG, "[file_input] Download failed: ${e.message}")
+                return ActionResult(
+                    actionId = "file_input",
+                    success = false,
+                    message = "Failed to download file: ${e.message}",
+                    error = e.message
+                )
+            }
+            
+            Log.d(TAG, "[file_input] File ready (new format): $localPath")
+            
+            return ActionResult(
+                actionId = "file_input",
+                success = true,
+                message = "File ready: $fileName",
+                data = mapOf(
+                    outputVariable to localPath,
+                    "fileName" to fileName,
+                    "format" to "single_url"
+                )
+            )
+        }
+        
+        // OLD FORMAT: files array with selection mode (backward compatibility)
         val filesRaw = params["files"] as? List<*> ?: emptyList<Any>()
         val selectionMode = params["selectionMode"] as? String ?: "sequential"
         val currentIndex = (params["currentIndex"] as? Number)?.toInt() ?: 0
-        val outputVariable = params["outputVariable"] as? String ?: "filePath"
         
         Log.d(TAG, "[file_input] files=${filesRaw.size}, mode=$selectionMode, index=$currentIndex")
         
@@ -896,31 +1152,38 @@ class JobExecutor(context: Context) {
                 "fileType" to fileType,
                 "selectedIndex" to selectedIndex,
                 "nextIndex" to nextIndex,
-                "totalFiles" to files.size
+                "totalFiles" to files.size,
+                "format" to "files_array"
             )
         )
     }
     
     /**
-     * Download a file from URL to device cache directory
+     * Download a file from URL to device and inject into MediaStore
+     * 
+     * Logic:
+     * 1. Clear ALL old files in workflow_files folder (so gallery only has new file)
+     * 2. Download new file (blocking)
+     * 3. Inject to MediaStore so Gallery/TikTok can see it
+     * 4. Return local path
      */
     private suspend fun downloadFileToCache(url: String, fileName: String): String {
         return withContext(Dispatchers.IO) {
             val cacheDir = context.cacheDir
-            val targetFile = java.io.File(cacheDir, "workflow_files/$fileName")
-            targetFile.parentFile?.mkdirs()
+            val workflowDir = java.io.File(cacheDir, "workflow_files")
+            workflowDir.mkdirs()
             
-            // Check if already cached
-            if (targetFile.exists() && targetFile.length() > 0) {
-                Log.d(TAG, "[download] Using cached: ${targetFile.absolutePath}")
-                return@withContext targetFile.absolutePath
-            }
+            // STEP 1: Clear ALL old files in workflow_files folder
+            clearWorkflowFiles(workflowDir)
+            
+            val targetFile = java.io.File(workflowDir, fileName)
             
             Log.d(TAG, "[download] Downloading: $url -> ${targetFile.absolutePath}")
             
+            // STEP 2: Download file (blocking)
             val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
-            connection.connectTimeout = 30000
-            connection.readTimeout = 30000
+            connection.connectTimeout = 60000  // 60s timeout for large files
+            connection.readTimeout = 60000
             connection.connect()
             
             if (connection.responseCode != 200) {
@@ -934,7 +1197,126 @@ class JobExecutor(context: Context) {
             }
             
             Log.d(TAG, "[download] Complete: ${targetFile.length()} bytes")
-            targetFile.absolutePath
+            
+            // STEP 3: Inject to MediaStore so Gallery apps can see it
+            val mediaStorePath = injectToMediaStore(targetFile, fileName)
+            
+            Log.d(TAG, "[download] Injected to MediaStore: $mediaStorePath")
+            
+            // Return the MediaStore path (or cache path if injection failed)
+            mediaStorePath ?: targetFile.absolutePath
+        }
+    }
+    
+    /**
+     * Clear all files in workflow_files directory
+     * This ensures only the new file exists for easy picking
+     */
+    private fun clearWorkflowFiles(workflowDir: java.io.File) {
+        if (workflowDir.exists() && workflowDir.isDirectory) {
+            val files = workflowDir.listFiles()
+            files?.forEach { file ->
+                if (file.isFile) {
+                    val deleted = file.delete()
+                    Log.d(TAG, "[cleanup] Deleted ${file.name}: $deleted")
+                }
+            }
+            
+            // Also clean up MediaStore entries for old workflow files
+            cleanOldMediaStoreEntries()
+        }
+    }
+    
+    /**
+     * Clean old workflow files from MediaStore
+     */
+    private fun cleanOldMediaStoreEntries() {
+        try {
+            val resolver = context.contentResolver
+            
+            // Delete images with DISPLAY_NAME containing "workflow_" prefix
+            val imageUri = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+            val deleted = resolver.delete(
+                imageUri,
+                "${android.provider.MediaStore.Images.Media.DISPLAY_NAME} LIKE ?",
+                arrayOf("workflow_%")
+            )
+            Log.d(TAG, "[cleanup] Removed $deleted old images from MediaStore")
+            
+            // Delete videos with same prefix
+            val videoUri = android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+            val deletedVideos = resolver.delete(
+                videoUri,
+                "${android.provider.MediaStore.Video.Media.DISPLAY_NAME} LIKE ?",
+                arrayOf("workflow_%")
+            )
+            Log.d(TAG, "[cleanup] Removed $deletedVideos old videos from MediaStore")
+        } catch (e: Exception) {
+            Log.w(TAG, "[cleanup] Failed to clean MediaStore: ${e.message}")
+        }
+    }
+    
+    /**
+     * Inject downloaded file to MediaStore so Gallery/TikTok can see it
+     * Returns the content URI path or null if failed
+     */
+    private fun injectToMediaStore(file: java.io.File, originalName: String): String? {
+        try {
+            val resolver = context.contentResolver
+            
+            // Determine if image or video
+            val extension = file.extension.lowercase()
+            val isVideo = extension in listOf("mp4", "webm", "mov", "avi", "mkv", "3gp")
+            val isImage = extension in listOf("jpg", "jpeg", "png", "gif", "webp", "bmp")
+            
+            if (!isImage && !isVideo) {
+                Log.d(TAG, "[mediastore] Skipping non-media file: $extension")
+                return file.absolutePath
+            }
+            
+            // Prefix with workflow_ for easy cleanup later
+            val mediaName = "workflow_${System.currentTimeMillis()}_$originalName"
+            
+            val values = android.content.ContentValues().apply {
+                put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, mediaName)
+                put(android.provider.MediaStore.MediaColumns.MIME_TYPE, 
+                    if (isVideo) "video/*" else "image/*")
+                put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, 
+                    if (isVideo) "${android.os.Environment.DIRECTORY_MOVIES}/ClickAI"
+                    else "${android.os.Environment.DIRECTORY_PICTURES}/ClickAI")
+                put(android.provider.MediaStore.MediaColumns.IS_PENDING, 1)
+            }
+            
+            val uri = if (isVideo) {
+                android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+            } else {
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+            }
+            
+            val contentUri = resolver.insert(uri, values)
+            if (contentUri == null) {
+                Log.e(TAG, "[mediastore] Failed to create MediaStore entry")
+                return null
+            }
+            
+            // Copy file content to MediaStore
+            resolver.openOutputStream(contentUri)?.use { output ->
+                java.io.FileInputStream(file).use { input ->
+                    input.copyTo(output)
+                }
+            }
+            
+            // Mark as complete
+            values.clear()
+            values.put(android.provider.MediaStore.MediaColumns.IS_PENDING, 0)
+            resolver.update(contentUri, values, null, null)
+            
+            Log.d(TAG, "[mediastore] Successfully added: $contentUri")
+            return contentUri.toString()
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "[mediastore] Injection failed: ${e.message}")
+            return null
         }
     }
 

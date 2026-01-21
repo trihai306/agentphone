@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { VariableInput } from './VariablePicker';
 import ElementPickerModal from './ElementPickerModal';
+import MediaPickerModal from '@/Components/MediaPickerModal';
 
 /**
  * NodeConfigPanel - Smart configuration panel for workflow nodes
@@ -1029,6 +1030,7 @@ function ConditionConfig({ data, updateData, updateMultipleData, isDark, upstrea
                     onSelect={handleElementSelect}
                     deviceId={selectedDevice?.device_id}
                     userId={userId}
+                    elementType="clickable"
                 />
             )}
         </>
@@ -1518,6 +1520,13 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
 
         console.log('📍 Calculated center:', centerX, centerY);
 
+        // Map strategy from ElementPicker to selectorPriority
+        let selectorPriorityValue = 'auto';
+        if (element._strategy === 'id') selectorPriorityValue = 'id';
+        else if (element._strategy === 'text') selectorPriorityValue = 'text';
+        else if (element._strategy === 'xy' || element._strategy === 'coordinates') selectorPriorityValue = 'coords';
+        else if (element._strategy === 'icon') selectorPriorityValue = 'icon';
+
         // Use batch update to avoid closure stale state issue
         updateMultipleData({
             resourceId: element.resourceId,
@@ -1534,10 +1543,16 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
             isCheckable: element.isCheckable ?? false,
             isFocusable: element.isFocusable ?? false,
             packageName: element.packageName || data.packageName,
+            // Store cropped icon image for template matching
+            image: element.image || null,
+            // Store selector strategy
+            selectorPriority: selectorPriorityValue,
+            // Store all selectors for fallback
+            _selectors: element._selectors,
         });
 
         setShowPicker(false);
-        console.log('✅ Element selection complete, modal closed');
+        console.log('✅ Element selection complete, strategy:', selectorPriorityValue);
     };
 
     return (
@@ -1594,10 +1609,10 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
             <ConfigSection title="Element Selector" isDark={isDark}>
                 <div className="space-y-2">
                     {[
-                        { value: 'auto', label: 'Auto (Smart)', desc: 'ID → Text → Coords' },
-                        { value: 'id', label: 'Resource ID', desc: 'Most reliable' },
-                        { value: 'text', label: 'Text Content', desc: 'Flexible' },
-                        { value: 'coords', label: 'Coordinates', desc: 'Fallback only' },
+                        { value: 'auto', label: '🧠 Auto (Smart)', desc: 'ID → Text → Icon' },
+                        { value: 'id', label: '🏷️ Resource ID', desc: 'Most reliable' },
+                        { value: 'text', label: '📝 Text Content', desc: 'Flexible' },
+                        { value: 'icon', label: '🖼️ Icon Match', desc: 'Visual detection' },
                     ].map(opt => (
                         <button
                             key={opt.value}
@@ -1709,18 +1724,64 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
                         </div>
                     )}
 
-                    {/* Coordinates Section */}
-                    {(data.x || data.coordinates?.x) && (
+                    {/* Icon Template Section */}
+                    {data.image && (
+                        <div className={`px-3 py-2 ${isDark ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-violet-500 text-[10px] font-bold">🖼️ ICON TEMPLATE</span>
+                                {selectorPriority === 'icon' && (
+                                    <span className={`text-[9px] px-1.5 py-0.5 rounded ${isDark ? 'bg-violet-500/20 text-violet-400' : 'bg-violet-100 text-violet-600'}`}>
+                                        Active
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className={`w-16 h-16 rounded-lg overflow-hidden border-2 ${selectorPriority === 'icon' ? 'border-violet-500' : isDark ? 'border-[#2a2a2a]' : 'border-gray-200'}`}>
+                                    <img
+                                        src={
+                                            // Priority: 1) base64 from _selectors, 2) base64 inline, 3) URL
+                                            data._selectors?.primary?.template
+                                                ? `data:image/png;base64,${data._selectors.primary.template}`
+                                                : data.image?.startsWith('http')
+                                                    ? data.image
+                                                    : data.image?.length > 200
+                                                        ? `data:image/png;base64,${data.image}`
+                                                        : data.image?.startsWith('/storage')
+                                                            ? data.image
+                                                            : null
+                                        }
+                                        alt="Icon template"
+                                        className="w-full h-full object-contain bg-white"
+                                        onError={(e) => {
+                                            // Fallback to placeholder if image fails to load
+                                            e.target.style.display = 'none';
+                                        }}
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <p className={`text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        This icon will be detected on screen at runtime using template matching.
+                                    </p>
+                                    <p className={`text-[9px] mt-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                                        💡 Works even if UI layout changes
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Fallback Coordinates (hidden but stored) */}
+                    {(data.x || data.y) && selectorPriority !== 'icon' && (
                         <div className={`px-3 py-2 ${isDark ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
                             <div className="flex items-center gap-2 mb-1">
-                                <span className="text-amber-500 text-[10px] font-bold">COORDINATES</span>
+                                <span className="text-amber-500 text-[10px] font-bold">📍 FALLBACK COORDS</span>
                             </div>
                             <div className="flex gap-4 text-xs font-mono">
-                                <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>
-                                    X: <span className="text-amber-400">{data.x || data.coordinates?.x}</span>
+                                <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>
+                                    X: <span className="text-amber-400">{data.x || 0}</span>
                                 </span>
-                                <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>
-                                    Y: <span className="text-amber-400">{data.y || data.coordinates?.y}</span>
+                                <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>
+                                    Y: <span className="text-amber-400">{data.y || 0}</span>
                                 </span>
                             </div>
                         </div>
@@ -2438,6 +2499,7 @@ function AssertConfig({ data, updateData, updateMultipleData, isDark, selectedDe
                 onSelect={handleElementSelect}
                 deviceId={selectedDevice?.device_id}
                 userId={userId}
+                elementType="clickable"
             />
         </>
     );
@@ -2599,6 +2661,7 @@ function ElementCheckConfig({ data, updateData, updateMultipleData, isDark, sele
                 onSelect={handleElementSelect}
                 deviceId={selectedDevice?.device_id}
                 userId={userId}
+                elementType="clickable"
             />
         </>
     );
@@ -2723,6 +2786,7 @@ function WaitForElementConfig({ data, updateData, updateMultipleData, isDark, se
                 onSelect={handleElementSelect}
                 deviceId={selectedDevice?.device_id}
                 userId={userId}
+                elementType="clickable"
             />
         </>
     );
@@ -2805,214 +2869,153 @@ function StartEndConfig({ data, updateData, isDark, nodeType }) {
     );
 }
 
-// File Input Config - Enhanced with multi-file and selection mode
+// File Input Config - Simplified with folder support
 function FileInputConfig({ data, updateData, isDark }) {
     const [showMediaPicker, setShowMediaPicker] = useState(false);
-    const files = data.files || [];
-    const selectionMode = data.selectionMode || 'sequential';
-    const currentIndex = data.currentIndex || 0;
+    const { t } = useTranslation();
 
-    // Handle files selected from Media Library
-    const handleFilesSelected = (selectedFiles) => {
-        const newFiles = selectedFiles.map(file => ({
-            id: file.id,
-            name: file.name || file.file_name,
-            path: file.path || file.file_path,
-            url: file.url || file.file_url || `/storage/${file.path || file.file_path}`,
-            type: file.type || file.mime_type,
-            thumbnail: file.thumbnail_url || file.url || `/storage/${file.path || file.file_path}`,
-        }));
-        updateData('files', [...files, ...newFiles]);
-        setShowMediaPicker(false);
+    const selectionType = data.selectionType || 'file';
+    const fileName = data.fileName || null;
+    const folderName = data.folderName || null;
+    const filePath = data.filePath || null;
+
+    const hasSelection = (selectionType === 'file' && fileName) ||
+        (selectionType === 'folder' && folderName);
+
+    // Handle file selected from Media Library
+    const handleFileSelected = (file) => {
+        updateData('selectionType', 'file');
+        updateData('fileId', file.id);
+        updateData('fileName', file.original_name || file.name);
+        updateData('filePath', file.url || file.file_url);
+        updateData('fileType', file.type);
+        updateData('fileSize', file.size || file.formatted_size);
+        // Clear folder data
+        updateData('folderName', null);
+        updateData('folderPath', null);
     };
 
-    const removeFile = (index) => {
-        const newFiles = files.filter((_, i) => i !== index);
-        updateData('files', newFiles);
-        // Reset index if out of bounds
-        if (currentIndex >= newFiles.length) {
-            updateData('currentIndex', 0);
-        }
+    // Handle folder selected from Media Library
+    const handleFolderSelected = (folder) => {
+        updateData('selectionType', 'folder');
+        updateData('folderName', folder.name);
+        updateData('folderPath', folder.path);
+        // Clear file data
+        updateData('fileId', null);
+        updateData('fileName', null);
+        updateData('filePath', null);
     };
 
-    const moveFile = (index, direction) => {
-        const newFiles = [...files];
-        const targetIndex = index + direction;
-        if (targetIndex < 0 || targetIndex >= newFiles.length) return;
-        [newFiles[index], newFiles[targetIndex]] = [newFiles[targetIndex], newFiles[index]];
-        updateData('files', newFiles);
+    // Clear selection
+    const clearSelection = () => {
+        updateData('selectionType', 'file');
+        updateData('fileId', null);
+        updateData('fileName', null);
+        updateData('filePath', null);
+        updateData('folderName', null);
+        updateData('folderPath', null);
     };
 
     return (
         <>
-            {/* Selection Mode */}
-            <ConfigSection title="🎯 Selection Mode" isDark={isDark}>
-                <div className="flex gap-2">
-                    {[
-                        { value: 'sequential', icon: '📋', label: 'Sequential', desc: 'Theo thứ tự' },
-                        { value: 'random', icon: '🎲', label: 'Random', desc: 'Ngẫu nhiên' },
-                    ].map(mode => (
-                        <button
-                            key={mode.value}
-                            onClick={() => updateData('selectionMode', mode.value)}
-                            className={`flex-1 p-3 rounded-xl text-left transition-all border ${selectionMode === mode.value
-                                    ? 'border-cyan-500 bg-cyan-500/10'
-                                    : isDark
-                                        ? 'border-[#2a2a2a] bg-[#0f0f0f] hover:border-[#3a3a3a]'
-                                        : 'border-gray-200 bg-gray-50 hover:border-gray-300'
-                                }`}
-                        >
-                            <div className="flex items-center gap-2">
-                                <span className="text-lg">{mode.icon}</span>
-                                <div>
-                                    <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                        {mode.label}
-                                    </p>
-                                    <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                        {mode.desc}
-                                    </p>
+            {/* Current Selection Display */}
+            <ConfigSection title="📁 Đã chọn" isDark={isDark}>
+                {hasSelection ? (
+                    <div className={`rounded-xl border overflow-hidden ${isDark ? 'border-[#2a2a2a] bg-[#0f0f0f]' : 'border-gray-200 bg-gray-50'}`}>
+                        {selectionType === 'folder' ? (
+                            /* Folder Preview */
+                            <div className="p-4 flex items-center gap-3">
+                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isDark ? 'bg-amber-500/20' : 'bg-amber-50'}`}>
+                                    <svg className="w-7 h-7 text-amber-500" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M10 4H2v16h20V6H12l-2-2z" />
+                                    </svg>
                                 </div>
-                            </div>
-                        </button>
-                    ))}
-                </div>
-            </ConfigSection>
-
-            {/* Files List */}
-            <ConfigSection title={`📁 Files (${files.length})`} isDark={isDark}>
-                {files.length === 0 ? (
-                    <div className={`text-center py-6 rounded-xl border-2 border-dashed ${isDark ? 'border-[#2a2a2a] text-gray-500' : 'border-gray-200 text-gray-400'
-                        }`}>
-                        <p className="text-2xl mb-2">📭</p>
-                        <p className="text-sm">Chưa có file nào</p>
-                        <p className="text-xs mt-1">Click button bên dưới để thêm files</p>
-                    </div>
-                ) : (
-                    <div className="space-y-2 max-h-60 overflow-y-auto">
-                        {files.map((file, index) => (
-                            <div
-                                key={file.id || index}
-                                className={`flex items-center gap-3 p-2 rounded-lg transition-all ${selectionMode === 'sequential' && index === currentIndex
-                                        ? 'ring-2 ring-cyan-500 bg-cyan-500/10'
-                                        : isDark ? 'bg-[#0f0f0f]' : 'bg-gray-50'
-                                    }`}
-                            >
-                                {/* Index badge */}
-                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${selectionMode === 'sequential' && index === currentIndex
-                                        ? 'bg-cyan-500 text-white'
-                                        : isDark ? 'bg-[#252525] text-gray-400' : 'bg-gray-200 text-gray-600'
-                                    }`}>
-                                    {index + 1}
-                                </div>
-
-                                {/* Thumbnail */}
-                                {file.thumbnail && file.type?.startsWith('image') ? (
-                                    <img
-                                        src={file.thumbnail}
-                                        alt={file.name}
-                                        className="w-10 h-10 rounded object-cover"
-                                    />
-                                ) : (
-                                    <div className={`w-10 h-10 rounded flex items-center justify-center ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-100'
-                                        }`}>
-                                        <span className="text-lg">
-                                            {file.type?.startsWith('video') ? '🎬' : '📄'}
+                                <div className="flex-1">
+                                    <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                        {folderName}
+                                    </p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600'}`}>
+                                            🎲 Random
+                                        </span>
+                                        <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                            Mỗi job chọn ngẫu nhiên 1 file
                                         </span>
                                     </div>
-                                )}
-
-                                {/* File name */}
-                                <div className="flex-1 min-w-0">
-                                    <p className={`text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                        {file.name}
-                                    </p>
-                                </div>
-
-                                {/* Actions */}
-                                <div className="flex gap-1">
-                                    {selectionMode === 'sequential' && (
-                                        <>
-                                            <button
-                                                onClick={() => moveFile(index, -1)}
-                                                disabled={index === 0}
-                                                className={`p-1 rounded text-xs transition-all ${index === 0
-                                                        ? 'opacity-30 cursor-not-allowed'
-                                                        : isDark ? 'hover:bg-[#252525]' : 'hover:bg-gray-200'
-                                                    }`}
-                                            >
-                                                ⬆️
-                                            </button>
-                                            <button
-                                                onClick={() => moveFile(index, 1)}
-                                                disabled={index === files.length - 1}
-                                                className={`p-1 rounded text-xs transition-all ${index === files.length - 1
-                                                        ? 'opacity-30 cursor-not-allowed'
-                                                        : isDark ? 'hover:bg-[#252525]' : 'hover:bg-gray-200'
-                                                    }`}
-                                            >
-                                                ⬇️
-                                            </button>
-                                        </>
-                                    )}
-                                    <button
-                                        onClick={() => removeFile(index)}
-                                        className={`p-1 rounded text-xs transition-all hover:bg-red-500/20 text-red-500`}
-                                    >
-                                        🗑️
-                                    </button>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                )}
+                        ) : (
+                            /* File Preview */
+                            <div className="p-4 flex items-center gap-3">
+                                {filePath && data.fileType === 'image' ? (
+                                    <img
+                                        src={filePath}
+                                        alt={fileName}
+                                        className="w-12 h-12 rounded-xl object-cover"
+                                    />
+                                ) : (
+                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isDark ? 'bg-violet-500/20' : 'bg-violet-50'}`}>
+                                        <svg className="w-6 h-6 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                )}
+                                <div className="flex-1">
+                                    <p className={`text-sm font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                        {fileName}
+                                    </p>
+                                    <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                        File cố định
+                                    </p>
+                                </div>
+                            </div>
+                        )}
 
-                {/* Add Files Button */}
-                <button
-                    onClick={() => setShowMediaPicker(true)}
-                    className={`w-full mt-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${isDark
-                            ? 'bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border border-cyan-500/30'
-                            : 'bg-cyan-50 text-cyan-600 hover:bg-cyan-100 border border-cyan-200'
-                        }`}
-                >
-                    <span>➕</span>
-                    <span>Thêm từ Media Library</span>
-                </button>
+                        {/* Actions */}
+                        <div className={`flex gap-2 px-4 py-3 border-t ${isDark ? 'border-[#252525]' : 'border-gray-200'}`}>
+                            <button
+                                onClick={() => setShowMediaPicker(true)}
+                                className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${isDark
+                                    ? 'bg-[#1a1a1a] hover:bg-[#252525] text-gray-300'
+                                    : 'bg-white hover:bg-gray-100 text-gray-700'}`}
+                            >
+                                Đổi
+                            </button>
+                            <button
+                                onClick={clearSelection}
+                                className="px-3 py-2 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 transition-all"
+                            >
+                                Xóa
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    /* Empty State */
+                    <button
+                        onClick={() => setShowMediaPicker(true)}
+                        className={`w-full py-6 rounded-xl border-2 border-dashed transition-all flex flex-col items-center gap-3 ${isDark
+                            ? 'border-[#2a2a2a] hover:border-cyan-500/50 hover:bg-cyan-500/5'
+                            : 'border-gray-200 hover:border-cyan-400 hover:bg-cyan-50/50'}`}
+                    >
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? 'bg-cyan-500/10' : 'bg-cyan-50'}`}>
+                            <svg className={`w-7 h-7 ${isDark ? 'text-cyan-400' : 'text-cyan-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                            </svg>
+                        </div>
+                        <div className="text-center">
+                            <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                Chọn File hoặc Folder
+                            </p>
+                            <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                File cố định hoặc Folder để random
+                            </p>
+                        </div>
+                    </button>
+                )}
             </ConfigSection>
 
-            {/* Current Index (Sequential only) */}
-            {selectionMode === 'sequential' && files.length > 0 && (
-                <ConfigSection title="📍 Current Index" isDark={isDark}>
-                    <div className="flex items-center gap-3">
-                        <input
-                            type="number"
-                            min="0"
-                            max={files.length - 1}
-                            value={currentIndex}
-                            onChange={(e) => updateData('currentIndex', Math.min(parseInt(e.target.value) || 0, files.length - 1))}
-                            className={`w-20 px-3 py-2 text-sm rounded-lg border text-center ${isDark
-                                ? 'bg-[#0f0f0f] border-[#2a2a2a] text-white'
-                                : 'bg-white border-gray-200 text-gray-900'
-                                }`}
-                        />
-                        <span className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            / {files.length} files
-                        </span>
-                        <button
-                            onClick={() => updateData('currentIndex', 0)}
-                            className={`text-xs px-2 py-1 rounded transition-all ${isDark ? 'bg-[#252525] hover:bg-[#2a2a2a]' : 'bg-gray-100 hover:bg-gray-200'
-                                }`}
-                        >
-                            Reset
-                        </button>
-                    </div>
-                    <p className={`text-[10px] mt-2 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                        Next file: {files[currentIndex]?.name || 'N/A'}
-                    </p>
-                </ConfigSection>
-            )}
-
             {/* Output Variable */}
-            <ConfigSection title="📤 Output Variable" isDark={isDark}>
+            <ConfigSection title="📤 Biến Output" isDark={isDark}>
                 <input
                     type="text"
                     value={data.outputVariable || 'filePath'}
@@ -3023,86 +3026,28 @@ function FileInputConfig({ data, updateData, isDark }) {
                         }`}
                 />
                 <p className={`text-[10px] mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    Access via {'{{'}filePath{'}}'}  in downstream nodes
+                    Truy cập qua <code className="text-cyan-400">{`{{${data.outputVariable || 'filePath'}}}`}</code> trong các node khác
                 </p>
             </ConfigSection>
 
-            {/* Allowed Types */}
-            <ConfigSection title="📋 Allowed Types" isDark={isDark}>
-                <div className="flex flex-wrap gap-2">
-                    {['image', 'video', 'document', 'any'].map(type => (
-                        <button
-                            key={type}
-                            onClick={() => updateData('allowedType', type)}
-                            className={`px-3 py-1.5 rounded text-xs transition-all ${data.allowedType === type
-                                ? 'bg-cyan-500 text-white'
-                                : isDark
-                                    ? 'bg-[#1a1a1a] hover:bg-[#252525] text-gray-300'
-                                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                                }`}
-                        >
-                            {type === 'image' && '🖼️'}
-                            {type === 'video' && '🎬'}
-                            {type === 'document' && '📄'}
-                            {type === 'any' && '📦'}
-                            {' '}{type.charAt(0).toUpperCase() + type.slice(1)}
-                        </button>
-                    ))}
-                </div>
-            </ConfigSection>
-
-            {/* Media Picker Modal - TODO: Implement actual picker */}
-            {showMediaPicker && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-                    <div className={`w-full max-w-2xl mx-4 rounded-2xl shadow-2xl ${isDark ? 'bg-[#0a0a0a]' : 'bg-white'}`}>
-                        <div className={`px-6 py-4 border-b flex items-center justify-between ${isDark ? 'border-[#2a2a2a]' : 'border-gray-200'}`}>
-                            <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                📁 Select Files from Media Library
-                            </h3>
-                            <button
-                                onClick={() => setShowMediaPicker(false)}
-                                className={`p-2 rounded-lg transition-all ${isDark ? 'hover:bg-[#252525]' : 'hover:bg-gray-100'}`}
-                            >
-                                ✕
-                            </button>
-                        </div>
-                        <div className="p-6">
-                            <p className={`text-center py-12 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Media Library integration sẽ được thêm sau.<br />
-                                Hiện tại, bạn có thể nhập URL trực tiếp.
-                            </p>
-                            {/* URL input fallback */}
-                            <div className="space-y-3">
-                                <input
-                                    type="text"
-                                    placeholder="Paste file URL here..."
-                                    className={`w-full px-4 py-3 rounded-lg border ${isDark
-                                        ? 'bg-[#0f0f0f] border-[#2a2a2a] text-white'
-                                        : 'bg-gray-50 border-gray-200 text-gray-900'
-                                        }`}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' && e.target.value) {
-                                            const url = e.target.value;
-                                            const name = url.split('/').pop() || 'file';
-                                            handleFilesSelected([{
-                                                id: Date.now(),
-                                                name,
-                                                path: url,
-                                                url,
-                                                type: name.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? 'image/jpeg' : 'file',
-                                            }]);
-                                            e.target.value = '';
-                                        }
-                                    }}
-                                />
-                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    Press Enter to add file URL
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+            {/* Explanation */}
+            {selectionType === 'folder' && (
+                <div className={`p-3 rounded-xl ${isDark ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-amber-50 border border-amber-200'}`}>
+                    <p className={`text-xs ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>
+                        <strong>🎲 Chế độ Random:</strong> Mỗi lần chạy job/campaign, hệ thống sẽ tự động chọn ngẫu nhiên 1 file từ folder này.
+                    </p>
                 </div>
             )}
+
+            {/* Media Picker Modal */}
+            <MediaPickerModal
+                isOpen={showMediaPicker}
+                onClose={() => setShowMediaPicker(false)}
+                onSelect={handleFileSelected}
+                onSelectFolder={handleFolderSelected}
+                allowFolderSelection={true}
+                fileType="any"
+            />
         </>
     );
 }

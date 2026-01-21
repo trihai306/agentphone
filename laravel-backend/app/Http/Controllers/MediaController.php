@@ -20,6 +20,63 @@ class MediaController extends Controller
     }
 
     /**
+     * API: Get user's media files as JSON (for modals/pickers)
+     */
+    public function apiList(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user();
+
+        $query = UserMedia::where('user_id', $user->id);
+
+        // Filter by type if specified
+        if ($request->filled('type') && $request->type !== 'any') {
+            match ($request->type) {
+                'image' => $query->images(),
+                'video' => $query->videos(),
+                default => null,
+            };
+        }
+
+        // Filter by folder
+        if ($request->filled('folder')) {
+            $query->inFolder($request->folder);
+        } else {
+            // Only show root-level files if no folder specified
+            $query->where(function ($q) {
+                $q->whereNull('folder')
+                    ->orWhere('folder', '')
+                    ->orWhere('folder', '/');
+            });
+        }
+
+        // Search by name
+        if ($request->filled('search')) {
+            $query->where('original_name', 'like', '%' . $request->search . '%');
+        }
+
+        $files = $query->orderBy('created_at', 'desc')->limit(100)->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $files,
+        ]);
+    }
+
+    /**
+     * API: Get user's folder list as JSON (for modals/pickers)
+     */
+    public function apiFolders(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user();
+        $folders = $this->mediaService->getUserFolders($user);
+
+        return response()->json([
+            'success' => true,
+            'folders' => $folders->values()->toArray(),
+        ]);
+    }
+
+    /**
      * Display a listing of the user's media
      */
     public function index(Request $request): Response
@@ -40,7 +97,14 @@ class MediaController extends Controller
 
         // Filter by folder
         if ($request->filled('folder')) {
+            // Show files in specific folder
             $query->inFolder($request->folder);
+        } else {
+            // When no folder filter, only show files at root level (not in any subfolder)
+            $query->where(function ($q) {
+                $q->where('folder', '/')
+                    ->orWhereNull('folder');
+            });
         }
 
         // Search by name
@@ -222,6 +286,26 @@ class MediaController extends Controller
             'name' => 'required|string|max:255|regex:/^[a-zA-Z0-9_\-\s]+$/',
         ]);
 
+        $user = $request->user();
+        $folderName = trim($request->name);
+        $folderPath = '/' . $folderName;
+
+        // Check if folder already exists
+        $existing = \App\Models\UserMediaFolder::where('user_id', $user->id)
+            ->where('path', $folderPath)
+            ->first();
+
+        if ($existing) {
+            return back()->withErrors(['name' => 'Thư mục này đã tồn tại.']);
+        }
+
+        // Create folder record
+        \App\Models\UserMediaFolder::create([
+            'user_id' => $user->id,
+            'name' => $folderName,
+            'path' => $folderPath,
+        ]);
+
         return back()->with('success', 'Thư mục đã được tạo.');
     }
 
@@ -240,6 +324,13 @@ class MediaController extends Controller
             return back()->withErrors(['error' => 'Generation chưa hoàn thành hoặc không có kết quả.']);
         }
 
+        // Validate folder if provided
+        $folder = $request->input('folder', '/');
+        if ($folder && $folder !== '/') {
+            // Sanitize folder name
+            $folder = '/' . ltrim($folder, '/');
+        }
+
         // Check quota
         $storagePlan = $user->getOrCreateStoragePlan();
         $aiDisk = config('ai-generation.storage.disk', 'public');
@@ -250,7 +341,7 @@ class MediaController extends Controller
             return back()->withErrors(['error' => $quotaCheck['message']]);
         }
 
-        $media = $this->mediaService->saveAiGenerationToMedia($user, $generation);
+        $media = $this->mediaService->saveAiGenerationToMedia($user, $generation, $folder);
 
         if (!$media) {
             return back()->with('info', 'File này đã được lưu vào thư viện.');

@@ -1,41 +1,133 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
-import { usePage } from '@inertiajs/react';
 
 /**
- * MediaPickerModal - Reusable modal for selecting files from user's media library
+ * MediaPickerModal - Reusable modal for selecting files or folders from user's media library
  * 
  * Usage:
  * <MediaPickerModal
  *   isOpen={showPicker}
  *   onClose={() => setShowPicker(false)}
  *   onSelect={(file) => handleFileSelected(file)}
+ *   onSelectFolder={(folder) => handleFolderSelected(folder)} // New: folder selection
+ *   allowFolderSelection={true} // New: enable folder selection
  *   fileType="image" // 'image', 'video', or 'any'
  * />
  */
-export default function MediaPickerModal({ isOpen, onClose, onSelect, fileType = 'any' }) {
+export default function MediaPickerModal({
+    isOpen,
+    onClose,
+    onSelect,
+    onSelectFolder,
+    allowFolderSelection = false,
+    fileType = 'any',
+}) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+
     const [selectedFile, setSelectedFile] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-
-    // This would normally fetch from API, but for now use props data
-    // In real implementation, you'd fetch via Inertia or Axios
     const [mediaFiles, setMediaFiles] = useState([]);
+    const [folders, setFolders] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [currentFolder, setCurrentFolder] = useState(null); // null = root
 
-    // Filter files based on type and search
+    // Fetch media files and folders from API
+    useEffect(() => {
+        if (isOpen) {
+            fetchMedia();
+        }
+    }, [isOpen, currentFolder]);
+
+    const fetchMedia = async () => {
+        setIsLoading(true);
+        try {
+            const params = new URLSearchParams();
+            if (currentFolder) {
+                params.append('folder', currentFolder);
+            }
+            if (fileType !== 'any') {
+                params.append('type', fileType);
+            }
+
+            const response = await window.axios.get(`/media/list.json?${params.toString()}`);
+            const data = response.data;
+
+            // Handle paginated or direct response
+            const files = data?.data || data || [];
+            setMediaFiles(files);
+
+            // Get folders - only show at root level or get subfolders
+            if (!currentFolder) {
+                const foldersResponse = await window.axios.get('/media/folders.json');
+                setFolders(foldersResponse.data?.folders || foldersResponse.data || []);
+            } else {
+                setFolders([]); // No nested folders for now
+            }
+        } catch (error) {
+            console.error('Failed to fetch media:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Reset state when modal closes
+    useEffect(() => {
+        if (!isOpen) {
+            setSelectedFile(null);
+            setCurrentFolder(null);
+            setSearchTerm('');
+        }
+    }, [isOpen]);
+
+    // Filter files based on search
     const filteredFiles = mediaFiles.filter(file => {
-        const matchesType = fileType === 'any' || file.type === fileType;
-        const matchesSearch = !searchTerm || file.original_name.toLowerCase().includes(searchTerm.toLowerCase());
-        return matchesType && matchesSearch;
+        const matchesSearch = !searchTerm ||
+            file.original_name?.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesSearch;
     });
 
-    const handleSelect = () => {
+    // Filter folders based on search
+    const filteredFolders = folders.filter(folder => {
+        const folderName = typeof folder === 'string' ? folder : folder.name;
+        return !searchTerm || folderName.toLowerCase().includes(searchTerm.toLowerCase());
+    });
+
+    const handleSelectFile = () => {
         if (selectedFile && onSelect) {
             onSelect(selectedFile);
             onClose();
         }
+    };
+
+    const handleSelectFolder = () => {
+        if (currentFolder && onSelectFolder) {
+            onSelectFolder({
+                name: currentFolder.split('/').pop(),
+                path: currentFolder,
+            });
+            onClose();
+        }
+    };
+
+    const navigateToFolder = (folderName) => {
+        const folderPath = currentFolder
+            ? `${currentFolder}/${folderName}`
+            : `/${folderName}`;
+        setCurrentFolder(folderPath);
+        setSelectedFile(null);
+    };
+
+    const navigateBack = () => {
+        if (!currentFolder) return;
+        const parts = currentFolder.split('/').filter(Boolean);
+        if (parts.length <= 1) {
+            setCurrentFolder(null);
+        } else {
+            parts.pop();
+            setCurrentFolder('/' + parts.join('/'));
+        }
+        setSelectedFile(null);
     };
 
     if (!isOpen) return null;
@@ -54,11 +146,25 @@ export default function MediaPickerModal({ isOpen, onClose, onSelect, fileType =
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                Chọn file từ thư viện
+                                Chọn từ Thư viện
                             </h2>
-                            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                {fileType === 'image' ? 'Chỉ hiển thị ảnh' : fileType === 'video' ? 'Chỉ hiển thị video' : 'Tất cả file'}
-                            </p>
+                            {/* Breadcrumb */}
+                            <div className="flex items-center gap-2 mt-1">
+                                <button
+                                    onClick={() => setCurrentFolder(null)}
+                                    className={`text-sm ${isDark ? 'text-cyan-400 hover:text-cyan-300' : 'text-cyan-600 hover:text-cyan-700'}`}
+                                >
+                                    Thư viện
+                                </button>
+                                {currentFolder && (
+                                    <>
+                                        <span className={isDark ? 'text-gray-600' : 'text-gray-400'}>/</span>
+                                        <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                            {currentFolder.split('/').filter(Boolean).pop()}
+                                        </span>
+                                    </>
+                                )}
+                            </div>
                         </div>
                         <button
                             onClick={onClose}
@@ -74,7 +180,7 @@ export default function MediaPickerModal({ isOpen, onClose, onSelect, fileType =
                     <div className="mt-4 relative">
                         <input
                             type="text"
-                            placeholder="Tìm kiếm file..."
+                            placeholder="Tìm kiếm..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-gray-500 focus:border-cyan-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-cyan-500'} border-2 focus:ring-2 focus:ring-cyan-500/20`}
@@ -85,15 +191,53 @@ export default function MediaPickerModal({ isOpen, onClose, onSelect, fileType =
                     </div>
                 </div>
 
-                {/* Media Grid */}
+                {/* Content Grid */}
                 <div className={`p-6 overflow-y-auto max-h-[50vh] ${isDark ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center py-12">
                             <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mb-4" />
                             <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Đang tải...</p>
                         </div>
-                    ) : filteredFiles.length > 0 ? (
+                    ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            {/* Back Button when in folder */}
+                            {currentFolder && (
+                                <div
+                                    onClick={navigateBack}
+                                    className={`group aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-2 border-2 border-dashed ${isDark ? 'border-[#2a2a2a] hover:border-cyan-500/50 bg-[#1a1a1a]' : 'border-gray-200 hover:border-cyan-500/50 bg-white'}`}
+                                >
+                                    <svg className={`w-10 h-10 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+                                    </svg>
+                                    <span className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Quay lại</span>
+                                </div>
+                            )}
+
+                            {/* Folders */}
+                            {filteredFolders.map((folder) => {
+                                const folderName = typeof folder === 'string' ? folder : folder.name;
+                                return (
+                                    <div
+                                        key={folderName}
+                                        onClick={() => navigateToFolder(folderName)}
+                                        className={`group aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-2 ${isDark ? 'bg-[#1a1a1a] hover:bg-[#252525]' : 'bg-white hover:bg-gray-50'} hover:scale-105 border ${isDark ? 'border-[#2a2a2a] hover:border-amber-500/50' : 'border-gray-200 hover:border-amber-400'}`}
+                                    >
+                                        <div className="w-16 h-16 flex items-center justify-center">
+                                            <svg className="w-12 h-12 text-amber-500" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M10 4H2v16h20V6H12l-2-2z" />
+                                            </svg>
+                                        </div>
+                                        <span className={`text-sm font-medium truncate max-w-[90%] ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                            {folderName}
+                                        </span>
+                                        <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                            Thư mục
+                                        </span>
+                                    </div>
+                                );
+                            })}
+
+                            {/* Files */}
                             {filteredFiles.map((file) => (
                                 <div
                                     key={file.id}
@@ -134,20 +278,20 @@ export default function MediaPickerModal({ isOpen, onClose, onSelect, fileType =
                                     </div>
                                 </div>
                             ))}
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center py-12">
-                            <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-4 ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-100'}`}>
-                                <svg className={`w-10 h-10 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                            <p className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                Chưa có file nào
-                            </p>
-                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'} mt-1`}>
-                                Tải lên file từ trang Media Library
-                            </p>
+
+                            {/* Empty State */}
+                            {!isLoading && filteredFiles.length === 0 && filteredFolders.length === 0 && !currentFolder && (
+                                <div className="col-span-full flex flex-col items-center justify-center py-12">
+                                    <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-4 ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-100'}`}>
+                                        <svg className={`w-10 h-10 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <p className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                        Chưa có file nào
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
@@ -173,8 +317,24 @@ export default function MediaPickerModal({ isOpen, onClose, onSelect, fileType =
                                     <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{selectedFile.formatted_size}</p>
                                 </div>
                             </div>
+                        ) : currentFolder && allowFolderSelection ? (
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isDark ? 'bg-amber-500/20' : 'bg-amber-50'}`}>
+                                    <svg className="w-6 h-6 text-amber-500" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M10 4H2v16h20V6H12l-2-2z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                        {currentFolder.split('/').filter(Boolean).pop()}
+                                    </p>
+                                    <p className={`text-xs ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+                                        📂 Chọn folder → Random file khi chạy
+                                    </p>
+                                </div>
+                            </div>
                         ) : (
-                            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Chọn một file</p>
+                            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Chọn một file hoặc folder</p>
                         )}
                     </div>
 
@@ -185,15 +345,27 @@ export default function MediaPickerModal({ isOpen, onClose, onSelect, fileType =
                         >
                             Hủy
                         </button>
+
+                        {/* Select Folder Button */}
+                        {currentFolder && allowFolderSelection && !selectedFile && (
+                            <button
+                                onClick={handleSelectFolder}
+                                className="px-6 py-2.5 rounded-xl font-medium transition-all bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/30 hover:scale-105"
+                            >
+                                Chọn Folder (Random)
+                            </button>
+                        )}
+
+                        {/* Select File Button */}
                         <button
-                            onClick={handleSelect}
+                            onClick={handleSelectFile}
                             disabled={!selectedFile}
                             className={`px-6 py-2.5 rounded-xl font-medium transition-all ${selectedFile
                                 ? 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white shadow-lg shadow-cyan-500/30 hover:scale-105'
                                 : `${isDark ? 'bg-[#252525] text-gray-600' : 'bg-gray-200 text-gray-400'} cursor-not-allowed`
                                 }`}
                         >
-                            Chọn file
+                            Chọn File
                         </button>
                     </div>
                 </div>

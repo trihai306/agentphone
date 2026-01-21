@@ -66,6 +66,12 @@ dependencies {
 
     // ML Kit Text Recognition for OCR
     implementation("com.google.mlkit:text-recognition:16.0.0")
+    
+    // ML Kit Object Detection for icon/element recognition
+    implementation("com.google.mlkit:object-detection:17.0.1")
+    
+    // ML Kit Image Labeling for icon classification
+    implementation("com.google.mlkit:image-labeling:17.0.8")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

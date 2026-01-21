@@ -16,7 +16,7 @@ use Illuminate\Support\Arr;
 class VariableContextService
 {
     /**
-     * Build execution context from all DataSourceNodes in a flow
+     * Build execution context from all DataSourceNodes and FileInputNodes in a flow
      */
     public function buildContext(Flow $flow, ?array $selectedRecordIds = null): array
     {
@@ -92,8 +92,46 @@ class VariableContextService
             $context['count'] = count($records);
         }
 
+        // Process FileInput nodes (file_input) - resolve file path or random from folder
+        $fileInputNodes = FlowNode::where('flow_id', $flow->id)
+            ->where('type', 'file_input')
+            ->get();
+
+        foreach ($fileInputNodes as $node) {
+            $nodeData = $this->parseNodeData($node->data);
+            $outputVariable = $nodeData['outputVariable'] ?? 'filePath';
+            $selectionType = $nodeData['selectionType'] ?? 'file';
+
+            if ($selectionType === 'folder') {
+                // Random file from folder
+                $folderPath = $nodeData['folderPath'] ?? null;
+                if ($folderPath) {
+                    $filePath = $this->getRandomFileFromFolder($flow->user_id, $folderPath);
+                    $context[$outputVariable] = $filePath;
+                }
+            } else {
+                // Fixed file path
+                $filePath = $nodeData['filePath'] ?? null;
+                $context[$outputVariable] = $filePath;
+            }
+        }
+
         return $context;
     }
+
+    /**
+     * Get a random file URL from a folder in user's media library
+     */
+    private function getRandomFileFromFolder(int $userId, string $folderPath): ?string
+    {
+        $file = \App\Models\UserMedia::where('user_id', $userId)
+            ->where('folder', $folderPath)
+            ->inRandomOrder()
+            ->first();
+
+        return $file?->url;
+    }
+
 
     /**
      * Build context directly from record IDs (Campaign mode)

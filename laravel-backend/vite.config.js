@@ -7,6 +7,7 @@ export default defineConfig({
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.jsx'],
             refresh: true,
+            detectTls: false, // Disable Herd/Valet TLS auto-detection
         }),
         react({
             include: "**/*.{jsx,tsx}",

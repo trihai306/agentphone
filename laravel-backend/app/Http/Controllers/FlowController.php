@@ -10,6 +10,8 @@ use App\Services\FlowService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class FlowController extends Controller
@@ -171,6 +173,9 @@ class FlowController extends Controller
             $existingNodeIds = [];
             foreach ($request->nodes as $nodeData) {
                 $existingNodeIds[] = $nodeData['id'];
+
+                // Process element icon images - extract base64 and save to storage
+                $nodeData = $this->processNodeImages($nodeData, $flow->id);
 
                 FlowNode::updateOrCreate(
                     [
@@ -469,5 +474,61 @@ class FlowController extends Controller
             'success' => true,
             'message' => 'Progress reported',
         ]);
+    }
+
+    /**
+     * Process node images - extract base64 element icons and save to storage
+     * Returns node data with image URLs instead of base64
+     */
+    private function processNodeImages(array $nodeData, int $flowId): array
+    {
+        if (!isset($nodeData['data']) || !is_array($nodeData['data'])) {
+            return $nodeData;
+        }
+
+        $data = $nodeData['data'];
+
+        // Check for 'image' field containing base64 data
+        if (isset($data['image']) && is_string($data['image'])) {
+            $base64 = $data['image'];
+
+            // Check if it's already a URL (not base64)
+            if (str_starts_with($base64, 'http://') || str_starts_with($base64, 'https://') || str_starts_with($base64, '/storage/')) {
+                return $nodeData;
+            }
+
+            // Remove data URL prefix if present (data:image/png;base64,...)
+            if (str_contains($base64, ',')) {
+                $base64 = explode(',', $base64)[1];
+            }
+
+            // Validate it's base64 and reasonable size
+            if (strlen($base64) > 100 && strlen($base64) < 500000) { // max ~375KB image
+                try {
+                    $imageData = base64_decode($base64, true);
+                    if ($imageData !== false) {
+                        // Generate unique filename
+                        $nodeId = str_replace([':', '.', '/'], '_', $nodeData['id'] ?? uniqid());
+                        $filename = "element_{$nodeId}.png";
+                        $directory = "public/workflows/{$flowId}/element_icons";
+                        $path = "{$directory}/{$filename}";
+
+                        // Create directory and save
+                        Storage::makeDirectory($directory);
+                        Storage::put($path, $imageData);
+
+                        // Replace base64 with URL
+                        $nodeData['data']['image'] = Storage::url("workflows/{$flowId}/element_icons/{$filename}");
+                        $nodeData['data']['iconUrl'] = $nodeData['data']['image'];
+
+                        Log::info("Saved element icon for workflow {$flowId}: {$filename}");
+                    }
+                } catch (\Exception $e) {
+                    Log::warning("Failed to process element icon: " . $e->getMessage());
+                }
+            }
+        }
+
+        return $nodeData;
     }
 }

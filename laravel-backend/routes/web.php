@@ -148,8 +148,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/media/bulk-delete', [MediaController::class, 'bulkDelete'])->name('media.bulkDelete');
     Route::post('/media/create-folder', [MediaController::class, 'createFolder'])->name('media.createFolder');
     Route::post('/media/save-from-ai/{generation}', [MediaController::class, 'saveAiToMedia'])->name('media.saveFromAi');
+    // JSON endpoints for media picker modal (session auth)
+    Route::get('/media/list.json', [MediaController::class, 'apiList'])->name('media.apiList');
+    Route::get('/media/folders.json', [MediaController::class, 'apiFolders'])->name('media.apiFolders');
     Route::resource('media', MediaController::class)->except(['create', 'edit']);
     Route::post('/media/{medium}/move', [MediaController::class, 'move'])->name('media.move');
+
 
     // AI Credits Management
     Route::prefix('ai-credits')->name('ai-credits.')->group(function () {

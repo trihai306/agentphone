@@ -66,7 +66,7 @@ export default function Index({ flows = { data: [] } }) {
     const handleToggleStatus = (flowId, currentStatus, e) => {
         e.preventDefault();
         e.stopPropagation();
-        router.patch(`/flows/${flowId}`, { status: currentStatus === 'active' ? 'draft' : 'active' });
+        router.put(`/flows/${flowId}`, { status: currentStatus === 'active' ? 'draft' : 'active' });
     };
 
     const filteredFlows = flows.data

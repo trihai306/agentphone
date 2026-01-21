@@ -30,6 +30,7 @@ class InspectElementsResult implements ShouldBroadcastNow
 
     public function broadcastOn(): Channel
     {
+        // Use standard Laravel Echo user channel naming
         return new PrivateChannel("user.{$this->userId}");
     }
 

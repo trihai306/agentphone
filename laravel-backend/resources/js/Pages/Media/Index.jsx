@@ -8,8 +8,9 @@ import { useToast } from '@/Components/Layout/ToastProvider';
 import MediaSidebar from '@/Components/Media/MediaSidebar';
 import MediaDetailPanel from '@/Components/Media/MediaDetailPanel';
 import MediaContextMenu from '@/Components/Media/MediaContextMenu';
+import CreateFolderModal from '@/Components/Media/CreateFolderModal';
 
-export default function Index({ media, stats, filters, storage_plan }) {
+export default function Index({ media, stats, folders = [], filters, storage_plan }) {
     const [viewMode, setViewMode] = useState('grid');
     const [selectedItems, setSelectedItems] = useState([]);
     const [activeItem, setActiveItem] = useState(null);
@@ -17,7 +18,10 @@ export default function Index({ media, stats, filters, storage_plan }) {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [contextMenu, setContextMenu] = useState(null);
+    const [backgroundContextMenu, setBackgroundContextMenu] = useState(null);
     const [showDetailPanel, setShowDetailPanel] = useState(true);
+    const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
+    const [dragOverFolder, setDragOverFolder] = useState(null);
 
     const { showConfirm } = useConfirm();
     const { t } = useTranslation();
@@ -59,9 +63,25 @@ export default function Index({ media, stats, filters, storage_plan }) {
         });
     }, [addToast, t]);
 
-    const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
+    // Track if we're doing an internal drag (moving media to folder) vs external (uploading file)
+    const [isInternalDrag, setIsInternalDrag] = useState(false);
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        // Only show upload overlay for external file drops (not internal media drags)
+        if (!isInternalDrag && e.dataTransfer.types.includes('Files')) {
+            setIsDragging(true);
+        }
+    };
     const handleDragLeave = () => setIsDragging(false);
-    const handleDrop = (e) => { e.preventDefault(); setIsDragging(false); handleUpload(e.dataTransfer.files); };
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        // Only upload if it's an external drop (has files but no media-id)
+        if (e.dataTransfer.files.length > 0 && !e.dataTransfer.getData('text/media-id')) {
+            handleUpload(e.dataTransfer.files);
+        }
+    };
 
     const toggleSelect = (id, e) => {
         e?.stopPropagation();
@@ -113,8 +133,20 @@ export default function Index({ media, stats, filters, storage_plan }) {
 
     const handleContextMenu = (e, item) => {
         e.preventDefault();
+        e.stopPropagation();
+        setBackgroundContextMenu(null);
         setContextMenu({ x: e.clientX, y: e.clientY });
         setActiveItem(item);
+    };
+
+    // Handle right-click on background (empty area) to show folder creation option
+    const handleBackgroundContextMenu = (e) => {
+        // Only trigger if clicking directly on the content area background
+        if (e.target === e.currentTarget) {
+            e.preventDefault();
+            setContextMenu(null);
+            setBackgroundContextMenu({ x: e.clientX, y: e.clientY });
+        }
     };
 
     const copyUrl = async (url) => {
@@ -125,6 +157,56 @@ export default function Index({ media, stats, filters, storage_plan }) {
             addToast(t('media.copy_failed', 'Không thể sao chép'), 'error');
         }
     };
+
+    // Navigate into folder
+    const navigateToFolder = (folderName) => {
+        router.get('/media', { ...filters, folder: '/' + folderName, type: null }, { preserveState: true });
+    };
+
+    // Navigate back to root
+    const navigateToRoot = () => {
+        router.get('/media', { ...filters, folder: null, type: null }, { preserveState: true });
+    };
+
+    // Handle dropping file on folder
+    const handleDropOnFolder = (e, folderName) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragOverFolder(null);
+        setIsInternalDrag(false);
+
+        // Get dragged media ID from data transfer
+        const mediaId = e.dataTransfer.getData('text/media-id');
+        if (mediaId) {
+            router.post(`/media/${mediaId}/move`, { folder: '/' + folderName }, {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    addToast(t('media.moved_to_folder', 'File đã được chuyển vào thư mục'), 'success');
+                },
+                onError: (errors) => {
+                    console.error('Move error:', errors);
+                    addToast(t('media.move_error', 'Không thể di chuyển file'), 'error');
+                }
+            });
+        }
+    };
+
+    // Handle drag start on media item
+    const handleMediaDragStart = (e, item) => {
+        setIsInternalDrag(true);
+        e.dataTransfer.setData('text/media-id', item.id.toString());
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    // Handle drag end on media item
+    const handleMediaDragEnd = () => {
+        setIsInternalDrag(false);
+        setDragOverFolder(null);
+    };
+
+    // Check if currently in a folder
+    const currentFolder = filters?.folder ? filters.folder.replace(/^\//, '') : null;
 
     return (
         <AppLayout title={t('media.title')}>
@@ -137,8 +219,10 @@ export default function Index({ media, stats, filters, storage_plan }) {
                 {/* Sidebar */}
                 <MediaSidebar
                     activeFilter={filters?.type}
+                    activeFolder={filters?.folder}
                     onFilterChange={applyFilter}
                     stats={stats}
+                    folders={folders}
                     storagePlan={storage_plan}
                     isDark={isDark}
                 />
@@ -240,7 +324,10 @@ export default function Index({ media, stats, filters, storage_plan }) {
                     </div>
 
                     {/* Content Area */}
-                    <div className="flex-1 overflow-y-auto p-6">
+                    <div
+                        className="flex-1 overflow-y-auto p-6"
+                        onContextMenu={handleBackgroundContextMenu}
+                    >
                         {/* Upload Progress */}
                         {isUploading && (
                             <div className={`mb-4 p-4 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
@@ -281,13 +368,63 @@ export default function Index({ media, stats, filters, storage_plan }) {
                             </div>
                         )}
 
+                        {/* Breadcrumb for folder navigation */}
+                        {currentFolder && (
+                            <div className={`mb-4 flex items-center gap-2 px-2 py-2 rounded-lg ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-100'}`}>
+                                <button
+                                    onClick={navigateToRoot}
+                                    className={`flex items-center gap-1 text-sm font-medium ${isDark ? 'text-violet-400 hover:text-violet-300' : 'text-violet-600 hover:text-violet-500'}`}
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                    </svg>
+                                    Media
+                                </button>
+                                <svg className={`w-4 h-4 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                                <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                    {currentFolder}
+                                </span>
+                            </div>
+                        )}
+
                         {/* Media Grid/List */}
-                        {media?.data?.length > 0 ? (
+                        {(folders.length > 0 && !currentFolder) || media?.data?.length > 0 ? (
                             viewMode === 'grid' ? (
                                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+                                    {/* Folder Cards - only show when not inside a folder */}
+                                    {!currentFolder && folders.map((folder) => (
+                                        <div
+                                            key={`folder-${folder}`}
+                                            onClick={() => navigateToFolder(folder)}
+                                            onDragOver={(e) => { e.preventDefault(); setDragOverFolder(folder); }}
+                                            onDragLeave={() => setDragOverFolder(null)}
+                                            onDrop={(e) => handleDropOnFolder(e, folder)}
+                                            className={`group relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02] flex flex-col items-center justify-center ${dragOverFolder === folder
+                                                ? 'ring-2 ring-violet-500 ring-offset-2 ' + (isDark ? 'ring-offset-[#0d0d0d] bg-violet-500/20' : 'ring-offset-white bg-violet-100')
+                                                : isDark ? 'bg-[#1a1a1a] hover:bg-[#222]' : 'bg-gray-100 hover:bg-gray-50'
+                                                } border-2 border-dashed ${isDark ? 'border-[#2a2a2a]' : 'border-gray-200'}`}
+                                        >
+                                            <svg className={`w-16 h-16 mb-2 ${isDark ? 'text-amber-500' : 'text-amber-400'}`} fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
+                                            </svg>
+                                            <span className={`text-sm font-medium text-center px-2 truncate max-w-full ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                                {folder}
+                                            </span>
+                                            <span className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                {t('media.folder', 'Thư mục')}
+                                            </span>
+                                        </div>
+                                    ))}
+
+                                    {/* Media Items */}
                                     {media.data.map((item) => (
                                         <div
                                             key={item.id}
+                                            draggable
+                                            onDragStart={(e) => handleMediaDragStart(e, item)}
+                                            onDragEnd={handleMediaDragEnd}
                                             onClick={() => setActiveItem(item)}
                                             onContextMenu={(e) => handleContextMenu(e, item)}
                                             className={`group relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02] ${activeItem?.id === item.id
@@ -479,7 +616,7 @@ export default function Index({ media, stats, filters, storage_plan }) {
                     />
                 )}
 
-                {/* Context Menu */}
+                {/* Context Menu for files */}
                 <MediaContextMenu
                     position={contextMenu}
                     item={activeItem}
@@ -493,6 +630,46 @@ export default function Index({ media, stats, filters, storage_plan }) {
                     }}
                     onDelete={() => handleDelete(activeItem?.id)}
                     onOpenAiStudio={() => router.visit('/ai-studio')}
+                    isDark={isDark}
+                />
+
+                {/* Background Context Menu (for creating folders) */}
+                {backgroundContextMenu && (
+                    <div
+                        className="fixed z-50"
+                        style={{ left: backgroundContextMenu.x, top: backgroundContextMenu.y }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className={`w-52 py-1.5 rounded-xl shadow-xl border overflow-hidden ${isDark
+                            ? 'bg-[#1a1a1a] border-[#2a2a2a]'
+                            : 'bg-white border-gray-200'
+                            }`}>
+                            <button
+                                onClick={() => {
+                                    setBackgroundContextMenu(null);
+                                    setShowCreateFolderModal(true);
+                                }}
+                                className={`w-full flex items-center gap-3 px-3 py-2 text-sm transition-all ${isDark
+                                    ? 'text-gray-300 hover:bg-[#222] hover:text-white'
+                                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                                    }`}
+                            >
+                                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                                </svg>
+                                <span>{t('media.create_folder', 'Tạo thư mục mới')}</span>
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Create Folder Modal */}
+                <CreateFolderModal
+                    isOpen={showCreateFolderModal}
+                    onClose={() => setShowCreateFolderModal(false)}
+                    onSuccess={() => {
+                        addToast(t('media.folder_created', 'Thư mục đã được tạo'), 'success');
+                    }}
                     isDark={isDark}
                 />
             </div>

@@ -18,14 +18,12 @@ export default function ElementPickerModal({
     onSelect,
     deviceId,
     userId,
-    elementType = 'all', // 'clickable' | 'editable' | 'all'
+    elementType = 'all', // 'clickable' | 'editable' | 'scrollable' | 'all'
 }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
-    // Mode: 'accessibility' (default) or 'ocr' (text detection)
-    const [inspectMode, setInspectMode] = useState('accessibility');
-
+    // State for elements (accessibility + OCR unified)
     const [elements, setElements] = useState([]);
     const [textElements, setTextElements] = useState([]); // OCR detected text
     const [loading, setLoading] = useState(false);
@@ -34,13 +32,150 @@ export default function ElementPickerModal({
     const [packageName, setPackageName] = useState('');
     const [filterType, setFilterType] = useState('all');
     const [hoveredElement, setHoveredElement] = useState(null);
-    const [selectedCategory, setSelectedCategory] = useState(elementType || 'smart');
+
+    // Map elementType to category: clickable -> 'clickable' (Buttons tab)
+    const defaultCategory = elementType === 'clickable' ? 'clickable'
+        : elementType === 'editable' ? 'editable'
+            : elementType === 'scrollable' ? 'scrollable'
+                : 'smart';
+    const [selectedCategory, setSelectedCategory] = useState(defaultCategory);
     const [screenshotData, setScreenshotData] = useState(null);
     const [screenDimensions, setScreenDimensions] = useState({ width: 1080, height: 2400 });
     const [imageNaturalDimensions, setImageNaturalDimensions] = useState(null);
     const [statusBarHeight, setStatusBarHeight] = useState(0);
     const [ocrProcessingTime, setOcrProcessingTime] = useState(0);
     const [selectedElement, setSelectedElement] = useState(null); // For showing detail panel
+    const [selectorStrategy, setSelectorStrategy] = useState('smart'); // smart | id | text | coordinates
+
+    // Calculate selector confidence score for an element
+    const getConfidenceScore = useCallback((el) => {
+        if (!el) return { score: 0, level: 'low', reason: 'No element' };
+
+        // High confidence: unique resourceId
+        if (el.resourceId && el.resourceId.includes(':id/')) {
+            return { score: 95, level: 'high', reason: 'Unique Resource ID' };
+        }
+
+        // High confidence: unique text that's not generic
+        const genericTexts = ['OK', 'Cancel', 'Yes', 'No', 'Submit', 'Back', 'Next', 'Done', '...'];
+        if (el.text && el.text.length > 2 && !genericTexts.includes(el.text)) {
+            return { score: 85, level: 'high', reason: 'Descriptive text content' };
+        }
+
+        // Medium confidence: contentDescription
+        if (el.contentDescription) {
+            return { score: 75, level: 'medium', reason: 'Content Description available' };
+        }
+
+        // Medium confidence: generic text
+        if (el.text) {
+            return { score: 60, level: 'medium', reason: 'Generic text (may match multiple)' };
+        }
+
+        // Low confidence: only coordinates
+        if (el.bounds) {
+            return { score: 40, level: 'low', reason: 'Coordinates only (may break on different screens)' };
+        }
+
+        return { score: 20, level: 'low', reason: 'No reliable selector' };
+    }, []);
+
+    // Generate UiSelector string for Android automation
+    const generateUiSelector = useCallback((el, strategy = 'smart') => {
+        if (!el) return null;
+
+        const selectors = [];
+
+        // Based on strategy priority
+        if (strategy === 'smart' || strategy === 'id') {
+            if (el.resourceId) {
+                selectors.push({
+                    type: 'resourceId',
+                    uiSelector: `UiSelector().resourceId("${el.resourceId}")`,
+                    xpath: `//*[@resource-id="${el.resourceId}"]`,
+                    priority: 1,
+                    confidence: 95
+                });
+            }
+        }
+
+        if (strategy === 'smart' || strategy === 'text') {
+            if (el.text) {
+                selectors.push({
+                    type: 'text',
+                    uiSelector: `UiSelector().text("${el.text}")`,
+                    xpath: `//*[@text="${el.text}"]`,
+                    priority: 2,
+                    confidence: 85
+                });
+            }
+            if (el.contentDescription) {
+                selectors.push({
+                    type: 'contentDescription',
+                    uiSelector: `UiSelector().description("${el.contentDescription}")`,
+                    xpath: `//*[@content-desc="${el.contentDescription}"]`,
+                    priority: 3,
+                    confidence: 75
+                });
+            }
+        }
+
+        // Icon template matching - use cropped icon image to find element
+        if (strategy === 'smart' || strategy === 'icon') {
+            if (el.image) {
+                selectors.push({
+                    type: 'icon',
+                    uiSelector: null,  // Not a UiSelector - uses template matching
+                    xpath: null,
+                    template: el.image,  // Base64 icon image
+                    priority: 2.5,  // Between text and coordinates
+                    confidence: 80,
+                    description: 'Visual icon matching'
+                });
+            }
+        }
+
+        if (strategy === 'smart' || strategy === 'coordinates') {
+            if (el.bounds) {
+                const centerX = Math.round(el.bounds.left + el.bounds.width / 2);
+                const centerY = Math.round(el.bounds.top + el.bounds.height / 2);
+                selectors.push({
+                    type: 'coordinates',
+                    uiSelector: `click(${centerX}, ${centerY})`,
+                    xpath: null,
+                    priority: 4,
+                    confidence: 40
+                });
+            }
+        }
+
+        // Sort by priority
+        selectors.sort((a, b) => a.priority - b.priority);
+
+        return selectors;
+    }, []);
+
+    // Build multi-selector output for onSelect
+    const buildSelectorOutput = useCallback((el) => {
+        if (!el) return null;
+
+        const selectors = generateUiSelector(el, selectorStrategy);
+        const confidence = getConfidenceScore(el);
+
+        return {
+            // Original element data
+            ...el,
+            // Enhanced selector data
+            _selectors: {
+                primary: selectors[0] || null,
+                secondary: selectors[1] || null,
+                fallback: selectors[selectors.length - 1] || null,
+                all: selectors
+            },
+            _confidence: confidence,
+            _strategy: selectorStrategy
+        };
+    }, [generateUiSelector, getConfidenceScore, selectorStrategy]);
 
     // Categorize elements
     const categories = useMemo(() => {
@@ -112,15 +247,20 @@ export default function ElementPickerModal({
             }
         };
 
-        // Listen for OCR results (visual:result event)
+        // Listen for OCR + Object Detection results (visual:result event)
         const handleVisualResult = (data) => {
-            console.log('👁️ Visual inspection (OCR) result:', data);
-            setLoading(false);
+            console.log('👁️ Visual inspection (OCR + Objects) result:', data);
+            // Don't set loading false here - let inspect:result control it
+            // setLoading(false);
 
             if (data.success) {
-                setTextElements(data.text_elements || []);
+                // Use all_elements (combined text + objects) if available, fallback to text_elements
+                const allVisualElements = data.all_elements || data.text_elements || [];
+                setTextElements(allVisualElements);
                 setOcrProcessingTime(data.processing_time_ms || 0);
-                setError(null);
+                // Don't clear error here - let inspect:result control it
+
+                console.log(`📊 Visual detection: ${data.text_count || 0} texts, ${data.object_count || 0} objects, total: ${allVisualElements.length}`);
 
                 if (data.screenshot) {
                     setScreenshotData(data.screenshot);
@@ -144,27 +284,51 @@ export default function ElementPickerModal({
                     setStatusBarHeight(data.status_bar_height);
                 }
             } else {
-                setError(data.error || 'OCR failed');
+                // OCR failed - just log, don't show error if accessibility elements work
+                console.warn('OCR failed:', data.error);
+                // DON'T set error here - accessibility scan is primary
+                // setError(data.error || 'OCR failed');
                 setTextElements([]);
             }
         };
 
         if (window.Echo) {
+            // Subscribe to standard Laravel Echo user channel (use user.{userId} to match backend)
+            console.log('🔌 ElementPicker: Subscribing to channel user.' + userId);
             const channel = window.Echo.private(`user.${userId}`);
-            channel.listen('.inspect:result', handleResult);
-            channel.listen('.visual:result', handleVisualResult);
+
+            // Log subscription success
+            channel.subscribed(() => {
+                console.log('✅ ElementPicker: Successfully subscribed to user.' + userId);
+            });
+
+            channel.listen('.inspect:result', (data) => {
+                console.log('✅ ElementPicker: Received inspect:result!', data);
+                handleResult(data);
+            });
+            channel.listen('.visual:result', (data) => {
+                console.log('✅ ElementPicker: Received visual:result!', data);
+                handleVisualResult(data);
+            });
 
             return () => {
+                console.log('🔌 ElementPicker: Unsubscribing from channel user.' + userId);
                 channel.stopListening('.inspect:result');
                 channel.stopListening('.visual:result');
             };
+        } else {
+            console.error('❌ ElementPicker: window.Echo not available!');
         }
     }, [isOpen, userId]);
 
-    // Auto-scan on open
+    // Auto-scan on open with small delay to ensure channel subscription is complete
     useEffect(() => {
         if (isOpen && deviceId && elements.length === 0 && textElements.length === 0) {
-            requestElements();
+            // Small delay to allow channel subscription to complete
+            const timer = setTimeout(() => {
+                requestElements();
+            }, 500);
+            return () => clearTimeout(timer);
         }
     }, [isOpen, deviceId]);
 
@@ -178,43 +342,71 @@ export default function ElementPickerModal({
         setLoading(true);
         setError(null);
 
+        // Safety timeout - if socket doesn't respond within 15s, stop loading
+        // (inspect:result payload can be 100KB+ with element icons)
+        const timeoutId = setTimeout(() => {
+            setLoading(false);
+            console.warn('⏱️ Element scan timeout - socket did not respond in time');
+        }, 15000);
+
         try {
-            // Call different endpoints based on mode
-            const endpoint = inspectMode === 'ocr'
-                ? '/devices/visual-inspect'
-                : '/devices/inspect';
+            // Call BOTH endpoints in parallel for unified results
+            const [accessibilityRes, ocrRes] = await Promise.allSettled([
+                window.axios.post('/devices/inspect', { device_id: deviceId }),
+                window.axios.post('/devices/visual-inspect', { device_id: deviceId })
+            ]);
 
-            const response = await window.axios.post(endpoint, {
-                device_id: deviceId
-            });
+            // Handle accessibility response
+            if (accessibilityRes.status === 'rejected') {
+                console.warn('Accessibility scan failed:', accessibilityRes.reason);
+            }
 
-            if (!response.data.success) {
-                setError(response.data.message);
+            // Handle OCR response  
+            if (ocrRes.status === 'rejected') {
+                console.warn('OCR scan failed:', ocrRes.reason);
+            }
+
+            // Check if at least one succeeded
+            const accessOk = accessibilityRes.status === 'fulfilled' && accessibilityRes.value?.data?.success;
+            const ocrOk = ocrRes.status === 'fulfilled' && ocrRes.value?.data?.success;
+
+            if (!accessOk && !ocrOk) {
+                setError('Không thể scan thiết bị');
                 setLoading(false);
+                clearTimeout(timeoutId);
             }
         } catch (err) {
             const message = err.response?.data?.message || 'Không thể kết nối đến server';
             setError(message);
             setLoading(false);
+            clearTimeout(timeoutId);
         }
-    }, [deviceId, inspectMode]);
+    }, [deviceId]);
 
-    // Re-scan when mode changes
-    useEffect(() => {
-        if (isOpen && deviceId) {
-            // Clear previous data
-            if (inspectMode === 'ocr') {
-                setElements([]);
-            } else {
-                setTextElements([]);
-            }
-            requestElements();
-        }
-    }, [inspectMode]);
+    // No longer need mode-change re-scan since we call both endpoints together
+
+    // Combine accessibility elements and OCR text elements
+    const allElements = useMemo(() => {
+        // Mark OCR elements with a flag for display purposes
+        const ocrWithFlag = textElements.map(el => ({
+            ...el,
+            _source: 'ocr',
+            isClickable: true, // OCR text is generally clickable
+            text: el.text || el.detectedText
+        }));
+
+        // Mark accessibility elements
+        const accessWithFlag = elements.map(el => ({
+            ...el,
+            _source: 'accessibility'
+        }));
+
+        return [...accessWithFlag, ...ocrWithFlag];
+    }, [elements, textElements]);
 
     // Filter elements
     const filteredElements = useMemo(() => {
-        return elements.filter(el => {
+        return allElements.filter(el => {
             // Search filter
             const searchLower = searchQuery.toLowerCase();
             const matchesSearch = !searchQuery ||
@@ -230,10 +422,11 @@ export default function ElementPickerModal({
             if (selectedCategory === 'text') matchesCategory = el.text && !el.isClickable && !el.isEditable;
             if (selectedCategory === 'scrollable') matchesCategory = el.isScrollable;
             if (selectedCategory === 'checkable') matchesCategory = el.isCheckable;
+            if (selectedCategory === 'smart') matchesCategory = true; // Smart shows all for grouping
 
             return matchesSearch && matchesCategory;
         });
-    }, [elements, searchQuery, selectedCategory]);
+    }, [allElements, searchQuery, selectedCategory]);
 
     // Smart grouped elements: group clickable parents with their children
     const smartGroupedElements = useMemo(() => {
@@ -250,11 +443,11 @@ export default function ElementPickerModal({
         };
 
         // Get all clickable elements first
-        const clickableElements = elements.filter(el => el.isClickable || el.isEditable);
+        const clickableElements = allElements.filter(el => el.isClickable || el.isEditable);
 
         // For each clickable, find children with text/description
         const grouped = clickableElements.map(parent => {
-            const children = elements.filter(child => {
+            const children = allElements.filter(child => {
                 if (child === parent) return false;
                 if (!isChildOf(child, parent)) return false;
                 // Only include children with text or contentDescription
@@ -267,7 +460,7 @@ export default function ElementPickerModal({
         grouped.sort((a, b) => (a.parent.bounds?.top || 0) - (b.parent.bounds?.top || 0));
 
         return grouped;
-    }, [elements]);
+    }, [allElements]);
 
     // Get element display name
     const getElementName = (el) => {
@@ -282,7 +475,7 @@ export default function ElementPickerModal({
         if (!parent.bounds) return [];
         const p = parent.bounds;
 
-        return elements.filter(child => {
+        return allElements.filter(child => {
             if (child === parent) return false;
             if (!child.bounds) return false;
             if (!(child.text || child.contentDescription)) return false;
@@ -294,7 +487,7 @@ export default function ElementPickerModal({
                 (c.top + c.height) <= (p.top + p.height) &&
                 !(c.left === p.left && c.top === p.top && c.width === p.width && c.height === p.height);
         }).slice(0, 3); // Max 3 children
-    }, [elements]);
+    }, [allElements]);
 
     // Find clickable parent for non-clickable element
     const findClickableParent = useCallback((el) => {
@@ -303,7 +496,7 @@ export default function ElementPickerModal({
 
         const c = el.bounds;
         // Find smallest clickable parent that contains this element
-        const parents = elements.filter(parent => {
+        const parents = allElements.filter(parent => {
             if (!parent.isClickable && !parent.isEditable) return false;
             if (parent === el) return false;
             if (!parent.bounds) return false;
@@ -318,7 +511,7 @@ export default function ElementPickerModal({
         if (parents.length === 0) return null;
         parents.sort((a, b) => (a.bounds.width * a.bounds.height) - (b.bounds.width * b.bounds.height));
         return parents[0];
-    }, [elements]);
+    }, [allElements]);
 
     // Get element type icon
     const getElementIcon = (el) => {
@@ -343,16 +536,16 @@ export default function ElementPickerModal({
 
     return (
         <>
-            {/* Backdrop */}
+            {/* Backdrop - Transparent, just for click-to-close */}
             <div
-                className="fixed inset-0 bg-black/70 backdrop-blur-md z-[100]"
+                className="fixed inset-0 z-[9999]"
                 onClick={onClose}
             />
 
-            {/* Modal */}
-            <div className="fixed inset-4 z-[100] flex items-center justify-center">
+            {/* Modal Container - On top of backdrop */}
+            <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 pointer-events-none">
                 <div
-                    className={`w-full max-w-6xl h-full max-h-[90vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col ${isDark ? 'bg-[#0f0f0f]' : 'bg-white'}`}
+                    className={`w-full max-w-6xl h-full max-h-[90vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col pointer-events-auto ${isDark ? 'bg-[#0f0f0f]' : 'bg-white'}`}
                     style={{
                         boxShadow: '0 25px 100px rgba(0, 0, 0, 0.5)',
                         border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`
@@ -363,47 +556,17 @@ export default function ElementPickerModal({
                     <div className={`px-6 py-4 border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${inspectMode === 'ocr'
-                                    ? (isDark ? 'bg-gradient-to-br from-emerald-500/30 to-teal-500/30' : 'bg-gradient-to-br from-emerald-100 to-teal-100')
-                                    : (isDark ? 'bg-gradient-to-br from-violet-500/30 to-purple-500/30' : 'bg-gradient-to-br from-violet-100 to-purple-100')
-                                    }`}>
-                                    <span className="text-2xl">{inspectMode === 'ocr' ? '👁️' : '🔍'}</span>
+                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-violet-500/30 to-purple-500/30' : 'bg-gradient-to-br from-violet-100 to-purple-100'}`}>
+                                    <span className="text-2xl">🔍</span>
                                 </div>
                                 <div>
                                     <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                        {inspectMode === 'ocr' ? 'OCR Text Detection' : 'Element Inspector'}
+                                        Element Inspector
                                     </h2>
                                     <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                        {inspectMode === 'ocr'
-                                            ? `${textElements.length} text elements detected ${ocrProcessingTime > 0 ? `(${ocrProcessingTime}ms)` : ''}`
-                                            : (packageName || 'Đang chờ kết nối thiết bị...')
-                                        }
+                                        {elements.length + textElements.length} elements • {packageName || 'Đang chờ kết nối...'}
                                     </p>
                                 </div>
-                            </div>
-
-                            {/* Mode Toggle */}
-                            <div className={`flex items-center p-1 rounded-xl ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
-                                <button
-                                    onClick={() => setInspectMode('accessibility')}
-                                    className={`px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all ${inspectMode === 'accessibility'
-                                        ? 'bg-violet-500 text-white shadow-lg'
-                                        : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-                                        }`}
-                                >
-                                    <span>🔍</span>
-                                    Accessibility
-                                </button>
-                                <button
-                                    onClick={() => setInspectMode('ocr')}
-                                    className={`px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all ${inspectMode === 'ocr'
-                                        ? 'bg-emerald-500 text-white shadow-lg'
-                                        : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-                                        }`}
-                                >
-                                    <span>👁️</span>
-                                    OCR Text
-                                </button>
                             </div>
 
                             <div className="flex items-center gap-3">
@@ -527,46 +690,58 @@ export default function ElementPickerModal({
 
                                                     {/* Element Bounds Overlay */}
                                                     <div className="absolute inset-0 overflow-visible">
-                                                        {filteredElements.slice(0, 25).map((el, idx) => {
+                                                        {filteredElements.map((el, idx) => {
                                                             if (!el.bounds) return null;
                                                             const b = el.bounds;
                                                             const isHovered = hoveredElement === idx;
                                                             const colors = getElementColor(el);
 
-                                                            // Adjust bounds.top for status bar offset
-                                                            // Element bounds include status bar, but screenshot may not
-                                                            const adjustedTop = Math.max(0, b.top - statusBarHeight);
+                                                            // Use percentage bounds if available (more accurate)
+                                                            // Otherwise fallback to pixel-based calculation
+                                                            let elLeft, elTop, elWidth, elHeight;
+
+                                                            if (b.leftPercent !== undefined && b.topPercent !== undefined) {
+                                                                // Use normalized percentage values - directly map to container
+                                                                elLeft = b.leftPercent * containerWidth;
+                                                                // Adjust for status bar (percentage of screen that status bar takes)
+                                                                const statusBarPercent = statusBarHeight / (screenDimensions.height || 2400);
+                                                                elTop = Math.max(0, (b.topPercent - statusBarPercent)) * containerHeight / (1 - statusBarPercent);
+                                                                elWidth = b.widthPercent * containerWidth;
+                                                                elHeight = b.heightPercent * containerHeight;
+                                                            } else {
+                                                                // Fallback to pixel-based calculation
+                                                                const adjustedTop = Math.max(0, b.top - statusBarHeight);
+                                                                elLeft = b.left * scaleX;
+                                                                elTop = adjustedTop * scaleY;
+                                                                elWidth = b.width * scaleX;
+                                                                elHeight = b.height * scaleY;
+                                                            }
 
                                                             return (
                                                                 <div
                                                                     key={idx}
-                                                                    className={`absolute border-2 rounded cursor-pointer transition-all ${isHovered ? 'z-30 scale-105' : 'z-10'} ${colors.border} ${isHovered ? colors.bg + ' shadow-lg' : 'bg-transparent hover:bg-white/10'}`}
+                                                                    className="absolute cursor-pointer transition-all z-10"
                                                                     style={{
-                                                                        left: `${b.left * scaleX}px`,
-                                                                        top: `${adjustedTop * scaleY}px`,
-                                                                        width: `${Math.max(b.width * scaleX, 4)}px`,
-                                                                        height: `${Math.max(b.height * scaleY, 4)}px`,
+                                                                        left: `${elLeft + elWidth / 2 - 8}px`,
+                                                                        top: `${elTop + elHeight / 2 - 8}px`,
                                                                     }}
                                                                     onMouseEnter={() => setHoveredElement(idx)}
                                                                     onMouseLeave={() => setHoveredElement(null)}
                                                                     onClick={() => onSelect(el)}
                                                                 >
-                                                                    {/* Index Badge - Inside element bounds */}
-                                                                    <div
-                                                                        className={`absolute top-0 left-0 min-w-[16px] h-[16px] rounded-sm flex items-center justify-center text-[8px] font-bold z-20 ${el.isEditable
-                                                                            ? 'bg-blue-500 text-white'
-                                                                            : el.isClickable
-                                                                                ? 'bg-violet-500 text-white'
-                                                                                : el.isScrollable
-                                                                                    ? 'bg-amber-500 text-white'
-                                                                                    : 'bg-gray-600 text-white'
-                                                                            }`}
+                                                                    {/* Tiny Index Number - no background */}
+                                                                    <span
+                                                                        className={`text-[7px] font-black transition-all ${isHovered ? 'scale-150' : ''}`}
+                                                                        style={{
+                                                                            color: '#ff3b30',
+                                                                            textShadow: '0 0 3px #fff, 0 0 5px #fff, 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff'
+                                                                        }}
                                                                     >
                                                                         {idx + 1}
-                                                                    </div>
+                                                                    </span>
                                                                     {isHovered && (
-                                                                        <div className={`absolute -top-6 left-4 px-1.5 py-0.5 rounded text-[8px] font-medium whitespace-nowrap shadow-lg ${isDark ? 'bg-black/90 text-white' : 'bg-white/95 text-gray-900'}`}>
-                                                                            {getElementName(el).substring(0, 20)}
+                                                                        <div className={`absolute -top-5 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded text-[7px] font-medium whitespace-nowrap shadow-lg z-40 ${isDark ? 'bg-black/90 text-white' : 'bg-white/95 text-gray-900'}`}>
+                                                                            {getElementName(el).substring(0, 25)}
                                                                         </div>
                                                                     )}
                                                                 </div>
@@ -699,14 +874,11 @@ export default function ElementPickerModal({
 
                                 {loading && (
                                     <div className="flex flex-col items-center justify-center py-12">
-                                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 animate-pulse ${inspectMode === 'ocr'
-                                            ? 'bg-gradient-to-br from-emerald-500/20 to-teal-500/20'
-                                            : 'bg-gradient-to-br from-violet-500/20 to-purple-500/20'
-                                            }`}>
-                                            <span className="text-3xl animate-bounce">{inspectMode === 'ocr' ? '👁️' : '📱'}</span>
+                                        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 animate-pulse bg-gradient-to-br from-violet-500/20 to-purple-500/20">
+                                            <span className="text-3xl animate-bounce">📱</span>
                                         </div>
                                         <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                            {inspectMode === 'ocr' ? 'Đang phân tích text (OCR)...' : 'Đang scan thiết bị...'}
+                                            Đang scan thiết bị...
                                         </p>
                                         <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                                             Vui lòng đợi trong giây lát
@@ -714,28 +886,22 @@ export default function ElementPickerModal({
                                     </div>
                                 )}
 
-                                {!loading && ((inspectMode === 'ocr' ? textElements.length : elements.length) === 0) && !error && (
+                                {!loading && allElements.length === 0 && !error && (
                                     <div className="flex flex-col items-center justify-center py-12">
-                                        <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mb-4 ${inspectMode === 'ocr'
-                                            ? 'bg-gradient-to-br from-emerald-500/10 to-teal-500/5'
-                                            : 'bg-gradient-to-br from-gray-500/10 to-gray-500/5'
-                                            }`}>
-                                            <span className="text-4xl">{inspectMode === 'ocr' ? '👁️' : '📱'}</span>
+                                        <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-4 bg-gradient-to-br from-gray-500/10 to-gray-500/5">
+                                            <span className="text-4xl">📱</span>
                                         </div>
                                         <p className={`font-medium mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                            {inspectMode === 'ocr' ? 'Chưa có text được phát hiện' : 'Chưa có dữ liệu'}
+                                            Chưa có dữ liệu
                                         </p>
                                         <p className={`text-sm text-center max-w-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                            {inspectMode === 'ocr'
-                                                ? 'Click "Refresh" để scan và phát hiện text trên màn hình'
-                                                : 'Click "Refresh" để scan màn hình thiết bị và hiển thị các elements'
-                                            }
+                                            Click "Refresh" để scan màn hình thiết bị và hiển thị các elements
                                         </p>
                                     </div>
                                 )}
 
                                 {/* Smart View - Hierarchical Display */}
-                                {inspectMode === 'accessibility' && selectedCategory === 'smart' && (
+                                {selectedCategory === 'smart' && (
                                     <div className="space-y-3">
                                         {smartGroupedElements.length === 0 && (
                                             <div className="text-center py-8">
@@ -840,8 +1006,8 @@ export default function ElementPickerModal({
                                     </div>
                                 )}
 
-                                {/* Elements Grid - Accessibility Mode (non-smart categories) */}
-                                {inspectMode === 'accessibility' && selectedCategory !== 'smart' && (
+                                {/* Elements Grid (non-smart categories) */}
+                                {selectedCategory !== 'smart' && (
                                     <div className="grid gap-2">
                                         {filteredElements.map((el, idx) => {
                                             const colors = getElementColor(el);
@@ -863,14 +1029,46 @@ export default function ElementPickerModal({
                                                         }`}
                                                 >
                                                     <div className="flex items-start gap-3">
-                                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${colors.bg}`}>
-                                                            <span className="text-lg">{getElementIcon(el)}</span>
-                                                        </div>
+                                                        {/* Index number badge - matches screenshot overlay */}
+                                                        <span
+                                                            className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold shadow-sm"
+                                                            style={{ minWidth: '24px' }}
+                                                        >
+                                                            {idx + 1}
+                                                        </span>
+                                                        {/* Show cropped icon image if available, else emoji */}
+                                                        {el.image ? (
+                                                            <img
+                                                                src={`data:image/png;base64,${el.image}`}
+                                                                alt={el.label || 'Icon'}
+                                                                className="w-10 h-10 rounded-xl object-contain flex-shrink-0 bg-black/20"
+                                                            />
+                                                        ) : (
+                                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${colors.bg}`}>
+                                                                <span className="text-lg">{getElementIcon(el)}</span>
+                                                            </div>
+                                                        )}
                                                         <div className="flex-1 min-w-0">
                                                             <p className={`font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                                                 {getElementName(el)}
                                                             </p>
                                                             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                                                {/* Type badge - object/text/accessibility */}
+                                                                {el.type === 'object' && (
+                                                                    <span className="text-[10px] px-2 py-0.5 rounded-md font-medium bg-emerald-500/20 text-emerald-400">
+                                                                        🎯 {el.label || 'Object'}
+                                                                    </span>
+                                                                )}
+                                                                {el.type === 'text' && (
+                                                                    <span className="text-[10px] px-2 py-0.5 rounded-md font-medium bg-teal-500/20 text-teal-400">
+                                                                        📝 OCR
+                                                                    </span>
+                                                                )}
+                                                                {el._source === 'ocr' && el.type !== 'object' && el.type !== 'text' && (
+                                                                    <span className="text-[10px] px-2 py-0.5 rounded-md font-medium bg-cyan-500/20 text-cyan-400">
+                                                                        👁️ Visual
+                                                                    </span>
+                                                                )}
                                                                 {/* Clickable/Editable/Scrollable badges */}
                                                                 {el.isClickable && (
                                                                     <span className="text-[10px] px-2 py-0.5 rounded-md font-medium bg-violet-500/20 text-violet-400">
@@ -893,6 +1091,12 @@ export default function ElementPickerModal({
                                                                 {el.bounds && (
                                                                     <span className={`text-[10px] px-2 py-0.5 rounded-md ${isDark ? 'bg-white/5 text-gray-500' : 'bg-gray-100 text-gray-400'}`}>
                                                                         {el.bounds.width}×{el.bounds.height}
+                                                                    </span>
+                                                                )}
+                                                                {/* Percentage coordinates (cross-device compatible) */}
+                                                                {(el.xPercent !== undefined && el.yPercent !== undefined) && (
+                                                                    <span className={`text-[10px] px-2 py-0.5 rounded-md font-medium ${isDark ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
+                                                                        📍 {el.xPercent.toFixed(1)}%, {el.yPercent.toFixed(1)}%
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -948,79 +1152,6 @@ export default function ElementPickerModal({
                                         })}
                                     </div>
                                 )}
-
-                                {/* Text Elements Grid - OCR Mode */}
-                                {inspectMode === 'ocr' && (
-                                    <div className="grid gap-2">
-                                        {textElements
-                                            .filter(el => !searchQuery || el.text?.toLowerCase().includes(searchQuery.toLowerCase()))
-                                            .map((el, idx) => {
-                                                const isHovered = hoveredElement === idx;
-
-                                                return (
-                                                    <button
-                                                        key={idx}
-                                                        onClick={() => onSelect({
-                                                            text: el.text,
-                                                            bounds: el.bounds,
-                                                            center: el.center,
-                                                            isOcrElement: true,
-                                                            confidence: el.confidence,
-                                                        })}
-                                                        onMouseEnter={() => setHoveredElement(idx)}
-                                                        onMouseLeave={() => setHoveredElement(null)}
-                                                        className={`w-full p-4 rounded-xl text-left transition-all border ${isHovered
-                                                            ? 'bg-emerald-500/20 border-emerald-500/30 scale-[1.02] shadow-lg'
-                                                            : isDark
-                                                                ? 'bg-[#1a1a1a] border-white/5 hover:border-emerald-500/20'
-                                                                : 'bg-gray-50 border-gray-100 hover:border-emerald-200'
-                                                            }`}
-                                                    >
-                                                        <div className="flex items-start gap-3">
-                                                            {/* OCR Icon */}
-                                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isHovered ? 'bg-emerald-500/30' : 'bg-emerald-500/10'}`}>
-                                                                <span className="text-lg">📝</span>
-                                                            </div>
-
-                                                            {/* Text Content */}
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                                                    "{el.text}"
-                                                                </p>
-                                                                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                                                    <span className={`text-[10px] px-2 py-0.5 rounded-md font-medium bg-emerald-500/20 text-emerald-400`}>
-                                                                        OCR Text
-                                                                    </span>
-                                                                    {el.bounds && (
-                                                                        <span className={`text-[10px] px-2 py-0.5 rounded-md ${isDark ? 'bg-white/5 text-gray-500' : 'bg-gray-100 text-gray-400'}`}>
-                                                                            {el.bounds.width}×{el.bounds.height}
-                                                                        </span>
-                                                                    )}
-                                                                    {el.confidence && (
-                                                                        <span className={`text-[10px] px-2 py-0.5 rounded-md ${isDark ? 'bg-white/5 text-gray-500' : 'bg-gray-100 text-gray-400'}`}>
-                                                                            {Math.round(el.confidence * 100)}% conf
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                                {el.center && (
-                                                                    <p className={`text-[10px] mt-1.5 font-mono ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                                                        Center: ({el.center.x}, {el.center.y})
-                                                                    </p>
-                                                                )}
-                                                            </div>
-
-                                                            {/* Select Icon */}
-                                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${isHovered ? 'bg-emerald-500 text-white' : isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                                </svg>
-                                                            </div>
-                                                        </div>
-                                                    </button>
-                                                );
-                                            })}
-                                    </div>
-                                )}
                             </div>
                         </div>
 
@@ -1053,6 +1184,105 @@ export default function ElementPickerModal({
                                             {getElementName(selectedElement)}
                                         </p>
                                     </div>
+
+                                    {/* ===== SELECTOR STRATEGY SECTION ===== */}
+                                    {(() => {
+                                        const confidence = getConfidenceScore(selectedElement);
+                                        const selectors = generateUiSelector(selectedElement, selectorStrategy);
+
+                                        return (
+                                            <div className={`p-3 rounded-xl border ${isDark ? 'bg-gradient-to-br from-violet-500/10 to-purple-500/5 border-violet-500/20' : 'bg-gradient-to-br from-violet-50 to-purple-50 border-violet-200'}`}>
+                                                {/* Confidence Score */}
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <label className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
+                                                        🎯 Selector Confidence
+                                                    </label>
+                                                    <div className={`flex items-center gap-2 px-2 py-1 rounded-lg ${confidence.level === 'high' ? 'bg-emerald-500/20 text-emerald-400' :
+                                                        confidence.level === 'medium' ? 'bg-amber-500/20 text-amber-400' :
+                                                            'bg-red-500/20 text-red-400'
+                                                        }`}>
+                                                        <span className="text-sm">{
+                                                            confidence.level === 'high' ? '🟢' :
+                                                                confidence.level === 'medium' ? '🟡' : '🔴'
+                                                        }</span>
+                                                        <span className="text-xs font-bold">{confidence.score}%</span>
+                                                    </div>
+                                                </div>
+                                                <p className={`text-[10px] mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                    {confidence.reason}
+                                                </p>
+
+                                                {/* Strategy Options */}
+                                                <div className="mb-3">
+                                                    <label className={`text-[9px] font-bold uppercase tracking-wider block mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                        Selector Strategy
+                                                    </label>
+                                                    <div className="grid grid-cols-2 gap-1.5">
+                                                        {[
+                                                            { value: 'smart', label: '🧠 Smart', desc: 'Auto-select best' },
+                                                            { value: 'id', label: '🏷️ ID', desc: 'Resource ID' },
+                                                            { value: 'text', label: '📝 Text', desc: 'Text match' },
+                                                            { value: 'icon', label: '🖼️ Icon', desc: 'Visual match' },
+                                                        ].map(opt => (
+                                                            <button
+                                                                key={opt.value}
+                                                                onClick={() => setSelectorStrategy(opt.value)}
+                                                                className={`px-2 py-1.5 rounded-lg text-left transition-all ${selectorStrategy === opt.value
+                                                                    ? 'bg-violet-500 text-white shadow-lg'
+                                                                    : isDark
+                                                                        ? 'bg-white/5 text-gray-400 hover:bg-white/10'
+                                                                        : 'bg-white text-gray-600 hover:bg-gray-50'
+                                                                    }`}
+                                                            >
+                                                                <span className="text-[11px] font-semibold block">{opt.label}</span>
+                                                                <span className={`text-[8px] ${selectorStrategy === opt.value ? 'text-white/70' : isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                                                                    {opt.desc}
+                                                                </span>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                {/* UiSelector Preview */}
+                                                {selectors && selectors.length > 0 && (
+                                                    <div>
+                                                        <label className={`text-[9px] font-bold uppercase tracking-wider block mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                            📋 Generated Selectors
+                                                        </label>
+                                                        <div className="space-y-1.5">
+                                                            {selectors.slice(0, 3).map((sel, idx) => (
+                                                                <div
+                                                                    key={idx}
+                                                                    className={`p-2 rounded-lg text-[10px] font-mono ${idx === 0
+                                                                        ? isDark ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-emerald-50 border border-emerald-200 text-emerald-600'
+                                                                        : isDark ? 'bg-white/5 text-gray-400' : 'bg-white text-gray-500'
+                                                                        }`}
+                                                                >
+                                                                    <div className="flex items-center justify-between mb-1">
+                                                                        <span className={`text-[8px] uppercase font-bold ${idx === 0 ? 'text-emerald-400' : isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                                                                            {idx === 0 ? '⭐ PRIMARY' : idx === 1 ? 'FALLBACK 1' : 'FALLBACK 2'} • {sel.type}
+                                                                        </span>
+                                                                        <span className={`text-[8px] px-1.5 py-0.5 rounded ${sel.confidence >= 80 ? 'bg-emerald-500/20 text-emerald-400' :
+                                                                            sel.confidence >= 50 ? 'bg-amber-500/20 text-amber-400' :
+                                                                                'bg-red-500/20 text-red-400'
+                                                                            }`}>
+                                                                            {sel.confidence}%
+                                                                        </span>
+                                                                    </div>
+                                                                    <code className="block break-all">{sel.uiSelector}</code>
+                                                                    {sel.xpath && (
+                                                                        <code className={`block break-all mt-1 text-[9px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                                                                            XPath: {sel.xpath}
+                                                                        </code>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
 
                                     {/* Resource ID */}
                                     {selectedElement.resourceId && (
@@ -1194,15 +1424,26 @@ export default function ElementPickerModal({
 
                                 {/* Select Button */}
                                 <div className={`p-4 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-                                    <button
-                                        onClick={() => {
-                                            onSelect(selectedElement);
-                                            setSelectedElement(null);
-                                        }}
-                                        className="w-full py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-violet-500 to-purple-600 text-white hover:shadow-lg hover:shadow-violet-500/30 hover:scale-[1.02] transition-all"
-                                    >
-                                        ✓ Chọn Element này
-                                    </button>
+                                    {(() => {
+                                        const conf = getConfidenceScore(selectedElement);
+                                        return (
+                                            <button
+                                                onClick={() => {
+                                                    onSelect(buildSelectorOutput(selectedElement));
+                                                    setSelectedElement(null);
+                                                }}
+                                                className="w-full py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-violet-500 to-purple-600 text-white hover:shadow-lg hover:shadow-violet-500/30 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                                            >
+                                                <span>✓ Chọn Element này</span>
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${conf.level === 'high' ? 'bg-emerald-400/30' :
+                                                    conf.level === 'medium' ? 'bg-amber-400/30' :
+                                                        'bg-red-400/30'
+                                                    }`}>
+                                                    {conf.level === 'high' ? '🟢' : conf.level === 'medium' ? '🟡' : '🔴'} {conf.score}%
+                                                </span>
+                                            </button>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         )}

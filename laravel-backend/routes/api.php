@@ -52,6 +52,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/devices/{id}', [DeviceController::class, 'destroy']);
     Route::post('/devices/logout-all', [DeviceController::class, 'logoutAll']);
 
+    // Media library API (for modals/pickers)
+    Route::get('/media', [\App\Http\Controllers\MediaController::class, 'apiList']);
+    Route::get('/media/folders', [\App\Http\Controllers\MediaController::class, 'apiFolders']);
+
+
     // Element Inspector - request elements from device and receive results
     Route::post('/devices/inspect', [DeviceController::class, 'inspectElements']);
     Route::post('/devices/inspect-result', [DeviceController::class, 'inspectElementsResult']);
@@ -59,6 +64,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Realtime accessibility check - request status from device via socket
     Route::post('/devices/check-accessibility', [DeviceController::class, 'checkAccessibility']);
     Route::post('/devices/check-accessibility-result', [DeviceController::class, 'checkAccessibilityResult']);
+
+    // Icon template matching - find icon on screen using template image
+    Route::post('/devices/find-icon', [DeviceController::class, 'findIcon']);
+
+    // Visual inspection (OCR) 
+    Route::post('/devices/visual-inspect', [DeviceController::class, 'visualInspect']);
 
     // Subscription management
     Route::prefix('subscriptions')->group(function () {

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 export default function MediaSidebar({
     activeFilter,
+    activeFolder,
     onFilterChange,
     stats = {},
     folders = [],
@@ -41,8 +42,11 @@ export default function MediaSidebar({
                 {navItems.map((item) => (
                     <button
                         key={item.key}
-                        onClick={() => onFilterChange('type', item.key === 'all' ? null : item.key)}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${(activeFilter === item.key) || (item.key === 'all' && !activeFilter)
+                        onClick={() => {
+                            onFilterChange('type', item.key === 'all' ? null : item.key);
+                            onFilterChange('folder', null);
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${(activeFilter === item.key && !activeFolder) || (item.key === 'all' && !activeFilter && !activeFolder)
                             ? isDark
                                 ? 'bg-white text-black'
                                 : 'bg-gray-900 text-white'
@@ -56,7 +60,7 @@ export default function MediaSidebar({
                         </svg>
                         <span className="flex-1 text-left">{item.label}</span>
                         {item.count !== undefined && (
-                            <span className={`text-xs ${(activeFilter === item.key) || (item.key === 'all' && !activeFilter)
+                            <span className={`text-xs ${(activeFilter === item.key && !activeFolder) || (item.key === 'all' && !activeFilter && !activeFolder)
                                 ? isDark ? 'text-black/60' : 'text-white/60'
                                 : isDark ? 'text-gray-600' : 'text-gray-400'
                                 }`}>
@@ -143,20 +147,20 @@ export default function MediaSidebar({
                 {/* Warning & Upgrade Button */}
                 {storagePercent > 70 && (
                     <div className={`mt-3 p-2.5 rounded-lg ${storagePercent > 90
-                            ? isDark ? 'bg-red-900/30' : 'bg-red-50'
-                            : isDark ? 'bg-amber-900/30' : 'bg-amber-50'
+                        ? isDark ? 'bg-red-900/30' : 'bg-red-50'
+                        : isDark ? 'bg-amber-900/30' : 'bg-amber-50'
                         }`}>
                         <p className={`text-xs ${storagePercent > 90
-                                ? isDark ? 'text-red-400' : 'text-red-600'
-                                : isDark ? 'text-amber-400' : 'text-amber-600'
+                            ? isDark ? 'text-red-400' : 'text-red-600'
+                            : isDark ? 'text-amber-400' : 'text-amber-600'
                             }`}>
                             {storagePercent > 90 ? '⚠️ Sắp hết dung lượng!' : '⚡ Gần đầy'}
                         </p>
                         <Link
                             href="/media/storage-plans"
                             className={`mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${isDark
-                                    ? 'bg-white text-black hover:bg-gray-100'
-                                    : 'bg-gray-900 text-white hover:bg-gray-800'
+                                ? 'bg-white text-black hover:bg-gray-100'
+                                : 'bg-gray-900 text-white hover:bg-gray-800'
                                 }`}
                         >
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

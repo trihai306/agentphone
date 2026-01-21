@@ -30,165 +30,147 @@ export default function Index() {
                 structuredData={structuredData}
             />
 
-            {/* Hero Section - Startup 2026 */}
-            <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900/90 to-slate-900">
-                {/* Animated Background Blobs */}
-                <div className="absolute inset-0 overflow-hidden">
-                    <div className="absolute top-1/4 -left-32 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-                    <div className="absolute top-1/3 -right-32 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-                    <div className="absolute -bottom-32 left-1/3 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-                </div>
-
-                {/* Grid Pattern Overlay */}
-                <div className="absolute inset-0 opacity-10" style={{
-                    backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)`,
+            {/* Hero Section - Professional Minimal */}
+            <section className="relative min-h-[95vh] flex items-center overflow-hidden bg-white dark:bg-black">
+                {/* Subtle Grid Pattern */}
+                <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" style={{
+                    backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
                     backgroundSize: '40px 40px'
                 }}></div>
 
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-                    <div className="grid lg:grid-cols-2 gap-16 items-center">
-                        {/* Left: Content */}
-                        <div className="text-center lg:text-left">
-                            {/* Badge */}
-                            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full px-5 py-2 mb-8 backdrop-blur-sm">
-                                <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                                </span>
-                                <span className="text-sm font-medium text-purple-200">Startup 2026 • Phone Farm Automation</span>
+                {/* Minimal Ambient Glow - Only in Dark Mode */}
+                <div className="absolute inset-0 overflow-hidden opacity-0 dark:opacity-100">
+                    <div className="absolute top-1/4 -left-32 w-[500px] h-[500px] bg-indigo-500/20 rounded-full blur-[120px]"></div>
+                    <div className="absolute bottom-1/4 -right-32 w-[500px] h-[500px] bg-slate-500/10 rounded-full blur-[120px]"></div>
+                </div>
+
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+                    <div className="grid lg:grid-cols-2 gap-20 items-center">
+                        {/* Left: Enhanced Content */}
+                        <div className="text-center lg:text-left space-y-8">
+                            {/* Simple Badge */}
+                            <div className="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-full px-4 py-2">
+                                <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Startup 2026</span>
                             </div>
 
-                            {/* Hero Title */}
-                            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-6 tracking-tight">
-                                Tự Động Hoá
-                                <span className="block bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
+                            {/* Hero Title - Clean Typography */}
+                            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 dark:text-white leading-[1.1] tracking-tight">
+                                <span className="block">Tự Động Hoá</span>
+                                <span className="block mt-2 text-gray-900 dark:text-white">
                                     Phone Farm
                                 </span>
-                                <span className="block text-3xl sm:text-4xl lg:text-5xl mt-2 text-gray-300 font-bold">
+                                <span className="block text-4xl sm:text-5xl lg:text-6xl mt-3 text-gray-600 dark:text-gray-400 font-bold">
                                     Như Người Thật
                                 </span>
                             </h1>
 
                             {/* Hero Description */}
-                            <p className="text-lg sm:text-xl text-gray-300 leading-relaxed mb-10 max-w-xl mx-auto lg:mx-0">
-                                Nền tảng kéo thả workflow chuyên nghiệp cho <span className="text-purple-300 font-semibold">nuôi nick</span>,
-                                <span className="text-blue-300 font-semibold"> test key</span>,
-                                <span className="text-cyan-300 font-semibold"> chăm sóc tài nguyên</span>.
-                                Hoạt động 24/7 không cần giám sát.
-                            </p>
+                            <div className="max-w-2xl mx-auto lg:mx-0">
+                                <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 leading-relaxed">
+                                    Nền tảng kéo thả workflow chuyên nghiệp cho nuôi nick, test key, chăm sóc tài nguyên. Hoạt động 24/7 không cần giám sát.
+                                </p>
+                            </div>
 
-                            {/* CTA Buttons */}
+                            {/* Professional CTA Buttons */}
                             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                                 <Link
                                     href="/register"
-                                    className="group inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-2xl transition-all shadow-xl shadow-purple-500/30 hover:shadow-2xl hover:shadow-purple-500/40 hover:-translate-y-1"
+                                    className="group inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-gray-900 dark:bg-white dark:text-gray-900 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-100 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
                                 >
                                     Dùng Thử Miễn Phí
-                                    <svg className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                     </svg>
                                 </Link>
                                 <Link
                                     href="/features"
-                                    className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-2xl border border-white/20 transition-all"
+                                    className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-800 transition-all duration-200"
                                 >
-                                    <svg className="mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
                                     Xem Demo
                                 </Link>
                             </div>
 
                             {/* Trust Indicators */}
-                            <div className="mt-12 flex items-center gap-8 justify-center lg:justify-start text-gray-400">
-                                <div className="flex items-center gap-2">
-                                    <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                    </svg>
-                                    <span className="text-sm">Không cần code</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                    </svg>
-                                    <span className="text-sm">Setup 5 phút</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                    </svg>
-                                    <span className="text-sm">Miễn phí 14 ngày</span>
-                                </div>
+                            <div className="flex flex-wrap items-center gap-6 justify-center lg:justify-start">
+                                {[
+                                    { text: "Không cần code" },
+                                    { text: "Setup 5 phút" },
+                                    { text: "Miễn phí 14 ngày" }
+                                ].map((item, i) => (
+                                    <div key={i} className="flex items-center gap-2">
+                                        <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                        </svg>
+                                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{item.text}</span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
 
-                        {/* Right: Phone Farm Grid Visual */}
+                        {/* Right: Enhanced Phone Farm Grid */}
                         <div className="hidden lg:block">
-                            <PhoneFarmGrid />
+                            <EnhancedPhoneFarmGrid />
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Stats Section - Investor Focused */}
-            <section className="py-16 bg-gray-900 border-y border-gray-800">
+            {/* Stats Section - Clean */}
+            <section className="py-16 bg-gray-50 dark:bg-gray-950 border-y border-gray-200 dark:border-gray-900">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-                        <StatCard
+                        <PremiumStatCard
                             number={activeDevices.toLocaleString()}
                             label="Thiết bị đang chạy"
                             icon="devices"
-                            color="purple"
-                            live={true}
                         />
-                        <StatCard
+                        <PremiumStatCard
                             number="99.9%"
                             label="Độ ổn định hệ thống"
                             icon="shield"
-                            color="green"
                         />
-                        <StatCard
+                        <PremiumStatCard
                             number={dailyActions.toLocaleString()}
                             label="Thao tác mỗi ngày"
                             icon="zap"
-                            color="blue"
-                            live={true}
                         />
-                        <StatCard
+                        <PremiumStatCard
                             number="98%"
                             label="Tỷ lệ sống nick"
                             icon="heart"
-                            color="pink"
                         />
                     </div>
                 </div>
             </section>
 
-            {/* Why 2026? - Market Timing */}
-            <section className="py-24 bg-gradient-to-b from-gray-900 to-black relative overflow-hidden">
-                {/* Animated Grid */}
+            {/* Why 2026? - Enhanced Timeline */}
+            <section className="py-28 bg-black relative overflow-hidden">
+                {/* Animated Grid Background */}
                 <div className="absolute inset-0 opacity-20" style={{
                     backgroundImage: `linear-gradient(rgba(139, 92, 246, 0.3) 1px, transparent 1px),
                                       linear-gradient(90deg, rgba(139, 92, 246, 0.3) 1px, transparent 1px)`,
-                    backgroundSize: '50px 50px'
+                    backgroundSize: '60px 60px'
                 }}></div>
 
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <span className="inline-flex items-center px-5 py-2 rounded-full text-sm font-bold bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-purple-300 mb-6">
-                            🚀 Thời Điểm Vàng
-                        </span>
-                        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
+                    {/* Section Header */}
+                    <div className="text-center mb-20">
+                        <div className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-purple-300 mb-8 backdrop-blur-xl">
+                            <span className="text-xl">🚀</span>
+                            <span>Thời Điểm Vàng</span>
+                        </div>
+                        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-6">
                             Tại Sao <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">2026</span> Là Năm Bùng Nổ?
                         </h2>
-                        <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+                        <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
                             Sự hội tụ hoàn hảo của công nghệ, thị trường và nhu cầu tạo nên cơ hội chưa từng có
                         </p>
                     </div>
 
+                    {/* Enhanced Timeline */}
                     <div className="grid md:grid-cols-3 gap-8">
-                        <TimelineCard
+                        <EnhancedTimelineCard
                             year="2024"
                             title="Nền Tảng"
                             description="AI Generative bùng nổ. Chi phí automation giảm 70%. Nhu cầu phone farm tăng mạnh."
@@ -196,7 +178,7 @@ export default function Index() {
                             color="gray"
                             past={true}
                         />
-                        <TimelineCard
+                        <EnhancedTimelineCard
                             year="2025"
                             title="Xây Dựng"
                             description="CLICKAI hoàn thiện core platform. First customers. Product-market fit validation."
@@ -204,7 +186,7 @@ export default function Index() {
                             color="purple"
                             current={true}
                         />
-                        <TimelineCard
+                        <EnhancedTimelineCard
                             year="2026"
                             title="Bùng Nổ"
                             description="Scale toàn Đông Nam Á. Enterprise có nhu cầu, thị trường sẵn sàng, công nghệ đỉnh cao."
@@ -216,395 +198,253 @@ export default function Index() {
                 </div>
             </section>
 
-            {/* Market Opportunity */}
-            <section className="py-24 bg-black relative">
+            {/* Market Opportunity - Premium Presentation */}
+            <section className="py-28 bg-gradient-to-b from-black to-[#0A0A0F] relative">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <span className="inline-flex items-center px-5 py-2 rounded-full text-sm font-bold bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 text-green-300 mb-6">
-                            💰 Cơ Hội Thị Trường
-                        </span>
-                        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
+                    {/* Section Header */}
+                    <div className="text-center mb-20">
+                        <div className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 text-green-300 mb-8 backdrop-blur-xl">
+                            <span className="text-xl">💰</span>
+                            <span>Cơ Hội Thị Trường</span>
+                        </div>
+                        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-6">
                             Thị Trường <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">$2.5 Tỷ USD</span>
                         </h2>
                     </div>
 
-                    <div className="grid lg:grid-cols-3 gap-8 mb-16">
-                        <MarketCard
+                    {/* Market Cards */}
+                    <div className="grid lg:grid-cols-3 gap-8 mb-20">
+                        <PremiumMarketCard
                             title="TAM"
                             subtitle="Total Addressable Market"
                             value="$2.5B"
                             description="Thị trường Phone Farm & Mobile Automation toàn cầu"
                             color="purple"
+                            icon="🌍"
                         />
-                        <MarketCard
+                        <PremiumMarketCard
                             title="SAM"
                             subtitle="Serviceable Available Market"
                             value="$400M"
                             description="Đông Nam Á - Thị trường phone farm sôi động nhất"
                             color="blue"
+                            icon="🗺️"
                         />
-                        <MarketCard
+                        <PremiumMarketCard
                             title="SOM"
                             subtitle="Serviceable Obtainable Market"
                             value="$50M"
                             description="Việt Nam - Thị trường ngách với tăng trưởng 40%/năm"
                             color="cyan"
+                            icon="🎯"
                         />
                     </div>
 
-                    {/* Growth Chart Visual */}
-                    <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 border border-gray-700">
-                        <div className="flex items-end justify-between h-48 gap-4">
+                    {/* Enhanced Growth Chart */}
+                    <div className="bg-gradient-to-br from-gray-900 to-gray-950 rounded-3xl p-10 border border-gray-800 shadow-2xl backdrop-blur-xl">
+                        <h3 className="text-2xl font-bold text-white mb-8 text-center">Dự Báo Tăng Trưởng (CAGR 35%)</h3>
+                        <div className="flex items-end justify-between h-64 gap-6">
                             {[
-                                { year: '2023', height: '20%', value: '$180M' },
-                                { year: '2024', height: '35%', value: '$280M' },
-                                { year: '2025', height: '55%', value: '$350M' },
-                                { year: '2026', height: '80%', value: '$480M', highlight: true },
-                                { year: '2027', height: '100%', value: '$600M' },
+                                { year: '2023', height: '25%', value: '$180M', highlight: false },
+                                { year: '2024', height: '40%', value: '$280M', highlight: false },
+                                { year: '2025', height: '60%', value: '$350M', highlight: false },
+                                { year: '2026', height: '85%', value: '$480M', highlight: true },
+                                { year: '2027', height: '100%', value: '$600M', highlight: false },
                             ].map((item, i) => (
-                                <div key={i} className="flex-1 flex flex-col items-center">
-                                    <span className={`text-xs font-bold mb-2 ${item.highlight ? 'text-cyan-400' : 'text-gray-400'}`}>
+                                <div key={i} className="flex-1 flex flex-col items-center group">
+                                    <span className={`text-sm font-bold mb-3 transition-all ${item.highlight ? 'text-cyan-400 text-lg' : 'text-gray-400 group-hover:text-gray-200'}`}>
                                         {item.value}
                                     </span>
-                                    <div
-                                        className={`w-full rounded-t-lg transition-all ${item.highlight
-                                            ? 'bg-gradient-to-t from-cyan-600 to-purple-500 shadow-lg shadow-cyan-500/30'
-                                            : 'bg-gradient-to-t from-gray-700 to-gray-600'
-                                            }`}
-                                        style={{ height: item.height }}
-                                    ></div>
-                                    <span className={`text-sm mt-2 font-semibold ${item.highlight ? 'text-cyan-400' : 'text-gray-500'}`}>
+                                    <div className="relative w-full">
+                                        <div
+                                            className={`w-full rounded-t-2xl transition-all duration-500 ${item.highlight
+                                                ? 'bg-gradient-to-t from-cyan-600 via-purple-500 to-pink-500 shadow-2xl shadow-cyan-500/40 animate-glow'
+                                                : 'bg-gradient-to-t from-gray-700 to-gray-600 group-hover:from-purple-600 group-hover:to-purple-500'
+                                                }`}
+                                            style={{ height: item.height }}
+                                        ></div>
+                                        {item.highlight && (
+                                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 bg-cyan-500 rounded-full text-xs font-extrabold text-white whitespace-nowrap shadow-lg">
+                                                ĐÂY RỒI
+                                            </div>
+                                        )}
+                                    </div>
+                                    <span className={`text-base mt-4 font-bold transition-all ${item.highlight ? 'text-cyan-400 text-lg' : 'text-gray-500 group-hover:text-gray-300'}`}>
                                         {item.year}
                                     </span>
                                 </div>
                             ))}
                         </div>
-                        <p className="text-center text-gray-400 mt-6">
-                            Dự báo tăng trưởng thị trường Phone Farm Việt Nam (CAGR 35%)
-                        </p>
                     </div>
                 </div>
             </section>
 
-            {/* Technology Stack */}
-            <section className="py-24 bg-gradient-to-b from-black to-gray-900 relative overflow-hidden">
-                {/* Tech Grid Background */}
+            {/* Technology Stack - Competitive Moat */}
+            <section className="py-28 bg-[#0A0A0F] relative overflow-hidden">
+                {/* Ambient Background */}
                 <div className="absolute inset-0">
-                    <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
+                    <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+                    <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse animation-delay-2000"></div>
                 </div>
 
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <span className="inline-flex items-center px-5 py-2 rounded-full text-sm font-bold bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 text-blue-300 mb-6">
-                            ⚡ Công Nghệ Đột Phá
-                        </span>
-                        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
+                    {/* Section Header */}
+                    <div className="text-center mb-20">
+                        <div className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 text-blue-300 mb-8 backdrop-blur-xl">
+                            <span className="text-xl">⚡</span>
+                            <span>Công Nghệ Đột Phá</span>
+                        </div>
+                        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-6">
                             Tech Stack <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Thế Hệ Mới</span>
                         </h2>
-                        <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+                        <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
                             Kiến trúc được thiết kế để scale và tích hợp AI từ ngày đầu
                         </p>
                     </div>
 
+                    {/* Tech Cards Grid */}
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <TechCard
+                        <PremiumTechCard
                             icon="🤖"
                             title="AI-First"
-                            description="Tích hợp GPT-4, Gemini, và các model AI mới nhất để tạo content, nhận diện UI"
+                            description="Độc quyền tích hợp Vision AI cho UI recognition, vượt trội 95% competitors chỉ dùng automation thông thường"
                             techs={["OpenAI", "Gemini", "Vision AI"]}
+                            moat="Competitive Moat"
                         />
-                        <TechCard
+                        <PremiumTechCard
                             icon="⚡"
                             title="Real-time"
-                            description="WebSocket bidirectional với độ trễ < 50ms. Điều khiển hàng trăm device cùng lúc"
+                            description="WebSocket bidirectional với độ trễ < 50ms. Điều khiển song song hàng trăm device cùng lúc"
                             techs={["Soketi", "Laravel Echo", "React"]}
+                            moat="10x Faster"
                         />
-                        <TechCard
+                        <PremiumTechCard
                             icon="📱"
                             title="Native Agent"
-                            description="Android Agent tối ưu, hoạt động như người thật, bypass detection"
-                            techs={["Kotlin", "Accessibility", "ADB"]}
+                            description="Android Agent tối ưu Kotlin, hoạt động như người thật với intelligent delays, bypass detection"
+                            techs={["Kotlin", "Accessibility", "Smart AI"]}
+                            moat="Human-like"
                         />
-                        <TechCard
+                        <PremiumTechCard
                             icon="🔄"
                             title="No-Code"
-                            description="Visual workflow builder với recording mode. Không cần biết code vẫn tự động hoá được"
+                            description="Visual workflow builder với recording mode. Dân MMO không cần code vẫn tự động hoá được"
                             techs={["ReactFlow", "Drag & Drop", "Record"]}
+                            moat="Zero Skill"
                         />
                     </div>
                 </div>
             </section>
+
+            {/* Continue with other sections... */}
+            {/* I'll add the remaining sections in the next part to keep it organized */}
 
             {/* 5 Core Features */}
-            <section className="py-24 bg-white dark:bg-gray-900">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 mb-4">
-                            5 Trụ Cột Chính
-                        </span>
-                        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-                            Tất Cả Những Gì Bạn Cần
-                        </h2>
-                        <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-                            Nền tảng tích hợp đầy đủ để tự động hoá mọi tác vụ trên phone farm
-                        </p>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <FeatureCard
-                            icon={<PhoneFarmIcon />}
-                            title="Phone Farm Management"
-                            description="Quản lý hàng trăm thiết bị từ một dashboard. Theo dõi trạng thái real-time, phân nhóm, gán tác vụ hàng loạt."
-                            color="purple"
-                        />
-                        <FeatureCard
-                            icon={<WorkflowIcon />}
-                            title="Visual Workflow Builder"
-                            description="Kéo thả tạo kịch bản tự động. Ghi lại thao tác thật, chỉnh sửa linh hoạt, không cần biết code."
-                            color="blue"
-                        />
-                        <FeatureCard
-                            icon={<TestKeyIcon />}
-                            title="Test Key Integration"
-                            description="Hỗ trợ test key cho các ứng dụng. Tự động hoá quá trình review, rating và feedback."
-                            color="cyan"
-                        />
-                        <FeatureCard
-                            icon={<ResourceIcon />}
-                            title="Resource Care"
-                            description="Chăm sóc tài nguyên tự động: warm-up account, nuôi nick, duy trì hoạt động tự nhiên."
-                            color="green"
-                        />
-                        <FeatureCard
-                            icon={<MultiAppIcon />}
-                            title="Multi-App Testing"
-                            description="Thử nghiệm đa dạng ứng dụng cùng lúc. Chạy song song nhiều workflow trên nhiều app."
-                            color="orange"
-                        />
-                        <FeatureCard
-                            icon={<AIIcon />}
-                            title="AI Content Studio"
-                            description="Tích hợp AI tạo nội dung. Tự động sinh text, hình ảnh, video cho các tác vụ automation."
-                            color="pink"
-                        />
-                    </div>
-                </div>
-            </section>
+            <CoreFeaturesSection />
 
             {/* How It Works */}
-            <section className="py-24 bg-gray-50 dark:bg-gray-800">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                            Bắt Đầu Trong 3 Bước
-                        </h2>
-                        <p className="text-xl text-gray-600 dark:text-gray-400">
-                            Triển khai nhanh chóng, không cần cài đặt phức tạp
-                        </p>
-                    </div>
-
-                    <div className="grid md:grid-cols-3 gap-8 relative">
-                        {/* Connection Line */}
-                        <div className="hidden md:block absolute top-24 left-1/4 right-1/4 h-0.5 bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500"></div>
-
-                        <StepCard
-                            step="01"
-                            title="Cài Đặt Agent"
-                            description="Tải và cài đặt CLICKAI Agent lên điện thoại. Kết nối tự động với hệ thống trong vài giây."
-                            color="purple"
-                        />
-                        <StepCard
-                            step="02"
-                            title="Tạo Workflow"
-                            description="Ghi lại thao tác thật hoặc kéo thả để xây dựng kịch bản tự động theo nhu cầu."
-                            color="blue"
-                        />
-                        <StepCard
-                            step="03"
-                            title="Chạy Tự Động"
-                            description="Lên lịch hoặc chạy ngay. Hệ thống hoạt động 24/7, bạn chỉ cần theo dõi kết quả."
-                            color="cyan"
-                        />
-                    </div>
-                </div>
-            </section>
+            <HowItWorksSection />
 
             {/* Use Cases */}
-            <section className="py-24 bg-white dark:bg-gray-900">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                            Được Xây Dựng Cho
-                        </h2>
-                        <p className="text-xl text-gray-600 dark:text-gray-400">
-                            Giải pháp phù hợp cho nhiều nhu cầu khác nhau
-                        </p>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <UseCaseCard
-                            icon="📱"
-                            title="Phone Farm MMO"
-                            description="Quản lý dàn máy chuyên nghiệp cho các chiến dịch MMO quy mô lớn"
-                            features={["Multi-device control", "Task scheduling", "Performance tracking"]}
-                        />
-                        <UseCaseCard
-                            icon="⭐"
-                            title="Test Key & Review"
-                            description="Tự động hoá quá trình test key, review và rating cho ứng dụng"
-                            features={["Auto rating", "Review generation", "App installation"]}
-                        />
-                        <UseCaseCard
-                            icon="🔥"
-                            title="Account Warming"
-                            description="Nuôi nick tự nhiên với các hoạt động mô phỏng hành vi người thật"
-                            features={["Natural behavior", "Random delays", "Activity patterns"]}
-                        />
-                        <UseCaseCard
-                            icon="🎬"
-                            title="Content Automation"
-                            description="Tự động đăng bài, tương tác với nội dung được tạo bởi AI"
-                            features={["AI content", "Auto posting", "Engagement automation"]}
-                        />
-                    </div>
-                </div>
-            </section>
+            <UseCasesSection />
 
             {/* Social Proof */}
-            <section className="py-24 bg-gray-50 dark:bg-gray-800">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                            Được Tin Dùng Bởi
-                        </h2>
-                        <p className="text-xl text-gray-600 dark:text-gray-400">
-                            Hàng nghìn người dùng đang chạy phone farm với CLICKAI
-                        </p>
-                    </div>
+            <SocialProofSection />
 
-                    <div className="grid md:grid-cols-3 gap-8">
-                        <TestimonialCard
-                            quote="CLICKAI giúp tôi quản lý 200 máy một cách dễ dàng. Tỷ lệ sống nick tăng từ 70% lên 95% sau 2 tháng sử dụng."
-                            name="Nguyễn Văn Minh"
-                            role="Farm Manager, 200+ devices"
-                            rating={5}
-                        />
-                        <TestimonialCard
-                            quote="Giao diện kéo thả rất trực quan. Từ người không biết code, giờ tôi có thể tạo workflow phức tạp trong 30 phút."
-                            name="Trần Thị Hương"
-                            role="Freelancer MMO"
-                            rating={5}
-                        />
-                        <TestimonialCard
-                            quote="Tích hợp AI Studio là điểm nhấn. Tự động tạo content độc đáo cho từng tài khoản, không bị trùng lặp."
-                            name="Lê Hoàng Nam"
-                            role="Content Team Lead"
-                            rating={5}
-                        />
-                    </div>
-                </div>
-            </section>
-
-            {/* CTA Section */}
-            <section className="relative py-24 overflow-hidden bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600">
-                <div className="absolute inset-0 bg-black/20"></div>
-                <div className="absolute inset-0 opacity-30" style={{
-                    backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.2) 1px, transparent 0)`,
-                    backgroundSize: '32px 32px'
-                }}></div>
-
-                <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
-                        Sẵn Sàng Tự Động Hoá<br />Phone Farm Của Bạn?
-                    </h2>
-                    <p className="text-xl text-white/90 mb-10">
-                        Đăng ký dùng thử miễn phí 14 ngày. Không cần thẻ tín dụng.
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Link
-                            href="/register"
-                            className="inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-purple-600 bg-white hover:bg-gray-50 rounded-2xl transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1"
-                        >
-                            Bắt Đầu Miễn Phí
-                            <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                            </svg>
-                        </Link>
-                        <Link
-                            href="/pricing"
-                            className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-white/20 hover:bg-white/30 backdrop-blur rounded-2xl border border-white/30 transition-all"
-                        >
-                            Xem Bảng Giá
-                        </Link>
-                    </div>
-                </div>
-            </section>
+            {/* Final CTA */}
+            <FinalCTASection />
         </LandingLayout>
     );
 }
 
-// Phone Farm Grid Visual Component
-function PhoneFarmGrid() {
+// Enhanced Phone Farm Grid with Premium Design
+function EnhancedPhoneFarmGrid() {
     const devices = [
-        { status: 'running', progress: 78 },
-        { status: 'online', progress: 100 },
-        { status: 'running', progress: 45 },
-        { status: 'idle', progress: 0 },
-        { status: 'running', progress: 92 },
-        { status: 'online', progress: 100 },
+        { status: 'running', progress: 78, brand: 'Samsung' },
+        { status: 'online', progress: 100, brand: 'Xiaomi' },
+        { status: 'running', progress: 45, brand: 'Oppo' },
+        { status: 'idle', progress: 0, brand: 'Vivo' },
+        { status: 'running', progress: 92, brand: 'Samsung' },
+        { status: 'online', progress: 100, brand: 'Realme' },
     ];
 
     const statusConfig = {
-        running: { color: 'bg-green-500', pulse: true, text: 'Đang chạy' },
-        online: { color: 'bg-blue-500', pulse: false, text: 'Sẵn sàng' },
-        idle: { color: 'bg-gray-500', pulse: false, text: 'Đợi' },
+        running: { color: 'bg-green-500', pulse: true, text: 'Đang chạy', glow: 'shadow-green-500/50' },
+        online: { color: 'bg-blue-500', pulse: false, text: 'Sẵn sàng', glow: 'shadow-blue-500/50' },
+        idle: { color: 'bg-gray-500', pulse: false, text: 'Đợi', glow: 'shadow-gray-500/30' },
     };
 
     return (
         <div className="relative">
-            {/* Glow Effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-blue-500/20 blur-3xl"></div>
+            {/* Premium Glow Effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-blue-500/20 to-cyan-500/20 blur-3xl animate-pulse"></div>
 
-            <div className="relative grid grid-cols-3 gap-4 p-6">
+            {/* Live Stats Overlay */}
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-10 px-6 py-3 bg-black/60 backdrop-blur-2xl rounded-2xl border border-white/20 shadow-2xl">
+                <div className="flex items-center gap-6 text-sm">
+                    <span className="flex items-center gap-2">
+                        <span className="relative flex h-2.5 w-2.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                        </span>
+                        <span className="text-green-400 font-bold">{devices.filter(d => d.status === 'running').length} Running</span>
+                    </span>
+                    <span className="text-gray-300 font-semibold">{devices.filter(d => d.status === 'online').length} Online</span>
+                </div>
+            </div>
+
+            <div className="relative grid grid-cols-3 gap-5 p-8 pt-12">
                 {devices.map((device, index) => {
                     const config = statusConfig[device.status];
                     return (
                         <div
                             key={index}
-                            className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-2xl p-4 transform hover:scale-105 transition-all"
+                            className="relative group transform hover:scale-110 hover:rotate-1 transition-all duration-300"
                             style={{ animationDelay: `${index * 100}ms` }}
                         >
-                            {/* Phone Frame */}
-                            <div className="aspect-[9/16] bg-gray-900 rounded-xl relative overflow-hidden">
-                                {/* Screen Content */}
-                                <div className="absolute inset-2 bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg flex flex-col items-center justify-center">
-                                    {/* App Icon */}
-                                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg mb-2"></div>
-
-                                    {/* Progress */}
-                                    {device.status === 'running' && (
-                                        <div className="w-full px-3 mt-2">
-                                            <div className="h-1 bg-gray-700 rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all"
-                                                    style={{ width: `${device.progress}%` }}
-                                                ></div>
-                                            </div>
-                                            <p className="text-[8px] text-gray-500 text-center mt-1">{device.progress}%</p>
+                            {/* Phone Frame with Glassmorphic Design */}
+                            <div className={`bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl border-2 border-gray-700/50 rounded-[28px] p-4 shadow-2xl ${config.glow} group-hover:border-purple-500/50 transition-all`}>
+                                {/* Screen */}
+                                <div className="aspect-[9/16] bg-gradient-to-b from-gray-900 to-black rounded-[20px] relative overflow-hidden border border-gray-800">
+                                    {/* Screen Content */}
+                                    <div className="absolute inset-2 rounded-2xl flex flex-col items-center justify-center">
+                                        {/* Brand Logo Mockup */}
+                                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 via-blue-500 to-cyan-500 rounded-2xl mb-3 flex items-center justify-center shadow-lg animate-float">
+                                            <span className="text-white text-xs font-bold">{device.brand[0]}</span>
                                         </div>
-                                    )}
-                                </div>
-                            </div>
 
-                            {/* Status Badge */}
-                            <div className="flex items-center justify-center gap-1.5 mt-3">
-                                <span className={`relative flex h-2 w-2 ${config.color} rounded-full`}>
-                                    {config.pulse && (
-                                        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${config.color} opacity-75`}></span>
-                                    )}
-                                </span>
-                                <span className="text-xs text-gray-400">{config.text}</span>
+                                        {/* Progress Bar */}
+                                        {device.status === 'running' && (
+                                            <div className="w-full px-4 mt-3 space-y-2">
+                                                <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden shadow-inner">
+                                                    <div
+                                                        className="h-full bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 rounded-full transition-all duration-1000 animate-shimmer bg-[length:200%_100%]"
+                                                        style={{ width: `${device.progress}%` }}
+                                                    ></div>
+                                                </div>
+                                                <p className="text-[9px] text-cyan-400 text-center font-bold tracking-wide">{device.progress}%</p>
+                                            </div>
+                                        )}
+
+                                        {/* Idle State */}
+                                        {device.status === 'idle' && (
+                                            <div className="text-gray-600 text-xs font-semibold">Standby</div>
+                                        )}
+                                    </div>
+
+                                    {/* Notch */}
+                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-4 bg-black rounded-b-2xl"></div>
+                                </div>
+
+                                {/* Status Badge */}
+                                <div className="flex items-center justify-center gap-2 mt-3">
+                                    <span className={`relative flex h-2 w-2 ${config.color} rounded-full`}>
+                                        {config.pulse && (
+                                            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${config.color} opacity-75`}></span>
+                                        )}
+                                    </span>
+                                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{config.text}</span>
+                                </div>
                             </div>
                         </div>
                     );
@@ -614,15 +454,8 @@ function PhoneFarmGrid() {
     );
 }
 
-// Stats Card
-function StatCard({ number, label, icon, color, live }) {
-    const colorClasses = {
-        purple: 'from-purple-500 to-purple-600',
-        green: 'from-green-500 to-green-600',
-        blue: 'from-blue-500 to-blue-600',
-        pink: 'from-pink-500 to-pink-600',
-    };
-
+// Simple Stat Card Component
+function PremiumStatCard({ number, label, icon }) {
     const icons = {
         devices: "M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z",
         shield: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
@@ -631,88 +464,64 @@ function StatCard({ number, label, icon, color, live }) {
     };
 
     return (
-        <div className="text-center group">
-            <div className={`relative w-14 h-14 mx-auto bg-gradient-to-br ${colorClasses[color]} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="text-center p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800">
+            {/* Icon */}
+            <div className="w-12 h-12 mx-auto bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={icons[icon]} />
                 </svg>
-                {live && (
-                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                    </span>
-                )}
             </div>
-            <div className="text-3xl lg:text-4xl font-bold text-white mb-1">{number}</div>
-            <div className="flex items-center justify-center gap-1.5 text-gray-400 text-sm">
-                {live && (
-                    <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                    </span>
-                )}
+
+            {/* Number */}
+            <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1 tabular-nums">
+                {number}
+            </div>
+
+            {/* Label */}
+            <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 {label}
             </div>
         </div>
     );
 }
 
-
-// Feature Card
-function FeatureCard({ icon, title, description, color }) {
+// Enhanced Timeline Card
+function EnhancedTimelineCard({ year, title, description, items, color, past, current, future }) {
     const colorClasses = {
-        purple: 'from-purple-500 to-purple-600 group-hover:shadow-purple-500/30',
-        blue: 'from-blue-500 to-blue-600 group-hover:shadow-blue-500/30',
-        cyan: 'from-cyan-500 to-cyan-600 group-hover:shadow-cyan-500/30',
-        green: 'from-green-500 to-green-600 group-hover:shadow-green-500/30',
-        orange: 'from-orange-500 to-orange-600 group-hover:shadow-orange-500/30',
-        pink: 'from-pink-500 to-pink-600 group-hover:shadow-pink-500/30',
+        gray: { gradient: 'from-gray-600 to-gray-700', border: 'border-gray-600', bg: 'bg-gray-800/50' },
+        purple: { gradient: 'from-purple-500 to-purple-600', border: 'border-purple-500', bg: 'bg-purple-500/10' },
+        cyan: { gradient: 'from-cyan-500 to-cyan-600', border: 'border-cyan-500/50', bg: 'bg-cyan-500/5' },
     };
 
     return (
-        <div className="group relative p-8 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-transparent hover:bg-white dark:hover:bg-gray-800 transition-all hover:-translate-y-2 hover:shadow-2xl">
-            <div className={`w-14 h-14 bg-gradient-to-br ${colorClasses[color]} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg ${colorClasses[color]}`}>
-                {icon}
+        <div className={`relative p-10 rounded-3xl border-2 transition-all duration-500 ${current ? `${colorClasses[color].bg} ${colorClasses[color].border} scale-105 shadow-2xl shadow-purple-500/30` :
+            future ? `${colorClasses[color].bg} ${colorClasses[color].border}` :
+                `${colorClasses[color].bg} ${colorClasses[color].border}`
+            } backdrop-blur-xl group hover:scale-105 hover:shadow-2xl`}>
+            {/* Current Year Badge */}
+            {current && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full text-xs font-extrabold text-white shadow-xl animate-pulse">
+                    ĐÂY RỒI
+                </div>
+            )}
+
+            {/* Year Badge */}
+            <div className={`inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br ${colorClasses[color].gradient} text-white text-3xl font-extrabold mb-8 shadow-xl group-hover:scale-110 group-hover:rotate-3 transition-all`}>
+                {year}
             </div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">{title}</h3>
-            <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{description}</p>
-        </div>
-    );
-}
 
-// Step Card
-function StepCard({ step, title, description, color }) {
-    const colorClasses = {
-        purple: 'from-purple-500 to-purple-600',
-        blue: 'from-blue-500 to-blue-600',
-        cyan: 'from-cyan-500 to-cyan-600',
-    };
+            {/* Content */}
+            <h3 className="text-2xl font-extrabold text-white mb-4">{title}</h3>
+            <p className="text-gray-400 mb-6 leading-relaxed">{description}</p>
 
-    return (
-        <div className="text-center relative">
-            <div className={`inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br ${colorClasses[color]} text-white text-2xl font-bold rounded-2xl mb-6 shadow-xl relative z-10`}>
-                {step}
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">{title}</h3>
-            <p className="text-gray-600 dark:text-gray-400">{description}</p>
-        </div>
-    );
-}
-
-// Use Case Card
-function UseCaseCard({ icon, title, description, features }) {
-    return (
-        <div className="group p-6 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-purple-500/50 dark:hover:border-purple-500/50 transition-all hover:-translate-y-1 hover:shadow-xl">
-            <div className="text-4xl mb-4">{icon}</div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{title}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{description}</p>
-            <ul className="space-y-2">
-                {features.map((feature, index) => (
-                    <li key={index} className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
-                        <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            {/* Items List */}
+            <ul className="space-y-3">
+                {items.map((item, i) => (
+                    <li key={i} className="flex items-center gap-3 text-sm">
+                        <svg className={`w-5 h-5 flex-shrink-0 ${current ? 'text-purple-400' : future ? 'text-cyan-400' : 'text-gray-500'}`} fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
-                        {feature}
+                        <span className="text-gray-300 font-medium">{item}</span>
                     </li>
                 ))}
             </ul>
@@ -720,28 +529,441 @@ function UseCaseCard({ icon, title, description, features }) {
     );
 }
 
-// Testimonial Card
-function TestimonialCard({ quote, name, role, rating }) {
+// Premium Market Card
+function PremiumMarketCard({ title, subtitle, value, description, color, icon }) {
+    const colorClasses = {
+        purple: 'from-purple-500 to-purple-600',
+        blue: 'from-blue-500 to-blue-600',
+        cyan: 'from-cyan-500 to-cyan-600',
+    };
+
     return (
-        <div className="p-8 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg">
-            {/* Stars */}
-            <div className="flex gap-1 mb-4">
-                {[...Array(rating)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                ))}
-            </div>
-            <p className="text-gray-700 dark:text-gray-300 mb-6 italic">"{quote}"</p>
-            <div>
-                <div className="font-semibold text-gray-900 dark:text-white">{name}</div>
-                <div className="text-sm text-gray-500">{role}</div>
+        <div className="group relative">
+            {/* Ambient Glow */}
+            <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${colorClasses[color]} opacity-0 group-hover:opacity-20 blur-3xl transition-opacity duration-500`}></div>
+
+            {/* Card */}
+            <div className="relative p-10 bg-gradient-to-br from-gray-900 to-gray-950 rounded-3xl border border-gray-800 group-hover:border-gray-700 transition-all duration-500 shadow-2xl group-hover:-translate-y-2 backdrop-blur-xl">
+                {/* Icon & Header */}
+                <div className="flex items-center gap-4 mb-6">
+                    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center text-3xl shadow-xl group-hover:scale-110 group-hover:rotate-6 transition-all`}>
+                        {icon}
+                    </div>
+                    <div>
+                        <div className={`text-2xl font-extrabold bg-gradient-to-r ${colorClasses[color]} bg-clip-text text-transparent`}>
+                            {title}
+                        </div>
+                        <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold">{subtitle}</div>
+                    </div>
+                </div>
+
+                {/* Value */}
+                <div className={`text-5xl font-extrabold bg-gradient-to-r ${colorClasses[color]} bg-clip-text text-transparent mb-4 tabular-nums`}>
+                    {value}
+                </div>
+
+                {/* Description */}
+                <p className="text-gray-400 text-sm leading-relaxed">{description}</p>
             </div>
         </div>
     );
 }
 
-// Icon Components
+// Premium Tech Card
+function PremiumTechCard({ icon, title, description, techs, moat }) {
+    return (
+        <div className="group relative">
+            {/* Glow on Hover */}
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-purple-500/20 to-cyan-500/20 opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-500"></div>
+
+            {/* Card */}
+            <div className="relative p-8 bg-gray-900/50 backdrop-blur-xl rounded-3xl border border-gray-800 group-hover:border-purple-500/50 transition-all duration-500 group-hover:-translate-y-2 shadow-2xl h-full flex flex-col">
+                {/* Moat Badge */}
+                {moat && (
+                    <div className="absolute -top-3 -right-3 px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full text-xs font-extrabold text-white shadow-xl">
+                        {moat}
+                    </div>
+                )}
+
+                {/* Icon */}
+                <div className="text-5xl mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all">{icon}</div>
+
+                {/* Title */}
+                <h3 className="text-xl font-extrabold text-white mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                    {title}
+                </h3>
+
+                {/* Description */}
+                <p className="text-sm text-gray-400 mb-6 leading-relaxed flex-grow">{description}</p>
+
+                {/* Tech Badges */}
+                <div className="flex flex-wrap gap-2">
+                    {techs.map((tech, i) => (
+                        <span key={i} className="px-4 py-1.5 text-xs font-bold bg-gray-800/80 text-gray-300 rounded-full border border-gray-700 backdrop-blur-sm group-hover:border-purple-500/50 transition-colors">
+                            {tech}
+                        </span>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// Remaining sections as separate components for better organization
+function CoreFeaturesSection() {
+    return (
+        <section className="py-28 bg-gradient-to-b from-[#0A0A0F] to-black">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center mb-20">
+                    <div className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold bg-purple-500/20 border border-purple-500/30 text-purple-300 mb-8">
+                        5 Trụ Cột Chính
+                    </div>
+                    <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-6">
+                        Tất Cả Những Gì Bạn Cần
+                    </h2>
+                    <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+                        Nền tảng tích hợp đầy đủ để tự động hoá mọi tác vụ trên phone farm
+                    </p>
+                </div>
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <PremiumFeatureCard
+                        icon={<PhoneFarmIcon />}
+                        title="Phone Farm Management"
+                        description="Quản lý hàng trăm thiết bị từ một dashboard. Theo dõi trạng thái real-time, phân nhóm, gán tác vụ hàng loạt."
+                        gradient="from-purple-500 to-purple-600"
+                    />
+                    <PremiumFeatureCard
+                        icon={<WorkflowIcon />}
+                        title="Visual Workflow Builder"
+                        description="Kéo thả tạo kịch bản tự động. Ghi lại thao tác thật, chỉnh sửa linh hoạt, không cần biết code."
+                        gradient="from-blue-500 to-blue-600"
+                    />
+                    <PremiumFeatureCard
+                        icon={<TestKeyIcon />}
+                        title="Test Key Integration"
+                        description="Hỗ trợ test key cho các ứng dụng. Tự động hoá quá trình review, rating và feedback."
+                        gradient="from-cyan-500 to-cyan-600"
+                    />
+                    <PremiumFeatureCard
+                        icon={<ResourceIcon />}
+                        title="Resource Care"
+                        description="Chăm sóc tài nguyên tự động: warm-up account, nuôi nick, duy trì hoạt động tự nhiên."
+                        gradient="from-green-500 to-green-600"
+                    />
+                    <PremiumFeatureCard
+                        icon={<MultiAppIcon />}
+                        title="Multi-App Testing"
+                        description="Thử nghiệm đa dạng ứng dụng cùng lúc. Chạy song song nhiều workflow trên nhiều app."
+                        gradient="from-orange-500 to-orange-600"
+                    />
+                    <PremiumFeatureCard
+                        icon={<AIIcon />}
+                        title="AI Content Studio"
+                        description="Tích hợp AI tạo nội dung. Tự động sinh text, hình ảnh, video cho các tác vụ automation."
+                        gradient="from-pink-500 to-pink-600"
+                    />
+                </div>
+            </div>
+        </section>
+    );
+}
+
+// How It Works Section
+function HowItWorksSection() {
+    return (
+        <section className="py-28 bg-black relative overflow-hidden">
+            {/* Grid Pattern */}
+            <div className="absolute inset-0 opacity-10" style={{
+                backgroundImage: `radial-gradient(circle at 2px 2px, rgba(139, 92, 246, 0.3) 1px, transparent 0)`,
+                backgroundSize: '48px 48px'
+            }}></div>
+
+            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center mb-20">
+                    <h2 className="text-4xl sm:text-5xl font-extrabold text-white mb-6">
+                        Bắt Đầu Trong <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">3 Bước</span>
+                    </h2>
+                    <p className="text-xl text-gray-400">
+                        Triển khai nhanh chóng, không cần cài đặt phức tạp
+                    </p>
+                </div>
+
+                {/* Steps with connection line */}
+                <div className="relative grid md:grid-cols-3 gap-8">
+                    {/* Connection Line */}
+                    <div className="hidden md:block absolute top-32 left-1/4 right-1/4 h-1 bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 rounded-full opacity-30"></div>
+
+                    <PremiumStepCard
+                        step="01"
+                        title="Cài Đặt Agent"
+                        description="Tải và cài đặt CLICKAI Agent lên điện thoại. Kết nối tự động với hệ thống trong vài giây."
+                        gradient="from-purple-500 to-purple-600"
+                    />
+                    <PremiumStepCard
+                        step="02"
+                        title="Tạo Workflow"
+                        description="Ghi lại thao tác thật hoặc kéo thả để xây dựng kịch bản tự động theo nhu cầu."
+                        gradient="from-blue-500 to-blue-600"
+                    />
+                    <PremiumStepCard
+                        step="03"
+                        title="Chạy Tự Động"
+                        description="Lên lịch hoặc chạy ngay. Hệ thống hoạt động 24/7, bạn chỉ cần theo dõi kết quả."
+                        gradient="from-cyan-500 to-cyan-600"
+                    />
+                </div>
+            </div>
+        </section>
+    );
+}
+
+// Use Cases Section
+function UseCasesSection() {
+    return (
+        <section className="py-28 bg-gradient-to-b from-black to-[#0A0A0F]">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center mb-20">
+                    <h2 className="text-4xl sm:text-5xl font-extrabold text-white mb-6">
+                        Được Xây Dựng Cho
+                    </h2>
+                    <p className="text-xl text-gray-400">
+                        Giải pháp phù hợp cho nhiều nhu cầu khác nhau
+                    </p>
+                </div>
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <PremiumUseCaseCard
+                        icon="📱"
+                        title="Phone Farm MMO"
+                        description="Quản lý dàn máy chuyên nghiệp cho các chiến dịch MMO quy mô lớn"
+                        features={["Multi-device control", "Task scheduling", "Performance tracking"]}
+                    />
+                    <PremiumUseCaseCard
+                        icon="⭐"
+                        title="Test Key & Review"
+                        description="Tự động hoá quá trình test key, review và rating cho ứng dụng"
+                        features={["Auto rating", "Review generation", "App installation"]}
+                    />
+                    <PremiumUseCaseCard
+                        icon="🔥"
+                        title="Account Warming"
+                        description="Nuôi nick tự nhiên với các hoạt động mô phỏng hành vi người thật"
+                        features={["Natural behavior", "Random delays", "Activity patterns"]}
+                    />
+                    <PremiumUseCaseCard
+                        icon="🎬"
+                        title="Content Automation"
+                        description="Tự động đăng bài, tương tác với nội dung được tạo bởi AI"
+                        features={["AI content", "Auto posting", "Engagement automation"]}
+                    />
+                </div>
+            </div>
+        </section>
+    );
+}
+
+// Social Proof Section
+function SocialProofSection() {
+    return (
+        <section className="py-28 bg-[#0A0A0F] relative">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center mb-20">
+                    <h2 className="text-4xl sm:text-5xl font-extrabold text-white mb-6">
+                        Được <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Tin Dùng</span> Bởi
+                    </h2>
+                    <p className="text-xl text-gray-400">
+                        Hàng nghìn người dùng đang chạy phone farm với CLICKAI
+                    </p>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-8">
+                    <PremiumTestimonialCard
+                        quote="CLICKAI giúp tôi quản lý 200 máy một cách dễ dàng. Tỷ lệ sống nick tăng từ 70% lên 95% sau 2 tháng sử dụng."
+                        name="Nguyễn Văn Minh"
+                        role="Farm Manager, 200+ devices"
+                        rating={5}
+                    />
+                    <PremiumTestimonialCard
+                        quote="Giao diện kéo thả rất trực quan. Từ người không biết code, giờ tôi có thể tạo workflow phức tạp trong 30 phút."
+                        name="Trần Thị Hương"
+                        role="Freelancer MMO"
+                        rating={5}
+                    />
+                    <PremiumTestimonialCard
+                        quote="Tích hợp AI Studio là điểm nhấn. Tự động tạo content độc đáo cho từng tài khoản, không bị trùng lặp."
+                        name="Lê Hoàng Nam"
+                        role="Content Team Lead"
+                        rating={5}
+                    />
+                </div>
+            </div>
+        </section>
+    );
+}
+
+// Final CTA Section
+function FinalCTASection() {
+    return (
+        <section className="relative py-32 overflow-hidden bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600">
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-black/30"></div>
+
+            {/* Animated Pattern */}
+            <div className="absolute inset-0 opacity-20" style={{
+                backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)`,
+                backgroundSize: '40px 40px'
+            }}></div>
+
+            {/* Floating Orbs */}
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-400 rounded-full mix-blend-overlay filter blur-3xl opacity-30 animate-blob"></div>
+            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-400 rounded-full mix-blend-overlay filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+
+            <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-8 leading-tight">
+                    Sẵn Sàng Tự Động Hoá<br />
+                    <span className="bg-gradient-to-r from-cyan-200 to-white bg-clip-text text-transparent">Phone Farm Của Bạn?</span>
+                </h2>
+                <p className="text-xl sm:text-2xl text-white/90 mb-12 max-w-3xl mx-auto leading-relaxed">
+                    Đăng ký dùng thử miễn phí 14 ngày. Không cần thẻ tín dụng.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                    <Link
+                        href="/register"
+                        className="group relative inline-flex items-center justify-center px-12 py-6 text-xl font-extrabold text-purple-600 bg-white hover:bg-gray-50 rounded-2xl overflow-hidden transition-all duration-300 shadow-2xl hover:shadow-white/20 hover:-translate-y-1"
+                    >
+                        <span className="relative flex items-center gap-3">
+                            Bắt Đầu Miễn Phí
+                            <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                        </span>
+                    </Link>
+                    <Link
+                        href="/pricing"
+                        className="inline-flex items-center justify-center px-12 py-6 text-xl font-bold text-white bg-white/20 hover:bg-white/30 backdrop-blur-xl rounded-2xl border-2 border-white/40 hover:border-white/60 transition-all duration-300"
+                    >
+                        Xem Bảng Giá
+                    </Link>
+                </div>
+
+                {/* Trust Badges */}
+                <div className="mt-16 flex flex-wrap items-center justify-center gap-8 text-white/80">
+                    <div className="flex items-center gap-2">
+                        <svg className="w-6 h-6 text-green-300" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-semibold">14 ngày dùng thử</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <svg className="w-6 h-6 text-green-300" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-semibold">Không cần thẻ tín dụng</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <svg className="w-6 h-6 text-green-300" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-semibold">Hỗ trợ 24/7</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+}
+
+// Premium Step Card
+function PremiumStepCard({ step, title, description, gradient }) {
+    return (
+        <div className="relative text-center group">
+            {/* Glow Effect */}
+            <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-20 blur-2xl transition-opacity`}></div>
+
+            {/* Step Number */}
+            <div className={`relative inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br ${gradient} text-white text-3xl font-extrabold rounded-2xl mb-8 shadow-2xl z-10 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+                {step}
+            </div>
+
+            {/* Content */}
+            <h3 className="text-2xl font-extrabold text-white mb-4">{title}</h3>
+            <p className="text-gray-400 leading-relaxed max-w-sm mx-auto">{description}</p>
+        </div>
+    );
+}
+
+// Premium Use Case Card
+function PremiumUseCaseCard({ icon, title, description, features }) {
+    return (
+        <div className="group relative">
+            {/* Glow */}
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-purple-500/20 to-cyan-500/20 opacity-0 group-hover:opacity-100 blur-2xl transition-opacity"></div>
+
+            {/* Card */}
+            <div className="relative p-8 bg-gray-900/80 backdrop-blur-xl rounded-3xl border border-gray-800 group-hover:border-purple-500/50 transition-all duration-500 group-hover:-translate-y-2 shadow-2xl h-full flex flex-col">
+                {/* Icon */}
+                <div className="text-5xl mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all">{icon}</div>
+
+                {/* Title */}
+                <h3 className="text-xl font-extrabold text-white mb-3">{title}</h3>
+
+                {/* Description */}
+                <p className="text-sm text-gray-400 mb-6 leading-relaxed flex-grow">{description}</p>
+
+                {/* Features */}
+                <ul className="space-y-2">
+                    {features.map((feature, index) => (
+                        <li key={index} className="flex items-center gap-2 text-xs text-gray-500">
+                            <svg className="w-4 h-4 text-purple-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span className="font-medium">{feature}</span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        </div>
+    );
+}
+
+// Premium Testimonial Card
+function PremiumTestimonialCard({ quote, name, role, rating }) {
+    return (
+        <div className="group relative">
+            {/* Glow */}
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 blur-2xl transition-opacity"></div>
+
+            {/* Card */}
+            <div className="relative p-10 bg-gradient-to-br from-gray-900 to-gray-950 backdrop-blur-xl rounded-3xl border border-gray-800 group-hover:border-purple-500/50 shadow-2xl transition-all duration-500 group-hover:-translate-y-2 h-full flex flex-col">
+                {/* Stars */}
+                <div className="flex gap-1 mb-6">
+                    {[...Array(rating)].map((_, i) => (
+                        <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                    ))}
+                </div>
+
+                {/* Quote */}
+                <p className="text-gray-300 mb-8 italic leading-relaxed flex-grow text-lg">"{quote}"</p>
+
+                {/* Author */}
+                <div className="flex items-center gap-4">
+                    {/* Avatar Placeholder */}
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                        {name[0]}
+                    </div>
+
+                    <div>
+                        <div className="font-bold text-white text-lg">{name}</div>
+                        <div className="text-sm text-gray-500 font-medium">{role}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
 function PhoneFarmIcon() {
     return (
         <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -790,80 +1012,28 @@ function AIIcon() {
     );
 }
 
-// Timeline Card for Why 2026 section
-function TimelineCard({ year, title, description, items, color, past, current, future }) {
-    const colorClasses = {
-        gray: 'from-gray-600 to-gray-700 border-gray-600',
-        purple: 'from-purple-500 to-purple-600 border-purple-500',
-        cyan: 'from-cyan-500 to-cyan-600 border-cyan-500',
-    };
-
+// Premium Feature Card
+function PremiumFeatureCard({ icon, title, description, gradient }) {
     return (
-        <div className={`relative p-8 rounded-2xl border-2 transition-all ${current ? 'bg-purple-500/10 border-purple-500 scale-105' :
-            future ? 'bg-cyan-500/5 border-cyan-500/50' :
-                'bg-gray-800/50 border-gray-700'
-            }`}>
-            {current && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-purple-500 rounded-full text-xs font-bold text-white">
-                    ĐÂY RỒI
+        <div className="group relative">
+            {/* Glow Effect */}
+            <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-20 blur-2xl transition-opacity duration-500`}></div>
+
+            {/* Card */}
+            <div className="relative p-8 bg-gradient-to-br from-gray-900/90 to-gray-950/90 backdrop-blur-xl rounded-3xl border border-white/10 group-hover:border-purple-500/30 transition-all duration-500 group-hover:scale-[1.02] group-hover:-translate-y-2 shadow-2xl h-full flex flex-col">
+                {/* Floating Icon */}
+                <div className={`relative w-16 h-16 mb-6 rounded-2xl bg-gradient-to-br ${gradient} shadow-xl shadow-purple-500/30 flex items-center justify-center transform group-hover:scale-110 group-hover:-translate-y-2 group-hover:rotate-3 transition-all duration-300`}>
+                    {icon}
                 </div>
-            )}
-            <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br ${colorClasses[color]} text-white text-2xl font-bold mb-6`}>
-                {year}
-            </div>
-            <h3 className="text-xl font-bold text-white mb-3">{title}</h3>
-            <p className="text-gray-400 mb-4">{description}</p>
-            <ul className="space-y-2">
-                {items.map((item, i) => (
-                    <li key={i} className="flex items-center gap-2 text-sm text-gray-500">
-                        <svg className={`w-4 h-4 ${current ? 'text-purple-400' : future ? 'text-cyan-400' : 'text-gray-500'}`} fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        {item}
-                    </li>
-                ))}
-            </ul>
-        </div>
-    );
-}
 
-// Market Card for TAM/SAM/SOM section
-function MarketCard({ title, subtitle, value, description, color }) {
-    const colorClasses = {
-        purple: 'from-purple-500 to-purple-600',
-        blue: 'from-blue-500 to-blue-600',
-        cyan: 'from-cyan-500 to-cyan-600',
-    };
+                {/* Content */}
+                <h3 className="text-2xl font-extrabold text-white mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                    {title}
+                </h3>
+                <p className="text-gray-400 leading-relaxed flex-grow">{description}</p>
 
-    return (
-        <div className="group p-8 bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl border border-gray-700 hover:border-gray-600 transition-all hover:-translate-y-2">
-            <div className="flex items-center gap-3 mb-4">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center`}>
-                    <span className="text-white font-bold text-sm">{title}</span>
-                </div>
-                <span className="text-xs text-gray-500 uppercase tracking-wider">{subtitle}</span>
-            </div>
-            <div className={`text-4xl font-bold bg-gradient-to-r ${colorClasses[color]} bg-clip-text text-transparent mb-3`}>
-                {value}
-            </div>
-            <p className="text-gray-400 text-sm">{description}</p>
-        </div>
-    );
-}
-
-// Tech Card for Technology Stack section
-function TechCard({ icon, title, description, techs }) {
-    return (
-        <div className="group p-6 bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 hover:border-purple-500/50 transition-all hover:-translate-y-1">
-            <div className="text-4xl mb-4">{icon}</div>
-            <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
-            <p className="text-sm text-gray-400 mb-4">{description}</p>
-            <div className="flex flex-wrap gap-2">
-                {techs.map((tech, i) => (
-                    <span key={i} className="px-3 py-1 text-xs font-medium bg-gray-800 text-gray-300 rounded-full border border-gray-700">
-                        {tech}
-                    </span>
-                ))}
+                {/* Decorative corner */}
+                <div className="absolute top-4 right-4 w-12 h-12 bg-gradient-to-br from-purple-500/20 to-transparent rounded-full blur-xl"></div>
             </div>
         </div>
     );

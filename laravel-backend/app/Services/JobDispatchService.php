@@ -155,6 +155,10 @@ class JobDispatchService
     {
         $tasks = $job->tasks()->orderBy('sequence')->get();
 
+        // Build context from VariableContextService (includes file_input resolved paths)
+        $variableContextService = app(VariableContextService::class);
+        $flowContext = $variableContextService->buildContext($job->flow);
+
         $actions = $tasks->map(function (JobTask $task, $index) {
             $inputData = $task->input_data ?? [];
 
@@ -188,6 +192,9 @@ class JobDispatchService
 
         // Build variables from job config
         $variables = $job->config['variables'] ?? [];
+
+        // Merge flowContext (includes file paths from file_input nodes)
+        $variables = array_merge($variables, $flowContext);
 
         // If job has data collection, get current record data
         $recordData = null;
@@ -357,6 +364,10 @@ class JobDispatchService
             // Smart action nodes (recorded)
             'recorded_action' => 'tap',
             'smart_action' => 'tap',
+
+            // File input
+            'file_input' => 'file_input',
+            'upload_file' => 'file_input',
         ];
 
         return $mapping[$nodeType] ?? 'custom';

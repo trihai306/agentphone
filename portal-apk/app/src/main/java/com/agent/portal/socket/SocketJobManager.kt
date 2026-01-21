@@ -338,13 +338,17 @@ object SocketJobManager {
 
         deviceChannel = pusher?.subscribePrivate(channelName, object : com.pusher.client.channel.PrivateChannelEventListener {
             override fun onSubscriptionSucceeded(channelName: String) {
+                Log.w(TAG, "🔵 SUBSCRIPTION_SUCCEEDED callback fired for: $channelName")
+                Log.w(TAG, "🔵 Socket ID: ${pusher?.connection?.socketId}")
                 Log.i(TAG, "✅ Private channel subscribed successfully: $channelName")
             }
             override fun onAuthenticationFailure(message: String?, e: Exception?) {
                 Log.e(TAG, "❌ Private channel auth FAILED: $message", e)
+                Log.e(TAG, "❌ Auth failure details - Socket ID: ${pusher?.connection?.socketId}")
             }
             override fun onEvent(event: PusherEvent) {
-                Log.i(TAG, "📥 Private channel event: ${event.eventName} - ${event.data}")
+                Log.w(TAG, "🔴 PRIVATE CHANNEL EVENT RECEIVED: ${event.eventName}")
+                Log.i(TAG, "📥 Private channel event: ${event.eventName} - ${event.data?.take(200)}")
                 // Route events to handlers
                 when (event.eventName) {
                     "job:new" -> handleNewJob(event.data)
@@ -356,6 +360,28 @@ object SocketJobManager {
                     "workflow:test" -> {
                         Log.i(TAG, "🧪 Received workflow:test event!")
                         handleWorkflowTest(event.data)
+                    }
+                    "inspect:elements" -> {
+                        Log.w(TAG, "🔍 Received inspect:elements via main handler!")
+                        handleInspectElements(event.data)
+                    }
+                    "check:accessibility" -> {
+                        Log.w(TAG, "🔍 Received check:accessibility via main handler!")
+                        handleCheckAccessibility(event.data)
+                    }
+                    "visual:inspect" -> {
+                        Log.w(TAG, "👁️ Received visual:inspect via main handler!")
+                        handleVisualInspect(event.data)
+                    }
+                    "find:icon" -> {
+                        Log.w(TAG, "🔍 Received find:icon via main handler!")
+                        handleFindIcon(event.data)
+                    }
+                    "pusher_internal:subscription_succeeded" -> {
+                        Log.w(TAG, "🟢 PUSHER INTERNAL: Subscription confirmed by server!")
+                    }
+                    else -> {
+                        Log.w(TAG, "⚠️ Unhandled event: ${event.eventName}")
                     }
                 }
             }
@@ -454,6 +480,21 @@ object SocketJobManager {
             override fun onSubscriptionSucceeded(channelName: String) {}
             override fun onAuthenticationFailure(message: String?, e: Exception?) {}
         })
+
+        // Listen for icon finding request from web (Template matching)
+        deviceChannel?.bind("find:icon", object : com.pusher.client.channel.PrivateChannelEventListener {
+            override fun onEvent(event: PusherEvent) {
+                Log.i(TAG, "🖼️ Received find:icon request (Template matching)")
+                handleFindIcon(event.data)
+            }
+            override fun onSubscriptionSucceeded(channelName: String) {}
+            override fun onAuthenticationFailure(message: String?, e: Exception?) {}
+        })
+
+        // Add global event listener to catch ALL events for debugging
+        deviceChannel?.bindGlobal { event ->
+            Log.w(TAG, "🌐 GLOBAL EVENT RECEIVED: eventName=${event?.eventName}, channel=${event?.channelName}, data=${event?.data?.take(200)}")
+        }
 
         Log.i(TAG, "Private channel subscription complete")
     }
@@ -1566,10 +1607,7 @@ object SocketJobManager {
                 // Get current package name
                 val packageName = rootNode.packageName?.toString() ?: "unknown"
                 
-                // Collect all visible elements
-                val elements = collectElements(rootNode, 0)
-                
-                // Get screen dimensions for bounds normalization
+                // Get screen dimensions for bounds normalization - MUST be calculated BEFORE collectElements
                 val ctx = contextRef?.get()
                 val displayMetrics = ctx?.resources?.displayMetrics
                 val screenWidth = displayMetrics?.widthPixels ?: 1080
@@ -1581,10 +1619,19 @@ object SocketJobManager {
                     if (resourceId > 0) context.resources.getDimensionPixelSize(resourceId) else 0
                 } ?: 0
                 
+                // Get navigation bar height for complete window metrics
+                val navBarHeight = ctx?.let { context ->
+                    val resourceId = context.resources.getIdentifier("navigation_bar_height", "dimen", "android")
+                    if (resourceId > 0) context.resources.getDimensionPixelSize(resourceId) else 0
+                } ?: 0
+                
+                // Collect all visible elements with screen dimensions for normalized bounds
+                val elements = collectElements(rootNode, 0, screenWidth, screenHeight)
+                
                 // Recycle root node
                 rootNode.recycle()
                 
-                Log.i(TAG, "✅ Found ${elements.size} elements in $packageName (statusBar=$statusBarHeight)")
+                Log.i(TAG, "✅ Found ${elements.size} elements in $packageName (screen=${screenWidth}x${screenHeight}, statusBar=$statusBarHeight, navBar=$navBarHeight)")
                 
                 // Take screenshot
                 accessibilityService.takeScreenshot { bitmap ->
@@ -1614,7 +1661,6 @@ object SocketJobManager {
                                 if (scaledBitmap != bitmap) {
                                     scaledBitmap.recycle()
                                 }
-                                bitmap.recycle()
                                 
                                 Log.i(TAG, "📸 Screenshot captured: ${byteArray.size / 1024}KB (${scaledWidth}x${scaledHeight})")
                                 
@@ -1624,6 +1670,154 @@ object SocketJobManager {
                             } catch (e: Exception) {
                                 Log.e(TAG, "Failed to encode screenshot", e)
                             }
+                            
+                            // Crop icons from small interactive elements
+                            try {
+                                val maxIconSize = 100 // Max 100px icons
+                                val minElementSize = 16 // Min element size to consider
+                                val maxElementSize = 500 // Max element size (increased for app icons)
+                                var iconsCropped = 0
+                                
+                                for (element in elements) {
+                                    if (element !is MutableMap<*, *>) continue
+                                    @Suppress("UNCHECKED_CAST")
+                                    val el = element as MutableMap<String, Any?>
+                                    
+                                    // Crop for interactive elements (clickable, checkable, editable) or elements with text/description
+                                    val isClickable = el["isClickable"] as? Boolean ?: false
+                                    val isCheckable = el["isCheckable"] as? Boolean ?: false
+                                    val isEditable = el["isEditable"] as? Boolean ?: false
+                                    val hasText = (el["text"] as? String)?.isNotEmpty() == true
+                                    val hasDesc = (el["contentDescription"] as? String)?.isNotEmpty() == true
+                                    
+                                    val bounds = el["bounds"] as? Map<String, Any?> ?: continue
+                                    val width = (bounds["width"] as? Number)?.toInt() ?: 0
+                                    val height = (bounds["height"] as? Number)?.toInt() ?: 0
+                                    val left = (bounds["left"] as? Number)?.toInt() ?: 0
+                                    val top = (bounds["top"] as? Number)?.toInt() ?: 0
+                                    
+                                    // Skip if not interactive and no identifying info
+                                    val isInteractive = isClickable || isCheckable || isEditable
+                                    val hasIdentity = hasText || hasDesc
+                                    if (!isInteractive && !hasIdentity) continue
+                                    
+                                    // Skip too small or too large elements
+                                    if (width < minElementSize || height < minElementSize) continue
+                                    if (width > maxElementSize || height > maxElementSize) continue
+                                    if (iconsCropped >= 60) continue // Limit to avoid memory issues
+                                    
+                                    // For tall elements (like app icons with text below), crop just the top portion
+                                    // Icon is usually in top part of element
+                                    val cropHeight = if (height > width * 1.5) {
+                                        // Tall element - icon is likely in top square portion
+                                        minOf(width, height / 2)
+                                    } else {
+                                        height
+                                    }
+                                    
+                                    // Crop icon from bitmap
+                                    try {
+                                        var iconBase64: String? = null
+                                        
+                                        // First try: Get app icon from PackageManager (for app launcher icons)
+                                        // This gives clean, high-quality icons without background artifacts
+                                        val className = el["className"] as? String ?: ""
+                                        val resourceId = el["resourceId"] as? String ?: ""
+                                        val contentDesc = el["contentDescription"] as? String ?: ""
+                                        
+                                        // Check if this is likely an app icon on home screen/launcher
+                                        val isLauncherIcon = resourceId.contains("icon", ignoreCase = true) ||
+                                            className.contains("AppWidget", ignoreCase = true) ||
+                                            (className.contains("TextView") && hasDesc && height > width) ||
+                                            resourceId.contains("launcher", ignoreCase = true)
+                                        
+                                        if (isLauncherIcon && contentDesc.isNotEmpty()) {
+                                            iconBase64 = tryGetAppIcon(contentDesc, maxIconSize)
+                                        }
+                                        
+                                        // Fallback: Crop from screenshot
+                                        if (iconBase64 == null) {
+                                            val safeLeft = left.coerceIn(0, bitmap.width - 1)
+                                            val safeTop = top.coerceIn(0, bitmap.height - 1)
+                                            val safeWidth = width.coerceIn(1, bitmap.width - safeLeft)
+                                            val safeHeight = cropHeight.coerceIn(1, bitmap.height - safeTop)
+                                            
+                                            val cropped = android.graphics.Bitmap.createBitmap(
+                                                bitmap, safeLeft, safeTop, safeWidth, safeHeight
+                                            )
+                                            
+                                            // Scale if needed
+                                            val scaledBitmap = if (safeWidth > maxIconSize || safeHeight > maxIconSize) {
+                                                val scale = maxIconSize.toFloat() / maxOf(safeWidth, safeHeight)
+                                                android.graphics.Bitmap.createScaledBitmap(
+                                                    cropped,
+                                                    (safeWidth * scale).toInt().coerceAtLeast(1),
+                                                    (safeHeight * scale).toInt().coerceAtLeast(1),
+                                                    true
+                                                ).also { if (it != cropped) cropped.recycle() }
+                                            } else {
+                                                cropped
+                                            }
+                                            
+                                            // Convert HARDWARE bitmap to SOFTWARE for pixel operations
+                                            val softwareBitmap = scaledBitmap.copy(android.graphics.Bitmap.Config.ARGB_8888, false)
+                                            if (softwareBitmap != scaledBitmap) {
+                                                scaledBitmap.recycle()
+                                            }
+                                            
+                                            if (softwareBitmap == null) {
+                                                // Fallback: just use the scaled bitmap directly
+                                                val iconStream = java.io.ByteArrayOutputStream()
+                                                scaledBitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 90, iconStream)
+                                                iconBase64 = android.util.Base64.encodeToString(
+                                                    iconStream.toByteArray(), 
+                                                    android.util.Base64.NO_WRAP
+                                                )
+                                            } else {
+                                                // ✅ STORE RAW ICON (no preprocessing)
+                                                // 
+                                                // Why RAW is better:
+                                                // 1. Background provides unique visual signature for template matching
+                                                // 2. Gradient backgrounds are PART of the icon visual identity
+                                                // 3. Tap uses HINT coordinates (x, y), not match center
+                                                // 4. Template matching + proximity bias handles dynamic backgrounds
+                                                //
+                                                // Smart crop problems:
+                                                // - Can't detect gradient backgrounds reliably
+                                                // - May remove icon content (over-aggressive)
+                                                // - Unnecessary complexity
+                                                
+                                                val iconBitmap = softwareBitmap
+                                            
+                                                // Encode to base64
+                                                val iconStream = java.io.ByteArrayOutputStream()
+                                                iconBitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 90, iconStream)
+                                                iconBase64 = android.util.Base64.encodeToString(
+                                                    iconStream.toByteArray(), 
+                                                    android.util.Base64.NO_WRAP
+                                                )
+                                            
+                                                iconBitmap.recycle()
+                                            }
+                                        } // End of if (iconBase64 == null) fallback
+                                        
+                                        if (iconBase64 != null) {
+                                            el["image"] = iconBase64
+                                            iconsCropped++
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.w(TAG, "Failed to crop icon at ($left,$top): ${e.message}")
+                                    }
+                                }
+                                
+                                if (iconsCropped > 0) {
+                                    Log.i(TAG, "🖼️ Cropped $iconsCropped icons from screenshot")
+                                }
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Failed to crop icons", e)
+                            }
+                            
+                            bitmap.recycle()
                         }
                         
                         // Send results back via API
@@ -1636,7 +1830,8 @@ object SocketJobManager {
                             "screen_height" to screenHeight,
                             "screenshot_width" to screenshotWidth,
                             "screenshot_height" to screenshotHeight,
-                            "status_bar_height" to statusBarHeight
+                            "status_bar_height" to statusBarHeight,
+                            "nav_bar_height" to navBarHeight
                         )
                         // Add optional fields
                         deviceId?.let { resultData["device_id"] = it }
@@ -1748,61 +1943,153 @@ object SocketJobManager {
             }
         }
     }
-    
     /**
      * Recursively collect elements from accessibility tree
-     * Only includes visible, meaningful elements (clickable, has text/resourceId/contentDesc)
+     * EXPANDED: Collects more elements including focusable, scrollable, and common view types
+     * Now includes normalized (0-1) percentage bounds for accurate cross-device positioning
      */
-    private fun collectElements(node: android.view.accessibility.AccessibilityNodeInfo?, depth: Int): List<Map<String, Any?>> {
-        if (node == null || depth > 15) return emptyList()
+    private fun collectElements(
+        node: android.view.accessibility.AccessibilityNodeInfo?, 
+        depth: Int,
+        screenWidth: Int = 1080,
+        screenHeight: Int = 2400
+    ): MutableList<MutableMap<String, Any?>> {
+        // Increased depth limit to 25 for complex UIs
+        if (node == null || depth > 25) return mutableListOf()
         
-        val results = mutableListOf<Map<String, Any?>>()
+        val results = mutableListOf<MutableMap<String, Any?>>()
         
         // Skip invisible elements
         if (!node.isVisibleToUser) {
+            // Still recurse children - some parents may be marked invisible but have visible children
+            for (i in 0 until node.childCount) {
+                val child = node.getChild(i)
+                if (child != null) {
+                    results.addAll(collectElements(child, depth + 1, screenWidth, screenHeight))
+                    child.recycle()
+                }
+            }
             return results
         }
         
-        // Only collect meaningful elements
+        // EXPANDED: Collect elements based on multiple criteria
         val hasText = !node.text.isNullOrBlank()
         val hasResourceId = !node.viewIdResourceName.isNullOrBlank()
         val hasContentDesc = !node.contentDescription.isNullOrBlank()
-        val isInteractive = node.isClickable || node.isLongClickable || node.isCheckable || node.isEditable
         
-        if (hasText || hasResourceId || hasContentDesc || isInteractive) {
+        // Expanded interactive checks
+        val isClickable = node.isClickable
+        val isLongClickable = node.isLongClickable
+        val isCheckable = node.isCheckable
+        val isEditable = node.isEditable
+        val isScrollable = node.isScrollable
+        val isFocusable = node.isFocusable
+        val isSelected = node.isSelected
+        
+        // Check for common interactive view class names
+        val className = node.className?.toString() ?: ""
+        val isLikelyInteractive = className.contains("Button") ||
+            className.contains("Image") ||
+            className.contains("Icon") ||
+            className.contains("Tab") ||
+            className.contains("Chip") ||
+            className.contains("Card") ||
+            className.contains("Item") ||
+            className.contains("Cell") ||
+            className.contains("Radio") ||
+            className.contains("Switch") ||
+            className.contains("Slider") ||
+            className.contains("SeekBar") ||
+            className.contains("Spinner") ||
+            className.contains("Menu") ||
+            className.contains("Fab") ||
+            className.endsWith("View") // Generic clickable views
+        
+        // Include element if it has any identifying info OR is interactive OR looks clickable
+        val shouldInclude = hasText || 
+            hasResourceId || 
+            hasContentDesc || 
+            isClickable || 
+            isLongClickable || 
+            isCheckable || 
+            isEditable ||
+            isScrollable ||
+            (isFocusable && isLikelyInteractive) ||
+            isSelected ||
+            isLikelyInteractive
+        
+        if (shouldInclude) {
             val bounds = android.graphics.Rect()
             node.getBoundsInScreen(bounds)
             
             // Skip elements with invalid bounds
             if (bounds.width() > 0 && bounds.height() > 0) {
-                results.add(mapOf(
+                // Calculate normalized (0-1) percentage values for cross-device compatibility
+                val leftPercent = if (screenWidth > 0) bounds.left.toFloat() / screenWidth else 0f
+                val topPercent = if (screenHeight > 0) bounds.top.toFloat() / screenHeight else 0f
+                val widthPercent = if (screenWidth > 0) bounds.width().toFloat() / screenWidth else 0f
+                val heightPercent = if (screenHeight > 0) bounds.height().toFloat() / screenHeight else 0f
+                
+                // Calculate center coordinates for tap actions
+                val centerX = bounds.left + bounds.width() / 2
+                val centerY = bounds.top + bounds.height() / 2
+                val centerXPercent = if (screenWidth > 0) centerX.toFloat() / screenWidth else 0.5f
+                val centerYPercent = if (screenHeight > 0) centerY.toFloat() / screenHeight else 0.5f
+                
+                results.add(mutableMapOf(
                     "resourceId" to node.viewIdResourceName,
                     "text" to node.text?.toString(),
                     "contentDescription" to node.contentDescription?.toString(),
                     "className" to node.className?.toString()?.substringAfterLast('.'),
                     "isClickable" to node.isClickable,
+                    "isLongClickable" to node.isLongClickable,
                     "isEditable" to node.isEditable,
                     "isCheckable" to node.isCheckable,
                     "isChecked" to node.isChecked,
                     "isScrollable" to node.isScrollable,
+                    "isFocusable" to node.isFocusable,
+                    "isEnabled" to node.isEnabled,
+                    
+                    // TOP-LEVEL COORDINATES (for easy FE/BE access)
+                    // Absolute coordinates (backward compatible)
+                    "x" to centerX,
+                    "y" to centerY,
+                    // Percentage coordinates (cross-device compatible)  
+                    "xPercent" to ("%.2f".format(centerXPercent * 100).toDouble()),  // 0-100 scale with 2 decimals
+                    "yPercent" to ("%.2f".format(centerYPercent * 100).toDouble()),
+                    // Screen resolution context
+                    "screen_width" to screenWidth,
+                    "screen_height" to screenHeight,
+                    
                     "bounds" to mapOf(
+                        // Absolute pixel values
                         "left" to bounds.left,
                         "top" to bounds.top,
                         "right" to bounds.right,
                         "bottom" to bounds.bottom,
                         "width" to bounds.width(),
-                        "height" to bounds.height()
+                        "height" to bounds.height(),
+                        // Normalized percentage values (0-1) for scaling
+                        "leftPercent" to leftPercent,
+                        "topPercent" to topPercent,
+                        "widthPercent" to widthPercent,
+                        "heightPercent" to heightPercent,
+                        // Center point for easy tap targeting
+                        "centerX" to centerX,
+                        "centerY" to centerY,
+                        "centerXPercent" to centerXPercent,
+                        "centerYPercent" to centerYPercent
                     ),
                     "depth" to depth
                 ))
             }
         }
         
-        // Recurse children
+        // Recurse children with same screen dimensions
         for (i in 0 until node.childCount) {
             val child = node.getChild(i)
             if (child != null) {
-                results.addAll(collectElements(child, depth + 1))
+                results.addAll(collectElements(child, depth + 1, screenWidth, screenHeight))
                 child.recycle()
             }
         }
@@ -1944,8 +2231,8 @@ object SocketJobManager {
                         }
                         
                         try {
-                            // Perform OCR using VisualInspectionService
-                            val result = com.agent.portal.vision.VisualInspectionService.detectText(bitmap)
+                            // Perform combined OCR + Object detection using VisualInspectionService
+                            val result = com.agent.portal.vision.VisualInspectionService.detectTextAndObjects(bitmap)
                             
                             // Convert bitmap to base64 for preview
                             var screenshotBase64: String? = null
@@ -2028,6 +2315,142 @@ object SocketJobManager {
     }
 
     /**
+     * Handle find icon request from web
+     * Takes screenshot, matches template icon, returns coordinates
+     */
+    private fun handleFindIcon(data: String) {
+        scope.launch {
+            try {
+                Log.i(TAG, "🔍 Starting icon template matching...")
+                
+                val eventData = gson.fromJson(data, Map::class.java) as? Map<String, Any>
+                val templateBase64 = eventData?.get("template") as? String
+                val minConfidence = (eventData?.get("min_confidence") as? Number)?.toDouble() ?: 0.65
+                
+                if (templateBase64.isNullOrEmpty()) {
+                    Log.e(TAG, "❌ No template image provided")
+                    publishEvent("find:icon:result", mapOf(
+                        "success" to false,
+                        "error" to "No template image provided"
+                    ))
+                    return@launch
+                }
+                
+                val accessibilityService = com.agent.portal.accessibility.PortalAccessibilityService.instance
+                if (accessibilityService == null) {
+                    Log.e(TAG, "❌ Accessibility service not available for icon matching")
+                    publishEvent("find:icon:result", mapOf(
+                        "success" to false,
+                        "error" to "Accessibility service not available"
+                    ))
+                    return@launch
+                }
+                
+                // Decode template from base64
+                val templateBytes = android.util.Base64.decode(templateBase64, android.util.Base64.DEFAULT)
+                val templateBitmap = android.graphics.BitmapFactory.decodeByteArray(templateBytes, 0, templateBytes.size)
+                
+                if (templateBitmap == null) {
+                    Log.e(TAG, "❌ Failed to decode template image")
+                    publishEvent("find:icon:result", mapOf(
+                        "success" to false,
+                        "error" to "Failed to decode template image"
+                    ))
+                    return@launch
+                }
+                
+                Log.i(TAG, "📸 Template decoded: ${templateBitmap.width}x${templateBitmap.height}")
+                
+                // Take screenshot
+                accessibilityService.takeScreenshot { screenshot ->
+                    scope.launch {
+                        if (screenshot == null) {
+                            Log.e(TAG, "❌ Failed to capture screenshot for icon matching")
+                            templateBitmap.recycle()
+                            publishEvent("find:icon:result", mapOf(
+                                "success" to false,
+                                "error" to "Screenshot capture failed"
+                            ))
+                            return@launch
+                        }
+                        
+                        Log.i(TAG, "📸 Screenshot captured: ${screenshot.width}x${screenshot.height}")
+                        
+                        try {
+                            // Convert HARDWARE bitmap to SOFTWARE bitmap for pixel access
+                            val softwareScreenshot = screenshot.copy(android.graphics.Bitmap.Config.ARGB_8888, false)
+                            val softwareTemplate = templateBitmap.copy(android.graphics.Bitmap.Config.ARGB_8888, false)
+                            
+                            // Recycle original bitmaps
+                            screenshot.recycle()
+                            templateBitmap.recycle()
+                            
+                            if (softwareScreenshot == null || softwareTemplate == null) {
+                                Log.e(TAG, "❌ Failed to convert bitmaps to software format")
+                                softwareScreenshot?.recycle()
+                                softwareTemplate?.recycle()
+                                publishEvent("find:icon:result", mapOf(
+                                    "success" to false,
+                                    "error" to "Bitmap conversion failed"
+                                ))
+                                return@launch
+                            }
+                            
+                            Log.i(TAG, "🔄 Converted to software bitmaps: ${softwareScreenshot.width}x${softwareScreenshot.height}")
+                            
+                            // Use TemplateMatchingService to find template
+                            val templateMatcher = com.agent.portal.vision.TemplateMatchingService()
+                            val result = templateMatcher.findTemplate(softwareScreenshot, softwareTemplate)
+                            
+                            // Recycle software bitmaps after matching
+                            softwareScreenshot.recycle()
+                            softwareTemplate.recycle()
+                            
+                            if (result != null && result.score >= minConfidence) {
+                                Log.i(TAG, "✅ Icon found at (${result.x}, ${result.y}) with confidence ${result.score}")
+                                publishEvent("find:icon:result", mapOf(
+                                    "success" to true,
+                                    "found" to true,
+                                    "x" to result.x,
+                                    "y" to result.y,
+                                    "confidence" to result.score,
+                                    "width" to result.width,
+                                    "height" to result.height,
+                                    "device_id" to (deviceId ?: "unknown")
+                                ))
+                            } else {
+                                Log.w(TAG, "⚠️ Icon not found or confidence too low: ${result?.score ?: 0}")
+                                publishEvent("find:icon:result", mapOf(
+                                    "success" to true,
+                                    "found" to false,
+                                    "confidence" to (result?.score ?: 0.0),
+                                    "error" to "Icon not found on screen",
+                                    "device_id" to (deviceId ?: "unknown")
+                                ))
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "❌ Template matching failed", e)
+                            screenshot.recycle()
+                            templateBitmap.recycle()
+                            publishEvent("find:icon:result", mapOf(
+                                "success" to false,
+                                "error" to (e.message ?: "Template matching failed")
+                            ))
+                        }
+                    }
+                }
+                
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Find icon failed", e)
+                publishEvent("find:icon:result", mapOf(
+                    "success" to false,
+                    "error" to (e.message ?: "Unknown error")
+                ))
+            }
+        }
+    }
+
+    /**
      * Start periodic accessibility status check (every 60 seconds)
      * Notifies backend when status changes
      */
@@ -2070,6 +2493,405 @@ object SocketJobManager {
         accessibilityCheckJob?.cancel()
         accessibilityCheckJob = null
         Log.i(TAG, "Stopped periodic accessibility status check")
+    }
+
+    /**
+     * Try to get app icon from PackageManager based on app name
+     * Returns base64 encoded PNG or null if not found
+     */
+    private fun tryGetAppIcon(appName: String, maxSize: Int): String? {
+        try {
+            val context = contextRef?.get() ?: return null
+            val pm = context.packageManager
+            
+            // Get all installed apps
+            val apps = pm.getInstalledApplications(android.content.pm.PackageManager.GET_META_DATA)
+            
+            // Find app that matches the name (case insensitive)
+            val normalizedName = appName.lowercase().trim()
+            val matchingApp = apps.find { app ->
+                try {
+                    val label = pm.getApplicationLabel(app).toString().lowercase()
+                    label == normalizedName || label.contains(normalizedName) || normalizedName.contains(label)
+                } catch (e: Exception) {
+                    false
+                }
+            }
+            
+            if (matchingApp == null) {
+                Log.d(TAG, "No matching app found for: $appName")
+                return null
+            }
+            
+            // Get app icon
+            val drawable = pm.getApplicationIcon(matchingApp)
+            
+            // Convert drawable to bitmap
+            val iconBitmap = when (drawable) {
+                is android.graphics.drawable.BitmapDrawable -> drawable.bitmap
+                is android.graphics.drawable.AdaptiveIconDrawable -> {
+                    // Handle adaptive icons (Android 8+)
+                    val size = maxSize
+                    val bitmap = android.graphics.Bitmap.createBitmap(size, size, android.graphics.Bitmap.Config.ARGB_8888)
+                    val canvas = android.graphics.Canvas(bitmap)
+                    drawable.setBounds(0, 0, size, size)
+                    drawable.draw(canvas)
+                    bitmap
+                }
+                else -> {
+                    // Generic drawable
+                    val size = maxSize
+                    val bitmap = android.graphics.Bitmap.createBitmap(size, size, android.graphics.Bitmap.Config.ARGB_8888)
+                    val canvas = android.graphics.Canvas(bitmap)
+                    drawable.setBounds(0, 0, size, size)
+                    drawable.draw(canvas)
+                    bitmap
+                }
+            }
+            
+            // Scale if needed
+            val scaledBitmap = if (iconBitmap.width > maxSize || iconBitmap.height > maxSize) {
+                val scale = maxSize.toFloat() / maxOf(iconBitmap.width, iconBitmap.height)
+                android.graphics.Bitmap.createScaledBitmap(
+                    iconBitmap,
+                    (iconBitmap.width * scale).toInt().coerceAtLeast(1),
+                    (iconBitmap.height * scale).toInt().coerceAtLeast(1),
+                    true
+                )
+            } else {
+                iconBitmap
+            }
+            
+            // Encode to base64
+            val stream = java.io.ByteArrayOutputStream()
+            scaledBitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, stream)
+            val base64 = android.util.Base64.encodeToString(stream.toByteArray(), android.util.Base64.NO_WRAP)
+            
+            Log.i(TAG, "✅ Got app icon from PackageManager: $appName -> ${matchingApp.packageName}")
+            
+            if (scaledBitmap != iconBitmap) scaledBitmap.recycle()
+            
+            return base64
+            
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to get app icon for $appName: ${e.message}")
+            return null
+        }
+    }
+
+    /**
+     * Smart bounds crop with intelligent icon/text separation
+     * 
+     * Strategy:
+     * 1. Find edges with UNIFORM color/transparency (padding)
+     * 2. Use horizontal projection to detect gap between icon and text
+     * 3. Crop to icon region only (before gap)
+     * 
+     * @param bitmap Input bitmap
+     * @return Tightly cropped icon (no text)
+     */
+    private fun smartCropIconBounds(bitmap: android.graphics.Bitmap): android.graphics.Bitmap {
+        try {
+            val width = bitmap.width
+            val height = bitmap.height
+            
+            Log.d(TAG, "   Smart bounds: Input ${width}x${height}")
+            
+            if (width < 10 || height < 10) return bitmap
+            
+            // ========== STEP 1: Detect Uniform Padding Edges ==========
+            // Sample corner to detect padding color
+            val corner = bitmap.getPixel(0, 0)
+            val threshold = 50.0
+            
+            // Find top content edge
+            var top = 0
+            rowLoop@ for (y in 0 until height) {
+                for (x in 0 until width) {
+                    val pixel = bitmap.getPixel(x, y)
+                    if (colorDistanceInt(pixel, corner) > threshold) {
+                        top = y
+                        break@rowLoop
+                    }
+                }
+            }
+            
+            // Find bottom content edge  
+            var bottom = height - 1
+            rowLoop@ for (y in height - 1 downTo 0) {
+                for (x in 0 until width) {
+                    val pixel = bitmap.getPixel(x, y)
+                    if (colorDistanceInt(pixel, corner) > threshold) {
+                        bottom = y
+                        break@rowLoop
+                    }
+                }
+            }
+            
+            // Find left content edge
+            var left = 0
+            colLoop@ for (x in 0 until width) {
+                for (y in 0 until height) {
+                    val pixel = bitmap.getPixel(x, y)
+                    if (colorDistanceInt(pixel, corner) > threshold) {
+                        left = x
+                        break@colLoop
+                    }
+                }
+            }
+            
+            // Find right content edge
+            var right = width - 1
+            colLoop@ for (x in width - 1 downTo 0) {
+                for (y in 0 until height) {
+                    val pixel = bitmap.getPixel(x, y)
+                    if (colorDistanceInt(pixel, corner) > threshold) {
+                        right = x
+                        break@colLoop
+                    }
+                }
+            }
+            
+            Log.d(TAG, "   Content bounds: top=$top, bottom=$bottom, left=$left, right=$right")
+            
+            if (right <= left || bottom <= top) {
+                Log.d(TAG, "   No content bounds found, keeping original")
+                return bitmap
+            }
+            
+            // ========== STEP 2: Intelligent Icon/Text Separation ==========
+            // Use horizontal projection to detect gap between icon and text
+            
+            val contentHeight = bottom - top + 1
+            val rowDensities = IntArray(contentHeight)
+            
+            // Calculate pixel density for each row in content region
+            for (y in 0 until contentHeight) {
+                val actualY = top + y
+                var contentPixels = 0
+                for (x in left..right) {
+                    val pixel = bitmap.getPixel(x, actualY)
+                    if (colorDistanceInt(pixel, corner) > threshold) {
+                        contentPixels++
+                    }
+                }
+                rowDensities[y] = contentPixels
+            }
+            
+            // Find the largest gap (consecutive low-density rows)
+            var maxGapStart = -1
+            var maxGapLength = 0
+            var currentGapStart = -1
+            var currentGapLength = 0
+            
+            val lowDensityThreshold = (right - left + 1) * 0.2 // 20% of width
+            
+            for (y in 0 until contentHeight) {
+                if (rowDensities[y] < lowDensityThreshold) {
+                    // Low density row (gap)
+                    if (currentGapStart == -1) {
+                        currentGapStart = y
+                        currentGapLength = 1
+                    } else {
+                        currentGapLength++
+                    }
+                } else {
+                    // High density row (content)
+                    if (currentGapLength > maxGapLength) {
+                        maxGapStart = currentGapStart
+                        maxGapLength = currentGapLength
+                    }
+                    currentGapStart = -1
+                    currentGapLength = 0
+                }
+            }
+            
+            // Check final gap
+            if (currentGapLength > maxGapLength) {
+                maxGapStart = currentGapStart
+                maxGapLength = currentGapLength
+            }
+            
+            val originalBottom = bottom
+            
+            if (maxGapStart > 0 && maxGapLength >= 2) {
+                // Found significant gap - crop before it
+                bottom = top + maxGapStart - 1
+                Log.d(TAG, "   Gap detected: rows $maxGapStart-${maxGapStart + maxGapLength - 1} (length=$maxGapLength)")
+                Log.d(TAG, "   Cropping to icon region: bottom $originalBottom -> $bottom")
+            } else {
+                // No clear gap - use top 50% as fallback
+                val iconHeight = (contentHeight * 0.5).toInt()
+                bottom = top + iconHeight
+                Log.d(TAG, "   No clear gap, using top 50%: bottom $originalBottom -> $bottom")
+            }
+            
+            // Add minimal padding
+            val padding = 1
+            left = (left - padding).coerceAtLeast(0)
+            top = (top - padding).coerceAtLeast(0)
+            right = (right + padding).coerceAtMost(width - 1)
+            bottom = (bottom + padding).coerceAtMost(height - 1)
+            
+            val finalWidth = right - left + 1
+            val finalHeight = bottom - top + 1
+            
+            Log.d(TAG, "   Final dimensions: ${finalWidth}x${finalHeight}")
+            
+            // Verify sensible dimensions
+            if (finalWidth < 8 || finalHeight < 8) {
+                Log.d(TAG, "   Result too small, keeping original")
+                return bitmap
+            }
+            
+            // ========== STEP 3: Crop ==========
+            val cropped = android.graphics.Bitmap.createBitmap(bitmap, left, top, finalWidth, finalHeight)
+            
+            val removedRatio = 1.0 - (finalWidth * finalHeight).toDouble() / (width * height)
+            Log.i(TAG, "✅ Bounds cropped: ${width}x${height} -> ${finalWidth}x${finalHeight} (${"%.1f".format(removedRatio * 100)}% removed, icon only)")
+            
+            return cropped
+            
+        } catch (e: Exception) {
+            Log.w(TAG, "⚠️ Bounds crop failed: ${e.message}")
+            return bitmap
+        }
+    }
+    
+    /**
+     * Color distance for Int pixel values
+     */
+    private fun colorDistanceInt(pixel1: Int, pixel2: Int): Double {
+        val r1 = (pixel1 shr 16) and 0xFF
+        val g1 = (pixel1 shr 8) and 0xFF
+        val b1 = pixel1 and 0xFF
+        
+        val r2 = (pixel2 shr 16) and 0xFF
+        val g2 = (pixel2 shr 8) and 0xFF
+        val b2 = pixel2 and 0xFF
+        
+        return kotlin.math.sqrt(
+            ((r1 - r2) * (r1 - r2) +
+             (g1 - g2) * (g1 - g2) +
+             (b1 - b2) * (b1 - b2)).toDouble()
+        )
+    }
+
+    /**
+     * Remove uniform background from bitmap (both dark and light backgrounds)
+     * Detects edge color and removes similar colored pixels to make them transparent
+     */
+    private fun removeDarkBackground(bitmap: android.graphics.Bitmap): android.graphics.Bitmap {
+        try {
+            val width = bitmap.width
+            val height = bitmap.height
+            
+            if (width < 10 || height < 10) return bitmap
+            
+            // Create mutable bitmap with alpha channel
+            val result = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
+            val canvas = android.graphics.Canvas(result)
+            canvas.drawBitmap(bitmap, 0f, 0f, null)
+            
+            // Get all pixels
+            val pixels = IntArray(width * height)
+            result.getPixels(pixels, 0, width, 0, 0, width, height)
+            
+            // Sample corner pixels to detect background color
+            val cornerSamples = mutableListOf<Int>()
+            val sampleSize = 3
+            
+            // Top-left corner
+            for (y in 0 until sampleSize) {
+                for (x in 0 until sampleSize) {
+                    cornerSamples.add(pixels[y * width + x])
+                }
+            }
+            // Top-right corner
+            for (y in 0 until sampleSize) {
+                for (x in width - sampleSize until width) {
+                    cornerSamples.add(pixels[y * width + x])
+                }
+            }
+            // Bottom-left corner  
+            for (y in height - sampleSize until height) {
+                for (x in 0 until sampleSize) {
+                    cornerSamples.add(pixels[y * width + x])
+                }
+            }
+            // Bottom-right corner
+            for (y in height - sampleSize until height) {
+                for (x in width - sampleSize until width) {
+                    cornerSamples.add(pixels[y * width + x])
+                }
+            }
+            
+            // Calculate average corner color
+            var avgR = 0
+            var avgG = 0
+            var avgB = 0
+            for (pixel in cornerSamples) {
+                avgR += (pixel shr 16) and 0xFF
+                avgG += (pixel shr 8) and 0xFF
+                avgB += pixel and 0xFF
+            }
+            avgR /= cornerSamples.size
+            avgG /= cornerSamples.size
+            avgB /= cornerSamples.size
+            
+            // Check if corners are uniform (low variance)
+            var variance = 0
+            for (pixel in cornerSamples) {
+                val r = (pixel shr 16) and 0xFF
+                val g = (pixel shr 8) and 0xFF
+                val b = pixel and 0xFF
+                variance += kotlin.math.abs(r - avgR) + kotlin.math.abs(g - avgG) + kotlin.math.abs(b - avgB)
+            }
+            variance /= cornerSamples.size
+            
+            // If corners aren't uniform (variance > 30), don't remove background
+            if (variance > 30) {
+                Log.d(TAG, "Icon corners not uniform (variance=$variance), keeping original")
+                return bitmap
+            }
+            
+            // Tolerance for background color matching
+            val tolerance = 35
+            
+            // Make background pixels transparent
+            var pixelsRemoved = 0
+            for (i in pixels.indices) {
+                val pixel = pixels[i]
+                val r = (pixel shr 16) and 0xFF
+                val g = (pixel shr 8) and 0xFF
+                val b = pixel and 0xFF
+                
+                // Check if similar to background color
+                val diffR = kotlin.math.abs(r - avgR)
+                val diffG = kotlin.math.abs(g - avgG)
+                val diffB = kotlin.math.abs(b - avgB)
+                
+                if (diffR < tolerance && diffG < tolerance && diffB < tolerance) {
+                    pixels[i] = 0x00000000 // Transparent
+                    pixelsRemoved++
+                }
+            }
+            
+            // Only apply if we removed a reasonable amount (10-90%)
+            val removalRatio = pixelsRemoved.toFloat() / pixels.size
+            if (removalRatio < 0.1f || removalRatio > 0.9f) {
+                Log.d(TAG, "Background removal ratio out of range (${"%.1f".format(removalRatio * 100)}%), keeping original")
+                return bitmap
+            }
+            
+            result.setPixels(pixels, 0, width, 0, 0, width, height)
+            Log.d(TAG, "Removed background: ${pixelsRemoved} pixels (${"%.1f".format(removalRatio * 100)}%), bg color=($avgR,$avgG,$avgB)")
+            return result
+            
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to remove background: ${e.message}")
+            return bitmap
+        }
     }
 
     fun shutdown() {

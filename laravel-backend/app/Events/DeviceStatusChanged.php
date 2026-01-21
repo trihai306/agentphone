@@ -29,6 +29,7 @@ class DeviceStatusChanged implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
+            // Use standard Laravel Echo user channel naming
             new PrivateChannel('user.' . $this->device->user_id),
         ];
     }

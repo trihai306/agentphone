@@ -2,9 +2,11 @@
     "debug": true,
     "host": "0.0.0.0",
     "port": 6001,
-    "websockets.activityTimeout": 300000,
-    "websockets.pongTimeout": 60000,
-    "websockets.pingInterval": 50000,
+    "websockets": {
+        "activityTimeout": 600000,
+        "pongTimeout": 120000,
+        "pingInterval": 60000
+    },
     "appManager.driver": "array",
     "appManager.array.apps": [
         {
@@ -13,10 +15,11 @@
             "secret": "app-secret",
             "enableClientMessages": true,
             "enableStatistics": true,
-            "maxConnections": -1,
-            "maxBackendEventsPerSecond": -1,
-            "maxClientEventsPerSecond": -1,
-            "maxReadRequestsPerSecond": -1,
+            "maxConnections": 10000,
+            "maxBackendEventsPerSecond": 10000,
+            "maxClientEventsPerSecond": 10000,
+            "maxReadRequestsPerSecond": 10000,
+            "maxEventPayloadInKb": 10240,
             "webhooks": [
                 {
                     "url": "http://localhost:8000/api/pusher/webhook",

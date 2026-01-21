@@ -238,6 +238,10 @@ class UserServicePackage extends Model
     {
         $package = $this->servicePackage;
 
+        if (!$package) {
+            throw new \RuntimeException("Không tìm thấy gói dịch vụ liên kết với đơn hàng này. Vui lòng kiểm tra lại.");
+        }
+
         $this->update([
             'status' => self::STATUS_ACTIVE,
             'activated_at' => now(),

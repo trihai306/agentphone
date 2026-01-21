@@ -751,6 +751,18 @@ class PortalAccessibilityService : AccessibilityService() {
         }
     }
 
+    /**
+     * Take screenshot and return Bitmap (suspend function for coroutines)
+     * Returns null if not available or failed
+     */
+    suspend fun takeScreenshotBitmap(): Bitmap? = kotlinx.coroutines.suspendCancellableCoroutine { continuation ->
+        takeScreenshot { bitmap ->
+            if (continuation.isActive) {
+                continuation.resume(bitmap, onCancellation = { bitmap?.recycle() })
+            }
+        }
+    }
+
     // ========================================================================
     // NODE ACTIONS - Execute actions on specific accessibility nodes
     // ========================================================================

@@ -33,7 +33,7 @@ class FilamentBroadcastNotification implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel("App.Models.User.{$this->userId}"),
+            new PrivateChannel("user.{$this->userId}"),
         ];
     }
 

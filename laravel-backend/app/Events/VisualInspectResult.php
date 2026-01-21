@@ -32,8 +32,8 @@ class VisualInspectResult implements ShouldBroadcastNow
 
     public function broadcastOn(): Channel
     {
-        // Use presence channel to reach web frontend
-        return new PresenceChannel("devices.{$this->userId}");
+        // Use standard Laravel Echo user channel naming (same as InspectElementsResult)
+        return new \Illuminate\Broadcasting\PrivateChannel("user.{$this->userId}");
     }
 
     public function broadcastAs(): string

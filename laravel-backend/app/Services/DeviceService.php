@@ -246,6 +246,24 @@ class DeviceService
     }
 
     /**
+     * Request icon template matching from device
+     * @param Device $device The target device
+     * @param int $userId The user ID
+     * @param string $template Base64 encoded template icon image
+     * @param float $minConfidence Minimum confidence threshold (0-1)
+     * @return bool True if request was sent successfully
+     */
+    public function requestFindIcon(Device $device, int $userId, string $template, float $minConfidence = 0.65): bool
+    {
+        if (!$device->socket_connected) {
+            return false;
+        }
+
+        broadcast(new \App\Events\FindIconRequest($device->device_id, $userId, $template, $minConfidence));
+        return true;
+    }
+
+    /**
      * Broadcast visual inspection (OCR) results to frontend
      * @param int $userId The user ID
      * @param string $deviceId The device ID

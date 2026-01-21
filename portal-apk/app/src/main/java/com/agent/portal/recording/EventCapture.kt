@@ -1077,6 +1077,27 @@ object EventCapture {
                 }
             }
             
+            // NEW: Check nearby sibling elements for better info
+            // This catches cases where user taps an element with poor info
+            // but a sibling nearby (within 50px) has better identifiers
+            if (bestScore < 5) {  // If current best lacks strong identifiers
+                val betterSibling = findSiblingsWithBetterInfo(sourceNode, bestScore)
+                if (betterSibling != null) {
+                    val siblingScore = scoreNode(betterSibling)
+                    if (siblingScore > bestScore) {
+                        // Recycle old best if it's not the source
+                        if (bestNode != sourceNode) {
+                            nodesToRecycle.add(bestNode)
+                        }
+                        bestNode = betterSibling
+                        bestScore = siblingScore
+                        Log.i(TAG, "🎯 Using sibling element: score=$siblingScore")
+                    } else {
+                        betterSibling.recycle()
+                    }
+                }
+            }
+            
         } catch (e: Exception) {
             Log.w(TAG, "Error finding best node: ${e.message}")
         } finally {
@@ -1096,22 +1117,43 @@ object EventCapture {
     /**
      * Score a node based on how much identifying information it has.
      * Higher score = more info = better for element selection.
+     * 
+     * Weighted scoring:
+     * - Unique resourceId: +4 (best identifier for replay)
+     * - Meaningful text (>2 chars, not just numbers): +3
+     * - Content description: +2
+     * - Basic resourceId: +2
+     * - Clickable: +1
+     * - Editable: +1
+     * - Tiny element (<20x20): -1 (likely invisible placeholder)
      */
     private fun scoreNode(node: AccessibilityNodeInfo): Int {
         var score = 0
         
-        // Text is most valuable (direct label)
-        if (!node.text.isNullOrBlank()) {
-            score += 3
+        val resourceId = node.viewIdResourceName ?: ""
+        val text = node.text?.toString() ?: ""
+        val contentDesc = node.contentDescription?.toString() ?: ""
+        
+        // Resource ID scoring - unique IDs get bonus
+        if (resourceId.isNotBlank()) {
+            score += 2
+            // Bonus for unique-looking resource IDs (no index/position/number suffix)
+            if (!resourceId.matches(Regex(".*[_\\-](\\d+|index|position|item)$"))) {
+                score += 2  // Total +4 for unique resourceId
+            }
+        }
+        
+        // Text scoring - meaningful text gets bonus
+        if (text.isNotBlank()) {
+            if (text.length > 2 && !text.matches(Regex("^\\d+$"))) {
+                score += 3  // Meaningful text
+            } else {
+                score += 1  // Short or numeric text
+            }
         }
         
         // Content description (accessibility label)
-        if (!node.contentDescription.isNullOrBlank()) {
-            score += 2
-        }
-        
-        // Resource ID (dev identifier)
-        if (!node.viewIdResourceName.isNullOrBlank()) {
+        if (contentDesc.isNotBlank()) {
             score += 2
         }
         
@@ -1123,6 +1165,17 @@ object EventCapture {
         // Bonus for being editable (input field)
         if (node.isEditable) {
             score += 1
+        }
+        
+        // Penalty for tiny elements (likely invisible placeholders)
+        try {
+            val rect = Rect()
+            node.getBoundsInScreen(rect)
+            if (rect.width() < 20 && rect.height() < 20) {
+                score -= 1
+            }
+        } catch (e: Exception) {
+            // Ignore bounds check errors
         }
         
         return score
@@ -1158,6 +1211,122 @@ object EventCapture {
             Log.w(TAG, "Error finding child with info: ${e.message}")
         }
         return null
+    }
+    
+    /**
+     * Check if two elements are nearby (overlapping or within threshold distance).
+     * Used to determine if a sibling element is relevant to the tapped area.
+     *
+     * @param bounds1 First element bounds
+     * @param bounds2 Second element bounds  
+     * @param threshold Maximum distance in pixels to consider "nearby" (default 50px)
+     * @return true if elements overlap or are within threshold distance
+     */
+    private fun areElementsNearby(bounds1: Rect, bounds2: Rect, threshold: Int = 50): Boolean {
+        // Check for intersection first
+        if (Rect.intersects(bounds1, bounds2)) {
+            return true
+        }
+        
+        // Calculate minimum distance between edges
+        val horizontalDistance = when {
+            bounds1.right < bounds2.left -> bounds2.left - bounds1.right
+            bounds2.right < bounds1.left -> bounds1.left - bounds2.right
+            else -> 0  // Overlapping horizontally
+        }
+        
+        val verticalDistance = when {
+            bounds1.bottom < bounds2.top -> bounds2.top - bounds1.bottom
+            bounds2.bottom < bounds1.top -> bounds1.top - bounds2.bottom
+            else -> 0  // Overlapping vertically
+        }
+        
+        // If either dimension is overlapping, just check the other
+        return if (horizontalDistance == 0 || verticalDistance == 0) {
+            horizontalDistance <= threshold && verticalDistance <= threshold
+        } else {
+            // Both dimensions are separated - use diagonal distance
+            val distance = kotlin.math.sqrt(
+                (horizontalDistance * horizontalDistance + verticalDistance * verticalDistance).toDouble()
+            )
+            distance <= threshold
+        }
+    }
+    
+    /**
+     * Find sibling elements (same parent) that have better identifying info.
+     * Used when the tapped element has poor info but nearby siblings are better.
+     *
+     * @param sourceNode The element that was tapped
+     * @param sourceScore The score of the source node
+     * @return A sibling node with better info if found, null otherwise
+     */
+    private fun findSiblingsWithBetterInfo(
+        sourceNode: AccessibilityNodeInfo,
+        sourceScore: Int
+    ): AccessibilityNodeInfo? {
+        try {
+            val parent = sourceNode.parent ?: return null
+            
+            // Get source bounds for proximity check
+            val sourceRect = Rect()
+            sourceNode.getBoundsInScreen(sourceRect)
+            
+            var bestSibling: AccessibilityNodeInfo? = null
+            var bestSiblingScore = sourceScore
+            val siblingsToRecycle = mutableListOf<AccessibilityNodeInfo>()
+            
+            // Iterate through all children of parent (siblings)
+            for (i in 0 until parent.childCount) {
+                val sibling = parent.getChild(i) ?: continue
+                
+                // Skip if this is the source node itself (compare by bounds since we can't compare references)
+                val siblingRect = Rect()
+                sibling.getBoundsInScreen(siblingRect)
+                if (siblingRect == sourceRect) {
+                    sibling.recycle()
+                    continue
+                }
+                
+                // Only consider nearby siblings
+                if (!areElementsNearby(sourceRect, siblingRect)) {
+                    sibling.recycle()
+                    continue
+                }
+                
+                // Score this sibling
+                val siblingScore = scoreNode(sibling)
+                
+                // Is this sibling better?
+                if (siblingScore > bestSiblingScore) {
+                    // Recycle previous best
+                    bestSibling?.let { siblingsToRecycle.add(it) }
+                    bestSibling = sibling
+                    bestSiblingScore = siblingScore
+                    Log.d(TAG, "🔍 Found better sibling: score=$siblingScore, id=${sibling.viewIdResourceName?.takeLast(30)}")
+                } else {
+                    sibling.recycle()
+                }
+            }
+            
+            // Recycle nodes we don't need
+            siblingsToRecycle.forEach { 
+                try { it.recycle() } catch (e: Exception) { }
+            }
+            
+            // Recycle parent
+            try { parent.recycle() } catch (e: Exception) { }
+            
+            if (bestSibling != null) {
+                Log.i(TAG, "✓ Selected sibling element: score=$bestSiblingScore vs source=$sourceScore")
+            }
+            
+            return bestSibling
+            
+        } catch (e: Exception) {
+            Log.w(TAG, "Error finding siblings: ${e.message}")
+            return null
+        }
     }
 
     /**

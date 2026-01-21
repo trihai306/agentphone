@@ -29,6 +29,7 @@ class DeviceAccessibilityChanged implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
+            // Use user.{userId} channel that frontend subscribes to
             new PrivateChannel('user.' . $this->device->user_id),
         ];
     }

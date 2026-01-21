@@ -90,6 +90,21 @@ class FlowService
             case 'tap':
             case 'double_tap':
             case 'long_press':
+                // Get icon template - prioritize base64 from _selectors, fallback to URL
+                $iconTemplate = null;
+                if (!empty($nodeData['_selectors']['primary']['template'])) {
+                    // Base64 template from Element Picker
+                    $iconTemplate = $nodeData['_selectors']['primary']['template'];
+                } elseif (!empty($nodeData['image'])) {
+                    // Convert relative URL to full URL if needed
+                    $image = $nodeData['image'];
+                    if (str_starts_with($image, '/storage/')) {
+                        $iconTemplate = url($image);
+                    } else {
+                        $iconTemplate = $image;
+                    }
+                }
+
                 return [
                     'x' => $this->getCoordinate($actionData, 'x'),
                     'y' => $this->getCoordinate($actionData, 'y'),
@@ -98,6 +113,14 @@ class FlowService
                     'text' => $actionData['text'] ?? null,
                     'className' => $actionData['className'] ?? null,
                     'bounds' => $actionData['bounds'] ?? null,
+                    // Smart matching options
+                    'selectorPriority' => $nodeData['selectorPriority'] ?? 'auto',
+                    'fuzzyMatch' => $nodeData['fuzzyMatch'] ?? false,
+                    'ignoreCase' => $nodeData['ignoreCase'] ?? true,
+                    // Icon template matching - base64 or full URL
+                    'image' => $iconTemplate,
+                    'iconUrl' => $iconTemplate,
+                    'minConfidence' => ($nodeData['_selectors']['primary']['confidence'] ?? 65) / 100,
                 ];
 
             case 'scroll':
