@@ -607,7 +607,14 @@
         "update_avatar": "Update avatar",
         "current_password": "Current password",
         "new_password": "New password",
-        "confirm_password": "Confirm password"
+        "confirm_password": "Confirm password",
+        "manage_description": "Manage your account settings",
+        "member_since": "Member Since",
+        "active": "Active",
+        "name": "Name",
+        "email": "Email",
+        "save_changes": "Save Changes",
+        "update_password": "Update Password"
     },
     "topup": {
         "title": "Top Up",

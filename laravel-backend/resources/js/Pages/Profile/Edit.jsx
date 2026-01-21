@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useForm, usePage } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AppLayout from '../../Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 
 export default function Edit({ user }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const { flash } = usePage().props;
     const isDark = theme === 'dark';
@@ -35,16 +37,16 @@ export default function Edit({ user }) {
     }
 
     return (
-        <AppLayout title="Profile">
+        <AppLayout title={t('profile.title')}>
             <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
                 <div className="max-w-[900px] mx-auto px-6 py-6">
                     {/* Header */}
                     <div className="mb-8">
                         <h1 className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            Profile
+                            {t('profile.title')}
                         </h1>
                         <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                            Manage your account settings
+                            {t('profile.manage_description', { defaultValue: 'Quản lý cài đặt tài khoản' })}
                         </p>
                     </div>
 
@@ -76,17 +78,17 @@ export default function Edit({ user }) {
 
                         <div className="grid grid-cols-3 gap-4">
                             <div className={`p-3 rounded-lg ${isDark ? 'bg-[#222]' : 'bg-gray-50'}`}>
-                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Member Since</p>
+                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('profile.member_since', { defaultValue: 'Thành viên từ' })}</p>
                                 <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                     {new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                                 </p>
                             </div>
                             <div className={`p-3 rounded-lg ${isDark ? 'bg-[#222]' : 'bg-gray-50'}`}>
-                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Status</p>
-                                <p className={`text-sm font-medium ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>Active</p>
+                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('common.status')}</p>
+                                <p className={`text-sm font-medium ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>{t('profile.active', { defaultValue: 'Hoạt động' })}</p>
                             </div>
                             <div className={`p-3 rounded-lg ${isDark ? 'bg-[#222]' : 'bg-gray-50'}`}>
-                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Devices</p>
+                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('navigation.devices')}</p>
                                 <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>0</p>
                             </div>
                         </div>
@@ -95,12 +97,12 @@ export default function Edit({ user }) {
                     {/* Profile Form */}
                     <div className={`p-6 rounded-xl mb-6 ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
                         <h3 className={`text-sm font-medium uppercase tracking-wider mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Personal Information
+                            {t('profile.personal_info')}
                         </h3>
                         <form onSubmit={handleProfileSubmit} className="space-y-4">
                             <div>
                                 <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    Name
+                                    {t('profile.name', { defaultValue: 'Họ tên' })}
                                 </label>
                                 <input
                                     type="text"
@@ -115,7 +117,7 @@ export default function Edit({ user }) {
                             </div>
                             <div>
                                 <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    Email
+                                    {t('profile.email', { defaultValue: 'Email' })}
                                 </label>
                                 <input
                                     type="email"
@@ -135,7 +137,7 @@ export default function Edit({ user }) {
                                     className={`px-4 py-2 text-sm font-medium rounded-lg ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'
                                         } disabled:opacity-50`}
                                 >
-                                    {profileForm.processing ? 'Saving...' : 'Save Changes'}
+                                    {profileForm.processing ? t('common.loading') : t('profile.save_changes', { defaultValue: 'Lưu thay đổi' })}
                                 </button>
                             </div>
                         </form>
@@ -144,12 +146,12 @@ export default function Edit({ user }) {
                     {/* Password Form */}
                     <div className={`p-6 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
                         <h3 className={`text-sm font-medium uppercase tracking-wider mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Security
+                            {t('profile.security')}
                         </h3>
                         <form onSubmit={handlePasswordSubmit} className="space-y-4">
                             <div>
                                 <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    Current Password
+                                    {t('profile.current_password')}
                                 </label>
                                 <div className="relative">
                                     <input
@@ -182,7 +184,7 @@ export default function Edit({ user }) {
                             </div>
                             <div>
                                 <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    New Password
+                                    {t('profile.new_password')}
                                 </label>
                                 <div className="relative">
                                     <input
@@ -215,7 +217,7 @@ export default function Edit({ user }) {
                             </div>
                             <div>
                                 <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    Confirm Password
+                                    {t('profile.confirm_password')}
                                 </label>
                                 <div className="relative">
                                     <input
@@ -250,7 +252,7 @@ export default function Edit({ user }) {
                                     className={`px-4 py-2 text-sm font-medium rounded-lg ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'
                                         } disabled:opacity-50`}
                                 >
-                                    {passwordForm.processing ? 'Updating...' : 'Update Password'}
+                                    {passwordForm.processing ? t('common.loading') : t('profile.update_password', { defaultValue: 'Cập nhật mật khẩu' })}
                                 </button>
                             </div>
                         </form>

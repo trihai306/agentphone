@@ -607,7 +607,14 @@
         "update_avatar": "Cập nhật ảnh",
         "current_password": "Mật khẩu hiện tại",
         "new_password": "Mật khẩu mới",
-        "confirm_password": "Xác nhận mật khẩu"
+        "confirm_password": "Xác nhận mật khẩu",
+        "manage_description": "Quản lý cài đặt tài khoản",
+        "member_since": "Thành viên từ",
+        "active": "Hoạt động",
+        "name": "Họ tên",
+        "email": "Email",
+        "save_changes": "Lưu thay đổi",
+        "update_password": "Cập nhật mật khẩu"
     },
     "topup": {
         "title": "Nạp Tiền",
