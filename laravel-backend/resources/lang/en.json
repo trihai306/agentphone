@@ -868,6 +868,7 @@
         "view_logs": "View Logs",
         "stats": {
             "total": "Total Jobs",
+            "pending": "Pending",
             "running": "Running",
             "completed": "Completed",
             "failed": "Failed"
@@ -906,6 +907,26 @@
             "started_at": "Started at",
             "completed_at": "Completed at",
             "duration": "Duration"
+        },
+        "device_panel": {
+            "title": "Devices",
+            "all_devices": "All Devices",
+            "device": "Device"
+        },
+        "search_placeholder": "Search jobs...",
+        "filters": {
+            "label": "Filters",
+            "clear_all": "Clear all"
+        },
+        "empty": {
+            "no_results": "No jobs found",
+            "try_different_filter": "Try changing filters to see different results"
+        },
+        "pagination": {
+            "showing": "Showing",
+            "jobs": "jobs",
+            "previous": "Previous",
+            "next": "Next"
         }
     },
     "campaigns": {

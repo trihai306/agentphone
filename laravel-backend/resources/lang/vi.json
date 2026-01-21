@@ -868,6 +868,7 @@
         "view_logs": "Xem Logs",
         "stats": {
             "total": "Tổng Job",
+            "pending": "Đang Chờ",
             "running": "Đang Chạy",
             "completed": "Hoàn Thành",
             "failed": "Thất Bại"
@@ -906,6 +907,26 @@
             "started_at": "Bắt đầu",
             "completed_at": "Hoàn thành",
             "duration": "Thời gian"
+        },
+        "device_panel": {
+            "title": "Thiết Bị",
+            "all_devices": "Tất cả thiết bị",
+            "device": "Thiết bị"
+        },
+        "search_placeholder": "Tìm kiếm jobs...",
+        "filters": {
+            "label": "Bộ lọc",
+            "clear_all": "Xoá tất cả"
+        },
+        "empty": {
+            "no_results": "Không tìm thấy job",
+            "try_different_filter": "Thử thay đổi bộ lọc để xem kết quả khác"
+        },
+        "pagination": {
+            "showing": "Hiển thị",
+            "jobs": "jobs",
+            "previous": "Trước",
+            "next": "Tiếp"
         }
     },
     "campaigns": {
