@@ -84,6 +84,11 @@ class CampaignController extends Controller
             'records_per_batch' => 'nullable|integer|min:1|max:100',
             'repeat_per_record' => 'nullable|integer|min:1|max:100',
             'record_filter' => 'nullable|array',
+            'data_config' => 'nullable|array',
+            'data_config.primary' => 'nullable|array',
+            'data_config.primary.collection_id' => 'nullable|exists:data_collections,id',
+            'data_config.pools' => 'nullable|array',
+            'records_per_device' => 'nullable|integer|min:1',
         ]);
 
         $campaign = Campaign::create([
@@ -92,11 +97,14 @@ class CampaignController extends Controller
             'description' => $validated['description'] ?? null,
             'icon' => $validated['icon'] ?? '🌱',
             'color' => $validated['color'] ?? '#8b5cf6',
-            'data_collection_id' => $validated['data_collection_id'] ?? null,
+            'data_collection_id' => $validated['data_config']['primary']['collection_id']
+                ?? $validated['data_collection_id'] ?? null,
             'execution_mode' => $validated['execution_mode'] ?? 'sequential',
             'records_per_batch' => $validated['records_per_batch'] ?? 10,
+            'records_per_device' => $validated['records_per_device'] ?? null,
             'repeat_per_record' => $validated['repeat_per_record'] ?? 1,
             'record_filter' => $validated['record_filter'] ?? null,
+            'data_config' => $validated['data_config'] ?? null,
             'status' => Campaign::STATUS_DRAFT,
         ]);
 
@@ -171,7 +179,8 @@ class CampaignController extends Controller
     }
 
     /**
-     * Run campaign - create jobs for records
+     * Run campaign - create chain jobs for records
+     * Each job = 1 record + workflow chain executed on 1 device
      */
     public function run(Request $request, Campaign $campaign)
     {
@@ -189,62 +198,82 @@ class CampaignController extends Controller
             return back()->with('error', 'Không có thiết bị online để chạy campaign!');
         }
 
-        // Get workflows
-        $workflows = $campaign->workflows;
+        // Get workflows sorted by sequence
+        $workflows = $campaign->workflows->sortBy('pivot.sequence');
         if ($workflows->isEmpty()) {
             return back()->with('error', 'Campaign chưa có workflow nào!');
         }
 
+        // Build workflow chain (array of workflow IDs)
+        $workflowChain = $workflows->pluck('id')->toArray();
+
         // Get record IDs to process
         $recordIds = $this->getFilteredRecordIds($campaign);
         $totalRecords = count($recordIds);
+        $deviceCount = $devices->count();
 
-        // If no data collection, still create jobs (workflow might have its own DataSource)
+        // If no data collection, create 1 job per device with workflow chain
         if ($totalRecords === 0 && !$campaign->data_collection_id) {
-            // Create one job per workflow per device without record data
-            foreach ($workflows as $wfIndex => $workflow) {
-                foreach ($devices as $device) {
+            foreach ($devices as $device) {
+                WorkflowJob::create([
+                    'user_id' => $campaign->user_id,
+                    'flow_id' => $workflows->first()->id, // Primary workflow for display
+                    'device_id' => $device->id,
+                    'campaign_id' => $campaign->id,
+                    'workflow_chain' => $workflowChain,
+                    'current_workflow_index' => 0,
+                    'name' => "{$campaign->name}",
+                    'status' => WorkflowJob::STATUS_PENDING,
+                    'priority' => 5,
+                    'max_retries' => 3,
+                ]);
+            }
+        } else {
+            // Calculate records per device
+            $recordsPerDevice = $campaign->records_per_device
+                ?? (int) ceil($totalRecords / $deviceCount);
+
+            // Track how many records assigned to current device
+            $deviceIndex = 0;
+            $recordsAssignedToDevice = 0;
+            $repeatCount = $campaign->repeat_per_record ?: 1;
+
+            foreach ($recordIds as $recordId) {
+                // Get current device
+                $device = $devices[$deviceIndex % $deviceCount];
+
+                // Create job(s) for this record
+                for ($r = 0; $r < $repeatCount; $r++) {
+                    // Build pool context (random comments, media, etc.)
+                    $poolContext = $this->buildJobContext($campaign);
+
                     WorkflowJob::create([
                         'user_id' => $campaign->user_id,
-                        'flow_id' => $workflow->id,
+                        'flow_id' => $workflows->first()->id, // Primary workflow
                         'device_id' => $device->id,
                         'campaign_id' => $campaign->id,
-                        'name' => "{$campaign->name} - {$workflow->name}",
+                        'data_collection_id' => $campaign->data_collection_id,
+                        'data_record_id' => $recordId,      // 1 record per job
+                        'workflow_chain' => $workflowChain, // Full chain
+                        'current_workflow_index' => 0,
+                        'chain_context' => $poolContext,    // Pool data for loops
+                        'name' => "{$campaign->name} - Record #{$recordId}" . ($repeatCount > 1 ? " (Run " . ($r + 1) . ")" : ""),
                         'status' => WorkflowJob::STATUS_PENDING,
                         'priority' => 5,
                         'max_retries' => 3,
                     ]);
                 }
-            }
-        } else {
-            // Batch records across devices
-            $batchSize = $campaign->records_per_batch ?: 10;
-            $batches = array_chunk($recordIds, $batchSize);
-            $deviceCount = $devices->count();
-            $deviceIndex = 0;
 
-            foreach ($workflows as $wfIndex => $workflow) {
-                foreach ($batches as $batchIndex => $batch) {
-                    // Round-robin device assignment
-                    $device = $devices[$deviceIndex % $deviceCount];
+                $recordsAssignedToDevice++;
+
+                // Move to next device when limit reached
+                if ($recordsAssignedToDevice >= $recordsPerDevice) {
                     $deviceIndex++;
+                    $recordsAssignedToDevice = 0;
 
-                    // Create repeat jobs if configured
-                    $repeatCount = $campaign->repeat_per_record ?: 1;
-                    for ($r = 0; $r < $repeatCount; $r++) {
-                        WorkflowJob::create([
-                            'user_id' => $campaign->user_id,
-                            'flow_id' => $workflow->id,
-                            'device_id' => $device->id,
-                            'campaign_id' => $campaign->id,
-                            'data_collection_id' => $campaign->data_collection_id,
-                            'data_record_ids' => $batch,
-                            'total_records_to_process' => count($batch),
-                            'name' => "{$campaign->name} - Batch " . ($batchIndex + 1) . ($repeatCount > 1 ? " (Run " . ($r + 1) . ")" : ""),
-                            'status' => WorkflowJob::STATUS_PENDING,
-                            'priority' => 5,
-                            'max_retries' => 3,
-                        ]);
+                    // Stop if no more devices available
+                    if ($deviceIndex >= $deviceCount) {
+                        break;
                     }
                 }
             }
@@ -301,6 +330,55 @@ class CampaignController extends Controller
                 // All records
                 return $query->pluck('id')->toArray();
         }
+    }
+
+    /**
+     * Build initial context for a job based on data_config pools
+     * This fetches pool data (e.g., random comments, media) for the job
+     */
+    protected function buildJobContext(Campaign $campaign): ?array
+    {
+        $dataConfig = $campaign->data_config;
+        if (!$dataConfig || empty($dataConfig['pools'])) {
+            return null;
+        }
+
+        $context = [];
+
+        foreach ($dataConfig['pools'] as $pool) {
+            $variable = $pool['variable'] ?? null;
+            $collectionId = $pool['collection_id'] ?? null;
+            $field = $pool['field'] ?? null;
+            $count = $pool['count'] ?? 1;
+            $mode = $pool['mode'] ?? 'random';
+
+            if (!$variable || !$collectionId) {
+                continue;
+            }
+
+            $collection = DataCollection::find($collectionId);
+            if (!$collection) {
+                continue;
+            }
+
+            $query = $collection->records();
+
+            // Apply mode
+            if ($mode === 'random') {
+                $query->inRandomOrder();
+            }
+
+            $records = $query->take($count)->get();
+
+            // Extract field values or full records
+            if ($field) {
+                $context[$variable] = $records->map(fn($r) => $r->data[$field] ?? null)->filter()->values()->toArray();
+            } else {
+                $context[$variable] = $records->map(fn($r) => $r->data)->toArray();
+            }
+        }
+
+        return empty($context) ? null : $context;
     }
 
     /**

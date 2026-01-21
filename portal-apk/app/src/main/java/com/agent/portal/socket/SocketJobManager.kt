@@ -135,7 +135,24 @@ object SocketJobManager {
 
         scope.launch {
             try {
-                Log.i(TAG, "Connecting to Pusher: $host:$port")
+                Log.i(TAG, "Connecting to Pusher: $host:$port (encrypted: $encrypted)")
+                
+                // Test HTTPS connectivity to production server first
+                if (encrypted && host != "10.0.2.2") {
+                    try {
+                        val testUrl = "https://$host/"
+                        Log.i(TAG, "Testing HTTPS connectivity to: $testUrl")
+                        val client = okhttp3.OkHttpClient.Builder()
+                            .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+                            .build()
+                        val request = okhttp3.Request.Builder().url(testUrl).head().build()
+                        val response = client.newCall(request).execute()
+                        Log.i(TAG, "✅ HTTPS test successful: ${response.code}")
+                        response.close()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "❌ HTTPS connectivity test failed: ${e.message}", e)
+                    }
+                }
 
                 // Configure auth endpoint for presence channels
                 val authUrl = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
@@ -580,7 +597,7 @@ object SocketJobManager {
                 val apiUrl = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
                     "http://10.0.2.2:8000/api"
                 } else {
-                    "https://laravel-backend.test/api"
+                    com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
                 }
 
                 // Send HTTP POST request
@@ -643,7 +660,7 @@ object SocketJobManager {
                 val apiUrl = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
                     "http://10.0.2.2:8000/api"
                 } else {
-                    "https://laravel-backend.test/api"
+                    com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
                 }
 
                 // Capture screenshot asynchronously
@@ -853,7 +870,7 @@ object SocketJobManager {
                 val apiUrl = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
                     "http://10.0.2.2:8000/api"
                 } else {
-                    "https://laravel-backend.test/api"
+                    com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
                 }
 
                 val payload = mapOf(

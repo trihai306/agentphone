@@ -30,7 +30,6 @@ export function useWalletUpdates() {
             channel = window.Echo.private(`wallet.${userId}`);
 
             channel.listen('.wallet.updated', (data) => {
-                console.log('Wallet update received:', data);
 
                 // Update local balance state immediately
                 setBalance(data.balance);
@@ -48,7 +47,6 @@ export function useWalletUpdates() {
             });
 
             setIsConnected(true);
-            console.log(`Subscribed to wallet updates for user ${userId}`);
         } catch (error) {
             console.error('Failed to subscribe to wallet channel:', error);
             setIsConnected(false);

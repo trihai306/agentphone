@@ -154,14 +154,11 @@ class HttpServerService : Service() {
             val session = sessionManager.getSession()
             
             if (session != null && !com.agent.portal.socket.SocketJobManager.isConnected()) {
-                // Get Soketi config
-                val soketiHost = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
-                    "10.0.2.2"
-                } else {
-                    "192.168.1.11" // Your local machine IP
-                }
-                val soketiPort = 6001
-                val soketiKey = "app-key"
+                // Get Soketi config from NetworkUtils
+                val soketiHost = com.agent.portal.utils.NetworkUtils.getSocketHost()
+                val soketiPort = com.agent.portal.utils.NetworkUtils.getSocketPort()
+                val soketiKey = "clickai-key"
+                val encrypted = com.agent.portal.utils.NetworkUtils.isSocketEncrypted()
                 
                 // Initialize and connect
                 com.agent.portal.socket.SocketJobManager.init(
@@ -169,7 +166,7 @@ class HttpServerService : Service() {
                     soketiKey,
                     soketiHost,
                     soketiPort,
-                    false
+                    encrypted
                 )
                 com.agent.portal.socket.SocketJobManager.connect()
                 

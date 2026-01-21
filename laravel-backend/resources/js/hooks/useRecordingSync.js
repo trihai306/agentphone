@@ -33,7 +33,6 @@ export function useRecordingSync(userId, options = {}) {
 
             channelRef.current
                 .listen('.session.started', (data) => {
-                    console.log('📹 Recording session started:', data);
                     setActiveSession({
                         sessionId: data.session_id,
                         deviceName: data.device_name,
@@ -46,7 +45,6 @@ export function useRecordingSync(userId, options = {}) {
                     callbacksRef.current.onSessionStarted?.(data);
                 })
                 .listen('.session.stopped', (data) => {
-                    console.log('⏹️ Recording session stopped:', data);
                     setActiveSession(prev => prev ? {
                         ...prev,
                         status: 'completed',
@@ -58,14 +56,12 @@ export function useRecordingSync(userId, options = {}) {
                     callbacksRef.current.onSessionStopped?.(data);
                 })
                 .listen('.event.received', (data) => {
-                    console.log('📍 Recording event:', data.event?.event_type);
                     setEvents(prev => [...prev, data.event]);
                     setEventCount(data.event_count);
                     callbacksRef.current.onEventReceived?.(data);
                 });
 
             setIsConnected(true);
-            console.log(`✅ Subscribed to ${channelName}`);
         } catch (error) {
             console.error('Failed to subscribe to recording channel:', error);
             setIsConnected(false);
@@ -73,7 +69,6 @@ export function useRecordingSync(userId, options = {}) {
 
         return () => {
             if (channelRef.current) {
-                console.log(`🔌 Leaving channel ${channelName}`);
                 window.Echo.leave(channelName);
                 channelRef.current = null;
                 setIsConnected(false);

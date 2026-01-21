@@ -242,7 +242,6 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         // Trigger accessibility check via socket
         const checkAccessibility = async () => {
             try {
-                console.log('🔍 Auto-checking accessibility for device:', selectedDevice.device_id);
                 await axios.post('/devices/check-accessibility', {
                     device_id: selectedDevice.device_id
                 });
@@ -1050,7 +1049,6 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                         user_id: props.auth?.user?.id,
                     }),
                 });
-                console.log('✅ Workflow listener registered for device:', selectedDevice.device_id);
             } catch (error) {
                 console.warn('Failed to register workflow listener:', error);
             }
@@ -1070,7 +1068,6 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                         device_id: selectedDevice.device_id,
                     }),
                 });
-                console.log('📤 Workflow listener unregistered for device:', selectedDevice.device_id);
             } catch (error) {
                 console.warn('Failed to unregister workflow listener:', error);
             }
@@ -1900,22 +1897,22 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
     const nodeTemplates = [
         // Recorded Actions
-        { type: 'click', label: 'Click', icon: 'cursor', color: '#3b82f6', bgColor: 'rgba(59, 130, 246, 0.15)', description: 'Tap on element', category: 'action' },
-        { type: 'text_input', label: 'Type Text', icon: 'keyboard', color: '#a855f7', bgColor: 'rgba(168, 85, 247, 0.15)', description: 'Input text', category: 'action' },
-        { type: 'scroll', label: 'Scroll', icon: 'scroll', color: '#f59e0b', bgColor: 'rgba(245, 158, 11, 0.15)', description: 'Scroll view', category: 'action' },
-        { type: 'swipe', label: 'Swipe', icon: 'swipe', color: '#06b6d4', bgColor: 'rgba(6, 182, 212, 0.15)', description: 'Swipe gesture', category: 'action' },
-        { type: 'key_event', label: 'Key Press', icon: 'phone', color: '#ec4899', bgColor: 'rgba(236, 72, 153, 0.15)', description: 'Back/Home key', category: 'action' },
+        { type: 'click', label: t('flows.editor.nodes.click'), icon: 'cursor', color: '#3b82f6', bgColor: 'rgba(59, 130, 246, 0.15)', description: t('flows.editor.nodes.click_desc', 'Tap on element'), category: 'action' },
+        { type: 'text_input', label: t('flows.editor.nodes.type_text'), icon: 'keyboard', color: '#a855f7', bgColor: 'rgba(168, 85, 247, 0.15)', description: t('flows.editor.nodes.type_text_desc', 'Input text'), category: 'action' },
+        { type: 'scroll', label: t('flows.editor.nodes.scroll'), icon: 'scroll', color: '#f59e0b', bgColor: 'rgba(245, 158, 11, 0.15)', description: t('flows.editor.nodes.scroll_desc', 'Scroll view'), category: 'action' },
+        { type: 'swipe', label: t('flows.editor.nodes.swipe'), icon: 'swipe', color: '#06b6d4', bgColor: 'rgba(6, 182, 212, 0.15)', description: t('flows.editor.nodes.swipe_desc', 'Swipe gesture'), category: 'action' },
+        { type: 'key_event', label: t('flows.editor.nodes.key_press'), icon: 'phone', color: '#ec4899', bgColor: 'rgba(236, 72, 153, 0.15)', description: t('flows.editor.nodes.key_press_desc', 'Back/Home key'), category: 'action' },
 
         // Logic/Conditions
-        { type: 'condition', label: 'Condition', icon: 'branch', color: '#f97316', bgColor: 'rgba(249, 115, 22, 0.15)', description: 'If/Else branch', category: 'logic' },
-        { type: 'wait', label: 'Wait', icon: 'clock', color: '#6b7280', bgColor: 'rgba(107, 114, 128, 0.15)', description: 'Delay execution', category: 'logic' },
-        { type: 'loop', label: 'Loop', icon: 'loop', color: '#14b8a6', bgColor: 'rgba(20, 184, 166, 0.15)', description: 'Repeat actions', category: 'logic' },
-        { type: 'assert', label: 'Assert', icon: 'check', color: '#22c55e', bgColor: 'rgba(34, 197, 94, 0.15)', description: 'Verify element', category: 'logic' },
+        { type: 'condition', label: t('flows.editor.nodes.condition'), icon: 'branch', color: '#f97316', bgColor: 'rgba(249, 115, 22, 0.15)', description: t('flows.editor.nodes.condition_desc', 'If/Else branch'), category: 'logic' },
+        { type: 'wait', label: t('flows.editor.nodes.wait'), icon: 'clock', color: '#6b7280', bgColor: 'rgba(107, 114, 128, 0.15)', description: t('flows.editor.nodes.wait_desc', 'Delay execution'), category: 'logic' },
+        { type: 'loop', label: t('flows.editor.nodes.loop'), icon: 'loop', color: '#14b8a6', bgColor: 'rgba(20, 184, 166, 0.15)', description: t('flows.editor.nodes.loop_desc', 'Repeat actions'), category: 'logic' },
+        { type: 'assert', label: t('flows.editor.nodes.assert'), icon: 'check', color: '#22c55e', bgColor: 'rgba(34, 197, 94, 0.15)', description: t('flows.editor.nodes.assert_desc', 'Verify element'), category: 'logic' },
 
         // Resources
-        { type: 'file_input', label: 'File Upload', icon: 'upload', color: '#06b6d4', bgColor: 'rgba(6, 182, 212, 0.15)', description: 'Upload files/images', category: 'resource' },
-        { type: 'data_source', label: 'Data Source', icon: 'database', color: '#f59e0b', bgColor: 'rgba(245, 158, 11, 0.15)', description: 'Connect test data', category: 'resource' },
-        { type: 'ai_process', label: 'AI Process', icon: 'sparkles', color: '#ec4899', bgColor: 'rgba(236, 72, 153, 0.15)', description: 'AI integration', category: 'resource' },
+        { type: 'file_input', label: t('flows.editor.nodes.file_upload'), icon: 'upload', color: '#06b6d4', bgColor: 'rgba(6, 182, 212, 0.15)', description: t('flows.editor.nodes.file_upload_desc', 'Upload files/images'), category: 'resource' },
+        { type: 'data_source', label: t('flows.editor.nodes.data_source'), icon: 'database', color: '#f59e0b', bgColor: 'rgba(245, 158, 11, 0.15)', description: t('flows.editor.nodes.data_source_desc', 'Connect test data'), category: 'resource' },
+        { type: 'ai_process', label: t('flows.editor.nodes.ai_process'), icon: 'sparkles', color: '#ec4899', bgColor: 'rgba(236, 72, 153, 0.15)', description: t('flows.editor.nodes.ai_process_desc', 'AI integration'), category: 'resource' },
     ];
 
     const onDragStart = (event, nodeType, nodeLabel, color) => {
@@ -2401,7 +2398,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
                                     </svg>
-                                    Stop
+                                    {t('flows.editor.toolbar.stop')}
                                 </button>
                             </>
                         )}
@@ -2415,7 +2412,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                                     </svg>
-                                    Resume
+                                    {t('flows.editor.toolbar.resume')}
                                 </button>
                                 <button
                                     onClick={stopExecution}
@@ -2424,7 +2421,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
                                     </svg>
-                                    Stop
+                                    {t('flows.editor.toolbar.stop')}
                                 </button>
                             </>
                         )}
@@ -2440,7 +2437,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                 </svg>
-                                Reset
+                                {t('flows.editor.toolbar.reset')}
                             </button>
                         )}
 
@@ -2462,7 +2459,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <span className="hidden sm:inline">Preview</span>
+                            <span className="hidden sm:inline">{t('flows.editor.toolbar.preview')}</span>
                         </button>
 
                         {/* Divider */}
@@ -2498,7 +2495,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                                 </svg>
                             )}
-                            <span className="hidden sm:inline">{saving ? 'Saving' : lastSaved ? 'Saved' : 'Save'}</span>
+                            <span className="hidden sm:inline">{saving ? t('flows.editor.toolbar.saving') : lastSaved ? t('flows.editor.toolbar.saved') : t('flows.editor.toolbar.save')}</span>
                         </button>
 
                         {/* Deploy Button - compact */}
@@ -2507,7 +2504,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <span className="hidden sm:inline">Deploy</span>
+                            <span className="hidden sm:inline">{t('flows.editor.toolbar.deploy')}</span>
                         </button>
 
                         {/* Language Switcher */}
@@ -2580,7 +2577,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                         <div className={`${showSidebar ? 'w-72' : 'w-0'} flex flex-col overflow-hidden transition-all duration-300 border-r ${isDark ? 'bg-[#0f0f0f] border-[#1e1e1e]' : 'bg-white border-gray-200'}`}>
                             {/* Sidebar Header */}
                             <div className={`h-12 px-4 flex items-center justify-between flex-shrink-0 border-b ${isDark ? 'border-[#1e1e1e]' : 'border-gray-200'}`}>
-                                <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Nodes</span>
+                                <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('flows.editor.toolbar.nodes_title')}</span>
                                 <button
                                     onClick={() => setShowSidebar(false)}
                                     className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${isDark ? 'hover:bg-[#1a1a1a] text-gray-500 hover:text-gray-300' : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600'}`}
@@ -2719,11 +2716,11 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 <p className={`text-[10px] font-semibold mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('flows.editor.sidebar.shortcuts').toUpperCase()}</p>
                                 <div className="space-y-1.5 text-[10px]">
                                     <div className={`flex items-center justify-between ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                        <span>Delete</span>
+                                        <span>{t('flows.editor.sidebar.delete')}</span>
                                         <kbd className={`px-1.5 py-0.5 rounded font-mono border text-[9px] ${isDark ? 'bg-[#1a1a1a] text-gray-400 border-[#252525]' : 'bg-white text-gray-500 border-gray-200'}`}>Del</kbd>
                                     </div>
                                     <div className={`flex items-center justify-between ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                        <span>Save</span>
+                                        <span>{t('flows.editor.sidebar.save')}</span>
                                         <kbd className={`px-1.5 py-0.5 rounded font-mono border text-[9px] ${isDark ? 'bg-[#1a1a1a] text-gray-400 border-[#252525]' : 'bg-white text-gray-500 border-gray-200'}`}>⌘S</kbd>
                                     </div>
                                 </div>

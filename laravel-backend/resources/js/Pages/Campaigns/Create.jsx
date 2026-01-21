@@ -67,6 +67,12 @@ export default function Create({ dataCollections = [], workflows = [], devices =
     const [records, setRecords] = useState([]);
     const [loadingRecords, setLoadingRecords] = useState(false);
 
+    // Smart Data Config - Data Pools for in-job loops
+    const [dataPools, setDataPools] = useState([]);
+    // Pool structure: { id, variable, collection_id, field, count, mode }
+    const [recordsPerDevice, setRecordsPerDevice] = useState('');
+
+
     const onlineDevices = devices.filter(d => d.socket_connected || d.status === 'online');
 
     // Load records when collection is selected and picker is opened
@@ -141,6 +147,34 @@ export default function Create({ dataCollections = [], workflows = [], devices =
         }
     };
 
+    // Data Pool management functions
+    const addDataPool = () => {
+        const newPool = {
+            id: Date.now(),
+            variable: '',
+            collection_id: null,
+            field: '',
+            count: 5,
+            mode: 'random'
+        };
+        setDataPools([...dataPools, newPool]);
+    };
+
+    const updateDataPool = (poolId, updates) => {
+        setDataPools(dataPools.map(p => p.id === poolId ? { ...p, ...updates } : p));
+    };
+
+    const removeDataPool = (poolId) => {
+        setDataPools(dataPools.filter(p => p.id !== poolId));
+    };
+
+    // Get collection schema fields for dropdown
+    const getCollectionFields = (collectionId) => {
+        const collection = dataCollections.find(dc => dc.id === collectionId);
+        if (!collection?.schema) return [];
+        return collection.schema.map(s => s.name || s.key).filter(Boolean);
+    };
+
     // Calculate effective record count
     const effectiveRecordCount = useMemo(() => {
         if (!selectedCollection) return 0;
@@ -192,6 +226,26 @@ export default function Create({ dataCollections = [], workflows = [], devices =
             }
         }
 
+        // Build data_config structure
+        let dataConfig = null;
+        if (selectedCollection || dataPools.length > 0) {
+            dataConfig = {
+                primary: selectedCollection ? {
+                    collection_id: selectedCollection.id,
+                    mapping: {} // Auto-map fields by name
+                } : null,
+                pools: dataPools
+                    .filter(p => p.variable && p.collection_id)
+                    .map(p => ({
+                        variable: p.variable,
+                        collection_id: p.collection_id,
+                        field: p.field || null,
+                        count: p.count || 5,
+                        mode: p.mode || 'random'
+                    }))
+            };
+        }
+
         router.post('/campaigns', {
             name,
             description,
@@ -200,6 +254,8 @@ export default function Create({ dataCollections = [], workflows = [], devices =
             device_ids: selectedDevices.map(d => d.id),
             repeat_per_record: repeatPerRecord,
             record_filter: recordFilter,
+            data_config: dataConfig,
+            records_per_device: recordsPerDevice ? parseInt(recordsPerDevice) : null,
         }, {
             onFinish: () => setIsSubmitting(false),
         });
@@ -581,6 +637,129 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                             )}
                                         </div>
                                     )}
+                                </div>
+
+                                {/* Data Pools - For In-Job Loops */}
+                                <div className={`p-5 rounded-xl ${isDark ? 'bg-violet-500/10 border border-violet-500/20' : 'bg-violet-50'}`}>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-2xl">🔄</span>
+                                            <div>
+                                                <p className={`font-medium ${isDark ? 'text-violet-300' : 'text-violet-800'}`}>Dữ Liệu Cho Vòng Lặp (Pool)</p>
+                                                <p className={`text-xs ${isDark ? 'text-violet-400/70' : 'text-violet-600'}`}>Comments, media, v.v. dùng lặp trong mỗi job</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={addDataPool}
+                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium ${isDark ? 'bg-violet-500/20 text-violet-300 hover:bg-violet-500/30' : 'bg-violet-100 text-violet-600 hover:bg-violet-200'}`}
+                                        >
+                                            + Thêm Pool
+                                        </button>
+                                    </div>
+
+                                    {dataPools.length === 0 ? (
+                                        <p className={`text-sm text-center py-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                            Chưa có pool nào. Thêm nếu workflow cần loop qua nhiều comments/media.
+                                        </p>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {dataPools.map((pool, index) => (
+                                                <div key={pool.id} className={`p-4 rounded-xl ${isDark ? 'bg-white/5' : 'bg-white'}`}>
+                                                    <div className="flex items-start gap-3">
+                                                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${isDark ? 'bg-violet-500/30 text-violet-300' : 'bg-violet-100 text-violet-600'}`}>
+                                                            {index + 1}
+                                                        </span>
+                                                        <div className="flex-1 grid grid-cols-2 gap-3">
+                                                            <div>
+                                                                <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Tên biến</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={pool.variable}
+                                                                    onChange={e => updateDataPool(pool.id, { variable: e.target.value })}
+                                                                    placeholder="vd: comments"
+                                                                    className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200'} focus:outline-none`}
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Collection</label>
+                                                                <select
+                                                                    value={pool.collection_id || ''}
+                                                                    onChange={e => updateDataPool(pool.id, { collection_id: parseInt(e.target.value) || null, field: '' })}
+                                                                    className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200'} focus:outline-none`}
+                                                                >
+                                                                    <option value="">Chọn...</option>
+                                                                    {dataCollections.map(dc => (
+                                                                        <option key={dc.id} value={dc.id}>{dc.name}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Field (tuỳ chọn)</label>
+                                                                <select
+                                                                    value={pool.field || ''}
+                                                                    onChange={e => updateDataPool(pool.id, { field: e.target.value })}
+                                                                    className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200'} focus:outline-none`}
+                                                                    disabled={!pool.collection_id}
+                                                                >
+                                                                    <option value="">Tất cả fields</option>
+                                                                    {getCollectionFields(pool.collection_id).map(f => (
+                                                                        <option key={f} value={f}>{f}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                            <div className="flex gap-2">
+                                                                <div className="flex-1">
+                                                                    <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Số lượng</label>
+                                                                    <input
+                                                                        type="number"
+                                                                        value={pool.count}
+                                                                        onChange={e => updateDataPool(pool.id, { count: Math.max(1, parseInt(e.target.value) || 1) })}
+                                                                        min={1}
+                                                                        className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200'} focus:outline-none`}
+                                                                    />
+                                                                </div>
+                                                                <div className="flex-1">
+                                                                    <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Chế độ</label>
+                                                                    <select
+                                                                        value={pool.mode}
+                                                                        onChange={e => updateDataPool(pool.id, { mode: e.target.value })}
+                                                                        className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200'} focus:outline-none`}
+                                                                    >
+                                                                        <option value="random">🔀 Random</option>
+                                                                        <option value="sequential">📋 Tuần tự</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => removeDataPool(pool.id)}
+                                                            className={`w-8 h-8 rounded-lg text-red-400 hover:bg-red-500/20`}
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Records Per Device */}
+                                <div className={`p-5 rounded-xl flex items-center justify-between ${isDark ? 'bg-emerald-500/10' : 'bg-emerald-50'}`}>
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-2xl">📱</span>
+                                        <div>
+                                            <p className={`font-medium ${isDark ? 'text-emerald-300' : 'text-emerald-800'}`}>Records/Thiết bị</p>
+                                            <p className={`text-xs ${isDark ? 'text-emerald-400/70' : 'text-emerald-600'}`}>Giới hạn số record mỗi thiết bị (để trống = chia đều)</p>
+                                        </div>
+                                    </div>
+                                    <input
+                                        type="number"
+                                        value={recordsPerDevice}
+                                        onChange={e => setRecordsPerDevice(e.target.value)}
+                                        placeholder="Auto"
+                                        className={`w-24 px-3 py-2 rounded-lg border text-center ${isDark ? 'bg-white/10 border-white/20 text-white placeholder:text-gray-500' : 'bg-white border-gray-300 text-gray-900'} focus:outline-none`}
+                                    />
                                 </div>
 
                                 {/* Repeat Config */}

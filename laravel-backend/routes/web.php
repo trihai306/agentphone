@@ -23,6 +23,10 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TopupController;
 use App\Http\Controllers\UserDeviceController;
 use App\Http\Controllers\WorkflowJobController;
+use App\Http\Controllers\MarketplaceController;
+use App\Http\Controllers\WalletController;
+use App\Http\Controllers\WithdrawalController;
+use App\Http\Controllers\UserBankAccountController;
 use Illuminate\Support\Facades\Route;
 
 // Locale Route (available for all users)
@@ -91,6 +95,18 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/topup/process', [TopupController::class, 'process'])->name('topup.process');
     Route::get('/topup/{topup}/payment', [TopupController::class, 'payment'])->name('topup.payment');
     Route::get('/topup/history', [TopupController::class, 'history'])->name('topup.history');
+
+    // Wallet & Transaction History
+    Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
+
+    // Withdrawal Routes
+    Route::get('/withdraw', [WithdrawalController::class, 'index'])->name('withdraw.index');
+    Route::post('/withdraw', [WithdrawalController::class, 'store'])->name('withdraw.store');
+    Route::post('/withdraw/{transaction}/cancel', [WithdrawalController::class, 'cancel'])->name('withdraw.cancel');
+
+    // User Bank Accounts
+    Route::resource('bank-accounts', UserBankAccountController::class)->except(['show', 'edit', 'create']);
+    Route::post('/bank-accounts/{bank_account}/set-default', [UserBankAccountController::class, 'setDefault'])->name('bank-accounts.setDefault');
 
     // Notification Routes
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -206,5 +222,16 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/campaigns/{campaign}', [\App\Http\Controllers\CampaignController::class, 'destroy'])->name('campaigns.destroy');
     Route::post('/campaigns/{campaign}/run', [\App\Http\Controllers\CampaignController::class, 'run'])->name('campaigns.run');
     Route::post('/campaigns/{campaign}/pause', [\App\Http\Controllers\CampaignController::class, 'pause'])->name('campaigns.pause');
-});
 
+    // Marketplace Routes
+    Route::prefix('marketplace')->name('marketplace.')->group(function () {
+        Route::get('/', [MarketplaceController::class, 'index'])->name('index');
+        Route::get('/my-listings', [MarketplaceController::class, 'myListings'])->name('my-listings');
+        Route::post('/publish', [MarketplaceController::class, 'store'])->name('store');
+        Route::get('/{listing}', [MarketplaceController::class, 'show'])->name('show');
+        Route::put('/{listing}', [MarketplaceController::class, 'update'])->name('update');
+        Route::delete('/{listing}', [MarketplaceController::class, 'destroy'])->name('destroy');
+        Route::post('/{listing}/purchase', [MarketplaceController::class, 'purchase'])->name('purchase');
+        Route::post('/{listing}/rate', [MarketplaceController::class, 'rate'])->name('rate');
+    });
+});

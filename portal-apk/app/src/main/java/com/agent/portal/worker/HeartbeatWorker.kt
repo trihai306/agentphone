@@ -61,7 +61,7 @@ class HeartbeatWorker(
         val apiUrl = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
             "http://10.0.2.2:8000/api"
         } else {
-            "https://laravel-backend.test/api"
+            com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
         }
         
         // Build request payload

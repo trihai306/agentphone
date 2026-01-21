@@ -806,7 +806,6 @@ function ConditionConfig({ data, updateData, updateMultipleData, isDark, upstrea
     ];
 
     const handleElementSelect = (element) => {
-        console.log('🎯 ConditionConfig handleElementSelect:', element);
 
         // Calculate center from bounds for potential coordinate-based actions
         let centerX, centerY;
@@ -920,16 +919,16 @@ function ConditionConfig({ data, updateData, updateMultipleData, isDark, upstrea
                                 }`}
                         >
                             <span>📱</span>
-                            Chọn Element từ Thiết bị
+                            {t('flows.editor.config.pick_element_from_device', { defaultValue: 'Chọn Element từ Thiết bị' })}
                         </button>
                         <p className={`text-[10px] mt-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Click để scan màn hình và chọn element cần kiểm tra
+                            {t('flows.editor.config.pick_element_hint', { defaultValue: 'Click để scan màn hình và chọn element cần kiểm tra' })}
                         </p>
                     </ConfigSection>
 
                     {/* Selected Element Display */}
                     {(data.resourceId || data.text) && (
-                        <ConfigSection title={t('flows.editor.config.element_selected')} isDark={isDark}>
+                        <ConfigSection title={t('flows.editor.config.selected_element', { defaultValue: 'Element Selected' })} isDark={isDark}>
                             <div className={`p-3 rounded-lg text-xs space-y-1 ${isDark ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-emerald-50 border border-emerald-200'}`}>
                                 {data.resourceId && (
                                     <div className="flex items-center gap-2">
@@ -1016,7 +1015,7 @@ function ConditionConfig({ data, updateData, updateMultipleData, isDark, upstrea
                                 }`}
                         />
                         <p className={`text-[10px] mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Thời gian tối đa để đợi element
+                            {t('flows.editor.config.timeout_desc', { defaultValue: 'Max wait time for element' })}
                         </p>
                     </ConfigSection>
                 </>
@@ -1062,7 +1061,7 @@ function AIConfig({ data, updateData, isDark, upstreamVariables, loopContext }) 
                 <VariableInput
                     value={data.prompt || ''}
                     onChange={(val) => updateData('prompt', val)}
-                    placeholder="Analyze this data: {{item.content}}"
+                    placeholder={t('flows.editor.config.prompt_placeholder', { defaultValue: 'Analyze this data: {{item.content}}' })}
                     multiline
                     availableVariables={upstreamVariables}
                     loopContext={loopContext}
@@ -1085,23 +1084,24 @@ function AIConfig({ data, updateData, isDark, upstreamVariables, loopContext }) 
 }
 
 function DataSourceConfig({ data, isDark }) {
+    const { t } = useTranslation();
     return (
         <div className={`p-3 rounded-lg ${isDark ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
             <div className="flex items-center gap-2 mb-2">
                 <span className="text-2xl">{data.collectionIcon || '📊'}</span>
                 <div>
                     <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        {data.collectionName || 'No collection selected'}
+                        {data.collectionName || t('flows.editor.config.no_collection_selected', { defaultValue: 'No collection selected' })}
                     </p>
                     <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        {data.recordCount || 0} records
+                        {data.recordCount || 0} {t('flows.editor.config.records', { defaultValue: 'records' })}
                     </p>
                 </div>
             </div>
             {data.schema?.length > 0 && (
                 <div className="mt-3 space-y-1">
                     <p className={`text-[10px] uppercase font-semibold ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        Output Fields:
+                        {t('flows.editor.config.output_fields', { defaultValue: 'Output Fields:' })}
                     </p>
                     {data.schema.slice(0, 5).map((field, i) => (
                         <div key={i} className="flex items-center gap-2 text-xs">
@@ -1141,7 +1141,7 @@ function WaitConfig({ data, updateData, isDark }) {
                             }`}
                     />
                     <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        = {(durationMs / 1000).toFixed(1)} giây
+                        = {(durationMs / 1000).toFixed(1)} {t('flows.editor.config.seconds')}
                     </p>
                 </div>
             </ConfigSection>
@@ -1245,10 +1245,10 @@ function ScrollActionConfig({ data, updateData, isDark }) {
     const amount = data.amount || data.actionData?.amount || 1;
 
     const directionOptions = [
-        { value: 'up', icon: '↑', label: t('flows.editor.scroll.up', { defaultValue: 'Up' }), color: '#22c55e', desc: 'Scroll content down' },
-        { value: 'down', icon: '↓', label: t('flows.editor.scroll.down', { defaultValue: 'Down' }), color: '#3b82f6', desc: 'Scroll content up' },
-        { value: 'left', icon: '←', label: t('flows.editor.scroll.left', { defaultValue: 'Left' }), color: '#a855f7', desc: 'Scroll content right' },
-        { value: 'right', icon: '→', label: t('flows.editor.scroll.right', { defaultValue: 'Right' }), color: '#f59e0b', desc: 'Scroll content left' },
+        { value: 'up', icon: '↑', label: t('flows.editor.scroll.up', { defaultValue: 'Up' }), color: '#22c55e', desc: t('flows.editor.scroll.desc_up', { defaultValue: 'Scroll content down' }) },
+        { value: 'down', icon: '↓', label: t('flows.editor.scroll.down', { defaultValue: 'Down' }), color: '#3b82f6', desc: t('flows.editor.scroll.desc_down', { defaultValue: 'Scroll content up' }) },
+        { value: 'left', icon: '←', label: t('flows.editor.scroll.left', { defaultValue: 'Left' }), color: '#a855f7', desc: t('flows.editor.scroll.desc_left', { defaultValue: 'Scroll content right' }) },
+        { value: 'right', icon: '→', label: t('flows.editor.scroll.right', { defaultValue: 'Right' }), color: '#f59e0b', desc: t('flows.editor.scroll.desc_right', { defaultValue: 'Scroll content left' }) },
     ];
 
     const currentDir = directionOptions.find(d => d.value === direction) || directionOptions[1];
@@ -1418,7 +1418,7 @@ function ScrollActionConfig({ data, updateData, isDark }) {
 function OpenAppActionConfig({ data, updateData, isDark }) {
     return (
         <>
-            <ConfigSection title="Package Name" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.package_name', { defaultValue: 'Package Name' })} isDark={isDark}>
                 <input
                     type="text"
                     value={data.packageName || data.package_name || ''}
@@ -1431,7 +1431,7 @@ function OpenAppActionConfig({ data, updateData, isDark }) {
                 />
             </ConfigSection>
 
-            <ConfigSection title="Quick Select" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.quick_select', { defaultValue: 'Quick Select' })} isDark={isDark}>
                 <div className="grid grid-cols-2 gap-2">
                     {[
                         { name: 'Facebook', pkg: 'com.facebook.katana', icon: '📘' },
@@ -1454,7 +1454,7 @@ function OpenAppActionConfig({ data, updateData, isDark }) {
                 </div>
             </ConfigSection>
 
-            <ConfigSection title="Startup Wait (ms)" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.startup_wait', { defaultValue: 'Startup Wait (ms)' })} isDark={isDark}>
                 <input
                     type="number"
                     min="1000"
@@ -1479,7 +1479,7 @@ function OpenAppActionConfig({ data, updateData, isDark }) {
                     ))}
                 </div>
                 <p className={`text-[10px] mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    Wait for app to fully load
+                    {t('flows.editor.config.startup_wait_desc', { defaultValue: 'Wait for app to fully load' })}
                 </p>
             </ConfigSection>
         </>
@@ -1491,17 +1491,10 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
     const { t } = useTranslation();
     const selectorPriority = data.selectorPriority || 'auto';
 
-    // Debug: log data to see what we have
-    console.log('[NodeConfigPanel] TapActionConfig data:', data);
-
     const screenshotUrl = data.screenshotUrl || data.screenshot_url;
 
     // Handler for element selection from picker
     const handleElementSelect = (element) => {
-        console.log('🎯 TapActionConfig handleElementSelect called:', element);
-        console.log('🔑 resourceId:', element.resourceId);
-        console.log('📝 text:', element.text);
-        console.log('📦 bounds:', element.bounds);
 
         // Calculate center coordinates from bounds if not directly provided
         let centerX = element.centerX || element.x;
@@ -1517,8 +1510,6 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
                 centerY = Math.round((b.top + b.bottom) / 2);
             }
         }
-
-        console.log('📍 Calculated center:', centerX, centerY);
 
         // Map strategy from ElementPicker to selectorPriority
         let selectorPriorityValue = 'auto';
@@ -1552,14 +1543,13 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
         });
 
         setShowPicker(false);
-        console.log('✅ Element selection complete, strategy:', selectorPriorityValue);
     };
 
     return (
         <>
             {/* Screenshot Preview with Tap Indicator */}
             {screenshotUrl && (
-                <ConfigSection title="Interaction Screenshot" isDark={isDark}>
+                <ConfigSection title={t('flows.editor.config.interaction_screenshot', { defaultValue: 'Interaction Screenshot' })} isDark={isDark}>
                     <div className="relative w-full rounded-lg overflow-hidden border border-gray-500/20"
                         style={{ aspectRatio: '9/19.5' }}>
                         <img
@@ -1590,7 +1580,7 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
             )}
 
             {/* Element Picker Button */}
-            <ConfigSection title="🔍 Element Inspector" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.element_inspector', { defaultValue: '🔍 Element Inspector' })} isDark={isDark}>
                 <button
                     onClick={() => setShowPicker(true)}
                     className={`w-full px-4 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${isDark
@@ -1599,20 +1589,20 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
                         }`}
                 >
                     <span>📱</span>
-                    Chọn Element từ Thiết bị
+                    {t('flows.editor.config.pick_element_from_device', { defaultValue: 'Chọn Element từ Thiết bị' })}
                 </button>
                 <p className={`text-[10px] mt-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    Click để scan màn hình và chọn element cần tương tác
+                    {t('flows.editor.config.pick_element_hint', { defaultValue: 'Click để scan màn hình và chọn element cần tương tác' })}
                 </p>
             </ConfigSection>
 
-            <ConfigSection title="Element Selector" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.element_selector', { defaultValue: 'Element Selector' })} isDark={isDark}>
                 <div className="space-y-2">
                     {[
-                        { value: 'auto', label: '🧠 Auto (Smart)', desc: 'ID → Text → Icon' },
-                        { value: 'id', label: '🏷️ Resource ID', desc: 'Most reliable' },
-                        { value: 'text', label: '📝 Text Content', desc: 'Flexible' },
-                        { value: 'icon', label: '🖼️ Icon Match', desc: 'Visual detection' },
+                        { value: 'auto', label: t('flows.editor.config.selector_auto', { defaultValue: '🧠 Auto (Smart)' }), desc: t('flows.editor.config.selector_auto_desc', { defaultValue: 'ID → Text → Icon' }) },
+                        { value: 'id', label: t('flows.editor.config.selector_id', { defaultValue: '🏷️ Resource ID' }), desc: t('flows.editor.config.most_reliable', { defaultValue: 'Most reliable' }) },
+                        { value: 'text', label: t('flows.editor.config.selector_text', { defaultValue: '📝 Text Content' }), desc: t('flows.editor.config.flexible', { defaultValue: 'Flexible' }) },
+                        { value: 'icon', label: t('flows.editor.config.selector_icon', { defaultValue: '🖼️ Icon Match' }), desc: t('flows.editor.config.visual_detection', { defaultValue: 'Visual detection' }) },
                     ].map(opt => (
                         <button
                             key={opt.value}
@@ -1632,7 +1622,7 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
             </ConfigSection>
 
             {/* Comprehensive Element Details */}
-            <ConfigSection title="Element Details" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.element_details', { defaultValue: 'Element Details' })} isDark={isDark}>
                 <div className={`rounded-lg overflow-hidden border ${isDark ? 'border-[#2a2a2a]' : 'border-gray-200'}`}>
                     {/* ID Section */}
                     {(data.resourceId || data.resource_id) && (
@@ -1649,16 +1639,16 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
                     {/* Text Section - EDITABLE */}
                     <div className={`px-3 py-2 border-b ${isDark ? 'border-[#2a2a2a]' : 'border-gray-100'}`}>
                         <div className="flex items-center justify-between mb-1">
-                            <span className="text-purple-500 text-[10px] font-bold">TEXT (Editable)</span>
+                            <span className="text-purple-500 text-[10px] font-bold">{t('flows.editor.config.text_editable', { defaultValue: 'TEXT (Editable)' })}</span>
                             <span className={`text-[9px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                Hỗ trợ {'{{'} biến {'}}'}
+                                {t('flows.editor.config.variable_support', { defaultValue: 'Supports {{ variable }}' })}
                             </span>
                         </div>
                         <input
                             type="text"
                             value={data.text || ''}
                             onChange={(e) => updateData('text', e.target.value)}
-                            placeholder="Nhập text để tìm element..."
+                            placeholder={t('flows.editor.config.enter_text_to_find', { defaultValue: 'Enter text to find element...' })}
                             className={`w-full px-2 py-1.5 text-xs rounded border ${isDark
                                 ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-gray-600'
                                 : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'
@@ -1669,16 +1659,16 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
                     {/* Content Description Section - EDITABLE */}
                     <div className={`px-3 py-2 border-b ${isDark ? 'border-[#2a2a2a]' : 'border-gray-100'}`}>
                         <div className="flex items-center justify-between mb-1">
-                            <span className="text-green-500 text-[10px] font-bold">CONTENT DESC (Editable)</span>
+                            <span className="text-green-500 text-[10px] font-bold">{t('flows.editor.config.content_desc_editable', { defaultValue: 'CONTENT DESC (Editable)' })}</span>
                             <span className={`text-[9px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                Hỗ trợ {'{{'} biến {'}}'}
+                                {t('flows.editor.config.variable_support', { defaultValue: 'Supports {{ variable }}' })}
                             </span>
                         </div>
                         <input
                             type="text"
                             value={data.contentDescription || ''}
                             onChange={(e) => updateData('contentDescription', e.target.value)}
-                            placeholder="Nhập content description..."
+                            placeholder={t('flows.editor.config.enter_content_desc', { defaultValue: 'Enter content description...' })}
                             className={`w-full px-2 py-1.5 text-xs rounded border ${isDark
                                 ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-gray-600'
                                 : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'
@@ -1690,7 +1680,7 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
                     {(data.className || data.class_name) && (
                         <div className={`px-3 py-2 border-b ${isDark ? 'border-[#2a2a2a]' : 'border-gray-100'}`}>
                             <div className="flex items-center gap-2 mb-1">
-                                <span className="text-orange-500 text-[10px] font-bold">CLASS</span>
+                                <span className="text-orange-500 text-[10px] font-bold">{t('flows.editor.config.class', { defaultValue: 'CLASS' })}</span>
                             </div>
                             <code className={`text-xs break-all ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                 {data.className || data.class_name}
@@ -1702,7 +1692,7 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
                     {(data.packageName || data.package_name) && (
                         <div className={`px-3 py-2 border-b ${isDark ? 'border-[#2a2a2a]' : 'border-gray-100'}`}>
                             <div className="flex items-center gap-2 mb-1">
-                                <span className="text-blue-500 text-[10px] font-bold">PACKAGE</span>
+                                <span className="text-blue-500 text-[10px] font-bold">{t('flows.editor.config.package', { defaultValue: 'PACKAGE' })}</span>
                             </div>
                             <code className={`text-xs break-all ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                 {data.packageName || data.package_name}
@@ -1714,7 +1704,7 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
                     {data.bounds && (
                         <div className={`px-3 py-2 border-b ${isDark ? 'border-[#2a2a2a]' : 'border-gray-100'}`}>
                             <div className="flex items-center gap-2 mb-1">
-                                <span className="text-pink-500 text-[10px] font-bold">BOUNDS</span>
+                                <span className="text-pink-500 text-[10px] font-bold">{t('flows.editor.config.bounds', { defaultValue: 'BOUNDS' })}</span>
                             </div>
                             <code className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                 {typeof data.bounds === 'object' && data.bounds !== null
@@ -1728,10 +1718,10 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
                     {data.image && (
                         <div className={`px-3 py-2 ${isDark ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-violet-500 text-[10px] font-bold">🖼️ ICON TEMPLATE</span>
+                                <span className="text-violet-500 text-[10px] font-bold">{t('flows.editor.config.icon_template', { defaultValue: '🖼️ ICON TEMPLATE' })}</span>
                                 {selectorPriority === 'icon' && (
                                     <span className={`text-[9px] px-1.5 py-0.5 rounded ${isDark ? 'bg-violet-500/20 text-violet-400' : 'bg-violet-100 text-violet-600'}`}>
-                                        Active
+                                        {t('flows.editor.config.active', { defaultValue: 'Active' })}
                                     </span>
                                 )}
                             </div>
@@ -1760,10 +1750,10 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
                                 </div>
                                 <div className="flex-1">
                                     <p className={`text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                        This icon will be detected on screen at runtime using template matching.
+                                        {t('flows.editor.config.icon_template_help', { defaultValue: 'This icon will be detected on screen at runtime using template matching.' })}
                                     </p>
                                     <p className={`text-[9px] mt-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                        💡 Works even if UI layout changes
+                                        {t('flows.editor.config.icon_template_tip', { defaultValue: '💡 Works even if UI layout changes' })}
                                     </p>
                                 </div>
                             </div>
@@ -1774,7 +1764,7 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
                     {(data.x || data.y) && selectorPriority !== 'icon' && (
                         <div className={`px-3 py-2 ${isDark ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
                             <div className="flex items-center gap-2 mb-1">
-                                <span className="text-amber-500 text-[10px] font-bold">📍 FALLBACK COORDS</span>
+                                <span className="text-amber-500 text-[10px] font-bold">{t('flows.editor.config.fallback_coords', { defaultValue: '📍 FALLBACK COORDS' })}</span>
                             </div>
                             <div className="flex gap-4 text-xs font-mono">
                                 <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>
@@ -1791,7 +1781,7 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
                     {(data.isClickable !== undefined || data.isEditable !== undefined || data.isScrollable !== undefined || data.isCheckable !== undefined) && (
                         <div className={`px-3 py-2 border-t ${isDark ? 'border-[#2a2a2a]' : 'border-gray-100'}`}>
                             <div className="flex items-center gap-2 mb-2">
-                                <span className={`text-[10px] font-bold ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>FLAGS</span>
+                                <span className={`text-[10px] font-bold ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('flows.editor.config.flags', { defaultValue: 'FLAGS' })}</span>
                             </div>
                             <div className="flex flex-wrap gap-1.5">
                                 {data.isClickable && (
@@ -1826,19 +1816,19 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
                     {/* No data case */}
                     {!data.resourceId && !data.resource_id && !data.text && !data.contentDescription && !data.x && !data.coordinates?.x && (
                         <div className={`px-3 py-4 text-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            <p className="text-xs">No element data recorded</p>
+                            <p className="text-xs">{t('flows.editor.config.no_element_data', { defaultValue: 'No element data recorded' })}</p>
                         </div>
                     )}
                 </div>
             </ConfigSection>
 
             {nodeType === 'text_input' && (
-                <ConfigSection title="Input Text" isDark={isDark}>
+                <ConfigSection title={t('flows.editor.config.input_text_label', { defaultValue: 'Input Text' })} isDark={isDark}>
                     <input
                         type="text"
                         value={data.inputText || data.text || ''}
                         onChange={(e) => updateData('inputText', e.target.value)}
-                        placeholder="Text to type or {{variable}}..."
+                        placeholder={t('flows.editor.config.input_text_placeholder', { defaultValue: 'Text to type or {{variable}}...' })}
                         className={`w-full px-3 py-2 text-sm rounded-lg border font-mono ${isDark
                             ? 'bg-[#0f0f0f] border-[#2a2a2a] text-white'
                             : 'bg-white border-gray-200 text-gray-900'
@@ -1857,7 +1847,7 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
                         return (
                             <div className="mt-2">
                                 <p className={`text-[10px] mb-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    📊 Chọn field từ <span className="text-amber-400 font-medium">{connectedSource?.data?.collectionName || 'Data Source'}</span>:
+                                    {t('flows.editor.config.select_field_from', { defaultValue: '📊 Select field from' })} <span className="text-amber-400 font-medium">{connectedSource?.data?.collectionName || 'Data Source'}</span>:
                                 </p>
                                 <div className="flex flex-wrap gap-1">
                                     {schema.map((field, idx) => (
@@ -1874,7 +1864,7 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
                                     ))}
                                 </div>
                                 <p className={`text-[9px] mt-1.5 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                    💡 Click để chèn biến vào ô nhập liệu
+                                    {t('flows.editor.config.click_to_insert_variable', { defaultValue: '💡 Click to insert variable into input' })}
                                 </p>
                             </div>
                         );
@@ -1883,13 +1873,13 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
                     {/* Hint when no data source connected */}
                     {!data.dataSourceNodeId && (
                         <p className={`text-[10px] mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            💡 Kết nối Data Source để chọn field từ dropdown
+                            {t('flows.editor.config.connect_data_source_hint', { defaultValue: '💡 Connect Data Source to select field from dropdown' })}
                         </p>
                     )}
                 </ConfigSection>
             )}
 
-            <ConfigSection title="Wait After (ms)" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.wait_after_ms', { defaultValue: 'Wait After (ms)' })} isDark={isDark}>
                 <input
                     type="number"
                     min="100"
@@ -1916,16 +1906,16 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
             </ConfigSection>
 
             {/* Smart Matching Toggle */}
-            <ConfigSection title="Smart Matching" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.smart_matching', { defaultValue: 'Smart Matching' })} isDark={isDark}>
                 <div className="space-y-3">
                     {/* Fuzzy Match Toggle */}
                     <div className="flex items-center justify-between">
                         <div>
                             <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                Fuzzy Matching
+                                {t('flows.editor.config.fuzzy_matching', { defaultValue: 'Fuzzy Matching' })}
                             </p>
                             <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Allow partial text/description matches
+                                {t('flows.editor.config.fuzzy_matching_desc', { defaultValue: 'Allow partial text/description matches' })}
                             </p>
                         </div>
                         <button
@@ -1940,10 +1930,10 @@ function TapActionConfig({ data, updateData, updateMultipleData, isDark, nodeTyp
                     <div className="flex items-center justify-between">
                         <div>
                             <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                Ignore Case
+                                {t('flows.editor.config.ignore_case', { defaultValue: 'Ignore Case' })}
                             </p>
                             <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Case-insensitive text matching
+                                {t('flows.editor.config.ignore_case_desc', { defaultValue: 'Case-insensitive text matching' })}
                             </p>
                         </div>
                         <button
@@ -1975,51 +1965,51 @@ function KeyActionConfig({ data, updateData, isDark, nodeType }) {
     // Available hardware keys with icons and categories
     const keyGroups = [
         {
-            label: 'Navigation',
+            label: t('flows.editor.config.keys.group_navigation', { defaultValue: 'Navigation' }),
             keys: [
-                { value: 'KEYCODE_BACK', label: 'Back', icon: '←', desc: 'Go back' },
-                { value: 'KEYCODE_HOME', label: 'Home', icon: '🏠', desc: 'Go to home screen' },
-                { value: 'KEYCODE_APP_SWITCH', label: 'Recent Apps', icon: '📑', desc: 'Show recent apps' },
-                { value: 'KEYCODE_MENU', label: 'Menu', icon: '☰', desc: 'Open menu' },
+                { value: 'KEYCODE_BACK', label: t('flows.editor.config.keys.back', { defaultValue: 'Back' }), icon: '←', desc: t('flows.editor.config.keys.desc_back', { defaultValue: 'Go back' }) },
+                { value: 'KEYCODE_HOME', label: t('flows.editor.config.keys.home', { defaultValue: 'Home' }), icon: '🏠', desc: t('flows.editor.config.keys.desc_home', { defaultValue: 'Go to home screen' }) },
+                { value: 'KEYCODE_APP_SWITCH', label: t('flows.editor.config.keys.recent_apps', { defaultValue: 'Recent Apps' }), icon: '📑', desc: t('flows.editor.config.keys.desc_recent_apps', { defaultValue: 'Show recent apps' }) },
+                { value: 'KEYCODE_MENU', label: t('flows.editor.config.keys.menu', { defaultValue: 'Menu' }), icon: '☰', desc: t('flows.editor.config.keys.desc_menu', { defaultValue: 'Open menu' }) },
             ]
         },
         {
-            label: 'Input',
+            label: t('flows.editor.config.keys.group_input', { defaultValue: 'Input' }),
             keys: [
-                { value: 'KEYCODE_ENTER', label: 'Enter', icon: '⏎', desc: 'Submit/Confirm' },
-                { value: 'KEYCODE_DEL', label: 'Delete', icon: '⌫', desc: 'Delete character' },
-                { value: 'KEYCODE_SPACE', label: 'Space', icon: '␣', desc: 'Space character' },
-                { value: 'KEYCODE_TAB', label: 'Tab', icon: '⇥', desc: 'Tab key' },
-                { value: 'KEYCODE_ESCAPE', label: 'Escape', icon: 'Esc', desc: 'Escape/Cancel' },
+                { value: 'KEYCODE_ENTER', label: t('flows.editor.config.keys.enter', { defaultValue: 'Enter' }), icon: '⏎', desc: t('flows.editor.config.keys.desc_enter', { defaultValue: 'Submit/Confirm' }) },
+                { value: 'KEYCODE_DEL', label: t('flows.editor.config.keys.delete', { defaultValue: 'Delete' }), icon: '⌫', desc: t('flows.editor.config.keys.desc_delete', { defaultValue: 'Delete character' }) },
+                { value: 'KEYCODE_SPACE', label: t('flows.editor.config.keys.space', { defaultValue: 'Space' }), icon: '␣', desc: t('flows.editor.config.keys.desc_space', { defaultValue: 'Space character' }) },
+                { value: 'KEYCODE_TAB', label: t('flows.editor.config.keys.tab', { defaultValue: 'Tab' }), icon: '⇥', desc: t('flows.editor.config.keys.desc_tab', { defaultValue: 'Tab key' }) },
+                { value: 'KEYCODE_ESCAPE', label: t('flows.editor.config.keys.escape', { defaultValue: 'Escape' }), icon: 'Esc', desc: t('flows.editor.config.keys.desc_escape', { defaultValue: 'Escape/Cancel' }) },
             ]
         },
         {
-            label: 'D-Pad',
+            label: t('flows.editor.config.keys.group_dpad', { defaultValue: 'D-Pad' }),
             keys: [
-                { value: 'KEYCODE_DPAD_UP', label: 'Up', icon: '↑', desc: 'Navigate up' },
-                { value: 'KEYCODE_DPAD_DOWN', label: 'Down', icon: '↓', desc: 'Navigate down' },
-                { value: 'KEYCODE_DPAD_LEFT', label: 'Left', icon: '←', desc: 'Navigate left' },
-                { value: 'KEYCODE_DPAD_RIGHT', label: 'Right', icon: '→', desc: 'Navigate right' },
-                { value: 'KEYCODE_DPAD_CENTER', label: 'Center', icon: '⊙', desc: 'Select/Confirm' },
+                { value: 'KEYCODE_DPAD_UP', label: t('flows.editor.config.keys.up', { defaultValue: 'Up' }), icon: '↑', desc: t('flows.editor.config.keys.desc_up', { defaultValue: 'Navigate up' }) },
+                { value: 'KEYCODE_DPAD_DOWN', label: t('flows.editor.config.keys.down', { defaultValue: 'Down' }), icon: '↓', desc: t('flows.editor.config.keys.desc_down', { defaultValue: 'Navigate down' }) },
+                { value: 'KEYCODE_DPAD_LEFT', label: t('flows.editor.config.keys.left', { defaultValue: 'Left' }), icon: '←', desc: t('flows.editor.config.keys.desc_left', { defaultValue: 'Navigate left' }) },
+                { value: 'KEYCODE_DPAD_RIGHT', label: t('flows.editor.config.keys.right', { defaultValue: 'Right' }), icon: '→', desc: t('flows.editor.config.keys.desc_right', { defaultValue: 'Navigate right' }) },
+                { value: 'KEYCODE_DPAD_CENTER', label: t('flows.editor.config.keys.center', { defaultValue: 'Center' }), icon: '⊙', desc: t('flows.editor.config.keys.desc_center', { defaultValue: 'Select/Confirm' }) },
             ]
         },
         {
-            label: 'Media',
+            label: t('flows.editor.config.keys.group_media', { defaultValue: 'Media' }),
             keys: [
-                { value: 'KEYCODE_VOLUME_UP', label: 'Volume +', icon: '🔊', desc: 'Increase volume' },
-                { value: 'KEYCODE_VOLUME_DOWN', label: 'Volume -', icon: '🔉', desc: 'Decrease volume' },
-                { value: 'KEYCODE_VOLUME_MUTE', label: 'Mute', icon: '🔇', desc: 'Mute audio' },
-                { value: 'KEYCODE_MEDIA_PLAY_PAUSE', label: 'Play/Pause', icon: '⏯️', desc: 'Toggle play' },
-                { value: 'KEYCODE_MEDIA_NEXT', label: 'Next', icon: '⏭️', desc: 'Next track' },
-                { value: 'KEYCODE_MEDIA_PREVIOUS', label: 'Previous', icon: '⏮️', desc: 'Previous track' },
+                { value: 'KEYCODE_VOLUME_UP', label: t('flows.editor.config.keys.volume_up', { defaultValue: 'Volume +' }), icon: '🔊', desc: t('flows.editor.config.keys.desc_volume_up', { defaultValue: 'Increase volume' }) },
+                { value: 'KEYCODE_VOLUME_DOWN', label: t('flows.editor.config.keys.volume_down', { defaultValue: 'Volume -' }), icon: '🔉', desc: t('flows.editor.config.keys.desc_volume_down', { defaultValue: 'Decrease volume' }) },
+                { value: 'KEYCODE_VOLUME_MUTE', label: t('flows.editor.config.keys.mute', { defaultValue: 'Mute' }), icon: '🔇', desc: t('flows.editor.config.keys.desc_mute', { defaultValue: 'Mute audio' }) },
+                { value: 'KEYCODE_MEDIA_PLAY_PAUSE', label: t('flows.editor.config.keys.play_pause', { defaultValue: 'Play/Pause' }), icon: '⏯️', desc: t('flows.editor.config.keys.desc_play_pause', { defaultValue: 'Toggle play' }) },
+                { value: 'KEYCODE_MEDIA_NEXT', label: t('flows.editor.config.keys.next', { defaultValue: 'Next' }), icon: '⏭️', desc: t('flows.editor.config.keys.desc_next', { defaultValue: 'Next track' }) },
+                { value: 'KEYCODE_MEDIA_PREVIOUS', label: t('flows.editor.config.keys.previous', { defaultValue: 'Previous' }), icon: '⏮️', desc: t('flows.editor.config.keys.desc_previous', { defaultValue: 'Previous track' }) },
             ]
         },
         {
-            label: 'System',
+            label: t('flows.editor.config.keys.group_system', { defaultValue: 'System' }),
             keys: [
-                { value: 'KEYCODE_POWER', label: 'Power', icon: '⏻', desc: 'Power button' },
-                { value: 'KEYCODE_CAMERA', label: 'Camera', icon: '📷', desc: 'Open camera' },
-                { value: 'KEYCODE_SEARCH', label: 'Search', icon: '🔍', desc: 'Open search' },
+                { value: 'KEYCODE_POWER', label: t('flows.editor.config.keys.power', { defaultValue: 'Power' }), icon: '⏻', desc: t('flows.editor.config.keys.desc_power', { defaultValue: 'Power button' }) },
+                { value: 'KEYCODE_CAMERA', label: t('flows.editor.config.keys.camera', { defaultValue: 'Camera' }), icon: '📷', desc: t('flows.editor.config.keys.desc_camera', { defaultValue: 'Open camera' }) },
+                { value: 'KEYCODE_SEARCH', label: t('flows.editor.config.keys.search', { defaultValue: 'Search' }), icon: '🔍', desc: t('flows.editor.config.keys.desc_search', { defaultValue: 'Open search' }) },
             ]
         }
     ];
@@ -2040,7 +2030,7 @@ function KeyActionConfig({ data, updateData, isDark, nodeType }) {
             const key = group.keys.find(k => k.value === keyValue);
             if (key) return { ...key, group: group.label };
         }
-        return { value: keyValue, label: keyValue, icon: '⌨️', desc: 'Custom key' };
+        return { value: keyValue, label: keyValue, icon: '⌨️', desc: t('flows.editor.config.keys.custom_key', { defaultValue: 'Custom key' }) };
     };
 
     const currentKeyInfo = findKeyInfo(currentKey);
@@ -2066,7 +2056,7 @@ function KeyActionConfig({ data, updateData, isDark, nodeType }) {
 
             {/* Key Selection - Only show for generic key_event type */}
             {nodeType === 'key_event' && (
-                <ConfigSection title={t('flows.editor.config.select_key', { defaultValue: 'Select Key' })} isDark={isDark}>
+                <ConfigSection title={t('flows.editor.config.keys.select_key', { defaultValue: 'Select Key' })} isDark={isDark}>
                     <div className="space-y-3">
                         {keyGroups.map(group => (
                             <div key={group.label}>
@@ -2108,8 +2098,8 @@ function KeyActionConfig({ data, updateData, isDark, nodeType }) {
             {(nodeType === 'back' || nodeType === 'home') && (
                 <div className={`p-3 rounded-lg ${isDark ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
                     <p className={`text-xs text-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        {nodeType === 'back' && '← This node will press the Android BACK button'}
-                        {nodeType === 'home' && '🏠 This node will press the Android HOME button'}
+                        {nodeType === 'back' && t('flows.editor.config.keys.node_back_desc', { defaultValue: '← This node will press the Android BACK button' })}
+                        {nodeType === 'home' && t('flows.editor.config.keys.node_home_desc', { defaultValue: '🏠 This node will press the Android HOME button' })}
                     </p>
                 </div>
             )}
@@ -2157,7 +2147,7 @@ function KeyActionConfig({ data, updateData, isDark, nodeType }) {
             </ConfigSection>
 
             {/* Repeat Count */}
-            <ConfigSection title={t('flows.editor.config.repeat_count', { defaultValue: 'Repeat Count' })} isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.keys.repeat_count', { defaultValue: 'Repeat Count' })} isDark={isDark}>
                 <div className="flex items-center gap-2">
                     <input
                         type="number"
@@ -2171,11 +2161,11 @@ function KeyActionConfig({ data, updateData, isDark, nodeType }) {
                             }`}
                     />
                     <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        {t('flows.editor.config.times', { defaultValue: 'times' })}
+                        {t('flows.editor.config.keys.times', { defaultValue: 'times' })}
                     </span>
                 </div>
                 <p className={`text-[10px] mt-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                    {t('flows.editor.config.repeat_count_hint', { defaultValue: 'Press the key multiple times (useful for scrolling)' })}
+                    {t('flows.editor.config.keys.repeat_count_hint', { defaultValue: 'Press the key multiple times (useful for scrolling)' })}
                 </p>
             </ConfigSection>
         </>
@@ -2332,7 +2322,6 @@ function AssertConfig({ data, updateData, updateMultipleData, isDark, selectedDe
     const assertType = data.assertType || 'exists';
 
     const handleElementSelect = (element) => {
-        console.log('🎯 AssertConfig handleElementSelect:', element);
 
         // Calculate center from bounds
         let centerX, centerY;
@@ -2362,7 +2351,8 @@ function AssertConfig({ data, updateData, updateMultipleData, isDark, selectedDe
     return (
         <>
             {/* Element Picker Button */}
-            <ConfigSection title="🔍 Element Inspector" isDark={isDark}>
+            {/* Element Picker Button */}
+            <ConfigSection title={t('flows.editor.config.element_inspector')} isDark={isDark}>
                 <button
                     onClick={() => setShowPicker(true)}
                     className={`w-full px-4 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${isDark
@@ -2371,16 +2361,16 @@ function AssertConfig({ data, updateData, updateMultipleData, isDark, selectedDe
                         }`}
                 >
                     <span>📱</span>
-                    Chọn Element từ Thiết bị
+                    {t('flows.editor.config.pick_element_from_device')}
                 </button>
                 <p className={`text-[10px] mt-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    Click để scan màn hình và chọn element cần kiểm tra
+                    {t('flows.editor.config.pick_element_hint')}
                 </p>
             </ConfigSection>
 
             {/* Selected Element Display */}
             {(data.resourceId || data.text) && (
-                <ConfigSection title="✅ Element Đã Chọn" isDark={isDark}>
+                <ConfigSection title={t('flows.editor.config.element_selected')} isDark={isDark}>
                     <div className={`p-3 rounded-lg text-xs space-y-1 ${isDark ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-emerald-50 border border-emerald-200'}`}>
                         {data.resourceId && (
                             <div className="flex items-center gap-2">
@@ -2404,13 +2394,13 @@ function AssertConfig({ data, updateData, updateMultipleData, isDark, selectedDe
                 </ConfigSection>
             )}
 
-            <ConfigSection title="Assertion Type" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.assert_type')} isDark={isDark}>
                 <div className="space-y-2">
                     {[
-                        { value: 'exists', label: 'Element Exists', icon: '✓', desc: 'Verify element is visible' },
-                        { value: 'not_exists', label: 'Element Not Exists', icon: '✗', desc: 'Verify element is hidden' },
-                        { value: 'text_equals', label: 'Text Equals', icon: '=', desc: 'Verify exact text match' },
-                        { value: 'text_contains', label: 'Text Contains', icon: '⊃', desc: 'Verify text includes value' },
+                        { value: 'exists', label: t('flows.editor.config.assert_exists'), icon: '✓', desc: t('flows.editor.config.assert_exists_desc') },
+                        { value: 'not_exists', label: t('flows.editor.config.assert_not_exists'), icon: '✗', desc: t('flows.editor.config.assert_not_exists_desc') },
+                        { value: 'text_equals', label: t('flows.editor.config.assert_text_equals'), icon: '=', desc: t('flows.editor.config.assert_text_equals_desc') },
+                        { value: 'text_contains', label: t('flows.editor.config.assert_text_contains'), icon: '⊃', desc: t('flows.editor.config.assert_text_contains_desc') },
                     ].map(opt => (
                         <button
                             key={opt.value}
@@ -2432,12 +2422,12 @@ function AssertConfig({ data, updateData, updateMultipleData, isDark, selectedDe
                 </div>
             </ConfigSection>
 
-            <ConfigSection title="Target Element" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.target_element')} isDark={isDark}>
                 <input
                     type="text"
                     value={data.targetSelector || data.resourceId || ''}
                     onChange={(e) => updateData('targetSelector', e.target.value)}
-                    placeholder="Resource ID or text..."
+                    placeholder={t('flows.editor.config.target_element_placeholder')}
                     className={`w-full px-3 py-2 text-sm rounded-lg border ${isDark
                         ? 'bg-[#0f0f0f] border-[#2a2a2a] text-white'
                         : 'bg-white border-gray-200 text-gray-900'
@@ -2446,12 +2436,12 @@ function AssertConfig({ data, updateData, updateMultipleData, isDark, selectedDe
             </ConfigSection>
 
             {['text_equals', 'text_contains'].includes(assertType) && (
-                <ConfigSection title="Expected Value" isDark={isDark}>
+                <ConfigSection title={t('flows.editor.config.expected_value')} isDark={isDark}>
                     <input
                         type="text"
                         value={data.expectedValue || ''}
                         onChange={(e) => updateData('expectedValue', e.target.value)}
-                        placeholder="Expected text..."
+                        placeholder={t('flows.editor.config.expected_value_placeholder')}
                         className={`w-full px-3 py-2 text-sm rounded-lg border ${isDark
                             ? 'bg-[#0f0f0f] border-[#2a2a2a] text-white'
                             : 'bg-white border-gray-200 text-gray-900'
@@ -2460,7 +2450,7 @@ function AssertConfig({ data, updateData, updateMultipleData, isDark, selectedDe
                 </ConfigSection>
             )}
 
-            <ConfigSection title="On Failure" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.on_failure')} isDark={isDark}>
                 <select
                     value={data.onFailure || 'stop'}
                     onChange={(e) => updateData('onFailure', e.target.value)}
@@ -2469,13 +2459,13 @@ function AssertConfig({ data, updateData, updateMultipleData, isDark, selectedDe
                         : 'bg-white border-gray-200 text-gray-900'
                         }`}
                 >
-                    <option value="stop">❌ Stop Workflow</option>
-                    <option value="continue">⏭️ Continue</option>
-                    <option value="retry">🔄 Retry (3 times)</option>
+                    <option value="stop">{t('flows.editor.config.stop_workflow')}</option>
+                    <option value="continue">{t('flows.editor.config.continue_workflow')}</option>
+                    <option value="retry">{t('flows.editor.config.retry_workflow')}</option>
                 </select>
             </ConfigSection>
 
-            <ConfigSection title="Timeout (ms)" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.timeout')} isDark={isDark}>
                 <input
                     type="number"
                     min="1000"
@@ -2488,7 +2478,7 @@ function AssertConfig({ data, updateData, updateMultipleData, isDark, selectedDe
                         }`}
                 />
                 <p className={`text-[10px] mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    Max time to wait for element
+                    {t('flows.editor.config.timeout_desc')}
                 </p>
             </ConfigSection>
 
@@ -2511,7 +2501,6 @@ function ElementCheckConfig({ data, updateData, updateMultipleData, isDark, sele
     const checkType = data.checkType || 'exists';
 
     const handleElementSelect = (element) => {
-        console.log('🎯 ElementCheckConfig handleElementSelect:', element);
 
         // Calculate center from bounds
         let centerX, centerY;
@@ -2540,7 +2529,8 @@ function ElementCheckConfig({ data, updateData, updateMultipleData, isDark, sele
     return (
         <>
             {/* Element Picker Button */}
-            <ConfigSection title="🔍 Element Inspector" isDark={isDark}>
+            {/* Element Picker Button */}
+            <ConfigSection title={t('flows.editor.config.element_inspector')} isDark={isDark}>
                 <button
                     onClick={() => setShowPicker(true)}
                     className={`w-full px-4 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${isDark
@@ -2549,21 +2539,21 @@ function ElementCheckConfig({ data, updateData, updateMultipleData, isDark, sele
                         }`}
                 >
                     <span>📱</span>
-                    Chọn Element từ Thiết bị
+                    {t('flows.editor.config.pick_element_from_device')}
                 </button>
                 <p className={`text-[10px] mt-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    Click để scan màn hình và chọn element
+                    {t('flows.editor.config.pick_element_hint')}
                 </p>
             </ConfigSection>
 
-            <ConfigSection title="Check Type" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.check_type')} isDark={isDark}>
                 <div className="space-y-2">
                     {[
-                        { value: 'exists', label: 'Element Exists', icon: '✓', desc: 'Check if element is visible' },
-                        { value: 'not_exists', label: 'Element Not Exists', icon: '✗', desc: 'Check if element is hidden' },
-                        { value: 'text_equals', label: 'Text Equals', icon: '=', desc: 'Compare exact text' },
-                        { value: 'text_contains', label: 'Text Contains', icon: '⊃', desc: 'Check if text includes value' },
-                        { value: 'is_checked', label: 'Is Checked', icon: '☑', desc: 'Check checkbox state' },
+                        { value: 'exists', label: t('flows.editor.config.assert_exists'), icon: '✓', desc: t('flows.editor.config.assert_exists_desc') },
+                        { value: 'not_exists', label: t('flows.editor.config.assert_not_exists'), icon: '✗', desc: t('flows.editor.config.assert_not_exists_desc') },
+                        { value: 'text_equals', label: t('flows.editor.config.assert_text_equals'), icon: '=', desc: t('flows.editor.config.assert_text_equals_desc') },
+                        { value: 'text_contains', label: t('flows.editor.config.assert_text_contains'), icon: '⊃', desc: t('flows.editor.config.assert_text_contains_desc') },
+                        { value: 'is_checked', label: t('flows.editor.config.is_checked'), icon: '☑', desc: t('flows.editor.config.check_is_checked_desc') },
                     ].map(opt => (
                         <button
                             key={opt.value}
@@ -2585,12 +2575,12 @@ function ElementCheckConfig({ data, updateData, updateMultipleData, isDark, sele
                 </div>
             </ConfigSection>
 
-            <ConfigSection title="Target Element" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.target_element')} isDark={isDark}>
                 <input
                     type="text"
                     value={data.resourceId || ''}
                     onChange={(e) => updateData('resourceId', e.target.value)}
-                    placeholder="Resource ID..."
+                    placeholder={t('flows.editor.config.resource_id_placeholder')}
                     className={`w-full px-3 py-2 text-sm rounded-lg border mb-2 ${isDark
                         ? 'bg-[#0f0f0f] border-[#2a2a2a] text-white'
                         : 'bg-white border-gray-200 text-gray-900'
@@ -2600,7 +2590,7 @@ function ElementCheckConfig({ data, updateData, updateMultipleData, isDark, sele
                     type="text"
                     value={data.text || ''}
                     onChange={(e) => updateData('text', e.target.value)}
-                    placeholder="Text to find..."
+                    placeholder={t('flows.editor.config.text_to_find')}
                     className={`w-full px-3 py-2 text-sm rounded-lg border ${isDark
                         ? 'bg-[#0f0f0f] border-[#2a2a2a] text-white'
                         : 'bg-white border-gray-200 text-gray-900'
@@ -2609,12 +2599,12 @@ function ElementCheckConfig({ data, updateData, updateMultipleData, isDark, sele
             </ConfigSection>
 
             {['text_equals', 'text_contains'].includes(checkType) && (
-                <ConfigSection title="Expected Value" isDark={isDark}>
+                <ConfigSection title={t('flows.editor.config.expected_value')} isDark={isDark}>
                     <input
                         type="text"
                         value={data.expectedValue || ''}
                         onChange={(e) => updateData('expectedValue', e.target.value)}
-                        placeholder="Expected text..."
+                        placeholder={t('flows.editor.config.expected_value_placeholder')}
                         className={`w-full px-3 py-2 text-sm rounded-lg border ${isDark
                             ? 'bg-[#0f0f0f] border-[#2a2a2a] text-white'
                             : 'bg-white border-gray-200 text-gray-900'
@@ -2623,7 +2613,7 @@ function ElementCheckConfig({ data, updateData, updateMultipleData, isDark, sele
                 </ConfigSection>
             )}
 
-            <ConfigSection title="Timeout (ms)" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.timeout')} isDark={isDark}>
                 <input
                     type="number"
                     min="1000"
@@ -2640,16 +2630,16 @@ function ElementCheckConfig({ data, updateData, updateMultipleData, isDark, sele
             {/* Branching Info */}
             <div className={`p-3 rounded-lg ${isDark ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
                 <p className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Branching:
+                    {t('flows.editor.config.branching')}
                 </p>
                 <div className="flex items-center gap-4 text-xs">
                     <div className="flex items-center gap-1.5">
                         <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
-                        <span className={isDark ? 'text-emerald-400' : 'text-emerald-600'}>True → condition met</span>
+                        <span className={isDark ? 'text-emerald-400' : 'text-emerald-600'}>{t('flows.editor.config.condition_true')}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
-                        <span className={isDark ? 'text-red-400' : 'text-red-600'}>False → condition not met</span>
+                        <span className={isDark ? 'text-red-400' : 'text-red-600'}>{t('flows.editor.config.condition_false')}</span>
                     </div>
                 </div>
             </div>
@@ -2672,7 +2662,6 @@ function WaitForElementConfig({ data, updateData, updateMultipleData, isDark, se
     const [showPicker, setShowPicker] = useState(false);
 
     const handleElementSelect = (element) => {
-        console.log('🎯 WaitForElementConfig handleElementSelect:', element);
 
         // Calculate center from bounds
         let centerX, centerY;
@@ -2699,7 +2688,8 @@ function WaitForElementConfig({ data, updateData, updateMultipleData, isDark, se
     return (
         <>
             {/* Element Picker Button */}
-            <ConfigSection title="🔍 Element Inspector" isDark={isDark}>
+            {/* Element Picker Button */}
+            <ConfigSection title={t('flows.editor.config.element_inspector')} isDark={isDark}>
                 <button
                     onClick={() => setShowPicker(true)}
                     className={`w-full px-4 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${isDark
@@ -2708,16 +2698,16 @@ function WaitForElementConfig({ data, updateData, updateMultipleData, isDark, se
                         }`}
                 >
                     <span>📱</span>
-                    Chọn Element từ Thiết bị
+                    {t('flows.editor.config.pick_element_from_device')}
                 </button>
             </ConfigSection>
 
-            <ConfigSection title="Target Element" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.target_element')} isDark={isDark}>
                 <input
                     type="text"
                     value={data.resourceId || ''}
                     onChange={(e) => updateData('resourceId', e.target.value)}
-                    placeholder="Resource ID..."
+                    placeholder={t('flows.editor.config.resource_id_placeholder')}
                     className={`w-full px-3 py-2 text-sm rounded-lg border mb-2 ${isDark
                         ? 'bg-[#0f0f0f] border-[#2a2a2a] text-white'
                         : 'bg-white border-gray-200 text-gray-900'
@@ -2727,7 +2717,7 @@ function WaitForElementConfig({ data, updateData, updateMultipleData, isDark, se
                     type="text"
                     value={data.text || ''}
                     onChange={(e) => updateData('text', e.target.value)}
-                    placeholder="Text to find..."
+                    placeholder={t('flows.editor.config.text_to_find')}
                     className={`w-full px-3 py-2 text-sm rounded-lg border ${isDark
                         ? 'bg-[#0f0f0f] border-[#2a2a2a] text-white'
                         : 'bg-white border-gray-200 text-gray-900'
@@ -2735,7 +2725,7 @@ function WaitForElementConfig({ data, updateData, updateMultipleData, isDark, se
                 />
             </ConfigSection>
 
-            <ConfigSection title="Timeout (ms)" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.timeout')} isDark={isDark}>
                 <input
                     type="number"
                     min="1000"
@@ -2761,7 +2751,7 @@ function WaitForElementConfig({ data, updateData, updateMultipleData, isDark, se
                 </div>
             </ConfigSection>
 
-            <ConfigSection title="On Timeout" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.on_timeout')} isDark={isDark}>
                 <select
                     value={data.onTimeout || 'fail'}
                     onChange={(e) => updateData('onTimeout', e.target.value)}
@@ -2770,12 +2760,12 @@ function WaitForElementConfig({ data, updateData, updateMultipleData, isDark, se
                         : 'bg-white border-gray-200 text-gray-900'
                         }`}
                 >
-                    <option value="fail">❌ Fail Workflow</option>
-                    <option value="skip">⏭️ Skip & Continue</option>
-                    <option value="retry">🔄 Retry</option>
+                    <option value="fail">{t('flows.editor.config.fail_workflow')}</option>
+                    <option value="skip">{t('flows.editor.config.skip_continue')}</option>
+                    <option value="retry">{t('flows.editor.config.retry_workflow')}</option>
                 </select>
                 <p className={`text-[10px] mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    What to do if element doesn't appear within timeout
+                    {t('flows.editor.config.on_timeout_desc')}
                 </p>
             </ConfigSection>
 
@@ -2801,12 +2791,12 @@ function StartEndConfig({ data, updateData, isDark, nodeType }) {
                     <span className="text-2xl">{nodeType === 'input' ? '▶️' : '🏁'}</span>
                     <div>
                         <div className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            {nodeType === 'input' ? 'Workflow Start' : 'Workflow End'}
+                            {nodeType === 'input' ? t('flows.editor.config.workflow_start') : t('flows.editor.config.workflow_end')}
                         </div>
                         <div className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                             {nodeType === 'input'
-                                ? 'Entry point of your automation'
-                                : 'Marks completion of workflow'}
+                                ? t('flows.editor.config.start_desc')
+                                : t('flows.editor.config.end_desc')}
                         </div>
                     </div>
                 </div>
@@ -2814,7 +2804,7 @@ function StartEndConfig({ data, updateData, isDark, nodeType }) {
 
             {nodeType === 'input' && (
                 <>
-                    <ConfigSection title="Trigger Type" isDark={isDark}>
+                    <ConfigSection title={t('flows.editor.config.trigger_type')} isDark={isDark}>
                         <select
                             value={data.triggerType || 'manual'}
                             onChange={(e) => updateData('triggerType', e.target.value)}
@@ -2823,26 +2813,26 @@ function StartEndConfig({ data, updateData, isDark, nodeType }) {
                                 : 'bg-white border-gray-200 text-gray-900'
                                 }`}
                         >
-                            <option value="manual">👆 Manual Run</option>
-                            <option value="scheduled">⏰ Scheduled</option>
-                            <option value="api">🔗 API Trigger</option>
+                            <option value="manual">{t('flows.editor.config.trigger_manual')}</option>
+                            <option value="scheduled">{t('flows.editor.config.trigger_scheduled')}</option>
+                            <option value="api">{t('flows.editor.config.trigger_api')}</option>
                         </select>
                     </ConfigSection>
 
                     {data.triggerType === 'scheduled' && (
-                        <ConfigSection title="Schedule" isDark={isDark}>
+                        <ConfigSection title={t('flows.editor.config.schedule')} isDark={isDark}>
                             <input
                                 type="text"
                                 value={data.cronExpression || '0 9 * * *'}
                                 onChange={(e) => updateData('cronExpression', e.target.value)}
-                                placeholder="Cron expression..."
+                                placeholder={t('flows.editor.config.cron_placeholder')}
                                 className={`w-full px-3 py-2 text-sm rounded-lg border font-mono ${isDark
                                     ? 'bg-[#0f0f0f] border-[#2a2a2a] text-cyan-400'
                                     : 'bg-white border-gray-200 text-cyan-600'
                                     }`}
                             />
                             <p className={`text-[10px] mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Default: Daily at 9:00 AM
+                                {t('flows.editor.config.cron_desc')}
                             </p>
                         </ConfigSection>
                     )}
@@ -2850,7 +2840,7 @@ function StartEndConfig({ data, updateData, isDark, nodeType }) {
             )}
 
             {nodeType === 'output' && (
-                <ConfigSection title="Completion Status" isDark={isDark}>
+                <ConfigSection title={t('flows.editor.config.completion_status')} isDark={isDark}>
                     <select
                         value={data.status || 'success'}
                         onChange={(e) => updateData('status', e.target.value)}
@@ -2859,9 +2849,9 @@ function StartEndConfig({ data, updateData, isDark, nodeType }) {
                             : 'bg-white border-gray-200 text-gray-900'
                             }`}
                     >
-                        <option value="success">✅ Success</option>
-                        <option value="failure">❌ Failure</option>
-                        <option value="conditional">❓ Based on Condition</option>
+                        <option value="success">{t('flows.editor.config.status_success')}</option>
+                        <option value="failure">{t('flows.editor.config.status_failure')}</option>
+                        <option value="conditional">{t('flows.editor.config.status_conditional')}</option>
                     </select>
                 </ConfigSection>
             )}
@@ -2919,7 +2909,7 @@ function FileInputConfig({ data, updateData, isDark }) {
     return (
         <>
             {/* Current Selection Display */}
-            <ConfigSection title="📁 Đã chọn" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.selected_file')} isDark={isDark}>
                 {hasSelection ? (
                     <div className={`rounded-xl border overflow-hidden ${isDark ? 'border-[#2a2a2a] bg-[#0f0f0f]' : 'border-gray-200 bg-gray-50'}`}>
                         {selectionType === 'folder' ? (
@@ -2936,10 +2926,10 @@ function FileInputConfig({ data, updateData, isDark }) {
                                     </p>
                                     <div className="flex items-center gap-2 mt-1">
                                         <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600'}`}>
-                                            🎲 Random
+                                            {t('flows.editor.config.random_mode')}
                                         </span>
                                         <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                            Mỗi job chọn ngẫu nhiên 1 file
+                                            {t('flows.editor.config.random_file_desc')}
                                         </span>
                                     </div>
                                 </div>
@@ -2965,7 +2955,7 @@ function FileInputConfig({ data, updateData, isDark }) {
                                         {fileName}
                                     </p>
                                     <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                        File cố định
+                                        {t('flows.editor.config.fixed_file')}
                                     </p>
                                 </div>
                             </div>
@@ -2979,13 +2969,13 @@ function FileInputConfig({ data, updateData, isDark }) {
                                     ? 'bg-[#1a1a1a] hover:bg-[#252525] text-gray-300'
                                     : 'bg-white hover:bg-gray-100 text-gray-700'}`}
                             >
-                                Đổi
+                                {t('flows.editor.config.change')}
                             </button>
                             <button
                                 onClick={clearSelection}
                                 className="px-3 py-2 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 transition-all"
                             >
-                                Xóa
+                                {t('flows.editor.config.delete')}
                             </button>
                         </div>
                     </div>
@@ -3004,10 +2994,10 @@ function FileInputConfig({ data, updateData, isDark }) {
                         </div>
                         <div className="text-center">
                             <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                Chọn File hoặc Folder
+                                {t('flows.editor.config.select_file_folder')}
                             </p>
                             <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                File cố định hoặc Folder để random
+                                {t('flows.editor.config.file_folder_desc')}
                             </p>
                         </div>
                     </button>
@@ -3015,7 +3005,7 @@ function FileInputConfig({ data, updateData, isDark }) {
             </ConfigSection>
 
             {/* Output Variable */}
-            <ConfigSection title="📤 Biến Output" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.output_variable')} isDark={isDark}>
                 <input
                     type="text"
                     value={data.outputVariable || 'filePath'}
@@ -3026,7 +3016,7 @@ function FileInputConfig({ data, updateData, isDark }) {
                         }`}
                 />
                 <p className={`text-[10px] mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    Truy cập qua <code className="text-cyan-400">{`{{${data.outputVariable || 'filePath'}}}`}</code> trong các node khác
+                    {t('flows.editor.config.access_via')} <code className="text-cyan-400">{`{{${data.outputVariable || 'filePath'}}}`}</code> {t('flows.editor.config.in_other_nodes')}
                 </p>
             </ConfigSection>
 
@@ -3034,7 +3024,7 @@ function FileInputConfig({ data, updateData, isDark }) {
             {selectionType === 'folder' && (
                 <div className={`p-3 rounded-xl ${isDark ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-amber-50 border border-amber-200'}`}>
                     <p className={`text-xs ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>
-                        <strong>🎲 Chế độ Random:</strong> Mỗi lần chạy job/campaign, hệ thống sẽ tự động chọn ngẫu nhiên 1 file từ folder này.
+                        <strong>{t('flows.editor.config.random_mode_label')}</strong> {t('flows.editor.config.random_mode_explanation')}
                     </p>
                 </div>
             )}
@@ -3058,7 +3048,7 @@ function ProcessConfig({ data, updateData, isDark, upstreamVariables }) {
 
     return (
         <>
-            <ConfigSection title="Process Type" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.process_type')} isDark={isDark}>
                 <select
                     value={processType}
                     onChange={(e) => updateData('processType', e.target.value)}
@@ -3067,16 +3057,16 @@ function ProcessConfig({ data, updateData, isDark, upstreamVariables }) {
                         : 'bg-white border-gray-200 text-gray-900'
                         }`}
                 >
-                    <option value="transform">🔄 Transform Data</option>
-                    <option value="filter">🔍 Filter Array</option>
-                    <option value="map">📍 Map Values</option>
-                    <option value="reduce">📊 Reduce/Aggregate</option>
-                    <option value="format">✨ Format Text</option>
-                    <option value="parse">📝 Parse JSON</option>
+                    <option value="transform">{t('flows.editor.config.transform_data')}</option>
+                    <option value="filter">{t('flows.editor.config.filter_array')}</option>
+                    <option value="map">{t('flows.editor.config.map_values')}</option>
+                    <option value="reduce">{t('flows.editor.config.reduce_aggregate')}</option>
+                    <option value="format">{t('flows.editor.config.format_text')}</option>
+                    <option value="parse">{t('flows.editor.config.parse_json')}</option>
                 </select>
             </ConfigSection>
 
-            <ConfigSection title="Input" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.input')} isDark={isDark}>
                 <input
                     type="text"
                     value={data.inputVariable || ''}
@@ -3090,7 +3080,7 @@ function ProcessConfig({ data, updateData, isDark, upstreamVariables }) {
             </ConfigSection>
 
             {processType === 'transform' && (
-                <ConfigSection title="Expression" isDark={isDark}>
+                <ConfigSection title={t('flows.editor.config.expression')} isDark={isDark}>
                     <textarea
                         value={data.expression || ''}
                         onChange={(e) => updateData('expression', e.target.value)}
@@ -3105,7 +3095,7 @@ function ProcessConfig({ data, updateData, isDark, upstreamVariables }) {
             )}
 
             {processType === 'filter' && (
-                <ConfigSection title="Filter Condition" isDark={isDark}>
+                <ConfigSection title={t('flows.editor.config.filter_condition')} isDark={isDark}>
                     <input
                         type="text"
                         value={data.filterCondition || ''}
@@ -3119,7 +3109,7 @@ function ProcessConfig({ data, updateData, isDark, upstreamVariables }) {
                 </ConfigSection>
             )}
 
-            <ConfigSection title="Output Variable" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.output_variable')} isDark={isDark}>
                 <input
                     type="text"
                     value={data.outputVariable || 'result'}
@@ -3136,9 +3126,10 @@ function ProcessConfig({ data, updateData, isDark, upstreamVariables }) {
 
 // Custom Action Config
 function CustomActionConfig({ data, updateData, isDark, upstreamVariables }) {
+    const { t } = useTranslation();
     return (
         <>
-            <ConfigSection title="Action Type" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.action_type')} isDark={isDark}>
                 <select
                     value={data.actionType || 'shell'}
                     onChange={(e) => updateData('actionType', e.target.value)}
@@ -3147,14 +3138,14 @@ function CustomActionConfig({ data, updateData, isDark, upstreamVariables }) {
                         : 'bg-white border-gray-200 text-gray-900'
                         }`}
                 >
-                    <option value="shell">⌨️ Shell Command</option>
-                    <option value="adb">📱 ADB Command</option>
-                    <option value="javascript">📜 JavaScript</option>
-                    <option value="webhook">🔔 Webhook</option>
+                    <option value="shell">{t('flows.editor.config.shell_command')}</option>
+                    <option value="adb">{t('flows.editor.config.adb_command')}</option>
+                    <option value="javascript">{t('flows.editor.config.javascript')}</option>
+                    <option value="webhook">{t('flows.editor.config.webhook')}</option>
                 </select>
             </ConfigSection>
 
-            <ConfigSection title="Command / Code" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.command_code')} isDark={isDark}>
                 <textarea
                     value={data.command || ''}
                     onChange={(e) => updateData('command', e.target.value)}
@@ -3174,7 +3165,7 @@ function CustomActionConfig({ data, updateData, isDark, upstreamVariables }) {
             </ConfigSection>
 
             {data.actionType === 'webhook' && (
-                <ConfigSection title="Webhook URL" isDark={isDark}>
+                <ConfigSection title={t('flows.editor.config.webhook_url')} isDark={isDark}>
                     <input
                         type="text"
                         value={data.webhookUrl || ''}
@@ -3188,7 +3179,7 @@ function CustomActionConfig({ data, updateData, isDark, upstreamVariables }) {
                 </ConfigSection>
             )}
 
-            <ConfigSection title="Output Variable" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.output_variable')} isDark={isDark}>
                 <input
                     type="text"
                     value={data.outputVariable || 'output'}
@@ -3200,7 +3191,7 @@ function CustomActionConfig({ data, updateData, isDark, upstreamVariables }) {
                 />
             </ConfigSection>
 
-            <ConfigSection title="Timeout (ms)" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.timeout')} isDark={isDark}>
                 <input
                     type="number"
                     min="1000"
@@ -3214,7 +3205,7 @@ function CustomActionConfig({ data, updateData, isDark, upstreamVariables }) {
                 />
             </ConfigSection>
 
-            <ConfigSection title="On Error" isDark={isDark}>
+            <ConfigSection title={t('flows.editor.config.on_error')} isDark={isDark}>
                 <select
                     value={data.onError || 'stop'}
                     onChange={(e) => updateData('onError', e.target.value)}
@@ -3223,9 +3214,9 @@ function CustomActionConfig({ data, updateData, isDark, upstreamVariables }) {
                         : 'bg-white border-gray-200 text-gray-900'
                         }`}
                 >
-                    <option value="stop">❌ Stop Workflow</option>
-                    <option value="continue">⏭️ Continue</option>
-                    <option value="retry">🔄 Retry (3 times)</option>
+                    <option value="stop">{t('flows.editor.config.stop_workflow')}</option>
+                    <option value="continue">{t('flows.editor.config.continue_workflow')}</option>
+                    <option value="retry">{t('flows.editor.config.retry_workflow')}</option>
                 </select>
             </ConfigSection>
         </>

@@ -179,28 +179,61 @@ export default function Index({ campaigns, stats }) {
                                                 <span className="text-sm">📊</span>
                                                 <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                                     {campaign.data_collection?.name || t('campaigns.meta.no_data')}
+                                                    {campaign.total_records > 0 && (
+                                                        <span className="ml-1">({campaign.total_records} records)</span>
+                                                    )}
                                                 </span>
                                             </div>
+                                            {/* Workflow Chain */}
                                             <div className="flex items-center gap-2">
                                                 <span className="text-sm">⚡</span>
                                                 <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                                    {campaign.workflows?.length || 0} {t('campaigns.meta.workflows')}
+                                                    {campaign.workflows?.length > 0 ? (
+                                                        campaign.workflows.map((wf, i) => (
+                                                            <span key={wf.id}>
+                                                                {i > 0 && ' → '}
+                                                                <span className={`${isDark ? 'text-violet-400' : 'text-violet-600'}`}>{wf.name}</span>
+                                                            </span>
+                                                        ))
+                                                    ) : (
+                                                        `0 ${t('campaigns.meta.workflows')}`
+                                                    )}
                                                 </span>
                                             </div>
+                                            {/* Devices & Distribution */}
                                             <div className="flex items-center gap-2">
                                                 <span className="text-sm">📱</span>
                                                 <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                                     {campaign.devices?.length || 0} {t('campaigns.meta.devices')}
+                                                    {campaign.records_per_device && (
+                                                        <span className="ml-1">× {campaign.records_per_device} records/device</span>
+                                                    )}
                                                 </span>
                                             </div>
+                                            {/* Data Pools */}
+                                            {campaign.data_config?.pools?.length > 0 && (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm">🔄</span>
+                                                    <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                        Pools: {campaign.data_config.pools.map((p, i) => (
+                                                            <span key={i}>
+                                                                {i > 0 && ', '}
+                                                                <span className={`${isDark ? 'text-cyan-400' : 'text-cyan-600'}`}>
+                                                                    {p.variable} ({p.count})
+                                                                </span>
+                                                            </span>
+                                                        ))}
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
 
                                         {/* Progress */}
                                         <div className="mb-4">
                                             <div className="flex justify-between text-xs mb-1">
-                                                <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{t('campaigns.meta.progress')}</span>
+                                                <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>Jobs</span>
                                                 <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-                                                    {campaign.records_processed || 0} / {campaign.total_records || 0}
+                                                    {campaign.records_processed || 0} / {campaign.total_records || 0} hoàn thành
                                                 </span>
                                             </div>
                                             <div className={`h-2 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-gray-100'}`}>
@@ -256,27 +289,29 @@ export default function Index({ campaigns, stats }) {
                                         <span className="text-4xl">🚀</span>
                                     </div>
                                     <h3 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                        Bắt đầu với Campaign
+                                        {t('campaigns.empty.title')}
                                     </h3>
                                     <p className={`text-sm max-w-lg mx-auto ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                        Campaign giúp tự động chạy kịch bản cho nhiều tài khoản cùng lúc trên nhiều thiết bị
+                                        {t('campaigns.empty.description')}
                                     </p>
                                 </div>
 
                                 {/* How It Works */}
                                 <div className={`rounded-xl p-5 mb-6 ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
                                     <h4 className={`text-sm font-semibold mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                        📖 Cách thức hoạt động
+                                        📖 {t('campaigns.empty.how_it_works')}
                                     </h4>
                                     <div className="flex items-center justify-between gap-2">
                                         {[
-                                            { icon: '📊', title: 'Danh sách tài khoản', desc: 'Data Collection' },
+                                            { icon: '📊', title: 'Primary Data', desc: '1 record = 1 job' },
                                             { icon: '→', isArrow: true },
-                                            { icon: '⚡', title: 'Kịch bản', desc: 'Workflows' },
+                                            { icon: '⚡', title: 'Workflow Chain', desc: 'WF1 → WF2 → ...' },
                                             { icon: '→', isArrow: true },
-                                            { icon: '📱', title: 'Thiết bị', desc: 'Devices' },
+                                            { icon: '📱', title: 'Devices', desc: 'Phân phối đều' },
                                             { icon: '→', isArrow: true },
-                                            { icon: '🎯', title: 'Kết quả', desc: 'Auto Jobs' },
+                                            { icon: '🔄', title: 'Pool Data', desc: 'Loop data' },
+                                            { icon: '→', isArrow: true },
+                                            { icon: '🎯', title: 'Jobs', desc: 'Tự động chạy' },
                                         ].map((item, i) => (
                                             item.isArrow ? (
                                                 <span key={i} className={`text-lg ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>→</span>
@@ -296,28 +331,28 @@ export default function Index({ campaigns, stats }) {
                                 {/* Prerequisites Checklist */}
                                 <div className={`rounded-xl p-5 mb-6 ${isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50'}`}>
                                     <h4 className={`text-sm font-semibold mb-3 ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
-                                        📋 Kiểm tra trước khi bắt đầu
+                                        📋 {t('campaigns.empty.checklist_title')}
                                     </h4>
                                     <div className="grid grid-cols-3 gap-4">
                                         <Link href="/data" className={`flex items-center gap-3 p-3 rounded-lg transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-white hover:shadow-md'}`}>
                                             <span className="text-xl">📊</span>
                                             <div>
                                                 <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Data Collection</p>
-                                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Danh sách tài khoản</p>
+                                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('campaigns.empty.checklist.accounts')}</p>
                                             </div>
                                         </Link>
                                         <Link href="/flows" className={`flex items-center gap-3 p-3 rounded-lg transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-white hover:shadow-md'}`}>
                                             <span className="text-xl">⚡</span>
                                             <div>
                                                 <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Workflows</p>
-                                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Kịch bản tự động</p>
+                                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('campaigns.empty.checklist.scripts')}</p>
                                             </div>
                                         </Link>
                                         <Link href="/devices" className={`flex items-center gap-3 p-3 rounded-lg transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-white hover:shadow-md'}`}>
                                             <span className="text-xl">📱</span>
                                             <div>
                                                 <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Devices</p>
-                                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Thiết bị đã kết nối</p>
+                                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('campaigns.empty.checklist.devices')}</p>
                                             </div>
                                         </Link>
                                     </div>
@@ -332,7 +367,7 @@ export default function Index({ campaigns, stats }) {
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                         </svg>
-                                        Tạo Campaign Đầu Tiên
+                                        {t('campaigns.create_first')}
                                     </Link>
                                 </div>
                             </div>

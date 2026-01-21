@@ -198,13 +198,12 @@ class LoginActivity : AppCompatActivity() {
     private fun connectToSocket(socketUrl: String, authToken: String) {
         try {
             // Pusher/Soketi credentials
-            val appKey = "app-key"
+            val appKey = "clickai-key"
             
             // Parse socket URL from NetworkUtils
-            val actualSocketUrl = com.agent.portal.utils.NetworkUtils.getSocketUrl()
-            val host = java.net.URI(actualSocketUrl).host
-            val port = java.net.URI(actualSocketUrl).port.let { if (it == -1) 6001 else it }
-            val encrypted = actualSocketUrl.startsWith("wss://") || actualSocketUrl.startsWith("https://")
+            val host = com.agent.portal.utils.NetworkUtils.getSocketHost()
+            val port = com.agent.portal.utils.NetworkUtils.getSocketPort()
+            val encrypted = com.agent.portal.utils.NetworkUtils.isSocketEncrypted()
             
             Log.i(TAG, "Connecting to Pusher: $host:$port (encrypted: $encrypted)")
             

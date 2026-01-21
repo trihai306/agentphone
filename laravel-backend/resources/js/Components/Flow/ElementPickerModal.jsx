@@ -208,7 +208,6 @@ export default function ElementPickerModal({
         if (!isOpen || !userId) return;
 
         const handleResult = (data) => {
-            console.log('📥 Element inspection result:', data);
             setLoading(false);
 
             if (data.success) {
@@ -249,7 +248,6 @@ export default function ElementPickerModal({
 
         // Listen for OCR + Object Detection results (visual:result event)
         const handleVisualResult = (data) => {
-            console.log('👁️ Visual inspection (OCR + Objects) result:', data);
             // Don't set loading false here - let inspect:result control it
             // setLoading(false);
 
@@ -259,8 +257,6 @@ export default function ElementPickerModal({
                 setTextElements(allVisualElements);
                 setOcrProcessingTime(data.processing_time_ms || 0);
                 // Don't clear error here - let inspect:result control it
-
-                console.log(`📊 Visual detection: ${data.text_count || 0} texts, ${data.object_count || 0} objects, total: ${allVisualElements.length}`);
 
                 if (data.screenshot) {
                     setScreenshotData(data.screenshot);
@@ -294,25 +290,16 @@ export default function ElementPickerModal({
 
         if (window.Echo) {
             // Subscribe to standard Laravel Echo user channel (use user.{userId} to match backend)
-            console.log('🔌 ElementPicker: Subscribing to channel user.' + userId);
             const channel = window.Echo.private(`user.${userId}`);
 
-            // Log subscription success
-            channel.subscribed(() => {
-                console.log('✅ ElementPicker: Successfully subscribed to user.' + userId);
-            });
-
             channel.listen('.inspect:result', (data) => {
-                console.log('✅ ElementPicker: Received inspect:result!', data);
                 handleResult(data);
             });
             channel.listen('.visual:result', (data) => {
-                console.log('✅ ElementPicker: Received visual:result!', data);
                 handleVisualResult(data);
             });
 
             return () => {
-                console.log('🔌 ElementPicker: Unsubscribing from channel user.' + userId);
                 channel.stopListening('.inspect:result');
                 channel.stopListening('.visual:result');
             };

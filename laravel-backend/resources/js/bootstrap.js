@@ -17,22 +17,38 @@ window.Pusher = Pusher;
 // Enable Pusher logging for debugging (disable in production)
 Pusher.logToConsole = import.meta.env.DEV;
 
-// Determine if we should use TLS based on scheme
+// Configuration for self-hosted Soketi
 const pusherScheme = import.meta.env.VITE_PUSHER_SCHEME || 'https';
 const useTLS = pusherScheme === 'https';
+const pusherHost = import.meta.env.VITE_PUSHER_HOST || 'laravel-backend.test';
+const pusherPort = parseInt(import.meta.env.VITE_PUSHER_PORT || '6001');
 
 // Initialize Laravel Echo with Soketi configuration
+// CRITICAL: Override ALL hosts to prevent fallback to Pusher infrastructure
 window.Echo = new Echo({
     broadcaster: 'pusher',
     key: import.meta.env.VITE_PUSHER_APP_KEY || 'app-key',
-    wsHost: import.meta.env.VITE_PUSHER_HOST || 'laravel-backend.test',
-    wsPort: import.meta.env.VITE_PUSHER_PORT || 6001,
-    wssPort: import.meta.env.VITE_PUSHER_PORT || 6001,
-    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER || 'mt1',
+
+    // WebSocket hosts - primary connection
+    wsHost: pusherHost,
+    wsPort: pusherPort,
+    wssPort: pusherPort,
+
+    // HTTP hosts - MUST be set for self-hosted Soketi to prevent fallback to Pusher
+    httpHost: pusherHost,
+    httpPort: pusherPort,
+    httpsPort: pusherPort,
+
+    // Force TLS and transport settings
     forceTLS: useTLS,
-    encrypted: useTLS,
-    disableStats: true,
-    enabledTransports: useTLS ? ['wss'] : ['ws'],
+    cluster: 'mt1', // Required but ignored when wsHost is set
+
+    // Disable Pusher infrastructure features
+    enableStats: false,
+    enabledTransports: ['ws', 'wss'],
+    disabledTransports: ['sockjs'],
+
+    // Auth configuration
     authEndpoint: '/broadcasting/auth',
     auth: {
         headers: {
@@ -41,14 +57,14 @@ window.Echo = new Echo({
     },
 });
 
-// Log connection status
+// Connection status handlers
 window.Echo.connector.pusher.connection.bind('connected', () => {
-    console.log('✅ Soketi WebSocket connected!');
+    // Connected successfully
 });
 window.Echo.connector.pusher.connection.bind('error', (err) => {
-    console.error('❌ Soketi WebSocket error:', err);
+    console.error('❌ Soketi error:', err);
 });
 window.Echo.connector.pusher.connection.bind('disconnected', () => {
-    console.warn('⚠️ Soketi WebSocket disconnected');
+    console.warn('⚠️ Soketi disconnected');
 });
 

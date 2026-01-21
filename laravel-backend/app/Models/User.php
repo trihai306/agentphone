@@ -251,6 +251,22 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Get user's marketplace listings (items they are selling)
+     */
+    public function marketplaceListings()
+    {
+        return $this->hasMany(MarketplaceListing::class);
+    }
+
+    /**
+     * Get user's marketplace purchases (items they bought)
+     */
+    public function marketplacePurchases()
+    {
+        return $this->hasMany(MarketplacePurchase::class);
+    }
+
+    /**
      * Get user's recording sessions
      */
     public function recordingSessions()

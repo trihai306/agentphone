@@ -230,7 +230,11 @@
                 "zoom_out": "Zoom Out",
                 "fit_view": "Fit View",
                 "undo": "Undo",
-                "redo": "Redo"
+                "redo": "Redo",
+                "nodes_title": "Nodes",
+                "preview": "Preview",
+                "save": "Save",
+                "deploy": "Deploy"
             },
             "nodes": {
                 "start": "Start",
@@ -839,8 +843,15 @@
         "account": "Account",
         "support": "Support",
         "collapse": "Collapse menu",
+        "expand": "Expand menu",
         "campaigns": "Campaigns",
-        "jobs": "Jobs"
+        "jobs": "Jobs",
+        "main": "Main",
+        "automation": "Automation",
+        "resources": "Resources",
+        "marketplace": "Marketplace",
+        "wallet": "Wallet",
+        "quick_access": "Quick Access"
     },
     "jobs": {
         "title": "Jobs",
@@ -996,6 +1007,23 @@
             "recent_jobs": "Recent Jobs",
             "view_all": "View all",
             "no_jobs": "No jobs yet"
+        },
+        "empty": {
+            "title": "Get Started with Campaign",
+            "description": "Campaign helps you run scripts for multiple accounts simultaneously on multiple devices",
+            "how_it_works": "How It Works",
+            "checklist_title": "Check Before Starting",
+            "steps": {
+                "accounts": "Account List",
+                "scripts": "Scripts",
+                "devices": "Devices",
+                "results": "Results"
+            },
+            "checklist": {
+                "accounts": "Account list",
+                "scripts": "Automation scripts",
+                "devices": "Connected devices"
+            }
         }
     },
     "header": {

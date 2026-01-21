@@ -115,11 +115,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         try {
-            val appKey = "app-key"
+            val appKey = "clickai-key"
             val socketUrl = com.agent.portal.utils.NetworkUtils.getSocketUrl()
-            val host = java.net.URI(socketUrl).host
-            val port = java.net.URI(socketUrl).port.let { if (it == -1) 6001 else it }
-            val encrypted = socketUrl.startsWith("wss://") || socketUrl.startsWith("https://")
+            val host = com.agent.portal.utils.NetworkUtils.getSocketHost()
+            val port = com.agent.portal.utils.NetworkUtils.getSocketPort()
+            val encrypted = com.agent.portal.utils.NetworkUtils.isSocketEncrypted()
 
             Log.i("MainActivity", "Initializing Pusher connection: $host:$port (encrypted: $encrypted)")
 

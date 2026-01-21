@@ -80,7 +80,7 @@ class DeviceRegistrationService(private val context: Context) {
     
     companion object {
         private const val TAG = "DeviceRegistration"
-        private const val DEFAULT_API_BASE_URL = "https://laravel-backend.test/api"
+        private const val DEFAULT_API_BASE_URL = "https://clickai.lionsoftware.cloud/api"
         private const val REGISTER_DEVICE_ENDPOINT = "/devices/register"
     }
     

@@ -230,7 +230,11 @@
                 "zoom_out": "Thu nhỏ",
                 "fit_view": "Vừa màn hình",
                 "undo": "Hoàn tác",
-                "redo": "Làm lại"
+                "redo": "Làm lại",
+                "nodes_title": "Nodes",
+                "preview": "Xem trước",
+                "save": "Lưu",
+                "deploy": "Triển khai"
             },
             "nodes": {
                 "start": "Bắt Đầu",
@@ -838,7 +842,16 @@
         "billing": "Thanh Toán",
         "account": "Tài Khoản",
         "support": "Hỗ Trợ",
-        "collapse": "Thu gọn menu"
+        "collapse": "Thu gọn menu",
+        "expand": "Mở rộng menu",
+        "campaigns": "Campaigns",
+        "jobs": "Jobs",
+        "main": "Chính",
+        "automation": "Tự Động Hóa",
+        "resources": "Tài Nguyên",
+        "marketplace": "Marketplace",
+        "wallet": "Ví Tiền",
+        "quick_access": "Truy Cập Nhanh"
     },
     "jobs": {
         "title": "Công việc",
@@ -994,6 +1007,23 @@
             "recent_jobs": "Jobs gần đây",
             "view_all": "Xem tất cả",
             "no_jobs": "Chưa có job nào"
+        },
+        "empty": {
+            "title": "Bắt Đầu Với Campaign",
+            "description": "Campaign giúp bạn chạy script cho nhiều tài khoản cùng lúc trên nhiều thiết bị",
+            "how_it_works": "Cách Hoạt Động",
+            "checklist_title": "Kiểm Tra Trước Khi Bắt Đầu",
+            "steps": {
+                "accounts": "Danh Sách Tài Khoản",
+                "scripts": "Kịch Bản",
+                "devices": "Thiết Bị",
+                "results": "Kết Quả"
+            },
+            "checklist": {
+                "accounts": "Danh sách tài khoản",
+                "scripts": "Kịch bản tự động",
+                "devices": "Thiết bị đã kết nối"
+            }
         }
     },
     "header": {
