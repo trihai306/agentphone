@@ -624,6 +624,74 @@
         "completed": "Completed",
         "failed": "Failed"
     },
+    "withdraw": {
+        "title": "Withdraw",
+        "description": "Withdraw funds from wallet to your bank account",
+        "new_request": "Create withdrawal request",
+        "amount": "Withdrawal amount",
+        "min_amount": "Minimum amount",
+        "select_bank": "Select bank account",
+        "fee": "Withdrawal fee",
+        "receive_amount": "Amount to receive",
+        "note": "Note",
+        "note_placeholder": "Optional note...",
+        "submit": "Submit withdrawal request",
+        "pending_requests": "Pending requests",
+        "no_pending": "No pending requests",
+        "recent_history": "Recent withdrawal history",
+        "no_bank_account": "You don't have any bank accounts yet",
+        "add_bank_account": "Add bank account",
+        "cancel": "Cancel request",
+        "confirm_cancel": "Are you sure you want to cancel this request?"
+    },
+    "wallet": {
+        "title": "Wallet",
+        "description": "Manage wallet and view transaction history",
+        "current_balance": "Current Balance",
+        "available_balance": "Available Balance",
+        "pending_amount": "Pending",
+        "total_deposits": "Total Deposits",
+        "total_withdrawals": "Total Withdrawals",
+        "pending_count": "Pending",
+        "transaction_history": "Transaction History",
+        "no_transactions": "No transactions yet"
+    },
+    "bank_accounts": {
+        "title": "Bank Accounts",
+        "description": "Manage bank accounts for withdrawals",
+        "add": "Add account",
+        "edit": "Edit account",
+        "your_accounts": "Your accounts",
+        "no_accounts": "No bank accounts yet",
+        "bank": "Bank",
+        "select_bank": "Select bank",
+        "account_number": "Account number",
+        "account_name": "Account holder name",
+        "branch": "Branch",
+        "branch_placeholder": "Branch (optional)",
+        "default": "Default",
+        "set_default": "Set as default",
+        "confirm_delete": "Are you sure you want to delete this account?"
+    },
+    "transaction": {
+        "code": "Transaction code",
+        "type": "Type",
+        "amount": "Amount",
+        "status": "Status",
+        "date": "Date",
+        "types": {
+            "deposit": "Deposit",
+            "withdrawal": "Withdrawal",
+            "ai_generation": "AI Generation"
+        },
+        "statuses": {
+            "pending": "Pending",
+            "processing": "Processing",
+            "completed": "Completed",
+            "failed": "Failed",
+            "cancelled": "Cancelled"
+        }
+    },
     "ai_studio": {
         "title": "AI Studio",
         "generate": "Generate",
@@ -851,6 +919,9 @@
         "resources": "Resources",
         "marketplace": "Marketplace",
         "wallet": "Wallet",
+        "withdraw": "Withdraw",
+        "bank_accounts": "Bank Accounts",
+        "finance": "Finance",
         "quick_access": "Quick Access"
     },
     "jobs": {

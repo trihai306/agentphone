@@ -624,6 +624,74 @@
         "completed": "Hoàn thành",
         "failed": "Thất bại"
     },
+    "withdraw": {
+        "title": "Rút Tiền",
+        "description": "Rút tiền từ ví về tài khoản ngân hàng của bạn",
+        "new_request": "Tạo yêu cầu rút tiền",
+        "amount": "Số tiền rút",
+        "min_amount": "Số tiền tối thiểu",
+        "select_bank": "Chọn tài khoản ngân hàng",
+        "fee": "Phí rút tiền",
+        "receive_amount": "Số tiền thực nhận",
+        "note": "Ghi chú",
+        "note_placeholder": "Ghi chú tùy chọn...",
+        "submit": "Gửi yêu cầu rút tiền",
+        "pending_requests": "Yêu cầu đang chờ",
+        "no_pending": "Không có yêu cầu đang chờ",
+        "recent_history": "Lịch sử rút tiền gần đây",
+        "no_bank_account": "Bạn chưa có tài khoản ngân hàng nào",
+        "add_bank_account": "Thêm tài khoản ngân hàng",
+        "cancel": "Hủy yêu cầu",
+        "confirm_cancel": "Bạn có chắc muốn hủy yêu cầu này?"
+    },
+    "wallet": {
+        "title": "Ví Tiền",
+        "description": "Quản lý ví và xem lịch sử giao dịch",
+        "current_balance": "Số dư hiện tại",
+        "available_balance": "Số dư khả dụng",
+        "pending_amount": "Đang chờ xử lý",
+        "total_deposits": "Tổng nạp",
+        "total_withdrawals": "Tổng rút",
+        "pending_count": "Đang chờ",
+        "transaction_history": "Lịch sử giao dịch",
+        "no_transactions": "Chưa có giao dịch nào"
+    },
+    "bank_accounts": {
+        "title": "Tài Khoản Ngân Hàng",
+        "description": "Quản lý tài khoản ngân hàng để nhận tiền rút",
+        "add": "Thêm tài khoản",
+        "edit": "Sửa tài khoản",
+        "your_accounts": "Tài khoản của bạn",
+        "no_accounts": "Chưa có tài khoản ngân hàng nào",
+        "bank": "Ngân hàng",
+        "select_bank": "Chọn ngân hàng",
+        "account_number": "Số tài khoản",
+        "account_name": "Tên chủ tài khoản",
+        "branch": "Chi nhánh",
+        "branch_placeholder": "Chi nhánh (tùy chọn)",
+        "default": "Mặc định",
+        "set_default": "Đặt làm mặc định",
+        "confirm_delete": "Bạn có chắc muốn xóa tài khoản này?"
+    },
+    "transaction": {
+        "code": "Mã giao dịch",
+        "type": "Loại",
+        "amount": "Số tiền",
+        "status": "Trạng thái",
+        "date": "Ngày",
+        "types": {
+            "deposit": "Nạp tiền",
+            "withdrawal": "Rút tiền",
+            "ai_generation": "Tạo AI"
+        },
+        "statuses": {
+            "pending": "Đang chờ",
+            "processing": "Đang xử lý",
+            "completed": "Hoàn thành",
+            "failed": "Thất bại",
+            "cancelled": "Đã hủy"
+        }
+    },
     "ai_studio": {
         "title": "AI Studio",
         "generate": "Tạo",
@@ -851,6 +919,9 @@
         "resources": "Tài Nguyên",
         "marketplace": "Marketplace",
         "wallet": "Ví Tiền",
+        "withdraw": "Rút Tiền",
+        "bank_accounts": "Tài Khoản NH",
+        "finance": "Tài Chính",
         "quick_access": "Truy Cập Nhanh"
     },
     "jobs": {
