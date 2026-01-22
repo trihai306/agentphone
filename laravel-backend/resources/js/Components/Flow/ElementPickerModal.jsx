@@ -400,9 +400,11 @@ export default function ElementPickerModal({
                 }
 
                 // Final chunk: stop loading
-                if (data.is_complete) {
+                if (data.is_complete === true) {
+                    console.log(`✅ Final chunk received (is_complete=true), stopping loading...`);
                     setLoading(false);
                     setIsChunking(false);
+                    setChunkProgress({ current: data.total_chunks, total: data.total_chunks });
                     console.log(`✅ All ${data.total_chunks} chunks received, total: ${data.total_element_count || 0} elements, ${data.total_ocr_count || 0} OCR`);
                 }
             });
