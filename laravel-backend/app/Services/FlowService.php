@@ -199,7 +199,7 @@ class FlowService
 
         // Build adjacency list with source handles and edge delay data
         $adjacency = [];
-        $incomingEdgeDelay = []; // Track delay config for edges leading INTO each node
+        $edgeDelays = []; // Map of source_node -> target_node -> delay config
         foreach ($edges as $edge) {
             $sourceHandle = $edge->source_handle ?? 'default';
             $adjacency[$edge->source_node_id][$sourceHandle] = $edge->target_node_id;
@@ -208,7 +208,8 @@ class FlowService
             $edgeData = is_array($edge->data) ? $edge->data : json_decode($edge->data ?? '{}', true);
             $delay = $edgeData['delay'] ?? null;
             if ($delay && $delay['mode'] !== 'none') {
-                $incomingEdgeDelay[$edge->target_node_id] = $delay;
+                // Store delay keyed by source -> target
+                $edgeDelays[$edge->source_node_id][$edge->target_node_id] = $delay;
             }
         }
 
@@ -266,18 +267,24 @@ class FlowService
             // Interpolate variables in params (for non-loop actions)
             $action['params'] = $this->variableService->interpolateParams($action['params'], $context);
 
-            // Inject edge delay as wait_before (for first action entering this node)
-            if (isset($incomingEdgeDelay[$currentNodeId])) {
-                $delay = $incomingEdgeDelay[$currentNodeId];
-                $waitBefore = $this->calculateEdgeDelay($delay);
-                $action['wait_before'] = $waitBefore;
-                // Clear so only first action gets the delay
-                unset($incomingEdgeDelay[$currentNodeId]);
-            }
-
             $actions[] = $action;
 
-            $currentNodeId = $this->getNextNodeId($adjacency, $currentNodeId);
+            // Get next node
+            $nextNodeId = $this->getNextNodeId($adjacency, $currentNodeId);
+
+            // Apply edge delay to THIS action's wait_after (delay before going to next node)
+            if ($nextNodeId && isset($edgeDelays[$currentNodeId][$nextNodeId])) {
+                $delay = $edgeDelays[$currentNodeId][$nextNodeId];
+                $edgeWaitMs = $this->calculateEdgeDelay($delay);
+
+                // Add edge delay to existing wait_after (don't replace it)
+                $action['wait_after'] = ($action['wait_after'] ?? 500) + $edgeWaitMs;
+
+                // Update the action in the array
+                $actions[count($actions) - 1] = $action;
+            }
+
+            $currentNodeId = $nextNodeId;
         }
 
         return $actions;
