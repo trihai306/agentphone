@@ -476,11 +476,11 @@ class FlowService
     /**
      * Calculate edge delay in milliseconds based on delay config
      * 
-     * Delay config structure:
+     * Delay config structure (values already in ms):
      * - mode: 'none' | 'fixed' | 'random'
-     * - fixedSeconds: number (for fixed mode)
-     * - minSeconds: number (for random mode)
-     * - maxSeconds: number (for random mode)
+     * - fixedMs: number (for fixed mode)
+     * - minMs: number (for random mode)
+     * - maxMs: number (for random mode)
      * 
      * @param array $delay Edge delay configuration
      * @return int Delay in milliseconds
@@ -494,18 +494,14 @@ class FlowService
         }
 
         if ($mode === 'fixed') {
-            $seconds = (float) ($delay['fixedSeconds'] ?? 1);
-            return (int) ($seconds * 1000);
+            return (int) ($delay['fixedMs'] ?? 500);
         }
 
         if ($mode === 'random') {
-            $minSeconds = (float) ($delay['minSeconds'] ?? 1);
-            $maxSeconds = (float) ($delay['maxSeconds'] ?? 3);
+            $min = (int) ($delay['minMs'] ?? 500);
+            $max = (int) ($delay['maxMs'] ?? 1500);
 
             // Generate random delay between min and max
-            $min = (int) ($minSeconds * 1000);
-            $max = (int) ($maxSeconds * 1000);
-
             return mt_rand($min, $max);
         }
 

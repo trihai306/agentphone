@@ -66,11 +66,11 @@ function AnimatedEdge({
     const isSuccess = executionState === 'success';
     const isError = executionState === 'error';
 
-    // Generate delay label text
+    // Generate delay label text (in ms)
     const getDelayLabel = () => {
         if (!delay || delay.mode === 'none') return null;
-        if (delay.mode === 'fixed') return `⏱️ ${delay.fixedSeconds}s`;
-        if (delay.mode === 'random') return `⏱️ ${delay.minSeconds}-${delay.maxSeconds}s`;
+        if (delay.mode === 'fixed') return `⏱️ ${delay.fixedMs}ms`;
+        if (delay.mode === 'random') return `⏱️ ${delay.minMs}-${delay.maxMs}ms`;
         return null;
     };
 
@@ -163,8 +163,8 @@ function AnimatedEdge({
                     {delayLabel ? (
                         <div
                             className={`px-2 py-1 rounded-full text-xs font-medium transition-all border ${isAnimating
-                                    ? 'bg-indigo-500/30 text-indigo-300 border-indigo-500/50 animate-pulse'
-                                    : 'bg-gray-800/90 text-gray-300 border-gray-600 hover:border-indigo-500 hover:bg-indigo-500/20'
+                                ? 'bg-indigo-500/30 text-indigo-300 border-indigo-500/50 animate-pulse'
+                                : 'bg-gray-800/90 text-gray-300 border-gray-600 hover:border-indigo-500 hover:bg-indigo-500/20'
                                 }`}
                             title="Click to configure delay"
                         >

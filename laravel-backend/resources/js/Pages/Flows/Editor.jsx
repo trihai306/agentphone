@@ -3147,7 +3147,8 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                             }}
                             onSave={handleEdgeDelayUpdate}
                             position={edgePopoverPosition}
-                            initialDelay={selectedEdgeForDelay?.data?.delay || { mode: 'none', fixedSeconds: 1, minSeconds: 1, maxSeconds: 3 }}
+                            isDark={isDark}
+                            initialDelay={selectedEdgeForDelay?.data?.delay || { mode: 'none', fixedMs: 500, minMs: 500, maxMs: 1500 }}
                         />
 
                         {/* Right Panel - Node Properties */}
