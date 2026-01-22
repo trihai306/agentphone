@@ -393,18 +393,29 @@ class DeviceController extends Controller
             return response()->json(['success' => false, 'message' => 'Device not found'], 404);
         }
 
-        // Update device status which will broadcast accessibility change if it changed
-        // This avoids duplicate broadcasts since updateDeviceStatus handles the broadcast internally
-        $this->deviceService->updateDeviceStatus($device, [
-            'status' => 'online',
+        $accessibilityEnabled = $request->input('accessibility_enabled');
+
+        // Update device in DB
+        $device->update([
+            'accessibility_enabled' => $accessibilityEnabled,
+            'accessibility_checked_at' => now(),
             'socket_connected' => true,
-            'accessibility_enabled' => $request->input('accessibility_enabled'),
+            'last_active_at' => now(),
         ]);
+
+        // Always broadcast accessibility status to FE (even if unchanged)
+        // This ensures FE gets the latest status after every check
+        \Log::info('Broadcasting accessibility status to FE', [
+            'device_id' => $device->device_id,
+            'accessibility_enabled' => $accessibilityEnabled,
+        ]);
+
+        broadcast(new \App\Events\DeviceAccessibilityChanged($device, $accessibilityEnabled));
 
         return response()->json([
             'success' => true,
             'message' => 'Accessibility status updated and broadcast',
-            'accessibility_enabled' => $request->input('accessibility_enabled'),
+            'accessibility_enabled' => $accessibilityEnabled,
         ]);
     }
 
