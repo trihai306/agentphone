@@ -49,6 +49,8 @@ object SocketJobManager {
     private var port: Int = 6001
     private var encrypted: Boolean = false
     private val isConnected = AtomicBoolean(false)
+    private val isInitialized = AtomicBoolean(false)
+    private val channelsSubscribed = AtomicBoolean(false)
     
     // Auto-reconnect
     private var reconnectAttempts = 0
@@ -90,6 +92,12 @@ object SocketJobManager {
      * Initialize Pusher manager
      */
     fun init(context: Context, appKey: String, host: String, port: Int = 6001, encrypted: Boolean = false) {
+        // Prevent duplicate initialization
+        if (isInitialized.get()) {
+            Log.w(TAG, "SocketJobManager already initialized, skipping duplicate init")
+            return
+        }
+        
         contextRef = WeakReference(context.applicationContext)
         this.appKey = appKey
         this.host = host
@@ -117,6 +125,7 @@ object SocketJobManager {
         this.authToken = session?.token
         
         Log.i(TAG, "SocketJobManager initialized - Host: $host:$port, Device: $deviceId, User: $userId")
+        isInitialized.set(true)
     }
 
     /**
@@ -237,6 +246,12 @@ object SocketJobManager {
      * This enables real-time online/offline status via Soketi webhooks
      */
     private fun subscribeToDeviceChannel() {
+        // Prevent duplicate channel subscriptions
+        if (channelsSubscribed.get()) {
+            Log.w(TAG, "Channels already subscribed, skipping duplicate subscription")
+            return
+        }
+        
         if (deviceId == null || userId == null) {
             Log.w(TAG, "Device ID or User ID not set, cannot subscribe to presence channel")
             // Fall back to private channel
@@ -252,6 +267,7 @@ object SocketJobManager {
             presenceChannel = pusher?.subscribePresence(presenceChannelName, object : PresenceChannelEventListener {
                 override fun onSubscriptionSucceeded(channelName: String) {
                     Log.i(TAG, "✅ Subscribed to presence channel: $channelName")
+                    channelsSubscribed.set(true)
                 }
 
                 override fun onAuthenticationFailure(message: String, e: Exception?) {
@@ -288,8 +304,8 @@ object SocketJobManager {
                             handleInspectElements(event.data)
                         }
                         "visual:inspect" -> {
-                            Log.i(TAG, "👁️ Received visual:inspect request via presence channel")
-                            handleVisualInspect(event.data)
+                            // DEPRECATED: OCR now included in inspect:elements
+                            Log.i(TAG, "⚠️ Ignoring visual:inspect - OCR in inspect:elements")
                         }
                         "command:quick_action" -> {
                             Log.i(TAG, "⚡ Received command:quick_action via presence channel")
@@ -315,11 +331,11 @@ object SocketJobManager {
                 override fun userUnsubscribed(channelName: String, user: User) {}
             })
 
-            // Bind visual:inspect for OCR text detection
+            // DEPRECATED: visual:inspect now handled by inspect:elements (unified API)
             presenceChannel?.bind("visual:inspect", object : PresenceChannelEventListener {
                 override fun onEvent(event: PusherEvent) {
-                    Log.i(TAG, "👁️ Received visual:inspect request via presence channel (direct bind)")
-                    handleVisualInspect(event.data)
+                    Log.i(TAG, "⚠️ Ignoring visual:inspect via presence - OCR now in inspect:elements")
+                    // DO NOT call handleVisualInspect
                 }
                 override fun onSubscriptionSucceeded(channelName: String) {}
                 override fun onAuthenticationFailure(message: String?, e: Exception?) {}
@@ -382,8 +398,8 @@ object SocketJobManager {
                         handleCheckAccessibility(event.data)
                     }
                     "visual:inspect" -> {
-                        Log.w(TAG, "👁️ Received visual:inspect via main handler!")
-                        handleVisualInspect(event.data)
+                        // DEPRECATED: OCR now included in inspect:elements
+                        Log.i(TAG, "⚠️ Ignoring visual:inspect - OCR in inspect:elements")
                     }
                     "find:icon" -> {
                         Log.w(TAG, "🔍 Received find:icon via main handler!")
@@ -483,11 +499,12 @@ object SocketJobManager {
             override fun onAuthenticationFailure(message: String?, e: Exception?) {}
         })
 
-        // Listen for visual inspection request from web (OCR-based text detection)
+        // DEPRECATED: visual:inspect is now handled by inspect:elements (unified API)
+        // Keep binding to avoid "unhandled event" warnings but do nothing
         deviceChannel?.bind("visual:inspect", object : com.pusher.client.channel.PrivateChannelEventListener {
             override fun onEvent(event: PusherEvent) {
-                Log.i(TAG, "👁️ Received visual:inspect request (OCR mode)")
-                handleVisualInspect(event.data)
+                Log.i(TAG, "⚠️ Ignoring visual:inspect - OCR now included in inspect:elements")
+                // DO NOT call handleVisualInspect - unified API handles this
             }
             override fun onSubscriptionSucceeded(channelName: String) {}
             override fun onAuthenticationFailure(message: String?, e: Exception?) {}
@@ -526,11 +543,14 @@ object SocketJobManager {
                     pusher?.unsubscribe("private-device.$deviceId")
                 }
                 deviceChannel = null
+                presenceChannel = null
                 
                 // Disconnect from Pusher
                 pusher?.disconnect()
                 pusher = null
                 isConnected.set(false)
+                channelsSubscribed.set(false)
+                isInitialized.set(false)
                 Log.i(TAG, "Disconnected from Pusher (intentional)")
             } catch (e: Exception) {
                 Log.e(TAG, "Error disconnecting", e)
@@ -1635,6 +1655,7 @@ object SocketJobManager {
                         var screenshotBase64: String? = null
                         var screenshotWidth = screenWidth
                         var screenshotHeight = screenHeight
+                        var ocrElements: List<Map<String, Any?>> = emptyList()  // OCR text elements
                         
                         if (bitmap != null) {
                             try {
@@ -1695,7 +1716,16 @@ object SocketJobManager {
                                     // Skip if not interactive and no identifying info
                                     val isInteractive = isClickable || isCheckable || isEditable
                                     val hasIdentity = hasText || hasDesc
-                                    if (!isInteractive && !hasIdentity) continue
+                                    
+                                    // Always crop icons for ImageView/ImageButton/Button classes even without text
+                                    val className = el["className"] as? String ?: ""
+                                    val isIconElement = className.contains("ImageView", ignoreCase = true) ||
+                                        className.contains("ImageButton", ignoreCase = true) ||
+                                        className.contains("Button", ignoreCase = true) ||
+                                        className.contains("Icon", ignoreCase = true) ||
+                                        className.contains("Fab", ignoreCase = true)
+                                    
+                                    if (!isInteractive && !hasIdentity && !isIconElement) continue
                                     
                                     // Skip too small or too large elements
                                     if (width < minElementSize || height < minElementSize) continue
@@ -1813,15 +1843,33 @@ object SocketJobManager {
                                 Log.e(TAG, "Failed to crop icons", e)
                             }
                             
+                            // ========== UNIFIED OCR TEXT DETECTION ==========
+                            // Run OCR on the SAME screenshot (no additional screenshot needed)
+                            try {
+                                // Convert HARDWARE bitmap to ARGB_8888 for ML Kit
+                                val ocrBitmap = bitmap.copy(android.graphics.Bitmap.Config.ARGB_8888, false)
+                                if (ocrBitmap != null) {
+                                    val ocrResult = com.agent.portal.vision.VisualInspectionService.detectText(ocrBitmap)
+                                    ocrElements = ocrResult.textElements.map { it.toMap() }
+                                    Log.i(TAG, "📝 OCR detected ${ocrElements.size} text elements in ${ocrResult.processingTimeMs}ms")
+                                    ocrBitmap.recycle()
+                                }
+                            } catch (e: Exception) {
+                                Log.e(TAG, "OCR detection failed (non-blocking)", e)
+                            }
+                            // ================================================
+                            
                             bitmap.recycle()
                         }
                         
-                        // Send results back via API
+                        // Send results back via API - UNIFIED response with both accessibility + OCR
                         val resultData = mutableMapOf<String, Any>(
                             "success" to true,
                             "package_name" to packageName,
                             "element_count" to elements.size,
                             "elements" to elements,
+                            "text_elements" to ocrElements,  // OCR text elements
+                            "ocr_count" to ocrElements.size,
                             "screen_width" to screenWidth,
                             "screen_height" to screenHeight,
                             "screenshot_width" to screenshotWidth,

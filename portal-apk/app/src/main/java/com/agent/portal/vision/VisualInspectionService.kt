@@ -342,21 +342,21 @@ object VisualInspectionService {
                     }
             }
             
-            // Extract text elements
+            // Extract text elements - use LINES instead of individual word elements
+            // This prevents fragmentation like "Admin" "•" being separate
             textResult?.let { text ->
                 for (block in text.textBlocks) {
+                    // Add full lines for complete text representation
                     for (line in block.lines) {
-                        for (element in line.elements) {
-                            val bounds = element.boundingBox ?: continue
-                            textElements.add(TextElement(
-                                text = element.text,
-                                bounds = bounds,
-                                centerX = bounds.centerX(),
-                                centerY = bounds.centerY(),
-                                confidence = element.confidence ?: 0.9f,
-                                language = element.recognizedLanguage
-                            ))
-                        }
+                        val lineBounds = line.boundingBox ?: continue
+                        textElements.add(TextElement(
+                            text = line.text,
+                            bounds = lineBounds,
+                            centerX = lineBounds.centerX(),
+                            centerY = lineBounds.centerY(),
+                            confidence = line.confidence ?: 0.9f,
+                            language = line.recognizedLanguage
+                        ))
                     }
                 }
             }

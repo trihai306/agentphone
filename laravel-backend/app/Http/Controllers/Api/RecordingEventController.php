@@ -66,17 +66,23 @@ class RecordingEventController extends Controller
                         deviceId: $request->device_id,
                         success: $request->success ?? false,
                         elements: $request->elements ?? [],
+                        textElements: $request->text_elements ?? [],  // OCR text from unified API
                         packageName: $request->package_name,
                         screenshot: $request->screenshot,
                         screenWidth: $request->screen_width,
                         screenHeight: $request->screen_height,
+                        screenshotWidth: $request->screenshot_width,
+                        screenshotHeight: $request->screenshot_height,
+                        statusBarHeight: $request->status_bar_height,
+                        navBarHeight: $request->nav_bar_height,
                         error: $request->error
                     ));
 
                     Log::info("Broadcast inspect:result to user channel", [
                         'user_id' => $device->user_id,
                         'device_id' => $request->device_id,
-                        'element_count' => $request->element_count ?? 0
+                        'element_count' => $request->element_count ?? 0,
+                        'ocr_count' => count($request->text_elements ?? [])
                     ]);
 
                     return response()->json([

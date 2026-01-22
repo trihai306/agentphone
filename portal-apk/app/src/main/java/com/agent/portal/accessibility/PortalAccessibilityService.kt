@@ -42,6 +42,11 @@ class PortalAccessibilityService : AccessibilityService() {
 
     private var nodeIndex = 0
     private val screenshotExecutor = Executors.newSingleThreadExecutor()
+    
+    // Screenshot mutex to prevent concurrent screenshot requests (causes error 3)
+    private val screenshotInProgress = java.util.concurrent.atomic.AtomicBoolean(false)
+    private val pendingScreenshotCallbacks = mutableListOf<(Bitmap?) -> Unit>()
+    private val screenshotLock = Any()
 
     // Advanced shortcut features
     private var volumeButtonManager: VolumeButtonShortcutManager? = null
@@ -724,9 +729,21 @@ class PortalAccessibilityService : AccessibilityService() {
 
     /**
      * Take screenshot using accessibility service
+     * Uses mutex to prevent concurrent screenshot requests (causes Android error 3)
      */
     fun takeScreenshot(callback: (Bitmap?) -> Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Check if a screenshot is already in progress
+            synchronized(screenshotLock) {
+                if (screenshotInProgress.get()) {
+                    // Queue this callback to receive the same screenshot result
+                    Log.w(TAG, "Screenshot already in progress, queueing callback")
+                    pendingScreenshotCallbacks.add(callback)
+                    return
+                }
+                screenshotInProgress.set(true)
+            }
+            
             takeScreenshot(
                 Display.DEFAULT_DISPLAY,
                 screenshotExecutor,
@@ -737,18 +754,56 @@ class PortalAccessibilityService : AccessibilityService() {
                             screenshot.colorSpace
                         )
                         screenshot.hardwareBuffer.close()
-                        callback(bitmap)
+                        
+                        // Notify all pending callbacks with the same bitmap
+                        notifyAllScreenshotCallbacks(bitmap, callback)
                     }
 
                     override fun onFailure(errorCode: Int) {
                         Log.e(TAG, "Screenshot failed with error: $errorCode")
-                        callback(null)
+                        // Notify all pending callbacks with null
+                        notifyAllScreenshotCallbacks(null, callback)
                     }
                 }
             )
         } else {
             callback(null)
         }
+    }
+    
+    /**
+     * Notify all pending screenshot callbacks with the result
+     * IMPORTANT: Each queued callback receives a COPY of the bitmap to prevent recycle conflicts
+     */
+    private fun notifyAllScreenshotCallbacks(bitmap: Bitmap?, originalCallback: (Bitmap?) -> Unit) {
+        val callbacks: List<(Bitmap?) -> Unit>
+        synchronized(screenshotLock) {
+            callbacks = pendingScreenshotCallbacks.toList()
+            pendingScreenshotCallbacks.clear()
+            screenshotInProgress.set(false)
+        }
+        
+        // Call original callback first with original bitmap
+        originalCallback(bitmap)
+        
+        // Then call all pending callbacks with COPIES of the bitmap
+        // This prevents "recycled bitmap" errors when callbacks run asynchronously
+        callbacks.forEach { cb ->
+            try {
+                if (bitmap != null && !bitmap.isRecycled) {
+                    // Create a copy for this callback
+                    val bitmapCopy = bitmap.copy(bitmap.config ?: Bitmap.Config.ARGB_8888, false)
+                    cb(bitmapCopy)
+                } else {
+                    cb(null)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error calling pending screenshot callback", e)
+            }
+        }
+        
+        // Original callback is responsible for recycling original bitmap
+        // Each queued callback is responsible for recycling its copy
     }
 
     /**
