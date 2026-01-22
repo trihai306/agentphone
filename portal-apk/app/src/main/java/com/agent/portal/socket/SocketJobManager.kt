@@ -154,13 +154,8 @@ object SocketJobManager {
                     }
                 }
 
-                // Configure auth endpoint for presence channels
-                val authUrl = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
-                    "http://10.0.2.2:8000/api/pusher/auth"
-                } else {
-                    // Use same base URL as API calls for physical devices
-                    "${com.agent.portal.utils.NetworkUtils.getApiBaseUrl()}/pusher/auth"
-                }
+                // Configure auth endpoint for presence channels - use production URL from NetworkUtils
+                val authUrl = "${com.agent.portal.utils.NetworkUtils.getApiBaseUrl()}/pusher/auth"
                 
                 // Refresh auth token from session (may have changed since init)
                 val context = contextRef?.get()
@@ -593,12 +588,8 @@ object SocketJobManager {
                     return@launch
                 }
 
-                // Determine API URL
-                val apiUrl = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
-                    "http://10.0.2.2:8000/api"
-                } else {
-                    com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
-                }
+                // Use production API URL from NetworkUtils
+                val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
 
                 // Send HTTP POST request
                 val client = okhttp3.OkHttpClient()
@@ -656,12 +647,8 @@ object SocketJobManager {
                     return@launch
                 }
 
-                // Determine API URL
-                val apiUrl = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
-                    "http://10.0.2.2:8000/api"
-                } else {
-                    com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
-                }
+                // Use production API URL from NetworkUtils
+                val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
 
                 // Capture screenshot asynchronously
                 val accessibilityService = com.agent.portal.accessibility.PortalAccessibilityService.instance
@@ -867,11 +854,7 @@ object SocketJobManager {
                 val session = sessionManager.getSession()
                 val token = session?.token ?: return@launch
 
-                val apiUrl = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
-                    "http://10.0.2.2:8000/api"
-                } else {
-                    com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
-                }
+                val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
 
                 val payload = mapOf(
                     "device_id" to (deviceId ?: "unknown"),
@@ -1450,11 +1433,7 @@ object SocketJobManager {
             val token = authToken ?: return
             val devId = deviceId ?: return
             
-            val apiUrl = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
-                "http://10.0.2.2:8000/api"
-            } else {
-                "${com.agent.portal.utils.NetworkUtils.getApiBaseUrl()}"
-            }
+            val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
             
             val client = okhttp3.OkHttpClient()
             val request = okhttp3.Request.Builder()

@@ -15,3 +15,7 @@ Schedule::command('devices:sync-presence')->everyMinute();
 // Dispatch scheduled workflow jobs every minute
 // Finds pending jobs with scheduled_at <= now() and dispatches them to devices
 Schedule::command('jobs:dispatch-scheduled')->everyMinute();
+
+// Check for inactive devices (no heartbeat/socket activity for 5+ minutes)
+// Mark them as offline and broadcast status change to frontend
+Schedule::command('devices:check-online-status')->everyMinute();

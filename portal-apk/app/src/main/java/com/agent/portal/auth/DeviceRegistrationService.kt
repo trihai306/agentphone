@@ -97,12 +97,8 @@ class DeviceRegistrationService(private val context: Context) {
             return savedUrl
         }
         
-        // Auto-detect emulator and use appropriate URL
-        return if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
-            "http://10.0.2.2:8000/api" // Laravel artisan serve
-        } else {
-            DEFAULT_API_BASE_URL
-        }
+        // Use centralized NetworkUtils (respects USE_PRODUCTION_API flag)
+        return com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
     }
     
     /**

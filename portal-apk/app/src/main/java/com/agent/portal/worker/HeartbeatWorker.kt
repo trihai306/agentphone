@@ -57,12 +57,8 @@ class HeartbeatWorker(
             newDeviceId
         }
         
-        // Determine API URL
-        val apiUrl = if (com.agent.portal.utils.NetworkUtils.isEmulator()) {
-            "http://10.0.2.2:8000/api"
-        } else {
-            com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
-        }
+        // Use production API URL from NetworkUtils
+        val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
         
         // Build request payload
         val isRecording = try {
