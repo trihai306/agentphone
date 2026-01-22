@@ -2316,23 +2316,13 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                     if (selectedDevice) {
                                         setTestRunning(true);
 
-                                        // Do realtime accessibility check first
+                                        // Run the workflow directly (no accessibility check needed)
                                         try {
-                                            const checkResponse = await axios.post('/devices/check-accessibility', {
-                                                device_id: selectedDevice.device_id
+                                            console.log('🚀 Starting test-run...', {
+                                                flowId: flow.id,
+                                                deviceId: selectedDevice.id,
+                                                deviceName: selectedDevice.name
                                             });
-
-                                            if (!checkResponse.data.current_status) {
-                                                // Just warn, don't block - APK might have accessibility enabled but DB not updated
-                                                console.warn('⚠️ Accessibility check returned false, but proceeding anyway for testing');
-                                                // addToast(`⚠️ Accessibility có thể chưa bật - đang thử chạy...`, 'warning');
-                                            }
-                                        } catch (checkError) {
-                                            console.warn('Accessibility check failed, proceeding anyway:', checkError);
-                                        }
-
-                                        // Now run the workflow
-                                        try {
                                             // Set all action nodes to 'pending' state for visual feedback
                                             setNodes(currentNodes =>
                                                 currentNodes.map(node => ({

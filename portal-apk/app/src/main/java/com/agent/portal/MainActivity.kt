@@ -82,6 +82,9 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        
+        // Set toolbar as ActionBar for menu to work
+        setSupportActionBar(binding.toolbar)
 
         // Initialize RecordingManager
         RecordingManager.init(this)

@@ -299,10 +299,7 @@ object SocketJobManager {
                         "job:pause" -> handlePauseJob(event.data)
                         "job:resume" -> handleResumeJob(event.data)
                         "config:update" -> handleConfigUpdate(event.data)
-                        "inspect:elements" -> {
-                            Log.i(TAG, "🔍 Received inspect:elements request via presence channel")
-                            handleInspectElements(event.data)
-                        }
+                        // Note: workflow:test, inspect:elements, check:accessibility are handled by global handler
                         "visual:inspect" -> {
                             // DEPRECATED: OCR now included in inspect:elements
                             Log.i(TAG, "⚠️ Ignoring visual:inspect - OCR in inspect:elements")
@@ -318,18 +315,7 @@ object SocketJobManager {
                 }
             })
 
-            // Bind specific events to presence channel
-            presenceChannel?.bind("inspect:elements", object : PresenceChannelEventListener {
-                override fun onEvent(event: PusherEvent) {
-                    Log.i(TAG, "🔍 Received inspect:elements request via presence channel (direct bind)")
-                    handleInspectElements(event.data)
-                }
-                override fun onSubscriptionSucceeded(channelName: String) {}
-                override fun onAuthenticationFailure(message: String?, e: Exception?) {}
-                override fun onUsersInformationReceived(channelName: String, users: MutableSet<User>?) {}
-                override fun userSubscribed(channelName: String, user: User) {}
-                override fun userUnsubscribed(channelName: String, user: User) {}
-            })
+            // Note: inspect:elements is handled by global handler, no need for direct bind here
 
             // DEPRECATED: visual:inspect now handled by inspect:elements (unified API)
             presenceChannel?.bind("visual:inspect", object : PresenceChannelEventListener {
@@ -385,18 +371,7 @@ object SocketJobManager {
                     "job:resume" -> handleResumeJob(event.data)
                     "config:update" -> handleConfigUpdate(event.data)
                     "recording.stop_requested" -> handleRecordingStopRequested(event.data)
-                    "workflow:test" -> {
-                        Log.i(TAG, "🧪 Received workflow:test event!")
-                        handleWorkflowTest(event.data)
-                    }
-                    "inspect:elements" -> {
-                        Log.w(TAG, "🔍 Received inspect:elements via main handler!")
-                        handleInspectElements(event.data)
-                    }
-                    "check:accessibility" -> {
-                        Log.w(TAG, "🔍 Received check:accessibility via main handler!")
-                        handleCheckAccessibility(event.data)
-                    }
+                    // Note: workflow:test, inspect:elements, check:accessibility are handled by global handler
                     "visual:inspect" -> {
                         // DEPRECATED: OCR now included in inspect:elements
                         Log.i(TAG, "⚠️ Ignoring visual:inspect - OCR in inspect:elements")
@@ -469,35 +444,10 @@ object SocketJobManager {
             override fun onAuthenticationFailure(message: String?, e: Exception?) {}
         })
 
-        // Listen for workflow test run command from web (quick test without job creation)
-        deviceChannel?.bind("workflow:test", object : com.pusher.client.channel.PrivateChannelEventListener {
-            override fun onEvent(event: PusherEvent) {
-                Log.i(TAG, "🧪 Received workflow:test event")
-                handleWorkflowTest(event.data)
-            }
-            override fun onSubscriptionSucceeded(channelName: String) {}
-            override fun onAuthenticationFailure(message: String?, e: Exception?) {}
-        })
+        // NOTE: workflow:test is handled by the global event handler in onEvent()
+        // Note: workflow:test, inspect:elements, check:accessibility are handled by global handler
+        // Do NOT bind separately here to avoid duplicate event processing
 
-        // Listen for element inspection request from web (Element Inspector feature)
-        deviceChannel?.bind("inspect:elements", object : com.pusher.client.channel.PrivateChannelEventListener {
-            override fun onEvent(event: PusherEvent) {
-                Log.i(TAG, "🔍 Received inspect:elements request")
-                handleInspectElements(event.data)
-            }
-            override fun onSubscriptionSucceeded(channelName: String) {}
-            override fun onAuthenticationFailure(message: String?, e: Exception?) {}
-        })
-
-        // Listen for accessibility check request from web (when user selects device)
-        deviceChannel?.bind("check:accessibility", object : com.pusher.client.channel.PrivateChannelEventListener {
-            override fun onEvent(event: PusherEvent) {
-                Log.i(TAG, "🔍 Received check:accessibility request")
-                handleCheckAccessibility(event.data)
-            }
-            override fun onSubscriptionSucceeded(channelName: String) {}
-            override fun onAuthenticationFailure(message: String?, e: Exception?) {}
-        })
 
         // DEPRECATED: visual:inspect is now handled by inspect:elements (unified API)
         // Keep binding to avoid "unhandled event" warnings but do nothing
@@ -520,12 +470,18 @@ object SocketJobManager {
             override fun onAuthenticationFailure(message: String?, e: Exception?) {}
         })
 
-        // Add global event listener to catch ALL events for debugging
+        // Add global event listener to route events (individual binds may not fire reliably)
         deviceChannel?.bindGlobal { event ->
-            Log.w(TAG, "🌐 GLOBAL EVENT RECEIVED: eventName=${event?.eventName}, channel=${event?.channelName}, data=${event?.data?.take(200)}")
+            // Route events silently - only log errors
+            when (event?.eventName) {
+                "workflow:test" -> handleWorkflowTest(event.data ?: "")
+                "inspect:elements" -> handleInspectElements(event.data ?: "")
+                "check:accessibility" -> handleCheckAccessibility(event.data ?: "")
+                "job:new" -> handleNewJob(event.data ?: "")
+                "recording.stop_requested" -> handleRecordingStopRequested(event.data ?: "")
+            }
         }
 
-        Log.i(TAG, "Private channel subscription complete")
     }
 
     /**
@@ -611,9 +567,16 @@ object SocketJobManager {
                 // Use production API URL from NetworkUtils
                 val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
 
-                // Send HTTP POST request
-                val client = okhttp3.OkHttpClient()
+                // Send HTTP POST request with longer timeout for large payloads
+                val client = okhttp3.OkHttpClient.Builder()
+                    .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                    .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                    .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                    .build()
+                    
                 val json = gson.toJson(enrichedData)
+                val payloadSizeKb = json.length / 1024
+                
                 val requestBody = okhttp3.RequestBody.create(
                     "application/json".toMediaTypeOrNull(),
                     json
@@ -627,17 +590,19 @@ object SocketJobManager {
                     .addHeader("Accept", "application/json")
                     .build()
 
+                Log.i(TAG, "📤 Sending $eventName (${payloadSizeKb}KB)...")
                 val response = client.newCall(request).execute()
                 
                 if (response.isSuccessful) {
-                    Log.i(TAG, "📤 Published event: $eventName")
+                    Log.i(TAG, "✅ Published $eventName (${payloadSizeKb}KB)")
                 } else {
-                    Log.w(TAG, "Failed to publish event: ${response.code}")
+                    val body = response.body?.string()?.take(200) ?: "no body"
+                    Log.e(TAG, "❌ Failed to publish $eventName: ${response.code} - $body")
                 }
                 
                 response.close()
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to publish event '$eventName'", e)
+                Log.e(TAG, "❌ Exception publishing '$eventName': ${e.message}", e)
             }
         }
     }
@@ -1862,66 +1827,32 @@ object SocketJobManager {
                             bitmap.recycle()
                         }
                         
-                        // ========== CHUNKED STREAMING ==========
-                        // Send elements in chunks to avoid large WebSocket payloads
-                        // Each chunk is ~50-100KB max to stay well under Soketi limits
-                        val chunkSize = 15  // 15 elements per chunk (with images ~3-5KB each)
-                        
-                        // Combine elements and OCR for total count
+                        // ========== SINGLE EVENT - NO CHUNKING ==========
+                        // Send all elements in one inspect:result event (socket limit increased)
                         val totalElements = elements.size
                         val totalOcr = ocrElements.size
                         
-                        // Calculate chunks
-                        val elementChunks = elements.chunked(chunkSize)
-                        val ocrChunks = ocrElements.chunked(chunkSize)
-                        val totalChunks = maxOf(elementChunks.size, ocrChunks.size, 1)
+                        Log.i(TAG, "📦 Sending ${totalElements} elements + ${totalOcr} OCR in single event")
                         
-                        Log.i(TAG, "📦 Sending ${totalElements} elements + ${totalOcr} OCR in $totalChunks chunks")
+                        val resultData = mutableMapOf<String, Any>(
+                            "success" to true,
+                            "package_name" to packageName,
+                            "elements" to elements,
+                            "text_elements" to ocrElements,
+                            "element_count" to totalElements,
+                            "ocr_count" to totalOcr,
+                            "screen_width" to screenWidth,
+                            "screen_height" to screenHeight,
+                            "screenshot_width" to screenshotWidth,
+                            "screenshot_height" to screenshotHeight,
+                            "status_bar_height" to statusBarHeight,
+                            "nav_bar_height" to navBarHeight
+                        )
+                        deviceId?.let { resultData["device_id"] = it }
+                        screenshotBase64?.let { resultData["screenshot"] = it }
                         
-                        // Send chunks
-                        for (i in 0 until totalChunks) {
-                            val isFirstChunk = (i == 0)
-                            val isLastChunk = (i == totalChunks - 1)
-                            
-                            val chunkData = mutableMapOf<String, Any>(
-                                "chunk_index" to (i + 1),
-                                "total_chunks" to totalChunks,
-                                "is_complete" to isLastChunk,
-                                "success" to true,
-                                "package_name" to packageName,
-                                "elements" to (elementChunks.getOrNull(i) ?: emptyList()),
-                                "text_elements" to (ocrChunks.getOrNull(i) ?: emptyList()),
-                                "total_element_count" to totalElements,
-                                "total_ocr_count" to totalOcr,
-                                "screen_width" to screenWidth,
-                                "screen_height" to screenHeight,
-                                "screenshot_width" to screenshotWidth,
-                                "screenshot_height" to screenshotHeight,
-                                "status_bar_height" to statusBarHeight,
-                                "nav_bar_height" to navBarHeight
-                            )
-                            
-                            // Add device_id
-                            deviceId?.let { chunkData["device_id"] = it }
-                            
-                            // Add screenshot only in first chunk
-                            if (isFirstChunk && screenshotBase64 != null) {
-                                chunkData["screenshot"] = screenshotBase64
-                            }
-                            
-                            val chunkElements = (chunkData["elements"] as? List<*>)?.size ?: 0
-                            val chunkOcr = (chunkData["text_elements"] as? List<*>)?.size ?: 0
-                            Log.i(TAG, "📤 Sending chunk ${i+1}/$totalChunks: $chunkElements elements, $chunkOcr OCR")
-                            
-                            publishEvent("inspect:chunk", chunkData)
-                            
-                            // Small delay between chunks to avoid flooding
-                            if (!isLastChunk) {
-                                delay(100)
-                            }
-                        }
-                        
-                        Log.i(TAG, "✅ All $totalChunks chunks sent successfully")
+                        publishEvent("inspect:result", resultData)
+                        Log.i(TAG, "✅ inspect:result sent successfully")
                     }
                 }
                 
