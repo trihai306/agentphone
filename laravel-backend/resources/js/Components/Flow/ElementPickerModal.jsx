@@ -319,15 +319,19 @@ export default function ElementPickerModal({
         if (window.Echo) {
             // Subscribe to standard Laravel Echo user channel (use user.{userId} to match backend)
             const channel = window.Echo.private(`user.${userId}`);
+            console.log(`🔌 ElementPicker: Subscribing to private-user.${userId}`);
 
             channel.listen('.inspect:result', (data) => {
+                console.log('📥 Received inspect:result event:', data);
                 handleResult(data);
             });
             channel.listen('.visual:result', (data) => {
+                console.log('📥 Received visual:result event:', data);
                 handleVisualResult(data);
             });
 
             return () => {
+                console.log(`🔌 ElementPicker: Unsubscribing from private-user.${userId}`);
                 channel.stopListening('.inspect:result');
                 channel.stopListening('.visual:result');
             };
