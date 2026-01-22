@@ -186,18 +186,24 @@ export default function ElementPickerModal({
     const categories = useMemo(() => {
         // Helper to check if element looks like a button based on className or other attributes
         const looksLikeButton = (el) => {
+            // Must have actual clickable/interactive property
             if (el.isClickable && !el.isEditable && !el.isCheckable) return true;
-
-            // Check className for common clickable patterns
-            const className = (el.className || '').toLowerCase();
-            const buttonPatterns = ['button', 'image', 'icon', 'card', 'item', 'cell', 'fab', 'chip', 'tab'];
-            if (buttonPatterns.some(p => className.includes(p))) return true;
-
-            // Check for elements with explicit tap-related attributes
             if (el.isLongClickable) return true;
 
-            // Check for elements with click handlers (contentDescription often indicates interactivity)
-            if (el.contentDescription && (el.isFocusable || className.includes('view'))) return true;
+            // Only consider className patterns if element is also focusable or has contentDescription
+            // This prevents including non-interactive CardView, ImageView, etc.
+            const className = (el.className || '').toLowerCase();
+            const interactivePatterns = ['button', 'fab', 'chip', 'tab', 'menuitem'];
+
+            // Strong button patterns - always include
+            if (interactivePatterns.some(p => className.includes(p))) return true;
+
+            // Weak patterns (image, icon, card, item) - only if focusable or has contentDescription
+            const weakPatterns = ['image', 'icon', 'card', 'item', 'cell'];
+            if (weakPatterns.some(p => className.includes(p))) {
+                // Must have evidence of interactivity
+                if (el.isFocusable && el.contentDescription) return true;
+            }
 
             return false;
         };
@@ -514,12 +520,19 @@ export default function ElementPickerModal({
 
             // Helper for enhanced button detection (same as in categories)
             const looksLikeButton = () => {
+                // Must have actual clickable/interactive property
                 if (el.isClickable && !el.isEditable && !el.isCheckable) return true;
-                const className = (el.className || '').toLowerCase();
-                const buttonPatterns = ['button', 'image', 'icon', 'card', 'item', 'cell', 'fab', 'chip', 'tab'];
-                if (buttonPatterns.some(p => className.includes(p))) return true;
                 if (el.isLongClickable) return true;
-                if (el.contentDescription && (el.isFocusable || className.includes('view'))) return true;
+
+                const className = (el.className || '').toLowerCase();
+                const interactivePatterns = ['button', 'fab', 'chip', 'tab', 'menuitem'];
+                if (interactivePatterns.some(p => className.includes(p))) return true;
+
+                // Weak patterns - only if focusable AND has contentDescription
+                const weakPatterns = ['image', 'icon', 'card', 'item', 'cell'];
+                if (weakPatterns.some(p => className.includes(p))) {
+                    if (el.isFocusable && el.contentDescription) return true;
+                }
                 return false;
             };
 
