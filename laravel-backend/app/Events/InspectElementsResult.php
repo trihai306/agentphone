@@ -90,7 +90,7 @@ class InspectElementsResult implements ShouldBroadcastNow
             'elements' => $elementsWithOptimizedImages,
             'text_elements' => $textStripped,  // Stripped for now
             'ocr_count' => count($this->textElements),
-            'screenshot' => null,  // Stripped to reduce payload
+            'screenshot' => $this->screenshot,  // Include full screenshot (Soketi limit 50MB)
             'screen_width' => $this->screenWidth,
             'screen_height' => $this->screenHeight,
             'screenshot_width' => $this->screenshotWidth,
