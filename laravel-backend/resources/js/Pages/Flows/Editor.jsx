@@ -380,6 +380,20 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         }));
     }, [nodes, nodeStates]);
 
+    // Handler for edge click - open delay config popover
+    // Note: Defined here before edgesWithExecution since it's used in the memo
+    const handleEdgeClick = useCallback((edgeId, position, currentDelay) => {
+        const edge = edges.find(e => e.id === edgeId);
+        if (edge) {
+            setSelectedEdgeForDelay(edge);
+            setEdgePopoverPosition({
+                x: position.x + (reactFlowWrapper.current?.getBoundingClientRect()?.left || 0),
+                y: position.y + (reactFlowWrapper.current?.getBoundingClientRect()?.top || 0) - 20
+            });
+            setShowEdgeDelayPopover(true);
+        }
+    }, [edges]);
+
     // Update edges with execution state and delay click handler
     const edgesWithExecution = useMemo(() => {
         return edges.map(edge => {
@@ -1460,19 +1474,6 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     const handleUpdateNode = useCallback((nodeId, updatedNode) => {
         setNodes((nds) => nds.map((n) => n.id === nodeId ? updatedNode : n));
     }, []);
-
-    // Handler for edge click - open delay config popover
-    const handleEdgeClick = useCallback((edgeId, position, currentDelay) => {
-        const edge = edges.find(e => e.id === edgeId);
-        if (edge) {
-            setSelectedEdgeForDelay(edge);
-            setEdgePopoverPosition({
-                x: position.x + (reactFlowWrapper.current?.getBoundingClientRect()?.left || 0),
-                y: position.y + (reactFlowWrapper.current?.getBoundingClientRect()?.top || 0) - 20
-            });
-            setShowEdgeDelayPopover(true);
-        }
-    }, [edges]);
 
     // Handler for updating edge delay config
     const handleEdgeDelayUpdate = useCallback((delayConfig) => {
