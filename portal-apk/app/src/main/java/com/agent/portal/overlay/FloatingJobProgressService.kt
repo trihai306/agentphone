@@ -135,6 +135,12 @@ class FloatingJobProgressService : Service() {
     private var workflowName = ""
     private var currentAction = 0
     private var totalActions = 0
+    private var currentActionName = ""
+    
+    // Timer tracking
+    private var workflowStartTime = 0L
+    private var currentActionStartTime = 0L
+    private var timerUpdateRunnable: Runnable? = null
 
     // For dragging
     private var initialX = 0
@@ -165,15 +171,19 @@ class FloatingJobProgressService : Service() {
                 workflowName = intent.getStringExtra(EXTRA_WORKFLOW_NAME) ?: "Workflow"
                 currentAction = intent.getIntExtra(EXTRA_CURRENT_ACTION, 0)
                 totalActions = intent.getIntExtra(EXTRA_TOTAL_ACTIONS, 0)
+                currentActionName = intent.getStringExtra(EXTRA_ACTION_NAME) ?: ""
 
                 if (!isOverlayAdded) {
                     showOverlay()
+                    startTimerUpdates()  // Start timer when overlay shown
                 }
                 updateUI()
             }
             ACTION_UPDATE -> {
                 currentAction = intent.getIntExtra(EXTRA_CURRENT_ACTION, currentAction)
                 totalActions = intent.getIntExtra(EXTRA_TOTAL_ACTIONS, totalActions)
+                currentActionName = intent.getStringExtra(EXTRA_ACTION_NAME) ?: currentActionName
+                currentActionStartTime = System.currentTimeMillis()  // Reset timer for new action
                 updateUI()
             }
             ACTION_HIDE -> {
@@ -192,6 +202,7 @@ class FloatingJobProgressService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         hideOverlay()
+        stopTimerUpdates()
         pulseAnimator?.cancel()
         instance = null
         Log.i(TAG, "FloatingJobProgressService destroyed")
@@ -310,6 +321,16 @@ class FloatingJobProgressService : Service() {
 
             // Workflow name
             view.findViewById<TextView>(R.id.tvWorkflowName)?.text = workflowName
+
+            // Current action name
+            if (currentActionName.isNotEmpty()) {
+                view.findViewById<TextView>(R.id.tvCurrentAction)?.apply {
+                    text = currentActionName
+                    visibility = View.VISIBLE
+                }
+            } else {
+                view.findViewById<TextView>(R.id.tvCurrentAction)?.visibility = View.GONE
+            }
 
             // Action progress
             view.findViewById<TextView>(R.id.tvActionProgress)?.text = "$currentAction/$totalActions"
@@ -454,6 +475,54 @@ class FloatingJobProgressService : Service() {
                 start()
             }
         }
+    }
+
+    /**
+     * Start timer updates - update UI every 100ms
+     */
+    private fun startTimerUpdates() {
+        workflowStartTime = System.currentTimeMillis()
+        currentActionStartTime = System.currentTimeMillis()
+        
+        timerUpdateRunnable = object : Runnable {
+            override fun run() {
+                updateTimers()
+                handler.postDelayed(this, 100)
+            }
+        }
+        handler.post(timerUpdateRunnable!!)
+    }
+
+    /**
+     * Stop timer updates
+     */
+    private fun stopTimerUpdates() {
+        timerUpdateRunnable?.let { handler.removeCallbacks(it) }
+        timerUpdateRunnable = null
+    }
+
+    /**
+     * Update timer displays
+     */
+    private fun updateTimers() {
+        overlayView?.let { view ->
+            // Overall elapsed time
+            val elapsed = System.currentTimeMillis() - workflowStartTime
+            view.findViewById<TextView>(R.id.tvElapsedTime)?.text = formatTime(elapsed)
+            
+            // Current action elapsed time (optional - could add to tvCurrentAction)
+            // val actionElapsed = System.currentTimeMillis() - currentActionStartTime
+        }
+    }
+
+    /**
+     * Format milliseconds to MM:SS
+     */
+    private fun formatTime(ms: Long): String {
+        val totalSeconds = (ms / 1000).toInt()
+        val minutes = totalSeconds / 60
+        val seconds = totalSeconds % 60
+        return String.format("%02d:%02d", minutes, seconds)
     }
 
     private fun dpToPx(dp: Int): Int {

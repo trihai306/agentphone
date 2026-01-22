@@ -80,6 +80,14 @@ class JobExecutor(context: Context) {
                 job.flowId?.let { flowId ->
                     reportProgress(flowId, action.id, "running", index + 1, config.actions.size)
                 }
+                
+                // Update floating overlay with current action name and progress
+                com.agent.portal.overlay.FloatingJobProgressService.updateProgress(
+                    context,
+                    currentAction = index + 1,
+                    totalActions = config.actions.size,
+                    actionName = "${action.type}"
+                )
 
                 // Execute action
                 val result = executeAction(action, job.params)

@@ -82,6 +82,31 @@
                     android:ellipsize="end"
                     android:maxLines="1" />
 
+                <!-- Elapsed Time -->
+                <TextView
+                    android:id="@+id/tvElapsedTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="00:00"
+                    android:textSize="11sp"
+                    android:textColor="#A855F7"
+                    android:fontFamily="sans-serif-mono"
+                    android:layout_marginTop="2dp" />
+
+                <!-- Current Action Name -->
+                <TextView
+                    android:id="@+id/tvCurrentAction"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tapping button..."
+                    android:textSize="10sp"
+                    android:textColor="#66FFFFFF"
+                    android:fontFamily="sans-serif"
+                    android:maxWidth="140dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:layout_marginTop="2dp" />
+
                 <!-- Action Progress -->
                 <LinearLayout
                     android:layout_width="wrap_content"
