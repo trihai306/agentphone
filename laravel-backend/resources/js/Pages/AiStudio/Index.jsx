@@ -6,7 +6,7 @@ import AppLayout from '../../Layouts/AppLayout';
 import { useToast } from '@/Components/Layout/ToastProvider';
 import { useTheme } from '@/Contexts/ThemeContext';
 import FolderSelectModal from '@/Components/Media/FolderSelectModal';
-import ScenarioTab from '@/Components/AIStudio/ScenarioTab';
+import ScenarioTab from '@/Components/AiStudio/ScenarioTab';
 
 // Provider badge colors - professional palette
 const providerColors = {
