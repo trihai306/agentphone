@@ -102,13 +102,17 @@ object VisualInspectionService {
     /**
      * Detected text element with coordinates
      */
+    /**
+     * Detected text element with coordinates and optional cropped image
+     */
     data class TextElement(
         val text: String,
         val bounds: Rect,
         val centerX: Int,
         val centerY: Int,
         val confidence: Float,
-        val language: String? = null
+        val language: String? = null,
+        val imageBase64: String? = null  // Cropped icon image for visual identification
     ) {
         fun toMap(): Map<String, Any?> = mapOf(
             "text" to text,
@@ -123,7 +127,8 @@ object VisualInspectionService {
             "center" to mapOf("x" to centerX, "y" to centerY),
             "confidence" to confidence,
             "language" to language,
-            "type" to "text"
+            "type" to "text",
+            "image" to imageBase64  // Include cropped image for Element Inspector
         )
     }
     
@@ -349,13 +354,19 @@ object VisualInspectionService {
                     // Add full lines for complete text representation
                     for (line in block.lines) {
                         val lineBounds = line.boundingBox ?: continue
+                        
+                        // Crop icon image for visual identification in Element Inspector
+                        // Use smaller maxSize (50px) to keep payload small for text elements
+                        val croppedImage = cropAndEncode(bitmap, lineBounds, maxSize = 50)
+                        
                         textElements.add(TextElement(
                             text = line.text,
                             bounds = lineBounds,
                             centerX = lineBounds.centerX(),
                             centerY = lineBounds.centerY(),
                             confidence = line.confidence ?: 0.9f,
-                            language = line.recognizedLanguage
+                            language = line.recognizedLanguage,
+                            imageBase64 = croppedImage  // Include cropped icon
                         ))
                     }
                 }

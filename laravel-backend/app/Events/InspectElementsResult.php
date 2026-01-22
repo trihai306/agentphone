@@ -49,19 +49,27 @@ class InspectElementsResult implements ShouldBroadcastNow
 
     public function broadcastWith(): array
     {
-        // Strip base64 image data from elements to reduce payload size
-        // Large payloads (1MB+) may fail WebSocket delivery
-        $elementsWithoutImages = array_map(function ($el) {
-            if (is_array($el)) {
-                unset($el['image']); // Remove base64 icon image
+        // SELECTIVE image stripping: only remove LARGE base64 images (>5KB ≈ 6800 chars)
+        // Small icons from OCR text elements (~1-3KB) pass through for visual identification
+        // This prevents WebSocket payload from exceeding limits while keeping useful icons
+        $maxImageSize = 6800; // ~5KB in base64
+
+        $elementsWithOptimizedImages = array_map(function ($el) use ($maxImageSize) {
+            if (is_array($el) && isset($el['image']) && is_string($el['image'])) {
+                // Only strip large images (typically accessibility element screenshots)
+                if (strlen($el['image']) > $maxImageSize) {
+                    unset($el['image']);
+                }
             }
             return $el;
         }, $this->elements);
 
-        // Also strip from text elements if present
-        $textWithoutImages = array_map(function ($el) {
-            if (is_array($el)) {
-                unset($el['image']);
+        // Same for text elements - keep small OCR text crops
+        $textWithOptimizedImages = array_map(function ($el) use ($maxImageSize) {
+            if (is_array($el) && isset($el['image']) && is_string($el['image'])) {
+                if (strlen($el['image']) > $maxImageSize) {
+                    unset($el['image']);
+                }
             }
             return $el;
         }, $this->textElements);
@@ -71,8 +79,8 @@ class InspectElementsResult implements ShouldBroadcastNow
             'success' => $this->success,
             'package_name' => $this->packageName,
             'element_count' => count($this->elements),
-            'elements' => $elementsWithoutImages,
-            'text_elements' => $textWithoutImages,  // OCR text elements
+            'elements' => $elementsWithOptimizedImages,
+            'text_elements' => $textWithOptimizedImages,  // OCR text elements with icons
             'ocr_count' => count($this->textElements),
             'screenshot' => $this->screenshot,
             'screen_width' => $this->screenWidth,
