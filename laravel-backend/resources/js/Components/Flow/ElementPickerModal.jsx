@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
 
 /**
@@ -46,6 +46,7 @@ export default function ElementPickerModal({
     const [ocrProcessingTime, setOcrProcessingTime] = useState(0);
     const [selectedElement, setSelectedElement] = useState(null); // For showing detail panel
     const [selectorStrategy, setSelectorStrategy] = useState('smart'); // smart | id | text | coordinates
+    const scanTimeoutRef = useRef(null); // Timeout ID for scan timeout
 
     // Calculate selector confidence score for an element
     const getConfidenceScore = useCallback((el) => {
@@ -227,6 +228,20 @@ export default function ElementPickerModal({
         if (!isOpen || !userId) return;
 
         const handleResult = (data) => {
+            console.log('🎯 handleResult CALLED with data:', {
+                device_id: data.device_id,
+                success: data.success,
+                element_count: data.element_count || data.elements?.length,
+                ocr_count: data.text_elements?.length
+            });
+
+            // Clear the scan timeout since we received the response
+            if (scanTimeoutRef.current) {
+                clearTimeout(scanTimeoutRef.current);
+                scanTimeoutRef.current = null;
+                console.log('✅ Cleared scan timeout - event arrived in time');
+            }
+
             setLoading(false);
 
             if (data.success) {
@@ -361,14 +376,21 @@ export default function ElementPickerModal({
         setLoading(true);
         setError(null);
 
-        // Safety timeout - if socket doesn't respond within 15s, stop loading
-        // (inspect:result payload can be 100KB+ with element icons)
-        const timeoutId = setTimeout(() => {
+        // Clear any existing timeout
+        if (scanTimeoutRef.current) {
+            clearTimeout(scanTimeoutRef.current);
+        }
+
+        // Safety timeout - if socket doesn't respond within 20s, stop loading
+        // (inspect:result payload can be 100KB+ with element icons)        
+        scanTimeoutRef.current = setTimeout(() => {
             setLoading(false);
             console.warn('⏱️ Element scan timeout - socket did not respond in time');
-        }, 15000);
+            scanTimeoutRef.current = null;
+        }, 20000);
 
         try {
+            console.log('📤 Sending inspect request for device:', deviceId);
             // SINGLE API call for element detection
             // Accessibility scan provides: elements + screenshot + element properties
             // No need for separate OCR call - reduces complexity and prevents screenshot conflicts
@@ -377,13 +399,21 @@ export default function ElementPickerModal({
             if (!response?.data?.success) {
                 setError('Không thể scan thiết bị');
                 setLoading(false);
-                clearTimeout(timeoutId);
+                if (scanTimeoutRef.current) {
+                    clearTimeout(scanTimeoutRef.current);
+                    scanTimeoutRef.current = null;
+                }
+            } else {
+                console.log('📥 API response success - waiting for socket event...');
             }
         } catch (err) {
             const message = err.response?.data?.message || 'Không thể kết nối đến server';
             setError(message);
             setLoading(false);
-            clearTimeout(timeoutId);
+            if (scanTimeoutRef.current) {
+                clearTimeout(scanTimeoutRef.current);
+                scanTimeoutRef.current = null;
+            }
         }
     }, [deviceId]);
 
