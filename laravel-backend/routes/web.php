@@ -139,6 +139,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/recording-sessions/start', [\App\Http\Controllers\Api\RecordingEventController::class, 'startSession'])->name('recording.start');
     Route::post('/recording-sessions/{sessionId}/stop', [\App\Http\Controllers\Api\RecordingEventController::class, 'stopSession'])->name('recording.stop');
 
+    // Real-time Recording Event Broadcasting (APK → Web)
+    Route::post('/recording/event', [\App\Http\Controllers\RecordingController::class, 'receiveEvent'])->name('recording.receiveEvent');
+
     // Element Inspector Routes (Web auth for Flow Editor)
     Route::post('/devices/inspect', [\App\Http\Controllers\DeviceController::class, 'inspectElements'])->name('devices.inspect');
     Route::post('/devices/visual-inspect', [\App\Http\Controllers\DeviceController::class, 'visualInspect'])->name('devices.visualInspect');
