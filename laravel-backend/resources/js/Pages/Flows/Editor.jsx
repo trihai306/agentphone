@@ -395,23 +395,44 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         });
     }, []); // Run once on mount
 
-    // Update nodes with execution state and callbacks
+    // Update nodes with execution state, visual styling, and callbacks
     const nodesWithExecution = useMemo(() => {
-        return nodes.map(node => ({
-            ...node,
-            data: {
-                ...node.data,
-                executionState: nodeStates[node.id]?.status || NodeStatus.IDLE,
-                // Pass edit sub-flow callback for loop nodes
-                ...(node.type === 'loop' && {
-                    onEditSubFlow: (nodeId) => {
-                        setSelectedNode(null); // Close config panel when opening modal
-                        setEditingLoopNodeId(nodeId);
-                        setShowLoopSubFlowModal(true);
-                    }
-                }),
+        return nodes.map(node => {
+            const state = nodeStates[node.id];
+
+            // Generate className based on execution status
+            let executionClass = '';
+            if (state) {
+                switch (state.status) {
+                    case NodeStatus.RUNNING:
+                        executionClass = 'ring-4 ring-indigo-500/50 shadow-lg shadow-indigo-500/30 animate-pulse';
+                        break;
+                    case NodeStatus.SUCCESS:
+                        executionClass = 'ring-2 ring-emerald-500/70';
+                        break;
+                    case NodeStatus.ERROR:
+                        executionClass = 'ring-2 ring-rose-500 shadow-lg shadow-rose-500/50';
+                        break;
+                }
             }
-        }));
+
+            return {
+                ...node,
+                className: `${node.className || ''} ${executionClass}`.trim(),
+                data: {
+                    ...node.data,
+                    executionState: state?.status || NodeStatus.IDLE,
+                    // Pass edit sub-flow callback for loop nodes
+                    ...(node.type === 'loop' && {
+                        onEditSubFlow: (nodeId) => {
+                            setSelectedNode(null); // Close config panel when opening modal
+                            setEditingLoopNodeId(nodeId);
+                            setShowLoopSubFlowModal(true);
+                        }
+                    }),
+                }
+            };
+        });
     }, [nodes, nodeStates]);
 
     // Handler for edge click - open delay config popover
