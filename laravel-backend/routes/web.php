@@ -196,6 +196,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Data Collections (No-Code Data Management)
     Route::resource('data-collections', \App\Http\Controllers\DataCollectionController::class);
+    Route::post('/data-collections/import-csv', [\App\Http\Controllers\DataCollectionController::class, 'importCSV'])->name('data-collections.importCSV');
     Route::post('/data-collections/{data_collection}/import', [\App\Http\Controllers\DataCollectionController::class, 'import'])->name('data-collections.import');
     Route::get('/data-collections/{data_collection}/export', [\App\Http\Controllers\DataCollectionController::class, 'export'])->name('data-collections.export');
     Route::post('/data-collections/{data_collection}/records', [\App\Http\Controllers\DataRecordController::class, 'store'])->name('data-records.store');

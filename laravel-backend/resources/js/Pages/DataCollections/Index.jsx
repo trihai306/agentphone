@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import CreateCollectionModal from '@/Components/DataCollections/CreateCollectionModal';
+import ImportCSVModal from '@/Components/DataCollections/ImportCSVModal';
 import CreateDropdownMenu, { QUICK_TEMPLATES } from '@/Components/DataCollections/CreateDropdownMenu';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
 import { useToast } from '@/Components/Layout/ToastProvider';
@@ -17,6 +18,7 @@ export default function Index({ collections, stats }) {
 
     // Modal states
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showImportCSVModal, setShowImportCSVModal] = useState(false);
     const [selectedTemplate, setSelectedTemplate] = useState(null);
 
     // Search & Filter states
@@ -126,7 +128,7 @@ export default function Index({ collections, stats }) {
     };
 
     const handleImportCSV = () => {
-        addToast(t('data_collections.csv_coming_soon'), 'info');
+        setShowImportCSVModal(true);
     };
 
     // Format date safely - backend returns diffForHumans() string
@@ -590,6 +592,14 @@ export default function Index({ collections, stats }) {
                         isOpen={showCreateModal}
                         onClose={() => { setShowCreateModal(false); setSelectedTemplate(null); }}
                         initialTemplate={selectedTemplate}
+                    />
+                )
+            }
+            {
+                showImportCSVModal && (
+                    <ImportCSVModal
+                        isOpen={showImportCSVModal}
+                        onClose={() => setShowImportCSVModal(false)}
                     />
                 )
             }

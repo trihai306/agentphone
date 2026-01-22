@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useForm, router } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useToast } from '@/Components/Layout/ToastProvider';
 import { DndContext, DragOverlay, closestCenter, useDraggable, useDroppable, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -7,27 +8,29 @@ import { SortableContext, useSortable, arrayMove, horizontalListSortingStrategy 
 import { CSS } from '@dnd-kit/utilities';
 
 // Enhanced Field Types with more options
-const FIELD_TYPES = [
-    { type: 'text', label: 'Text', icon: '📝', color: '#3b82f6', description: 'Short text content', placeholder: 'Enter text...' },
-    { type: 'number', label: 'Number', icon: '🔢', color: '#10b981', description: 'Numeric values', placeholder: '0' },
-    { type: 'email', label: 'Email', icon: '📧', color: '#8b5cf6', description: 'Email addresses', placeholder: 'email@example.com' },
-    { type: 'phone', label: 'Phone', icon: '📱', color: '#f97316', description: 'Phone numbers', placeholder: '+84 xxx xxx xxx' },
-    { type: 'date', label: 'Date', icon: '📅', color: '#f59e0b', description: 'Date picker', placeholder: 'YYYY-MM-DD' },
-    { type: 'boolean', label: 'Checkbox', icon: '☑️', color: '#ec4899', description: 'Yes/No toggle', placeholder: '☐' },
-    { type: 'select', label: 'Dropdown', icon: '🎯', color: '#06b6d4', description: 'Multiple options', placeholder: 'Select...' },
-    { type: 'textarea', label: 'Long Text', icon: '📄', color: '#6366f1', description: 'Multiline text', placeholder: 'Enter long text...' },
-    { type: 'url', label: 'URL', icon: '🔗', color: '#14b8a6', description: 'Web links', placeholder: 'https://...' },
-    { type: 'currency', label: 'Currency', icon: '💰', color: '#22c55e', description: 'Money values', placeholder: '$0.00' },
-    { type: 'rating', label: 'Rating', icon: '⭐', color: '#eab308', description: '1-5 stars', placeholder: '★★★☆☆' },
-    { type: 'autonumber', label: 'Auto ID', icon: '🔢', color: '#64748b', description: 'Auto-increment ID', placeholder: '#001' },
+// Field types with translation support
+const getFieldTypes = (t) => [
+    { type: 'text', label: t('data_collections.field_types.text'), icon: '📝', color: '#3b82f6', description: t('data_collections.field_types.text_desc'), placeholder: 'Enter text...' },
+    { type: 'number', label: t('data_collections.field_types.number'), icon: '🔢', color: '#10b981', description: t('data_collections.field_types.number_desc'), placeholder: '0' },
+    { type: 'email', label: t('data_collections.field_types.email'), icon: '📧', color: '#8b5cf6', description: t('data_collections.field_types.email_desc'), placeholder: 'email@example.com' },
+    { type: 'phone', label: t('data_collections.field_types.phone'), icon: '📱', color: '#f97316', description: t('data_collections.field_types.phone_desc'), placeholder: '+84 xxx xxx xxx' },
+    { type: 'date', label: t('data_collections.field_types.date'), icon: '📅', color: '#f59e0b', description: t('data_collections.field_types.date_desc'), placeholder: 'YYYY-MM-DD' },
+    { type: 'boolean', label: t('data_collections.field_types.boolean'), icon: '☑️', color: '#ec4899', description: t('data_collections.field_types.boolean_desc'), placeholder: '☐' },
+    { type: 'select', label: t('data_collections.field_types.select'), icon: '🎯', color: '#06b6d4', description: t('data_collections.field_types.select_desc'), placeholder: 'Select...' },
+    { type: 'textarea', label: t('data_collections.field_types.textarea'), icon: '📄', color: '#6366f1', description: t('data_collections.field_types.textarea_desc'), placeholder: 'Enter long text...' },
+    { type: 'url', label: t('data_collections.field_types.url'), icon: '🔗', color: '#14b8a6', description: t('data_collections.field_types.url_desc'), placeholder: 'https://...' },
+    { type: 'currency', label: t('data_collections.field_types.currency'), icon: '💰', color: '#22c55e', description: t('data_collections.field_types.currency_desc'), placeholder: '$0.00' },
+    { type: 'rating', label: t('data_collections.field_types.rating'), icon: '⭐', color: '#eab308', description: t('data_collections.field_types.rating_desc'), placeholder: '★★★☆☆' },
+    { type: 'autonumber', label: t('data_collections.field_types.autonumber'), icon: '🔢', color: '#64748b', description: t('data_collections.field_types.autonumber_desc'), placeholder: '#001' },
 ];
 
 // Quick Templates for common use cases
-const QUICK_TEMPLATES = [
+// Quick templates with translation support
+const getQuickTemplates = (t) => [
     {
         id: 'customer',
-        name: '👥 Customer Table',
-        description: 'Contact management',
+        name: t('data_collections.templates.customer'),
+        description: t('data_collections.templates.customer_desc'),
         fields: [
             { name: 'Full Name', type: 'text', required: true },
             { name: 'Email', type: 'email', required: true },
@@ -38,8 +41,8 @@ const QUICK_TEMPLATES = [
     },
     {
         id: 'product',
-        name: '📦 Product Inventory',
-        description: 'Product catalog',
+        name: t('data_collections.templates.product'),
+        description: t('data_collections.templates.product_desc'),
         fields: [
             { name: 'Product Name', type: 'text', required: true },
             { name: 'SKU', type: 'text', required: true },
@@ -50,8 +53,8 @@ const QUICK_TEMPLATES = [
     },
     {
         id: 'task',
-        name: '✅ Task Tracker',
-        description: 'Project management',
+        name: t('data_collections.templates.task'),
+        description: t('data_collections.templates.task_desc'),
         fields: [
             { name: 'Task Name', type: 'text', required: true },
             { name: 'Description', type: 'textarea', required: false },
@@ -62,10 +65,27 @@ const QUICK_TEMPLATES = [
     },
 ];
 
+// Static field type data for icon/placeholder lookups in child components
+const FIELD_TYPES_STATIC = {
+    text: { icon: '📝', color: '#3b82f6', placeholder: 'Enter text...' },
+    number: { icon: '🔢', color: '#10b981', placeholder: '0' },
+    email: { icon: '📧', color: '#8b5cf6', placeholder: 'email@example.com' },
+    phone: { icon: '📱', color: '#f97316', placeholder: '+84 xxx xxx xxx' },
+    date: { icon: '📅', color: '#f59e0b', placeholder: 'YYYY-MM-DD' },
+    boolean: { icon: '☑️', color: '#ec4899', placeholder: '☐' },
+    select: { icon: '🎯', color: '#06b6d4', placeholder: 'Select...' },
+    textarea: { icon: '📄', color: '#6366f1', placeholder: 'Enter long text...' },
+    url: { icon: '🔗', color: '#14b8a6', placeholder: 'https://...' },
+    currency: { icon: '💰', color: '#22c55e', placeholder: '$0.00' },
+    rating: { icon: '⭐', color: '#eab308', placeholder: '★★★☆☆' },
+    autonumber: { icon: '🔢', color: '#64748b', placeholder: '#001' },
+};
+
 const ICON_OPTIONS = ['📊', '👥', '💼', '🎯', '📝', '💡', '🚀', '⚡', '🎨', '🔧', '📦', '🛒', '💰', '📈', '🗂️', '📋'];
 const COLOR_OPTIONS = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4', '#ef4444', '#84cc16', '#6366f1', '#14b8a6'];
 
 export default function CreateCollectionModal({ isOpen, onClose, initialTemplate = null }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const { addToast } = useToast();
     const isDark = theme === 'dark';
@@ -73,6 +93,10 @@ export default function CreateCollectionModal({ isOpen, onClose, initialTemplate
     const [activeId, setActiveId] = useState(null);
     const [selectedFieldId, setSelectedFieldId] = useState(null);
     const [showTemplates, setShowTemplates] = useState(!initialTemplate);
+
+    // Get translated field types and templates
+    const FIELD_TYPES = getFieldTypes(t);
+    const QUICK_TEMPLATES = getQuickTemplates(t);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: initialTemplate ? initialTemplate.name : '',
@@ -196,18 +220,18 @@ export default function CreateCollectionModal({ isOpen, onClose, initialTemplate
             },
             onError: (errors) => {
                 console.error('Create collection errors:', errors);
-                addToast('Có lỗi xảy ra: ' + Object.values(errors).join(', '), 'error');
+                addToast(t('data_collections.wizard.error_occurred') + ': ' + Object.values(errors).join(', '), 'error');
             }
         });
     };
 
     const nextStep = () => {
         if (step === 1 && !data.name.trim()) {
-            addToast('Vui lòng nhập tên collection', 'warning');
+            addToast(t('data_collections.wizard.validation_name_required'), 'warning');
             return;
         }
         if (step === 2 && fields.length === 0) {
-            addToast('Vui lòng thêm ít nhất 1 column cho table của bạn', 'warning');
+            addToast(t('data_collections.wizard.validation_add_column'), 'warning');
             return;
         }
         setStep(step + 1);
@@ -245,16 +269,18 @@ export default function CreateCollectionModal({ isOpen, onClose, initialTemplate
                                 applyTemplate={applyTemplate}
                                 showTemplates={showTemplates && fields.length === 0}
                                 isDark={isDark}
+                                FIELD_TYPES={FIELD_TYPES}
+                                QUICK_TEMPLATES={QUICK_TEMPLATES}
                             />
                             <DragOverlay>
                                 {activeId?.startsWith('type-') && (
-                                    <DragPreview type={activeId.replace('type-', '')} />
+                                    <DragPreview type={activeId.replace('type-', '')} FIELD_TYPES={FIELD_TYPES} />
                                 )}
                             </DragOverlay>
                         </DndContext>
                     )}
 
-                    {step === 3 && <Step3 data={data} fields={fields} isDark={isDark} />}
+                    {step === 3 && <Step3 data={data} fields={fields} isDark={isDark} FIELD_TYPES={FIELD_TYPES} />}
                 </div>
 
                 {/* Footer */}
@@ -274,10 +300,11 @@ export default function CreateCollectionModal({ isOpen, onClose, initialTemplate
 
 // Modal Header
 function ModalHeader({ data, step, onClose, isDark }) {
+    const { t } = useTranslation();
     const titles = {
-        1: 'Tạo Collection Mới',
-        2: 'Thiết Kế Cấu Trúc Table',
-        3: 'Xác Nhận & Tạo'
+        1: t('data_collections.wizard.step1_title'),
+        2: t('data_collections.wizard.step2_title'),
+        3: t('data_collections.wizard.step3_title')
     };
 
     return (
@@ -320,13 +347,14 @@ function ModalHeader({ data, step, onClose, isDark }) {
 
 // Modal Footer
 function ModalFooter({ step, setStep, nextStep, handleSubmit, processing, onClose, isDark }) {
+    const { t } = useTranslation();
     return (
         <div className={`px-6 py-4 border-t ${isDark ? 'border-[#2a2a2a] bg-[#141414]' : 'border-gray-200 bg-white'} flex justify-between`}>
             <button
                 onClick={() => step > 1 ? setStep(step - 1) : onClose()}
                 className={`px-5 py-2.5 rounded-xl font-medium transition-all ${isDark ? 'bg-[#1a1a1a] hover:bg-[#252525] text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
             >
-                {step === 1 ? 'Hủy' : '← Quay lại'}
+                {step === 1 ? t('data_collections.wizard.cancel') : t('data_collections.wizard.back')}
             </button>
 
             {step < 3 ? (
@@ -334,7 +362,7 @@ function ModalFooter({ step, setStep, nextStep, handleSubmit, processing, onClos
                     onClick={nextStep}
                     className="px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-xl font-medium shadow-lg shadow-cyan-500/30 flex items-center gap-2 transition-all hover:scale-105"
                 >
-                    Tiếp theo <span className="text-lg">→</span>
+                    {t('data_collections.wizard.next')} <span className="text-lg">→</span>
                 </button>
             ) : (
                 <button
@@ -348,10 +376,10 @@ function ModalFooter({ step, setStep, nextStep, handleSubmit, processing, onClos
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                             </svg>
-                            Đang tạo...
+                            {t('data_collections.wizard.creating')}
                         </>
                     ) : (
-                        <>✓ Tạo Collection</>
+                        <>{t('data_collections.wizard.create_collection')}</>
                     )}
                 </button>
             )}
@@ -361,6 +389,7 @@ function ModalFooter({ step, setStep, nextStep, handleSubmit, processing, onClos
 
 // Step 1: Basic Info
 function Step1({ data, setData, isDark }) {
+    const { t } = useTranslation();
     return (
         <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -368,13 +397,13 @@ function Step1({ data, setData, isDark }) {
                 <div className="space-y-5">
                     <div>
                         <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                            Tên Collection <span className="text-red-500">*</span>
+                            {t('data_collections.wizard.collection_name')} <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
-                            placeholder="VD: Danh sách khách hàng, Kho sản phẩm..."
+                            placeholder={t('data_collections.wizard.collection_name_placeholder')}
                             className={`w-full px-4 py-3 rounded-xl text-lg transition-all ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-gray-500' : 'bg-white border-gray-300 placeholder-gray-400'} border-2 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500`}
                             autoFocus
                         />
@@ -382,12 +411,12 @@ function Step1({ data, setData, isDark }) {
 
                     <div>
                         <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                            Mô tả (tùy chọn)
+                            {t('data_collections.wizard.description_optional')}
                         </label>
                         <textarea
                             value={data.description}
                             onChange={(e) => setData('description', e.target.value)}
-                            placeholder="Collection này dùng để làm gì?"
+                            placeholder={t('data_collections.wizard.description_placeholder')}
                             rows={3}
                             className={`w-full px-4 py-3 rounded-xl resize-none transition-all ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white' : 'bg-white border-gray-300'} border-2 focus:ring-2 focus:ring-cyan-500`}
                         />
@@ -398,7 +427,7 @@ function Step1({ data, setData, isDark }) {
                 <div className="space-y-5">
                     <div>
                         <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                            Chọn Icon
+                            {t('data_collections.wizard.select_icon')}
                         </label>
                         <div className="grid grid-cols-8 gap-2">
                             {ICON_OPTIONS.map((icon) => (
@@ -416,7 +445,7 @@ function Step1({ data, setData, isDark }) {
 
                     <div>
                         <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                            Chọn Màu
+                            {t('data_collections.wizard.select_color')}
                         </label>
                         <div className="flex gap-2 flex-wrap">
                             {COLOR_OPTIONS.map((color) => (
@@ -435,12 +464,12 @@ function Step1({ data, setData, isDark }) {
 
             {/* Preview */}
             <div className={`p-5 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white'} border-2 ${isDark ? 'border-[#2a2a2a]' : 'border-gray-200'}`}>
-                <p className="text-xs text-gray-500 mb-3 uppercase tracking-wider font-medium">Preview</p>
+                <p className="text-xs text-gray-500 mb-3 uppercase tracking-wider font-medium">{t('data_collections.wizard.preview')}</p>
                 <div className="flex items-center gap-4">
                     <div className="text-5xl p-4 rounded-2xl" style={{ backgroundColor: data.color + '15' }}>{data.icon}</div>
                     <div>
-                        <h3 className={`font-bold text-xl ${isDark ? 'text-white' : 'text-gray-900'}`}>{data.name || 'Tên Collection'}</h3>
-                        <p className="text-gray-500 mt-1">{data.description || 'Mô tả collection của bạn'}</p>
+                        <h3 className={`font-bold text-xl ${isDark ? 'text-white' : 'text-gray-900'}`}>{data.name || t('data_collections.wizard.preview_name')}</h3>
+                        <p className="text-gray-500 mt-1">{data.description || t('data_collections.wizard.preview_desc')}</p>
                     </div>
                 </div>
             </div>
@@ -449,7 +478,8 @@ function Step1({ data, setData, isDark }) {
 }
 
 // Step 2: Enhanced Schema Builder with Live Table Preview
-function Step2Enhanced({ fields, selectedFieldId, setSelectedFieldId, selectedField, addField, updateField, removeField, applyTemplate, showTemplates, isDark }) {
+function Step2Enhanced({ fields, selectedFieldId, setSelectedFieldId, selectedField, addField, updateField, removeField, applyTemplate, showTemplates, isDark, FIELD_TYPES, QUICK_TEMPLATES }) {
+    const { t } = useTranslation();
     const { setNodeRef: setDropRef, isOver } = useDroppable({ id: 'table-drop' });
 
     return (
@@ -460,7 +490,7 @@ function Step2Enhanced({ fields, selectedFieldId, setSelectedFieldId, selectedFi
                 {showTemplates && (
                     <div className="mb-6">
                         <h3 className={`text-xs font-bold mb-3 uppercase tracking-wider flex items-center gap-2 ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`}>
-                            ⚡ Quick Templates
+                            ⚡ {t('data_collections.wizard.quick_templates')}
                         </h3>
                         <div className="space-y-2">
                             {QUICK_TEMPLATES.map((template) => (
@@ -470,23 +500,23 @@ function Step2Enhanced({ fields, selectedFieldId, setSelectedFieldId, selectedFi
                                     className={`w-full p-3 rounded-xl text-left transition-all hover:scale-[1.02] ${isDark ? 'bg-gradient-to-r from-cyan-900/30 to-blue-900/30 hover:from-cyan-900/50 hover:to-blue-900/50 border-cyan-800/50' : 'bg-gradient-to-r from-cyan-50 to-blue-50 hover:from-cyan-100 hover:to-blue-100 border-cyan-200'} border`}
                                 >
                                     <p className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{template.name}</p>
-                                    <p className={`text-xs mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{template.fields.length} columns • {template.description}</p>
+                                    <p className={`text-xs mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{template.fields.length} {t('data_collections.wizard.columns')} • {template.description}</p>
                                 </button>
                             ))}
                         </div>
                         <div className={`my-4 flex items-center gap-3 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
                             <div className="flex-1 h-px bg-current opacity-30" />
-                            <span className="text-xs uppercase tracking-wider">OR</span>
+                            <span className="text-xs uppercase tracking-wider">{t('data_collections.wizard.or')}</span>
                             <div className="flex-1 h-px bg-current opacity-30" />
                         </div>
                     </div>
                 )}
 
                 <h3 className={`text-xs font-bold mb-3 uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    ➕ Add Column
+                    ➕ {t('data_collections.wizard.add_column')}
                 </h3>
                 <p className={`text-xs mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    Click or drag to table
+                    {t('data_collections.wizard.click_or_drag')}
                 </p>
                 <div className="space-y-1.5">
                     {FIELD_TYPES.map((fieldType) => (
@@ -526,7 +556,7 @@ function Step2Enhanced({ fields, selectedFieldId, setSelectedFieldId, selectedFi
                         />
                     </SortableContext>
                 ) : (
-                    <EmptyTableState isOver={isOver} isDark={isDark} />
+                    <EmptyTableState isOver={isOver} isDark={isDark} t={t} />
                 )}
             </div>
 
@@ -544,10 +574,10 @@ function Step2Enhanced({ fields, selectedFieldId, setSelectedFieldId, selectedFi
                     <div className="h-full flex flex-col items-center justify-center text-center">
                         <div className="text-5xl mb-4 opacity-50">⚙️</div>
                         <p className={`font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                            Column Config
+                            {t('data_collections.wizard.column_config')}
                         </p>
                         <p className={`text-xs mt-2 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                            Click a column header to configure
+                            {t('data_collections.wizard.click_header_to_config')}
                         </p>
                     </div>
                 )}
@@ -601,7 +631,7 @@ function SortableColumnHeader({ field, isSelected, onClick, updateField, isDark 
     const [editName, setEditName] = useState(field.name);
     const inputRef = useRef(null);
 
-    const ft = FIELD_TYPES.find(f => f.type === field.type);
+    const ft = FIELD_TYPES_STATIC[field.type];
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -677,6 +707,7 @@ function SortableColumnHeader({ field, isSelected, onClick, updateField, isDark 
 
 // Live Table Preview (Spreadsheet-like with Sortable Columns)
 function LiveTablePreview({ fields, selectedFieldId, setSelectedFieldId, updateField, removeField, isDark }) {
+    const { t } = useTranslation();
     return (
         <div className={`rounded-xl overflow-hidden border-2 ${isDark ? 'border-[#2a2a2a] bg-[#0a0a0a]' : 'border-gray-200 bg-white'}`}>
             <div className="overflow-x-auto">
@@ -707,7 +738,7 @@ function LiveTablePreview({ fields, selectedFieldId, setSelectedFieldId, updateF
                                     {rowNum}
                                 </td>
                                 {fields.map((field) => {
-                                    const ft = FIELD_TYPES.find(f => f.type === field.type);
+                                    const ft = FIELD_TYPES_STATIC[field.type];
                                     return (
                                         <td
                                             key={field.id}
@@ -725,14 +756,14 @@ function LiveTablePreview({ fields, selectedFieldId, setSelectedFieldId, updateF
             </div>
             {/* Footer hint */}
             <div className={`px-3 py-2 text-xs ${isDark ? 'bg-[#1a1a1a] text-gray-500' : 'bg-gray-50 text-gray-400'} border-t ${isDark ? 'border-[#2a2a2a]' : 'border-gray-200'}`}>
-                💡 Click header to configure • Double-click to rename • Drag to reorder
+                {t('data_collections.wizard.table_hint')}
             </div>
         </div>
     );
 }
 
 // Empty Table State
-function EmptyTableState({ isOver, isDark }) {
+function EmptyTableState({ isOver, isDark, t }) {
     return (
         <div className={`h-full min-h-[400px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center transition-all ${isOver
             ? 'border-cyan-500 bg-cyan-500/10'
@@ -744,12 +775,12 @@ function EmptyTableState({ isOver, isDark }) {
                 {isOver ? '📥' : '📊'}
             </div>
             <h4 className={`font-semibold text-lg mb-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                {isOver ? 'Drop here!' : 'Empty Table'}
+                {isOver ? t('data_collections.wizard.drop_here') : t('data_collections.wizard.empty_table')}
             </h4>
             <p className={`text-sm text-center max-w-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                 {isOver
-                    ? 'Release to add column'
-                    : 'Use Quick Templates above or add columns from the left panel'}
+                    ? t('data_collections.wizard.release_to_add')
+                    : t('data_collections.wizard.empty_table_hint')}
             </p>
         </div>
     );
@@ -757,7 +788,8 @@ function EmptyTableState({ isOver, isDark }) {
 
 // Field Configuration Panel
 function FieldConfigPanel({ field, updateField, removeField, onClose, isDark }) {
-    const fieldType = FIELD_TYPES.find(f => f.type === field.type);
+    const { t } = useTranslation();
+    const fieldType = FIELD_TYPES_STATIC[field.type];
 
     return (
         <div className="space-y-4">
@@ -766,10 +798,10 @@ function FieldConfigPanel({ field, updateField, removeField, onClose, isDark }) 
                     <span className="text-2xl">{fieldType?.icon}</span>
                     <div>
                         <h4 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            Column Config
+                            {t('data_collections.wizard.column_config')}
                         </h4>
                         <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {fieldType?.label}
+                            {field.type}
                         </p>
                     </div>
                 </div>
@@ -871,8 +903,8 @@ function FieldConfigPanel({ field, updateField, removeField, onClose, isDark }) 
 }
 
 // Drag Preview
-function DragPreview({ type }) {
-    const fieldType = FIELD_TYPES.find(f => f.type === type);
+function DragPreview({ type, FIELD_TYPES }) {
+    const fieldType = FIELD_TYPES?.find(f => f.type === type) || FIELD_TYPES_STATIC[type];
     if (!fieldType) return null;
 
     return (
@@ -889,7 +921,8 @@ function DragPreview({ type }) {
 }
 
 // Step 3: Preview & Confirm
-function Step3({ data, fields, isDark }) {
+function Step3({ data, fields, isDark, FIELD_TYPES }) {
+    const { t } = useTranslation();
     return (
         <div className="p-6 space-y-6">
             {/* Collection Summary */}
@@ -901,7 +934,7 @@ function Step3({ data, fields, isDark }) {
                         {data.description && <p className="text-gray-500 mt-1">{data.description}</p>}
                         <div className="flex items-center gap-2 mt-2">
                             <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: data.color + '20', color: data.color }}>
-                                {fields.length} columns
+                                {fields.length} {t('data_collections.wizard.columns')}
                             </span>
                         </div>
                     </div>
@@ -913,7 +946,7 @@ function Step3({ data, fields, isDark }) {
                         <thead>
                             <tr className={isDark ? 'bg-[#1a1a1a]' : 'bg-gray-100'}>
                                 {fields.map((field) => {
-                                    const ft = FIELD_TYPES.find(f => f.type === field.type);
+                                    const ft = FIELD_TYPES?.find(f => f.type === field.type) || FIELD_TYPES_STATIC[field.type];
                                     return (
                                         <th key={field.id} className={`px-4 py-3 text-left text-sm font-semibold border-b ${isDark ? 'border-gray-700 text-gray-200' : 'border-gray-200 text-gray-700'}`}>
                                             <span className="mr-2">{ft?.icon}</span>
@@ -940,8 +973,8 @@ function Step3({ data, fields, isDark }) {
             {/* Success Message */}
             <div className={`text-center p-6 rounded-xl ${isDark ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-200'} border-2`}>
                 <div className="text-5xl mb-3">🎉</div>
-                <h3 className="text-xl font-bold text-green-600 dark:text-green-400">Ready to Create!</h3>
-                <p className="text-sm text-gray-500 mt-2">Your collection will be created with {fields.length} columns. You can add data right after creation.</p>
+                <h3 className="text-xl font-bold text-green-600 dark:text-green-400">{t('data_collections.wizard.ready_to_create')}</h3>
+                <p className="text-sm text-gray-500 mt-2">{t('data_collections.wizard.will_create_with', { count: fields.length })}</p>
             </div>
         </div>
     );

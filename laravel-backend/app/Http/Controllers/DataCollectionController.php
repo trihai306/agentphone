@@ -20,10 +20,10 @@ class DataCollectionController extends Controller
 
         $collections = $user->dataCollections()
             ->withCount([
-                    'records' => function ($query) {
-                        $query->where('status', 'active');
-                    }
-                ])
+                'records' => function ($query) {
+                    $query->where('status', 'active');
+                }
+            ])
             ->orderBy('updated_at', 'desc')
             ->get()
             ->map(fn($collection) => [
@@ -191,6 +191,49 @@ class DataCollectionController extends Controller
 
         return redirect()->route('data-collections.index')
             ->with('success', 'Collection deleted successfully!');
+    }
+
+    /**
+     * Import CSV to create new collection with records
+     */
+    public function importCSV(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'icon' => 'nullable|string|max:10',
+            'color' => 'nullable|string|max:20',
+            'schema' => 'required|array|min:1',
+            'schema.*.name' => 'required|string',
+            'schema.*.type' => 'required|string',
+            'records' => 'required|array',
+        ]);
+
+        // Create collection
+        $collection = Auth::user()->dataCollections()->create([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? 'Imported from CSV',
+            'icon' => $validated['icon'] ?? '📊',
+            'color' => $validated['color'] ?? '#3b82f6',
+            'schema' => $validated['schema'],
+            'total_records' => count($validated['records']),
+        ]);
+
+        // Create records
+        $recordCount = 0;
+        foreach ($validated['records'] as $recordData) {
+            $collection->records()->create([
+                'data' => $recordData,
+                'status' => 'active',
+            ]);
+            $recordCount++;
+        }
+
+        // Update total_records count
+        $collection->update(['total_records' => $recordCount]);
+
+        return redirect()->route('data-collections.show', $collection)
+            ->with('success', "Collection created with {$recordCount} records!");
     }
 
     /**

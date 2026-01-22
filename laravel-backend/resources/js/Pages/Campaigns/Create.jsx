@@ -77,6 +77,10 @@ export default function Create({ dataCollections = [], workflows = [], devices =
     const [deviceRecordAssignments, setDeviceRecordAssignments] = useState({}); // { deviceId: [recordId, ...] }
     const [activeDeviceForPicker, setActiveDeviceForPicker] = useState(null);
 
+    // UX Improvements: Simplified mode
+    const [showAdvanced, setShowAdvanced] = useState(false);
+    const [quickPreset, setQuickPreset] = useState('auto'); // 'auto' | 'all_devices' | 'custom'
+
 
     const onlineDevices = devices.filter(d => d.socket_connected || d.status === 'online');
 
@@ -169,6 +173,14 @@ export default function Create({ dataCollections = [], workflows = [], devices =
         } else {
             setSelectedDevices([...selectedDevices, device]);
         }
+    };
+
+    const selectAllDevices = () => {
+        setSelectedDevices([...devices]);
+    };
+
+    const clearDevices = () => {
+        setSelectedDevices([]);
     };
 
     // Data Pool management functions
@@ -515,12 +527,31 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                         {/* Step 2: Devices */}
                         {step === 2 && (
                             <div>
-                                <label className={`block text-sm font-medium mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    📱 Chọn Thiết Bị ({selectedDevices.length}/{onlineDevices.length} online)
-                                </label>
+                                <div className="flex items-center justify-between mb-4">
+                                    <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                        📱 Chọn Thiết Bị ({selectedDevices.length}/{devices.length} thiết bị)
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={selectAllDevices}
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-medium ${isDark ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30' : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'}`}
+                                        >
+                                            ✓ Chọn tất cả
+                                        </button>
+                                        {selectedDevices.length > 0 && (
+                                            <button
+                                                onClick={clearDevices}
+                                                className={`px-3 py-1.5 rounded-lg text-xs font-medium ${isDark ? 'bg-white/10 text-gray-400 hover:bg-white/15' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                                            >
+                                                Bỏ chọn
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
                                 <div className="grid grid-cols-3 gap-3">
-                                    {onlineDevices.map(device => {
+                                    {devices.map(device => {
                                         const isSelected = selectedDevices.find(d => d.id === device.id);
+                                        const isOnline = device.socket_connected || device.status === 'online';
                                         return (
                                             <button
                                                 key={device.id}
@@ -532,22 +563,24 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                             >
                                                 <div className="relative">
                                                     <span className="text-2xl">📱</span>
-                                                    <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full" />
+                                                    <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className={`font-medium text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{device.name}</p>
-                                                    <p className={`text-xs truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{device.model}</p>
+                                                    <p className={`text-xs truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                        {device.model} • {isOnline ? <span className="text-green-500">Online</span> : <span className="text-gray-400">Offline</span>}
+                                                    </p>
                                                 </div>
                                                 {isSelected && <span className="text-emerald-500">✓</span>}
                                             </button>
                                         );
                                     })}
                                 </div>
-                                {onlineDevices.length === 0 && (
+                                {devices.length === 0 && (
                                     <div className={`text-center py-12 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                                         <span className="text-4xl block mb-3">📵</span>
-                                        <p>Không có thiết bị online</p>
-                                        <a href="/devices" className="text-emerald-400 hover:underline text-sm">Xem thiết bị →</a>
+                                        <p>Chưa có thiết bị nào</p>
+                                        <a href="/devices" className="text-emerald-400 hover:underline text-sm">Thêm thiết bị →</a>
                                     </div>
                                 )}
                             </div>
@@ -664,293 +697,314 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                     )}
                                 </div>
 
-                                {/* Data Pools - For In-Job Loops */}
-                                <div className={`p-5 rounded-xl ${isDark ? 'bg-violet-500/10 border border-violet-500/20' : 'bg-violet-50'}`}>
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-2xl">🔄</span>
-                                            <div>
-                                                <p className={`font-medium ${isDark ? 'text-violet-300' : 'text-violet-800'}`}>Dữ Liệu Cho Vòng Lặp (Pool)</p>
-                                                <p className={`text-xs ${isDark ? 'text-violet-400/70' : 'text-violet-600'}`}>Comments, media, v.v. dùng lặp trong mỗi job</p>
-                                            </div>
+                                {/* Advanced Options Toggle */}
+                                <button
+                                    onClick={() => setShowAdvanced(!showAdvanced)}
+                                    className={`w-full p-4 rounded-xl flex items-center justify-between transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-50 hover:bg-gray-100'}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-xl">⚙️</span>
+                                        <div className="text-left">
+                                            <p className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Tuỳ chỉnh nâng cao</p>
+                                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Data Pools, phân chia records thủ công</p>
                                         </div>
-                                        <button
-                                            onClick={addDataPool}
-                                            className={`px-3 py-1.5 rounded-lg text-sm font-medium ${isDark ? 'bg-violet-500/20 text-violet-300 hover:bg-violet-500/30' : 'bg-violet-100 text-violet-600 hover:bg-violet-200'}`}
-                                        >
-                                            + Thêm Pool
-                                        </button>
                                     </div>
+                                    <span className={`text-lg transition-transform ${showAdvanced ? 'rotate-180' : ''}`}>▼</span>
+                                </button>
 
-                                    {dataPools.length === 0 ? (
-                                        <p className={`text-sm text-center py-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                            Chưa có pool nào. Thêm nếu workflow cần loop qua nhiều comments/media.
-                                        </p>
-                                    ) : (
-                                        <div className="space-y-3">
-                                            {dataPools.map((pool, index) => (
-                                                <div key={pool.id} className={`p-4 rounded-xl ${isDark ? 'bg-white/5' : 'bg-white'}`}>
-                                                    <div className="flex items-start gap-3">
-                                                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${isDark ? 'bg-violet-500/30 text-violet-300' : 'bg-violet-100 text-violet-600'}`}>
-                                                            {index + 1}
-                                                        </span>
-                                                        <div className="flex-1 grid grid-cols-2 gap-3">
-                                                            <div>
-                                                                <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Tên biến</label>
-                                                                <input
-                                                                    type="text"
-                                                                    value={pool.variable}
-                                                                    onChange={e => updateDataPool(pool.id, { variable: e.target.value })}
-                                                                    placeholder="vd: comments"
-                                                                    className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200'} focus:outline-none`}
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Collection</label>
-                                                                <select
-                                                                    value={pool.collection_id || ''}
-                                                                    onChange={e => updateDataPool(pool.id, { collection_id: parseInt(e.target.value) || null, field: '' })}
-                                                                    className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200'} focus:outline-none`}
-                                                                >
-                                                                    <option value="">Chọn...</option>
-                                                                    {dataCollections.map(dc => (
-                                                                        <option key={dc.id} value={dc.id}>{dc.name}</option>
-                                                                    ))}
-                                                                </select>
-                                                            </div>
-                                                            <div>
-                                                                <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Field (tuỳ chọn)</label>
-                                                                <select
-                                                                    value={pool.field || ''}
-                                                                    onChange={e => updateDataPool(pool.id, { field: e.target.value })}
-                                                                    className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200'} focus:outline-none`}
-                                                                    disabled={!pool.collection_id}
-                                                                >
-                                                                    <option value="">Tất cả fields</option>
-                                                                    {getCollectionFields(pool.collection_id).map(f => (
-                                                                        <option key={f} value={f}>{f}</option>
-                                                                    ))}
-                                                                </select>
-                                                            </div>
-                                                            <div className="flex gap-2">
-                                                                <div className="flex-1">
-                                                                    <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Số lượng</label>
-                                                                    <input
-                                                                        type="number"
-                                                                        value={pool.count}
-                                                                        onChange={e => updateDataPool(pool.id, { count: Math.max(1, parseInt(e.target.value) || 1) })}
-                                                                        min={1}
-                                                                        className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200'} focus:outline-none`}
-                                                                    />
-                                                                </div>
-                                                                <div className="flex-1">
-                                                                    <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Chế độ</label>
-                                                                    <select
-                                                                        value={pool.mode}
-                                                                        onChange={e => updateDataPool(pool.id, { mode: e.target.value })}
-                                                                        className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200'} focus:outline-none`}
-                                                                    >
-                                                                        <option value="random">🔀 Random</option>
-                                                                        <option value="sequential">📋 Tuần tự</option>
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <button
-                                                            onClick={() => removeDataPool(pool.id)}
-                                                            className={`w-8 h-8 rounded-lg text-red-400 hover:bg-red-500/20`}
-                                                        >
-                                                            ✕
-                                                        </button>
+                                {/* Advanced Options Content - Collapsible */}
+                                {showAdvanced && (
+                                    <div className="space-y-5 pl-4 border-l-2 border-violet-500/30">
+                                        {/* Data Pools - For In-Job Loops */}
+                                        <div className={`p-5 rounded-xl ${isDark ? 'bg-violet-500/10 border border-violet-500/20' : 'bg-violet-50'}`}>
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-2xl">🔄</span>
+                                                    <div>
+                                                        <p className={`font-medium ${isDark ? 'text-violet-300' : 'text-violet-800'}`}>Dữ Liệu Cho Vòng Lặp (Pool)</p>
+                                                        <p className={`text-xs ${isDark ? 'text-violet-400/70' : 'text-violet-600'}`}>Comments, media, v.v. dùng lặp trong mỗi job</p>
                                                     </div>
                                                 </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Device Assignment Mode */}
-                                <div className={`p-5 rounded-xl ${isDark ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-emerald-50'}`}>
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-2xl">📱</span>
-                                            <div>
-                                                <p className={`font-medium ${isDark ? 'text-emerald-300' : 'text-emerald-800'}`}>Phân Chia Records</p>
-                                                <p className={`text-xs ${isDark ? 'text-emerald-400/70' : 'text-emerald-600'}`}>Cách phân records cho các thiết bị</p>
+                                                <button
+                                                    onClick={addDataPool}
+                                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium ${isDark ? 'bg-violet-500/20 text-violet-300 hover:bg-violet-500/30' : 'bg-violet-100 text-violet-600 hover:bg-violet-200'}`}
+                                                >
+                                                    + Thêm Pool
+                                                </button>
                                             </div>
-                                        </div>
-                                    </div>
 
-                                    {/* Mode Toggle */}
-                                    <div className="flex gap-2 mb-4">
-                                        <button
-                                            onClick={() => setAssignmentMode('auto')}
-                                            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all
-                                                ${assignmentMode === 'auto'
-                                                    ? 'bg-emerald-500 text-white'
-                                                    : isDark ? 'bg-white/10 text-gray-300 hover:bg-white/15' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                                        >
-                                            🔄 Tự động (chia đều)
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setAssignmentMode('manual');
-                                                if (records.length === 0 && selectedCollection) {
-                                                    loadRecords();
-                                                }
-                                            }}
-                                            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all
-                                                ${assignmentMode === 'manual'
-                                                    ? 'bg-emerald-500 text-white'
-                                                    : isDark ? 'bg-white/10 text-gray-300 hover:bg-white/15' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                                        >
-                                            🎯 Thủ công (chọn cụ thể)
-                                        </button>
-                                    </div>
-
-                                    {/* Auto Mode: Records Per Device */}
-                                    {assignmentMode === 'auto' && (
-                                        <div className="flex items-center justify-between">
-                                            <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                                Giới hạn records/thiết bị:
-                                            </span>
-                                            <input
-                                                type="number"
-                                                value={recordsPerDevice}
-                                                onChange={e => setRecordsPerDevice(e.target.value)}
-                                                placeholder="Auto"
-                                                className={`w-24 px-3 py-2 rounded-lg border text-center ${isDark ? 'bg-white/10 border-white/20 text-white placeholder:text-gray-500' : 'bg-white border-gray-300 text-gray-900'} focus:outline-none`}
-                                            />
-                                        </div>
-                                    )}
-
-                                    {/* Manual Mode: Device List with Record Assignment */}
-                                    {assignmentMode === 'manual' && selectedCollection && (
-                                        <div className="space-y-3">
-                                            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                                Click vào thiết bị để chọn records (Tổng: <span className="font-bold text-emerald-400">{getTotalAssignedRecords()}</span> records)
-                                            </p>
-                                            <div className="space-y-2 max-h-48 overflow-y-auto">
-                                                {selectedDevices.map(device => (
-                                                    <div
-                                                        key={device.id}
-                                                        className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all
-                                                            ${activeDeviceForPicker === device.id
-                                                                ? 'bg-emerald-500/20 border border-emerald-500'
-                                                                : isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-white hover:bg-gray-50'}`}
-                                                        onClick={() => setActiveDeviceForPicker(activeDeviceForPicker === device.id ? null : device.id)}
-                                                    >
-                                                        <div className="flex items-center gap-3">
-                                                            <span className="text-xl">📱</span>
-                                                            <div>
-                                                                <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{device.name}</p>
-                                                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{device.model}</p>
+                                            {dataPools.length === 0 ? (
+                                                <p className={`text-sm text-center py-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                    Chưa có pool nào. Thêm nếu workflow cần loop qua nhiều comments/media.
+                                                </p>
+                                            ) : (
+                                                <div className="space-y-3">
+                                                    {dataPools.map((pool, index) => (
+                                                        <div key={pool.id} className={`p-4 rounded-xl ${isDark ? 'bg-white/5' : 'bg-white'}`}>
+                                                            <div className="flex items-start gap-3">
+                                                                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${isDark ? 'bg-violet-500/30 text-violet-300' : 'bg-violet-100 text-violet-600'}`}>
+                                                                    {index + 1}
+                                                                </span>
+                                                                <div className="flex-1 grid grid-cols-2 gap-3">
+                                                                    <div>
+                                                                        <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Tên biến</label>
+                                                                        <input
+                                                                            type="text"
+                                                                            value={pool.variable}
+                                                                            onChange={e => updateDataPool(pool.id, { variable: e.target.value })}
+                                                                            placeholder="vd: comments"
+                                                                            className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200'} focus:outline-none`}
+                                                                        />
+                                                                    </div>
+                                                                    <div>
+                                                                        <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Collection</label>
+                                                                        <select
+                                                                            value={pool.collection_id || ''}
+                                                                            onChange={e => updateDataPool(pool.id, { collection_id: parseInt(e.target.value) || null, field: '' })}
+                                                                            className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200'} focus:outline-none`}
+                                                                        >
+                                                                            <option value="">Chọn...</option>
+                                                                            {dataCollections.map(dc => (
+                                                                                <option key={dc.id} value={dc.id}>{dc.name}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    </div>
+                                                                    <div>
+                                                                        <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Field (tuỳ chọn)</label>
+                                                                        <select
+                                                                            value={pool.field || ''}
+                                                                            onChange={e => updateDataPool(pool.id, { field: e.target.value })}
+                                                                            className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200'} focus:outline-none`}
+                                                                            disabled={!pool.collection_id}
+                                                                        >
+                                                                            <option value="">Tất cả fields</option>
+                                                                            {getCollectionFields(pool.collection_id).map(f => (
+                                                                                <option key={f} value={f}>{f}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    </div>
+                                                                    <div className="flex gap-2">
+                                                                        <div className="flex-1">
+                                                                            <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Số lượng</label>
+                                                                            <input
+                                                                                type="number"
+                                                                                value={pool.count}
+                                                                                onChange={e => updateDataPool(pool.id, { count: Math.max(1, parseInt(e.target.value) || 1) })}
+                                                                                min={1}
+                                                                                className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200'} focus:outline-none`}
+                                                                            />
+                                                                        </div>
+                                                                        <div className="flex-1">
+                                                                            <label className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Chế độ</label>
+                                                                            <select
+                                                                                value={pool.mode}
+                                                                                onChange={e => updateDataPool(pool.id, { mode: e.target.value })}
+                                                                                className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200'} focus:outline-none`}
+                                                                            >
+                                                                                <option value="random">🔀 Random</option>
+                                                                                <option value="sequential">📋 Tuần tự</option>
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => removeDataPool(pool.id)}
+                                                                    className={`w-8 h-8 rounded-lg text-red-400 hover:bg-red-500/20`}
+                                                                >
+                                                                    ✕
+                                                                </button>
                                                             </div>
                                                         </div>
-                                                        <div className="text-right">
-                                                            <span className={`px-3 py-1 rounded-lg text-sm font-medium
-                                                                ${getAssignedRecordCount(device.id) > 0
-                                                                    ? 'bg-emerald-500/20 text-emerald-400'
-                                                                    : isDark ? 'bg-white/10 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
-                                                                {getAssignedRecordCount(device.id)} records
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-
-                                            {/* Record Picker for Active Device */}
-                                            {activeDeviceForPicker && (
-                                                <div className={`mt-4 p-4 rounded-xl ${isDark ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
-                                                    <div className="flex items-center justify-between mb-3">
-                                                        <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                                            Chọn records cho: {selectedDevices.find(d => d.id === activeDeviceForPicker)?.name}
-                                                        </p>
-                                                        <div className="flex gap-2">
-                                                            <button
-                                                                onClick={() => {
-                                                                    const allIds = records.map(r => r.id);
-                                                                    setDeviceRecordAssignments(prev => ({ ...prev, [activeDeviceForPicker]: allIds }));
-                                                                }}
-                                                                className={`text-xs px-2 py-1 rounded ${isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-600'}`}
-                                                            >
-                                                                Chọn tất cả
-                                                            </button>
-                                                            <button
-                                                                onClick={() => {
-                                                                    setDeviceRecordAssignments(prev => ({ ...prev, [activeDeviceForPicker]: [] }));
-                                                                }}
-                                                                className={`text-xs px-2 py-1 rounded ${isDark ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-600'}`}
-                                                            >
-                                                                Bỏ chọn
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <div className="grid grid-cols-5 gap-2 max-h-40 overflow-y-auto">
-                                                        {loadingRecords ? (
-                                                            <p className={`col-span-5 text-center py-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                                Đang tải...
-                                                            </p>
-                                                        ) : records.map(record => {
-                                                            const isSelected = (deviceRecordAssignments[activeDeviceForPicker] || []).includes(record.id);
-                                                            return (
-                                                                <button
-                                                                    key={record.id}
-                                                                    onClick={() => toggleRecordForDevice(activeDeviceForPicker, record.id)}
-                                                                    className={`p-2 rounded-lg text-xs font-medium transition-all
-                                                                        ${isSelected
-                                                                            ? 'bg-emerald-500 text-white'
-                                                                            : isDark ? 'bg-white/5 text-gray-300 hover:bg-white/10' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                                                                >
-                                                                    #{record.id}
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
+                                                    ))}
                                                 </div>
                                             )}
                                         </div>
-                                    )}
 
-                                    {/* Warning when no collection selected in manual mode */}
-                                    {assignmentMode === 'manual' && !selectedCollection && (
-                                        <p className={`text-sm text-center py-4 ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
-                                            ⚠️ Vui lòng chọn Dữ Liệu trước khi phân chia thủ công
-                                        </p>
-                                    )}
-                                </div>
+                                        {/* Device Assignment Mode */}
+                                        <div className={`p-5 rounded-xl ${isDark ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-emerald-50'}`}>
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-2xl">📱</span>
+                                                    <div>
+                                                        <p className={`font-medium ${isDark ? 'text-emerald-300' : 'text-emerald-800'}`}>Phân Chia Records</p>
+                                                        <p className={`text-xs ${isDark ? 'text-emerald-400/70' : 'text-emerald-600'}`}>Cách phân records cho các thiết bị</p>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                                {/* Repeat Config */}
-                                <div className={`p-5 rounded-xl flex items-center justify-between ${isDark ? 'bg-amber-500/10' : 'bg-amber-50'}`}>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-2xl">🔄</span>
-                                        <div>
-                                            <p className={`font-medium ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>Số lần lặp</p>
-                                            <p className={`text-xs ${isDark ? 'text-amber-400/70' : 'text-amber-600'}`}>Mỗi record chạy bao nhiêu lần</p>
+                                            {/* Mode Toggle */}
+                                            <div className="flex gap-2 mb-4">
+                                                <button
+                                                    onClick={() => setAssignmentMode('auto')}
+                                                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all
+                                                ${assignmentMode === 'auto'
+                                                            ? 'bg-emerald-500 text-white'
+                                                            : isDark ? 'bg-white/10 text-gray-300 hover:bg-white/15' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                                                >
+                                                    🔄 Tự động (chia đều)
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setAssignmentMode('manual');
+                                                        if (records.length === 0 && selectedCollection) {
+                                                            loadRecords();
+                                                        }
+                                                    }}
+                                                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all
+                                                ${assignmentMode === 'manual'
+                                                            ? 'bg-emerald-500 text-white'
+                                                            : isDark ? 'bg-white/10 text-gray-300 hover:bg-white/15' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                                                >
+                                                    🎯 Thủ công (chọn cụ thể)
+                                                </button>
+                                            </div>
+
+                                            {/* Auto Mode: Records Per Device */}
+                                            {assignmentMode === 'auto' && (
+                                                <div className="flex items-center justify-between">
+                                                    <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                        Giới hạn records/thiết bị:
+                                                    </span>
+                                                    <input
+                                                        type="number"
+                                                        value={recordsPerDevice}
+                                                        onChange={e => setRecordsPerDevice(e.target.value)}
+                                                        placeholder="Auto"
+                                                        className={`w-24 px-3 py-2 rounded-lg border text-center ${isDark ? 'bg-white/10 border-white/20 text-white placeholder:text-gray-500' : 'bg-white border-gray-300 text-gray-900'} focus:outline-none`}
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {/* Manual Mode: Device List with Record Assignment */}
+                                            {assignmentMode === 'manual' && selectedCollection && (
+                                                <div className="space-y-3">
+                                                    <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                        Click vào thiết bị để chọn records (Tổng: <span className="font-bold text-emerald-400">{getTotalAssignedRecords()}</span> records)
+                                                    </p>
+                                                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                                                        {selectedDevices.map(device => (
+                                                            <div
+                                                                key={device.id}
+                                                                className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all
+                                                            ${activeDeviceForPicker === device.id
+                                                                        ? 'bg-emerald-500/20 border border-emerald-500'
+                                                                        : isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-white hover:bg-gray-50'}`}
+                                                                onClick={() => setActiveDeviceForPicker(activeDeviceForPicker === device.id ? null : device.id)}
+                                                            >
+                                                                <div className="flex items-center gap-3">
+                                                                    <span className="text-xl">📱</span>
+                                                                    <div>
+                                                                        <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{device.name}</p>
+                                                                        <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{device.model}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="text-right">
+                                                                    <span className={`px-3 py-1 rounded-lg text-sm font-medium
+                                                                ${getAssignedRecordCount(device.id) > 0
+                                                                            ? 'bg-emerald-500/20 text-emerald-400'
+                                                                            : isDark ? 'bg-white/10 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
+                                                                        {getAssignedRecordCount(device.id)} records
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+
+                                                    {/* Record Picker for Active Device */}
+                                                    {activeDeviceForPicker && (
+                                                        <div className={`mt-4 p-4 rounded-xl ${isDark ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
+                                                            <div className="flex items-center justify-between mb-3">
+                                                                <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                                                    Chọn records cho: {selectedDevices.find(d => d.id === activeDeviceForPicker)?.name}
+                                                                </p>
+                                                                <div className="flex gap-2">
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            const allIds = records.map(r => r.id);
+                                                                            setDeviceRecordAssignments(prev => ({ ...prev, [activeDeviceForPicker]: allIds }));
+                                                                        }}
+                                                                        className={`text-xs px-2 py-1 rounded ${isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-600'}`}
+                                                                    >
+                                                                        Chọn tất cả
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setDeviceRecordAssignments(prev => ({ ...prev, [activeDeviceForPicker]: [] }));
+                                                                        }}
+                                                                        className={`text-xs px-2 py-1 rounded ${isDark ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-600'}`}
+                                                                    >
+                                                                        Bỏ chọn
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                            <div className="grid grid-cols-5 gap-2 max-h-40 overflow-y-auto">
+                                                                {loadingRecords ? (
+                                                                    <p className={`col-span-5 text-center py-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                                        Đang tải...
+                                                                    </p>
+                                                                ) : records.map(record => {
+                                                                    const isSelected = (deviceRecordAssignments[activeDeviceForPicker] || []).includes(record.id);
+                                                                    return (
+                                                                        <button
+                                                                            key={record.id}
+                                                                            onClick={() => toggleRecordForDevice(activeDeviceForPicker, record.id)}
+                                                                            className={`p-2 rounded-lg text-xs font-medium transition-all
+                                                                        ${isSelected
+                                                                                    ? 'bg-emerald-500 text-white'
+                                                                                    : isDark ? 'bg-white/5 text-gray-300 hover:bg-white/10' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                                                                        >
+                                                                            #{record.id}
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* Warning when no collection selected in manual mode */}
+                                            {assignmentMode === 'manual' && !selectedCollection && (
+                                                <p className={`text-sm text-center py-4 ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+                                                    ⚠️ Vui lòng chọn Dữ Liệu trước khi phân chia thủ công
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Repeat Config */}
+                                        <div className={`p-5 rounded-xl flex items-center justify-between ${isDark ? 'bg-amber-500/10' : 'bg-amber-50'}`}>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-2xl">🔄</span>
+                                                <div>
+                                                    <p className={`font-medium ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>Số lần lặp</p>
+                                                    <p className={`text-xs ${isDark ? 'text-amber-400/70' : 'text-amber-600'}`}>Mỗi record chạy bao nhiêu lần</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button onClick={() => setRepeatPerRecord(Math.max(1, repeatPerRecord - 1))} className={`w-9 h-9 rounded-lg font-bold ${isDark ? 'bg-white/10 hover:bg-white/20' : 'bg-white hover:bg-gray-100'}`}>-</button>
+                                                <span className={`w-12 text-center text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{repeatPerRecord}</span>
+                                                <button onClick={() => setRepeatPerRecord(Math.min(100, repeatPerRecord + 1))} className={`w-9 h-9 rounded-lg font-bold ${isDark ? 'bg-white/10 hover:bg-white/20' : 'bg-white hover:bg-gray-100'}`}>+</button>
+                                            </div>
+                                        </div>
+
+                                        {/* Description */}
+                                        <div className={`p-4 rounded-xl ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                                            <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                Mô tả (tuỳ chọn)
+                                            </label>
+                                            <textarea
+                                                value={description}
+                                                onChange={e => setDescription(e.target.value)}
+                                                placeholder="Ghi chú về campaign này..."
+                                                rows={2}
+                                                className={`w-full px-4 py-3 rounded-xl border resize-none ${isDark
+                                                    ? 'bg-white/5 border-white/10 text-white placeholder:text-gray-600'
+                                                    : 'bg-white border-gray-200 text-gray-900'} focus:outline-none`}
+                                            />
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <button onClick={() => setRepeatPerRecord(Math.max(1, repeatPerRecord - 1))} className={`w-9 h-9 rounded-lg font-bold ${isDark ? 'bg-white/10 hover:bg-white/20' : 'bg-white hover:bg-gray-100'}`}>-</button>
-                                        <span className={`w-12 text-center text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{repeatPerRecord}</span>
-                                        <button onClick={() => setRepeatPerRecord(Math.min(100, repeatPerRecord + 1))} className={`w-9 h-9 rounded-lg font-bold ${isDark ? 'bg-white/10 hover:bg-white/20' : 'bg-white hover:bg-gray-100'}`}>+</button>
-                                    </div>
-                                </div>
+                                )}
 
-                                {/* Description */}
-                                <div className={`p-4 rounded-xl ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
-                                    <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                        Mô tả (tuỳ chọn)
-                                    </label>
-                                    <textarea
-                                        value={description}
-                                        onChange={e => setDescription(e.target.value)}
-                                        placeholder="Ghi chú về campaign này..."
-                                        rows={2}
-                                        className={`w-full px-4 py-3 rounded-xl border resize-none ${isDark
-                                            ? 'bg-white/5 border-white/10 text-white placeholder:text-gray-600'
-                                            : 'bg-white border-gray-200 text-gray-900'} focus:outline-none`}
-                                    />
-                                </div>
                             </div>
                         )}
 
