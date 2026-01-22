@@ -43,7 +43,8 @@ class InspectElementsResult implements ShouldBroadcastNow
 
     public function broadcastAs(): string
     {
-        return 'inspect:result';
+        // Use DOT notation (not colon) for Soketi compatibility
+        return 'inspect.result';
     }
 
     public function broadcastWith(): array
