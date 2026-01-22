@@ -371,7 +371,7 @@ object SocketJobManager {
                     "job:resume" -> handleResumeJob(event.data)
                     "config:update" -> handleConfigUpdate(event.data)
                     "recording.stop_requested" -> handleRecordingStopRequested(event.data)
-                    // Note: workflow:test, inspect:elements, check:accessibility are handled by global handler
+                    "workflow:test" -> handleWorkflowTest(event.data)
                     "visual:inspect" -> {
                         // DEPRECATED: OCR now included in inspect:elements
                         Log.i(TAG, "⚠️ Ignoring visual:inspect - OCR in inspect:elements")
