@@ -179,8 +179,26 @@ export default function ElementPickerModal({
 
     // Categorize elements
     const categories = useMemo(() => {
+        // Helper to check if element looks like a button based on className or other attributes
+        const looksLikeButton = (el) => {
+            if (el.isClickable && !el.isEditable && !el.isCheckable) return true;
+
+            // Check className for common clickable patterns
+            const className = (el.className || '').toLowerCase();
+            const buttonPatterns = ['button', 'image', 'icon', 'card', 'item', 'cell', 'fab', 'chip', 'tab'];
+            if (buttonPatterns.some(p => className.includes(p))) return true;
+
+            // Check for elements with explicit tap-related attributes
+            if (el.isLongClickable) return true;
+
+            // Check for elements with click handlers (contentDescription often indicates interactivity)
+            if (el.contentDescription && (el.isFocusable || className.includes('view'))) return true;
+
+            return false;
+        };
+
         // Count clickable elements for smart view
-        const clickableCount = elements.filter(el => el.isClickable || el.isEditable).length;
+        const clickableCount = elements.filter(el => el.isClickable || el.isEditable || looksLikeButton(el)).length;
 
         const cats = {
             smart: { label: 'Smart', icon: '🧠', count: clickableCount },
@@ -193,9 +211,10 @@ export default function ElementPickerModal({
         };
 
         elements.forEach(el => {
-            if (el.isClickable && !el.isEditable && !el.isCheckable) cats.clickable.count++;
+            // Use enhanced button detection
+            if (looksLikeButton(el)) cats.clickable.count++;
             if (el.isEditable) cats.editable.count++;
-            if (el.text && !el.isClickable && !el.isEditable) cats.text.count++;
+            if (el.text && !looksLikeButton(el) && !el.isEditable) cats.text.count++;
             if (el.isScrollable) cats.scrollable.count++;
             if (el.isCheckable) cats.checkable.count++;
         });
@@ -239,6 +258,15 @@ export default function ElementPickerModal({
                 // Handle status bar height
                 if (data.status_bar_height !== undefined) {
                     setStatusBarHeight(data.status_bar_height);
+                }
+
+                // ========== UNIFIED: Handle OCR text elements from same response ==========
+                // APK now sends text_elements in the same inspect:result response
+                if (data.text_elements && Array.isArray(data.text_elements)) {
+                    setTextElements(data.text_elements);
+                    if (data.ocr_count !== undefined) {
+                        console.log(`📝 OCR detected ${data.ocr_count} text elements`);
+                    }
                 }
             } else {
                 setError(data.error || 'Inspection failed');
@@ -337,27 +365,12 @@ export default function ElementPickerModal({
         }, 15000);
 
         try {
-            // Call BOTH endpoints in parallel for unified results
-            const [accessibilityRes, ocrRes] = await Promise.allSettled([
-                window.axios.post('/devices/inspect', { device_id: deviceId }),
-                window.axios.post('/devices/visual-inspect', { device_id: deviceId })
-            ]);
+            // SINGLE API call for element detection
+            // Accessibility scan provides: elements + screenshot + element properties
+            // No need for separate OCR call - reduces complexity and prevents screenshot conflicts
+            const response = await window.axios.post('/devices/inspect', { device_id: deviceId });
 
-            // Handle accessibility response
-            if (accessibilityRes.status === 'rejected') {
-                console.warn('Accessibility scan failed:', accessibilityRes.reason);
-            }
-
-            // Handle OCR response  
-            if (ocrRes.status === 'rejected') {
-                console.warn('OCR scan failed:', ocrRes.reason);
-            }
-
-            // Check if at least one succeeded
-            const accessOk = accessibilityRes.status === 'fulfilled' && accessibilityRes.value?.data?.success;
-            const ocrOk = ocrRes.status === 'fulfilled' && ocrRes.value?.data?.success;
-
-            if (!accessOk && !ocrOk) {
+            if (!response?.data?.success) {
                 setError('Không thể scan thiết bị');
                 setLoading(false);
                 clearTimeout(timeoutId);
@@ -375,10 +388,11 @@ export default function ElementPickerModal({
     // Combine accessibility elements and OCR text elements
     const allElements = useMemo(() => {
         // Mark OCR elements with a flag for display purposes
+        // Note: OCR elements are NOT automatically clickable - they're just detected text
         const ocrWithFlag = textElements.map(el => ({
             ...el,
             _source: 'ocr',
-            isClickable: true, // OCR text is generally clickable
+            isClickable: el.isClickable ?? false, // Preserve original value or default to false
             text: el.text || el.detectedText
         }));
 
@@ -402,11 +416,22 @@ export default function ElementPickerModal({
                 (el.resourceId?.toLowerCase().includes(searchLower)) ||
                 (el.className?.toLowerCase().includes(searchLower));
 
+            // Helper for enhanced button detection (same as in categories)
+            const looksLikeButton = () => {
+                if (el.isClickable && !el.isEditable && !el.isCheckable) return true;
+                const className = (el.className || '').toLowerCase();
+                const buttonPatterns = ['button', 'image', 'icon', 'card', 'item', 'cell', 'fab', 'chip', 'tab'];
+                if (buttonPatterns.some(p => className.includes(p))) return true;
+                if (el.isLongClickable) return true;
+                if (el.contentDescription && (el.isFocusable || className.includes('view'))) return true;
+                return false;
+            };
+
             // Category filter
             let matchesCategory = selectedCategory === 'all';
-            if (selectedCategory === 'clickable') matchesCategory = el.isClickable && !el.isEditable && !el.isCheckable;
+            if (selectedCategory === 'clickable') matchesCategory = looksLikeButton();
             if (selectedCategory === 'editable') matchesCategory = el.isEditable;
-            if (selectedCategory === 'text') matchesCategory = el.text && !el.isClickable && !el.isEditable;
+            if (selectedCategory === 'text') matchesCategory = el.text && !looksLikeButton() && !el.isEditable;
             if (selectedCategory === 'scrollable') matchesCategory = el.isScrollable;
             if (selectedCategory === 'checkable') matchesCategory = el.isCheckable;
             if (selectedCategory === 'smart') matchesCategory = true; // Smart shows all for grouping
