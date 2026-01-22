@@ -49,13 +49,30 @@ class InspectElementsResult implements ShouldBroadcastNow
 
     public function broadcastWith(): array
     {
+        // Strip base64 image data from elements to reduce payload size
+        // Large payloads (1MB+) may fail WebSocket delivery
+        $elementsWithoutImages = array_map(function ($el) {
+            if (is_array($el)) {
+                unset($el['image']); // Remove base64 icon image
+            }
+            return $el;
+        }, $this->elements);
+
+        // Also strip from text elements if present
+        $textWithoutImages = array_map(function ($el) {
+            if (is_array($el)) {
+                unset($el['image']);
+            }
+            return $el;
+        }, $this->textElements);
+
         return [
             'device_id' => $this->deviceId,
             'success' => $this->success,
             'package_name' => $this->packageName,
             'element_count' => count($this->elements),
-            'elements' => $this->elements,
-            'text_elements' => $this->textElements,  // OCR text elements
+            'elements' => $elementsWithoutImages,
+            'text_elements' => $textWithoutImages,  // OCR text elements
             'ocr_count' => count($this->textElements),
             'screenshot' => $this->screenshot,
             'screen_width' => $this->screenWidth,
