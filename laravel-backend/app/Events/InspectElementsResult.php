@@ -74,15 +74,23 @@ class InspectElementsResult implements ShouldBroadcastNow
             return $el;
         }, $this->textElements);
 
-        return [
+        // Strip ALL images from text elements to debug payload size
+        $textStripped = array_map(function ($el) {
+            if (is_array($el) && isset($el['image'])) {
+                unset($el['image']);
+            }
+            return $el;
+        }, $this->textElements);
+
+        $payload = [
             'device_id' => $this->deviceId,
             'success' => $this->success,
             'package_name' => $this->packageName,
             'element_count' => count($this->elements),
             'elements' => $elementsWithOptimizedImages,
-            'text_elements' => $textWithOptimizedImages,  // OCR text elements with icons
+            'text_elements' => $textStripped,  // Stripped for now
             'ocr_count' => count($this->textElements),
-            'screenshot' => $this->screenshot,
+            'screenshot' => null,  // Stripped to reduce payload
             'screen_width' => $this->screenWidth,
             'screen_height' => $this->screenHeight,
             'screenshot_width' => $this->screenshotWidth,
@@ -92,6 +100,12 @@ class InspectElementsResult implements ShouldBroadcastNow
             'error' => $this->error,
             'timestamp' => now()->toIso8601String(),
         ];
+
+        // Log payload size for debugging
+        $payloadSize = strlen(json_encode($payload));
+        \Illuminate\Support\Facades\Log::info("📊 InspectElementsResult payload size: " . round($payloadSize / 1024, 2) . "KB");
+
+        return $payload;
     }
 }
 
