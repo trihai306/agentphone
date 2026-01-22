@@ -389,7 +389,7 @@ class MainActivity : AppCompatActivity() {
         // Initialize UI based on current recording state
         updateRecordingUI()
 
-        // Start Recording Button - Check workflow listener first, then show App Chooser
+        // Start Recording Button - Show App Chooser directly (workflow listener check removed)
         binding.btnStartRecording.setOnClickListener {
             Log.i("MainActivity", "=== START RECORDING BUTTON CLICKED ===")
             
@@ -398,79 +398,60 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             
-            Log.i("MainActivity", "checkRecordingPrerequisites() PASSED - checking workflow listener")
+            Log.i("MainActivity", "checkRecordingPrerequisites() PASSED - showing AppChooserDialog")
 
-            // Check if workflow editor is listening before showing app chooser
-            checkWorkflowListener { isListening, message ->
-                if (!isListening) {
-                    Log.w("MainActivity", "No workflow listener: $message")
-                    runOnUiThread {
-                        Toast.makeText(
-                            this,
-                            "❌ $message",
-                            Toast.LENGTH_LONG
-                        ).show()
+            // Show app chooser dialog directly (skip workflow listener check for now)
+            val appChooser = AppChooserDialog(this) { selectedApp ->
+                Log.i("MainActivity", "App selected for recording: ${selectedApp.packageName}")
+
+                // Start recording with selected app
+                RecordingManager.startRecording(selectedApp.packageName)
+                updateRecordingUI()
+
+                // Launch the selected app with fresh start
+                try {
+                    // Force-stop the app first to ensure fresh start
+                    val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+                    try {
+                        activityManager.killBackgroundProcesses(selectedApp.packageName)
+                        Log.i("MainActivity", "Killed background processes for: ${selectedApp.packageName}")
+                    } catch (e: Exception) {
+                        Log.w("MainActivity", "Could not kill background processes: ${e.message}")
                     }
-                    return@checkWorkflowListener
-                }
-
-                Log.i("MainActivity", "Workflow listener confirmed - showing AppChooserDialog")
-
-                runOnUiThread {
-                    // Show app chooser dialog
-                    val appChooser = AppChooserDialog(this) { selectedApp ->
-                        Log.i("MainActivity", "App selected for recording: ${selectedApp.packageName}")
-
-                        // Start recording with selected app
-                        RecordingManager.startRecording(selectedApp.packageName)
-                        updateRecordingUI()
-
-                        // Launch the selected app with fresh start
-                        try {
-                            // Force-stop the app first to ensure fresh start
-                            val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
-                            try {
-                                activityManager.killBackgroundProcesses(selectedApp.packageName)
-                                Log.i("MainActivity", "Killed background processes for: ${selectedApp.packageName}")
-                            } catch (e: Exception) {
-                                Log.w("MainActivity", "Could not kill background processes: ${e.message}")
-                            }
-                            
-                            // Small delay to allow app to fully terminate
-                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                                val launchIntent = packageManager.getLaunchIntentForPackage(selectedApp.packageName)
-                                if (launchIntent != null) {
-                                    // Clear task and start fresh
-                                    launchIntent.addFlags(
-                                        Intent.FLAG_ACTIVITY_NEW_TASK or 
-                                        Intent.FLAG_ACTIVITY_CLEAR_TASK or
-                                        Intent.FLAG_ACTIVITY_CLEAR_TOP
-                                    )
-                                    startActivity(launchIntent)
-                                    Log.i("MainActivity", "Launched app (fresh start): ${selectedApp.packageName}")
-                                } else {
-                                    Log.w("MainActivity", "No launch intent for: ${selectedApp.packageName}")
-                                }
-                            }, 200) // 200ms delay for app to terminate
-                        } catch (e: Exception) {
-                            Log.e("MainActivity", "Failed to launch app: ${e.message}", e)
-                        }
-
-                        // Start floating recording service for visual feedback
-                        val intent = Intent(this, com.agent.portal.overlay.FloatingRecordingService::class.java).apply {
-                            action = com.agent.portal.overlay.FloatingRecordingService.ACTION_SHOW
-                        }
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            startForegroundService(intent)
+                    
+                    // Small delay to allow app to fully terminate
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        val launchIntent = packageManager.getLaunchIntentForPackage(selectedApp.packageName)
+                        if (launchIntent != null) {
+                            // Clear task and start fresh
+                            launchIntent.addFlags(
+                                Intent.FLAG_ACTIVITY_NEW_TASK or 
+                                Intent.FLAG_ACTIVITY_CLEAR_TASK or
+                                Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            )
+                            startActivity(launchIntent)
+                            Log.i("MainActivity", "Launched app (fresh start): ${selectedApp.packageName}")
                         } else {
-                            startService(intent)
+                            Log.w("MainActivity", "No launch intent for: ${selectedApp.packageName}")
                         }
-
-                        Toast.makeText(this, "🎬 Recording ${selectedApp.appName}...", Toast.LENGTH_SHORT).show()
-                    }
-                    appChooser.show()
+                    }, 200) // 200ms delay for app to terminate
+                } catch (e: Exception) {
+                    Log.e("MainActivity", "Failed to launch app: ${e.message}", e)
                 }
+
+                // Start floating recording service for visual feedback
+                val intent = Intent(this, com.agent.portal.overlay.FloatingRecordingService::class.java).apply {
+                    action = com.agent.portal.overlay.FloatingRecordingService.ACTION_SHOW
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(intent)
+                } else {
+                    startService(intent)
+                }
+
+                Toast.makeText(this, "🎬 Recording ${selectedApp.appName}...", Toast.LENGTH_SHORT).show()
             }
+            appChooser.show()
         }
 
         // Pause/Resume Button
