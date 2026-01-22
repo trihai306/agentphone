@@ -170,8 +170,12 @@ class JobExecutor(context: Context) {
     ) {
         withContext(Dispatchers.IO) {
             try {
-                val baseUrl = AuthService.baseUrl ?: return@withContext
-                val token = AuthService.authToken ?: return@withContext
+                // Get base URL from NetworkUtils
+                val baseUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
+                
+                // Get auth token from SharedPreferences
+                val prefs = context.getSharedPreferences("portal_auth", android.content.Context.MODE_PRIVATE)
+                val token = prefs.getString("auth_token", null) ?: return@withContext
                 
                 val payload = mapOf(
                     "flow_id" to flowId,
@@ -187,7 +191,7 @@ class JobExecutor(context: Context) {
                 val requestBody = json.toRequestBody("application/json".toMediaType())
                 
                 val request = Request.Builder()
-                    .url("$baseUrl/api/workflow/test-run/progress")
+                    .url("$baseUrl/workflow/test-run/progress")
                     .post(requestBody)
                     .addHeader("Authorization", "Bearer $token")
                     .addHeader("Accept", "application/json")

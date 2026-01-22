@@ -194,7 +194,6 @@ Route::middleware(['auth'])->group(function () {
 
         // AI Scenarios (Script to Scenes)
         Route::get('/scenarios', [\App\Http\Controllers\AiScenarioController::class, 'index'])->name('scenarios.index');
-        Route::get('/scenarios/create', [\App\Http\Controllers\AiScenarioController::class, 'create'])->name('scenarios.create');
         Route::post('/scenarios/parse', [\App\Http\Controllers\AiScenarioController::class, 'parseScript'])->name('scenarios.parse');
         Route::post('/scenarios/estimate', [\App\Http\Controllers\AiScenarioController::class, 'estimateCredits'])->name('scenarios.estimate');
         Route::post('/scenarios', [\App\Http\Controllers\AiScenarioController::class, 'store'])->name('scenarios.store');
