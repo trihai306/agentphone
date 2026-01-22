@@ -4,6 +4,7 @@ import { BaseEdge, getSmoothStepPath, EdgeLabelRenderer } from 'reactflow';
 /**
  * Animated edge component with flowing particle effect for execution visualization
  * Supports branch types (true/false) for conditional coloring
+ * Supports delay configuration with label display
  */
 function AnimatedEdge({
     id,
@@ -21,6 +22,8 @@ function AnimatedEdge({
     const executionState = data?.executionState || 'idle';
     const isDark = data?.isDark ?? true;
     const branchType = data?.branchType || sourceHandleId; // 'true', 'false', or default
+    const delay = data?.delay; // { mode, fixedSeconds, minSeconds, maxSeconds }
+    const onEdgeClick = data?.onEdgeClick; // callback for edge click
 
     const [edgePath, labelX, labelY] = getSmoothStepPath({
         sourceX,
@@ -62,11 +65,38 @@ function AnimatedEdge({
     const isAnimating = executionState === 'running';
     const isSuccess = executionState === 'success';
     const isError = executionState === 'error';
-    const isBranchTrue = branchType === 'true' || branchType === 'success';
-    const isBranchFalse = branchType === 'false' || branchType === 'error';
+
+    // Generate delay label text
+    const getDelayLabel = () => {
+        if (!delay || delay.mode === 'none') return null;
+        if (delay.mode === 'fixed') return `⏱️ ${delay.fixedSeconds}s`;
+        if (delay.mode === 'random') return `⏱️ ${delay.minSeconds}-${delay.maxSeconds}s`;
+        return null;
+    };
+
+    const delayLabel = getDelayLabel();
+    const hasDelay = delay && delay.mode !== 'none';
+
+    // Handle edge click for delay configuration
+    const handleEdgeClick = (e) => {
+        e.stopPropagation();
+        if (onEdgeClick) {
+            onEdgeClick(id, { x: labelX, y: labelY }, delay);
+        }
+    };
 
     return (
         <>
+            {/* Invisible wider path for easier clicking */}
+            <path
+                d={edgePath}
+                fill="none"
+                stroke="transparent"
+                strokeWidth={20}
+                style={{ cursor: 'pointer' }}
+                onClick={handleEdgeClick}
+            />
+
             {/* Background edge (thicker, for depth) */}
             <BaseEdge
                 path={edgePath}
@@ -117,38 +147,61 @@ function AnimatedEdge({
                 </circle>
             )}
 
-            {/* Edge label showing execution info */}
-            {data?.showLabel && (
-                <EdgeLabelRenderer>
-                    <div
-                        style={{
-                            position: 'absolute',
-                            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-                            pointerEvents: 'all',
-                        }}
-                        className="nodrag nopan"
-                    >
+            {/* Delay label - always show if configured */}
+            <EdgeLabelRenderer>
+                <div
+                    style={{
+                        position: 'absolute',
+                        transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+                        pointerEvents: 'all',
+                        cursor: 'pointer',
+                    }}
+                    className="nodrag nopan"
+                    onClick={handleEdgeClick}
+                >
+                    {/* Delay label badge */}
+                    {delayLabel ? (
                         <div
-                            className={`px-2 py-1 rounded-md text-xs font-medium transition-all ${isAnimating
+                            className={`px-2 py-1 rounded-full text-xs font-medium transition-all border ${isAnimating
+                                    ? 'bg-indigo-500/30 text-indigo-300 border-indigo-500/50 animate-pulse'
+                                    : 'bg-gray-800/90 text-gray-300 border-gray-600 hover:border-indigo-500 hover:bg-indigo-500/20'
+                                }`}
+                            title="Click to configure delay"
+                        >
+                            {delayLabel}
+                        </div>
+                    ) : (
+                        /* Show hint dot when no delay set */
+                        <div
+                            className="w-4 h-4 rounded-full bg-gray-700/50 border border-gray-600 hover:bg-indigo-500/30 hover:border-indigo-500 transition-all flex items-center justify-center"
+                            title="Click to add delay"
+                        >
+                            <span className="text-[8px] text-gray-400">+</span>
+                        </div>
+                    )}
+
+                    {/* Execution state label */}
+                    {data?.showLabel && (
+                        <div
+                            className={`mt-1 px-2 py-1 rounded-md text-xs font-medium transition-all ${isAnimating
                                 ? 'bg-indigo-500/20 text-indigo-400 animate-pulse'
                                 : isSuccess
                                     ? 'bg-emerald-500/20 text-emerald-400'
                                     : isError
                                         ? 'bg-red-500/20 text-red-400'
-                                        : isDark
-                                            ? 'bg-gray-800/80 text-gray-400'
-                                            : 'bg-white/80 text-gray-500'
+                                        : 'hidden'
                                 }`}
                         >
                             {isAnimating && '⏳ Flowing...'}
                             {isSuccess && '✓ Done'}
                             {isError && '✗ Error'}
                         </div>
-                    </div>
-                </EdgeLabelRenderer>
-            )}
+                    )}
+                </div>
+            </EdgeLabelRenderer>
         </>
     );
 }
 
 export default AnimatedEdge;
+

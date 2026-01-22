@@ -197,11 +197,19 @@ class FlowService
         // Index nodes by node_id
         $allNodes = $nodes->keyBy('node_id');
 
-        // Build adjacency list with source handles
+        // Build adjacency list with source handles and edge delay data
         $adjacency = [];
+        $incomingEdgeDelay = []; // Track delay config for edges leading INTO each node
         foreach ($edges as $edge) {
             $sourceHandle = $edge->source_handle ?? 'default';
             $adjacency[$edge->source_node_id][$sourceHandle] = $edge->target_node_id;
+
+            // Extract edge delay config (stored in edge data)
+            $edgeData = is_array($edge->data) ? $edge->data : json_decode($edge->data ?? '{}', true);
+            $delay = $edgeData['delay'] ?? null;
+            if ($delay && $delay['mode'] !== 'none') {
+                $incomingEdgeDelay[$edge->target_node_id] = $delay;
+            }
         }
 
         // Find start node
@@ -257,6 +265,16 @@ class FlowService
 
             // Interpolate variables in params (for non-loop actions)
             $action['params'] = $this->variableService->interpolateParams($action['params'], $context);
+
+            // Inject edge delay as wait_before (for first action entering this node)
+            if (isset($incomingEdgeDelay[$currentNodeId])) {
+                $delay = $incomingEdgeDelay[$currentNodeId];
+                $waitBefore = $this->calculateEdgeDelay($delay);
+                $action['wait_before'] = $waitBefore;
+                // Clear so only first action gets the delay
+                unset($incomingEdgeDelay[$currentNodeId]);
+            }
+
             $actions[] = $action;
 
             $currentNodeId = $this->getNextNodeId($adjacency, $currentNodeId);
@@ -453,6 +471,45 @@ class FlowService
         }
 
         return [];
+    }
+
+    /**
+     * Calculate edge delay in milliseconds based on delay config
+     * 
+     * Delay config structure:
+     * - mode: 'none' | 'fixed' | 'random'
+     * - fixedSeconds: number (for fixed mode)
+     * - minSeconds: number (for random mode)
+     * - maxSeconds: number (for random mode)
+     * 
+     * @param array $delay Edge delay configuration
+     * @return int Delay in milliseconds
+     */
+    private function calculateEdgeDelay(array $delay): int
+    {
+        $mode = $delay['mode'] ?? 'none';
+
+        if ($mode === 'none') {
+            return 0;
+        }
+
+        if ($mode === 'fixed') {
+            $seconds = (float) ($delay['fixedSeconds'] ?? 1);
+            return (int) ($seconds * 1000);
+        }
+
+        if ($mode === 'random') {
+            $minSeconds = (float) ($delay['minSeconds'] ?? 1);
+            $maxSeconds = (float) ($delay['maxSeconds'] ?? 3);
+
+            // Generate random delay between min and max
+            $min = (int) ($minSeconds * 1000);
+            $max = (int) ($maxSeconds * 1000);
+
+            return mt_rand($min, $max);
+        }
+
+        return 0;
     }
 
     // ===========================================

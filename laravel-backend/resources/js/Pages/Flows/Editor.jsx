@@ -61,6 +61,7 @@ import QuickAddMenu from '../../Components/Flow/QuickAddMenu';
 import LiveRecordingPanel from '../../Components/Flow/LiveRecordingPanel';
 import ImportRecordingModal from '../../Components/Flow/ImportRecordingModal';
 import WorkflowPreviewModal from '../../Components/Flow/WorkflowPreviewModal';
+import EdgeDelayPopover from '../../Components/Flow/EdgeDelayPopover';
 
 const nodeTypes = {
     // Control Flow
@@ -189,6 +190,11 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
     // Workflow Preview Modal state
     const [showPreviewModal, setShowPreviewModal] = useState(false);
+
+    // Edge Delay Popover state
+    const [showEdgeDelayPopover, setShowEdgeDelayPopover] = useState(false);
+    const [selectedEdgeForDelay, setSelectedEdgeForDelay] = useState(null);
+    const [edgePopoverPosition, setEdgePopoverPosition] = useState({ x: 0, y: 0 });
 
     // Debug Panel state - shows raw APK event data
     const [debugEvents, setDebugEvents] = useState([]);
@@ -374,7 +380,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         }));
     }, [nodes, nodeStates]);
 
-    // Update edges with execution state
+    // Update edges with execution state and delay click handler
     const edgesWithExecution = useMemo(() => {
         return edges.map(edge => {
             const sourceState = nodeStates[edge.source]?.status;
@@ -397,10 +403,11 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                     ...edge.data,
                     executionState,
                     isDark,
+                    onEdgeClick: handleEdgeClick, // Inject click handler for delay config
                 }
             };
         });
-    }, [edges, nodeStates, isDark]);
+    }, [edges, nodeStates, isDark, handleEdgeClick]);
 
     // Recording controls - Start/Stop recording session
     const startRecording = useCallback(async () => {
@@ -1453,6 +1460,43 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     const handleUpdateNode = useCallback((nodeId, updatedNode) => {
         setNodes((nds) => nds.map((n) => n.id === nodeId ? updatedNode : n));
     }, []);
+
+    // Handler for edge click - open delay config popover
+    const handleEdgeClick = useCallback((edgeId, position, currentDelay) => {
+        const edge = edges.find(e => e.id === edgeId);
+        if (edge) {
+            setSelectedEdgeForDelay(edge);
+            setEdgePopoverPosition({
+                x: position.x + (reactFlowWrapper.current?.getBoundingClientRect()?.left || 0),
+                y: position.y + (reactFlowWrapper.current?.getBoundingClientRect()?.top || 0) - 20
+            });
+            setShowEdgeDelayPopover(true);
+        }
+    }, [edges]);
+
+    // Handler for updating edge delay config
+    const handleEdgeDelayUpdate = useCallback((delayConfig) => {
+        if (!selectedEdgeForDelay) return;
+
+        setEdges((eds) => eds.map((e) => {
+            if (e.id === selectedEdgeForDelay.id) {
+                return {
+                    ...e,
+                    data: {
+                        ...e.data,
+                        delay: delayConfig,
+                    },
+                };
+            }
+            return e;
+        }));
+
+        setShowEdgeDelayPopover(false);
+        setSelectedEdgeForDelay(null);
+
+        // Trigger auto-save
+        debouncedSave(nodes, edges);
+    }, [selectedEdgeForDelay, nodes, edges, debouncedSave]);
 
     const onDragOver = useCallback((event) => {
         event.preventDefault();
@@ -3092,6 +3136,18 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 )}
                             </ReactFlow>
                         </div>
+
+                        {/* Edge Delay Popover */}
+                        <EdgeDelayPopover
+                            isOpen={showEdgeDelayPopover}
+                            onClose={() => {
+                                setShowEdgeDelayPopover(false);
+                                setSelectedEdgeForDelay(null);
+                            }}
+                            onSave={handleEdgeDelayUpdate}
+                            position={edgePopoverPosition}
+                            initialDelay={selectedEdgeForDelay?.data?.delay || { mode: 'none', fixedSeconds: 1, minSeconds: 1, maxSeconds: 3 }}
+                        />
 
                         {/* Right Panel - Node Properties */}
                         {selectedNode && (
