@@ -350,6 +350,13 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                 >
                                     Gallery
                                 </Link>
+
+                                <Link
+                                    href="/ai-studio/scenarios"
+                                    className="px-4 py-2.5 text-sm font-semibold rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500 transition-all shadow-lg shadow-emerald-500/25"
+                                >
+                                    📝 Kịch bản AI
+                                </Link>
                             </div>
                         </div>
                     </div>

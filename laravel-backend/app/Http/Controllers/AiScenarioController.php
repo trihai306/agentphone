@@ -45,6 +45,20 @@ class AiScenarioController extends Controller
     }
 
     /**
+     * Show scenario creation page
+     */
+    public function create()
+    {
+        $user = Auth::user();
+
+        return Inertia::render('AIStudio/Scenario', [
+            'currentCredits' => $user->ai_credits,
+            'videoModels' => $this->generationService->getAvailableModels('video'),
+            'imageModels' => $this->generationService->getAvailableModels('image'),
+        ]);
+    }
+
+    /**
      * Parse script into scenes (AJAX)
      */
     public function parseScript(Request $request)

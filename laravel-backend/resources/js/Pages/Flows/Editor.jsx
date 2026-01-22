@@ -133,6 +133,7 @@ const defaultEdgeOptions = {
 function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     // Use usePage to get props directly - workaround for Inertia prop hydration bug
     const { props } = usePage();
+    const { auth } = props; // Get auth for socket channel subscription
     const [onlineDevices, setOnlineDevices] = useState(props.onlineDevices || []);
     const collections = props.dataCollections || dataCollections;
 
