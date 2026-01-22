@@ -29,11 +29,10 @@ class RecordingController extends Controller
 
         // Broadcast to web listeners via socket
         broadcast(new RecordingEventReceived(
-            $validated['device_id'],
+            auth()->id(),
             $validated['flow_id'],
-            $validated['event_type'],
-            $validated['event_data'],
-            $validated['timestamp']
+            $validated['device_id'], // Use device_id as sessionId
+            $validated['event_data']
         ));
 
         return response()->json([

@@ -255,6 +255,57 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         };
     }, [auth?.user?.id, flow?.id, updateNodeState]);
 
+    // Listen for real-time recording events from APK via socket
+    // When APK captures an action during recording, it broadcasts to the device channel
+    useEffect(() => {
+        if (!selectedDevice?.device_id || !isRecording) return;
+        if (!window.Echo) {
+            console.warn('[Recording] Echo not available for recording events');
+            return;
+        }
+
+        const deviceChannel = window.Echo.private(`device.${selectedDevice.device_id}`);
+        if (!deviceChannel) return;
+
+        console.log('[Recording] 🎯 Subscribed to device channel for recording events:', selectedDevice.device_id);
+
+        // Handle recording action captured event from APK
+        const handleEventCaptured = (event) => {
+            console.log('[Recording] 📥 Received event.captured:', event);
+
+            // Skip if recording is paused
+            if (isRecordingPaused) {
+                console.log('[Recording] Skipping event - recording paused');
+                return;
+            }
+
+            // Add to debug panel
+            setDebugEvents(prev => [...prev.slice(-50), { ...event, receivedAt: new Date().toISOString() }]);
+
+            // Extract event data
+            const eventData = event.event || event;
+            const nodeSuggestion = event.node_suggestion || {
+                data: {
+                    label: eventData.event_type,
+                    color: 'blue'
+                }
+            };
+
+            // Create node from event
+            if (typeof createNodeFromEvent === 'function') {
+                createNodeFromEvent(eventData, nodeSuggestion);
+            }
+        };
+
+        // Listen for event.captured (from RecordingActionCaptured event)
+        deviceChannel.listen('.event.captured', handleEventCaptured);
+
+        return () => {
+            console.log('[Recording] 🔌 Unsubscribed from device channel:', selectedDevice.device_id);
+            deviceChannel.stopListening('.event.captured', handleEventCaptured);
+        };
+    }, [selectedDevice?.device_id, isRecording, isRecordingPaused, createNodeFromEvent]);
+
     // Sync selectedNode when nodes change (fix stale state bug)
     useEffect(() => {
         if (selectedNode) {
