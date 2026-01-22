@@ -37,6 +37,7 @@ class Campaign extends Model
         'repeat_per_record',
         'record_filter',
         'data_config',
+        'device_record_assignments',
         'variable_mapping',
         'device_strategy',
         'schedule',
@@ -52,6 +53,7 @@ class Campaign extends Model
     protected $casts = [
         'record_filter' => 'array',
         'data_config' => 'array',
+        'device_record_assignments' => 'array',
         'variable_mapping' => 'array',
         'schedule' => 'array',
         'last_run_at' => 'datetime',

@@ -89,6 +89,7 @@ class CampaignController extends Controller
             'data_config.primary.collection_id' => 'nullable|exists:data_collections,id',
             'data_config.pools' => 'nullable|array',
             'records_per_device' => 'nullable|integer|min:1',
+            'device_record_assignments' => 'nullable|array',
         ]);
 
         $campaign = Campaign::create([
@@ -105,6 +106,7 @@ class CampaignController extends Controller
             'repeat_per_record' => $validated['repeat_per_record'] ?? 1,
             'record_filter' => $validated['record_filter'] ?? null,
             'data_config' => $validated['data_config'] ?? null,
+            'device_record_assignments' => $validated['device_record_assignments'] ?? null,
             'status' => Campaign::STATUS_DRAFT,
         ]);
 
@@ -229,51 +231,83 @@ class CampaignController extends Controller
                 ]);
             }
         } else {
-            // Calculate records per device
-            $recordsPerDevice = $campaign->records_per_device
-                ?? (int) ceil($totalRecords / $deviceCount);
-
-            // Track how many records assigned to current device
-            $deviceIndex = 0;
-            $recordsAssignedToDevice = 0;
             $repeatCount = $campaign->repeat_per_record ?: 1;
+            $assignments = $campaign->device_record_assignments;
 
-            foreach ($recordIds as $recordId) {
-                // Get current device
-                $device = $devices[$deviceIndex % $deviceCount];
+            // Check if manual device assignments exist
+            if ($assignments && !empty($assignments)) {
+                // MANUAL ASSIGNMENT MODE: Use specific records for each device
+                foreach ($assignments as $deviceId => $assignedRecordIds) {
+                    $device = $devices->firstWhere('id', (int) $deviceId);
+                    if (!$device) {
+                        continue; // Skip if device not online
+                    }
 
-                // Create job(s) for this record
-                for ($r = 0; $r < $repeatCount; $r++) {
-                    // Build pool context (random comments, media, etc.)
-                    $poolContext = $this->buildJobContext($campaign);
+                    // Filter to only valid record IDs
+                    $validRecordIds = array_intersect($assignedRecordIds, $recordIds);
 
-                    WorkflowJob::create([
-                        'user_id' => $campaign->user_id,
-                        'flow_id' => $workflows->first()->id, // Primary workflow
-                        'device_id' => $device->id,
-                        'campaign_id' => $campaign->id,
-                        'data_collection_id' => $campaign->data_collection_id,
-                        'data_record_id' => $recordId,      // 1 record per job
-                        'workflow_chain' => $workflowChain, // Full chain
-                        'current_workflow_index' => 0,
-                        'chain_context' => $poolContext,    // Pool data for loops
-                        'name' => "{$campaign->name} - Record #{$recordId}" . ($repeatCount > 1 ? " (Run " . ($r + 1) . ")" : ""),
-                        'status' => WorkflowJob::STATUS_PENDING,
-                        'priority' => 5,
-                        'max_retries' => 3,
-                    ]);
+                    foreach ($validRecordIds as $recordId) {
+                        for ($r = 0; $r < $repeatCount; $r++) {
+                            $poolContext = $this->buildJobContext($campaign);
+
+                            WorkflowJob::create([
+                                'user_id' => $campaign->user_id,
+                                'flow_id' => $workflows->first()->id,
+                                'device_id' => $device->id,
+                                'campaign_id' => $campaign->id,
+                                'data_collection_id' => $campaign->data_collection_id,
+                                'data_record_id' => $recordId,
+                                'workflow_chain' => $workflowChain,
+                                'current_workflow_index' => 0,
+                                'chain_context' => $poolContext,
+                                'name' => "{$campaign->name} - Record #{$recordId}" . ($repeatCount > 1 ? " (Run " . ($r + 1) . ")" : ""),
+                                'status' => WorkflowJob::STATUS_PENDING,
+                                'priority' => 5,
+                                'max_retries' => 3,
+                            ]);
+                        }
+                    }
                 }
+            } else {
+                // AUTO ASSIGNMENT MODE: Round-robin distribution
+                $recordsPerDevice = $campaign->records_per_device
+                    ?? (int) ceil($totalRecords / $deviceCount);
 
-                $recordsAssignedToDevice++;
+                $deviceIndex = 0;
+                $recordsAssignedToDevice = 0;
 
-                // Move to next device when limit reached
-                if ($recordsAssignedToDevice >= $recordsPerDevice) {
-                    $deviceIndex++;
-                    $recordsAssignedToDevice = 0;
+                foreach ($recordIds as $recordId) {
+                    $device = $devices[$deviceIndex % $deviceCount];
 
-                    // Stop if no more devices available
-                    if ($deviceIndex >= $deviceCount) {
-                        break;
+                    for ($r = 0; $r < $repeatCount; $r++) {
+                        $poolContext = $this->buildJobContext($campaign);
+
+                        WorkflowJob::create([
+                            'user_id' => $campaign->user_id,
+                            'flow_id' => $workflows->first()->id,
+                            'device_id' => $device->id,
+                            'campaign_id' => $campaign->id,
+                            'data_collection_id' => $campaign->data_collection_id,
+                            'data_record_id' => $recordId,
+                            'workflow_chain' => $workflowChain,
+                            'current_workflow_index' => 0,
+                            'chain_context' => $poolContext,
+                            'name' => "{$campaign->name} - Record #{$recordId}" . ($repeatCount > 1 ? " (Run " . ($r + 1) . ")" : ""),
+                            'status' => WorkflowJob::STATUS_PENDING,
+                            'priority' => 5,
+                            'max_retries' => 3,
+                        ]);
+                    }
+
+                    $recordsAssignedToDevice++;
+
+                    if ($recordsAssignedToDevice >= $recordsPerDevice) {
+                        $deviceIndex++;
+                        $recordsAssignedToDevice = 0;
+
+                        if ($deviceIndex >= $deviceCount) {
+                            break;
+                        }
                     }
                 }
             }

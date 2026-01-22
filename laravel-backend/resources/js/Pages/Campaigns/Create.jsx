@@ -72,6 +72,11 @@ export default function Create({ dataCollections = [], workflows = [], devices =
     // Pool structure: { id, variable, collection_id, field, count, mode }
     const [recordsPerDevice, setRecordsPerDevice] = useState('');
 
+    // Device Record Assignment - Manual mode
+    const [assignmentMode, setAssignmentMode] = useState('auto'); // 'auto' | 'manual'
+    const [deviceRecordAssignments, setDeviceRecordAssignments] = useState({}); // { deviceId: [recordId, ...] }
+    const [activeDeviceForPicker, setActiveDeviceForPicker] = useState(null);
+
 
     const onlineDevices = devices.filter(d => d.socket_connected || d.status === 'online');
 
@@ -109,6 +114,25 @@ export default function Create({ dataCollections = [], workflows = [], devices =
 
     const clearSelection = () => {
         setSelectedRecordIds([]);
+    };
+
+    // Device record assignment helpers
+    const toggleRecordForDevice = (deviceId, recordId) => {
+        setDeviceRecordAssignments(prev => {
+            const current = prev[deviceId] || [];
+            const updated = current.includes(recordId)
+                ? current.filter(id => id !== recordId)
+                : [...current, recordId];
+            return { ...prev, [deviceId]: updated };
+        });
+    };
+
+    const getAssignedRecordCount = (deviceId) => {
+        return (deviceRecordAssignments[deviceId] || []).length;
+    };
+
+    const getTotalAssignedRecords = () => {
+        return Object.values(deviceRecordAssignments).reduce((sum, arr) => sum + arr.length, 0);
     };
 
     // Filter workflows (exclude selected)
@@ -255,7 +279,8 @@ export default function Create({ dataCollections = [], workflows = [], devices =
             repeat_per_record: repeatPerRecord,
             record_filter: recordFilter,
             data_config: dataConfig,
-            records_per_device: recordsPerDevice ? parseInt(recordsPerDevice) : null,
+            records_per_device: assignmentMode === 'auto' && recordsPerDevice ? parseInt(recordsPerDevice) : null,
+            device_record_assignments: assignmentMode === 'manual' ? deviceRecordAssignments : null,
         }, {
             onFinish: () => setIsSubmitting(false),
         });
@@ -744,22 +769,155 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                     )}
                                 </div>
 
-                                {/* Records Per Device */}
-                                <div className={`p-5 rounded-xl flex items-center justify-between ${isDark ? 'bg-emerald-500/10' : 'bg-emerald-50'}`}>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-2xl">📱</span>
-                                        <div>
-                                            <p className={`font-medium ${isDark ? 'text-emerald-300' : 'text-emerald-800'}`}>Records/Thiết bị</p>
-                                            <p className={`text-xs ${isDark ? 'text-emerald-400/70' : 'text-emerald-600'}`}>Giới hạn số record mỗi thiết bị (để trống = chia đều)</p>
+                                {/* Device Assignment Mode */}
+                                <div className={`p-5 rounded-xl ${isDark ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-emerald-50'}`}>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-2xl">📱</span>
+                                            <div>
+                                                <p className={`font-medium ${isDark ? 'text-emerald-300' : 'text-emerald-800'}`}>Phân Chia Records</p>
+                                                <p className={`text-xs ${isDark ? 'text-emerald-400/70' : 'text-emerald-600'}`}>Cách phân records cho các thiết bị</p>
+                                            </div>
                                         </div>
                                     </div>
-                                    <input
-                                        type="number"
-                                        value={recordsPerDevice}
-                                        onChange={e => setRecordsPerDevice(e.target.value)}
-                                        placeholder="Auto"
-                                        className={`w-24 px-3 py-2 rounded-lg border text-center ${isDark ? 'bg-white/10 border-white/20 text-white placeholder:text-gray-500' : 'bg-white border-gray-300 text-gray-900'} focus:outline-none`}
-                                    />
+
+                                    {/* Mode Toggle */}
+                                    <div className="flex gap-2 mb-4">
+                                        <button
+                                            onClick={() => setAssignmentMode('auto')}
+                                            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all
+                                                ${assignmentMode === 'auto'
+                                                    ? 'bg-emerald-500 text-white'
+                                                    : isDark ? 'bg-white/10 text-gray-300 hover:bg-white/15' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                                        >
+                                            🔄 Tự động (chia đều)
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setAssignmentMode('manual');
+                                                if (records.length === 0 && selectedCollection) {
+                                                    loadRecords();
+                                                }
+                                            }}
+                                            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all
+                                                ${assignmentMode === 'manual'
+                                                    ? 'bg-emerald-500 text-white'
+                                                    : isDark ? 'bg-white/10 text-gray-300 hover:bg-white/15' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                                        >
+                                            🎯 Thủ công (chọn cụ thể)
+                                        </button>
+                                    </div>
+
+                                    {/* Auto Mode: Records Per Device */}
+                                    {assignmentMode === 'auto' && (
+                                        <div className="flex items-center justify-between">
+                                            <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                Giới hạn records/thiết bị:
+                                            </span>
+                                            <input
+                                                type="number"
+                                                value={recordsPerDevice}
+                                                onChange={e => setRecordsPerDevice(e.target.value)}
+                                                placeholder="Auto"
+                                                className={`w-24 px-3 py-2 rounded-lg border text-center ${isDark ? 'bg-white/10 border-white/20 text-white placeholder:text-gray-500' : 'bg-white border-gray-300 text-gray-900'} focus:outline-none`}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Manual Mode: Device List with Record Assignment */}
+                                    {assignmentMode === 'manual' && selectedCollection && (
+                                        <div className="space-y-3">
+                                            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                Click vào thiết bị để chọn records (Tổng: <span className="font-bold text-emerald-400">{getTotalAssignedRecords()}</span> records)
+                                            </p>
+                                            <div className="space-y-2 max-h-48 overflow-y-auto">
+                                                {selectedDevices.map(device => (
+                                                    <div
+                                                        key={device.id}
+                                                        className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all
+                                                            ${activeDeviceForPicker === device.id
+                                                                ? 'bg-emerald-500/20 border border-emerald-500'
+                                                                : isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-white hover:bg-gray-50'}`}
+                                                        onClick={() => setActiveDeviceForPicker(activeDeviceForPicker === device.id ? null : device.id)}
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-xl">📱</span>
+                                                            <div>
+                                                                <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{device.name}</p>
+                                                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{device.model}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <span className={`px-3 py-1 rounded-lg text-sm font-medium
+                                                                ${getAssignedRecordCount(device.id) > 0
+                                                                    ? 'bg-emerald-500/20 text-emerald-400'
+                                                                    : isDark ? 'bg-white/10 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
+                                                                {getAssignedRecordCount(device.id)} records
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            {/* Record Picker for Active Device */}
+                                            {activeDeviceForPicker && (
+                                                <div className={`mt-4 p-4 rounded-xl ${isDark ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
+                                                    <div className="flex items-center justify-between mb-3">
+                                                        <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                                            Chọn records cho: {selectedDevices.find(d => d.id === activeDeviceForPicker)?.name}
+                                                        </p>
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={() => {
+                                                                    const allIds = records.map(r => r.id);
+                                                                    setDeviceRecordAssignments(prev => ({ ...prev, [activeDeviceForPicker]: allIds }));
+                                                                }}
+                                                                className={`text-xs px-2 py-1 rounded ${isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-600'}`}
+                                                            >
+                                                                Chọn tất cả
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setDeviceRecordAssignments(prev => ({ ...prev, [activeDeviceForPicker]: [] }));
+                                                                }}
+                                                                className={`text-xs px-2 py-1 rounded ${isDark ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-600'}`}
+                                                            >
+                                                                Bỏ chọn
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-5 gap-2 max-h-40 overflow-y-auto">
+                                                        {loadingRecords ? (
+                                                            <p className={`col-span-5 text-center py-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                                Đang tải...
+                                                            </p>
+                                                        ) : records.map(record => {
+                                                            const isSelected = (deviceRecordAssignments[activeDeviceForPicker] || []).includes(record.id);
+                                                            return (
+                                                                <button
+                                                                    key={record.id}
+                                                                    onClick={() => toggleRecordForDevice(activeDeviceForPicker, record.id)}
+                                                                    className={`p-2 rounded-lg text-xs font-medium transition-all
+                                                                        ${isSelected
+                                                                            ? 'bg-emerald-500 text-white'
+                                                                            : isDark ? 'bg-white/5 text-gray-300 hover:bg-white/10' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                                                                >
+                                                                    #{record.id}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Warning when no collection selected in manual mode */}
+                                    {assignmentMode === 'manual' && !selectedCollection && (
+                                        <p className={`text-sm text-center py-4 ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+                                            ⚠️ Vui lòng chọn Dữ Liệu trước khi phân chia thủ công
+                                        </p>
+                                    )}
                                 </div>
 
                                 {/* Repeat Config */}

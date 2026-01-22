@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 export default function Index({ creditPackages = [], recentTopups = [], currentBalance = 0, walletBalance = 0 }) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const isDark = theme === 'dark';
     const [selectedPackage, setSelectedPackage] = useState(null);
     const [processing, setProcessing] = useState(false);
@@ -35,8 +37,8 @@ export default function Index({ creditPackages = [], recentTopups = [], currentB
     const getColor = (index) => packageColors[index % packageColors.length];
 
     return (
-        <AppLayout title="Top Up">
-            <Head title="Top Up" />
+        <AppLayout title={t('topup.title')}>
+            <Head title={t('topup.title')} />
 
             <div className={`min-h-screen ${isDark ? 'bg-[#09090b]' : 'bg-gradient-to-br from-slate-50 via-white to-slate-100'}`}>
                 {/* Background decoration */}
@@ -57,10 +59,10 @@ export default function Index({ creditPackages = [], recentTopups = [], currentB
                                 </div>
                                 <div>
                                     <h1 className={`text-3xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                        Nạp Tiền
+                                        {t('topup.title')}
                                     </h1>
                                     <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                        Thêm tiền vào ví để sử dụng dịch vụ
+                                        {t('topup.description')}
                                     </p>
                                 </div>
                             </div>
@@ -68,14 +70,14 @@ export default function Index({ creditPackages = [], recentTopups = [], currentB
                         <Link
                             href="/topup/history"
                             className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-xl border transition-all ${isDark
-                                    ? 'border-white/10 text-gray-300 hover:bg-white/5 hover:border-white/20'
-                                    : 'border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'
+                                ? 'border-white/10 text-gray-300 hover:bg-white/5 hover:border-white/20'
+                                : 'border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'
                                 }`}
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            Lịch sử
+                            {t('topup.history')}
                         </Link>
                     </div>
 
@@ -86,7 +88,7 @@ export default function Index({ creditPackages = [], recentTopups = [], currentB
                         <div className="relative flex items-center justify-between">
                             <div>
                                 <p className={`text-sm font-medium uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    Số dư hiện tại
+                                    {t('topup.current_balance')}
                                 </p>
                                 <p className={`text-5xl font-bold mt-3 bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent`}>
                                     {formatCurrency(walletBalance || currentBalance)}
@@ -102,7 +104,7 @@ export default function Index({ creditPackages = [], recentTopups = [], currentB
 
                     {/* Packages Section */}
                     <h2 className={`text-lg font-semibold mb-5 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        Chọn gói nạp tiền
+                        {t('topup.select_package')}
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
                         {creditPackages.map((pkg, index) => {
@@ -116,17 +118,17 @@ export default function Index({ creditPackages = [], recentTopups = [], currentB
                                     onClick={() => handleSelectPackage(pkg)}
                                     disabled={processing}
                                     className={`group relative overflow-hidden text-left rounded-2xl backdrop-blur-xl border transition-all duration-300 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed ${isPopular
-                                            ? `bg-gradient-to-br ${color.from} ${color.to} border-transparent shadow-xl ${color.shadow}`
-                                            : isDark
-                                                ? 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
-                                                : 'bg-white/80 border-gray-200/50 hover:border-gray-300 shadow-lg shadow-gray-200/30'
+                                        ? `bg-gradient-to-br ${color.from} ${color.to} border-transparent shadow-xl ${color.shadow}`
+                                        : isDark
+                                            ? 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
+                                            : 'bg-white/80 border-gray-200/50 hover:border-gray-300 shadow-lg shadow-gray-200/30'
                                         }`}
                                 >
                                     {/* Popular badge */}
                                     {isPopular && (
                                         <div className="absolute top-4 right-4">
                                             <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/20 text-white backdrop-blur-sm">
-                                                Phổ biến
+                                                {t('topup.popular')}
                                             </span>
                                         </div>
                                     )}
@@ -144,8 +146,8 @@ export default function Index({ creditPackages = [], recentTopups = [], currentB
                                     <div className="p-6">
                                         {/* Icon */}
                                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${isPopular
-                                                ? 'bg-white/20'
-                                                : `bg-gradient-to-br ${color.from} ${color.to} ${color.shadow} shadow-lg`
+                                            ? 'bg-white/20'
+                                            : `bg-gradient-to-br ${color.from} ${color.to} ${color.shadow} shadow-lg`
                                             }`}>
                                             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
@@ -180,7 +182,7 @@ export default function Index({ creditPackages = [], recentTopups = [], currentB
                                         <div className={`mt-4 pt-4 border-t ${isPopular ? 'border-white/20' : isDark ? 'border-white/10' : 'border-gray-100'}`}>
                                             <div className="flex justify-between items-center">
                                                 <span className={`text-sm ${isPopular ? 'text-white/70' : isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                    Bạn nhận được
+                                                    {t('topup.you_receive')}
                                                 </span>
                                                 <span className={`text-lg font-bold ${isPopular ? 'text-white' : isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
                                                     {formatCurrency(pkg.price + (pkg.bonus || 0))}
@@ -196,7 +198,7 @@ export default function Index({ creditPackages = [], recentTopups = [], currentB
                                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                                     </svg>
-                                                    <span className="text-sm font-medium">Đang xử lý...</span>
+                                                    <span className="text-sm font-medium">{t('topup.processing')}</span>
                                                 </div>
                                             </div>
                                         )}
@@ -210,7 +212,7 @@ export default function Index({ creditPackages = [], recentTopups = [], currentB
                     <div className={`p-6 rounded-2xl backdrop-blur-xl border mb-10 ${isDark ? 'bg-white/5 border-white/10' : 'bg-white/80 border-gray-200/50 shadow-lg shadow-gray-200/30'
                         }`}>
                         <h3 className={`text-sm font-medium uppercase tracking-wider mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Phương thức thanh toán
+                            {t('topup.payment_methods')}
                         </h3>
                         <div className="flex flex-wrap gap-4">
                             {['Chuyển khoản ngân hàng', 'MoMo', 'VNPay', 'ZaloPay'].map((method, i) => (
@@ -228,17 +230,17 @@ export default function Index({ creditPackages = [], recentTopups = [], currentB
                     {recentTopups.length > 0 && (
                         <>
                             <h2 className={`text-lg font-semibold mb-5 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                Giao dịch gần đây
+                                {t('topup.recent_transactions')}
                             </h2>
                             <div className={`rounded-2xl overflow-hidden backdrop-blur-xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white/80 border-gray-200/50 shadow-lg'}`}>
                                 <div className="overflow-x-auto">
                                     <table className="w-full">
                                         <thead>
                                             <tr className={`border-b ${isDark ? 'border-white/10' : 'border-gray-100'}`}>
-                                                <th className={`text-left py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Gói</th>
-                                                <th className={`text-left py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Số tiền</th>
-                                                <th className={`text-left py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Trạng thái</th>
-                                                <th className={`text-left py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Ngày</th>
+                                                <th className={`text-left py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('topup.package')}</th>
+                                                <th className={`text-left py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('topup.amount')}</th>
+                                                <th className={`text-left py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('topup.status')}</th>
+                                                <th className={`text-left py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('topup.date')}</th>
                                             </tr>
                                         </thead>
                                         <tbody className={`divide-y ${isDark ? 'divide-white/5' : 'divide-gray-100'}`}>
@@ -252,18 +254,18 @@ export default function Index({ creditPackages = [], recentTopups = [], currentB
                                                     </td>
                                                     <td className="py-4 px-6">
                                                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${topup.payment_status === 'completed'
-                                                                ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
-                                                                : topup.payment_status === 'pending'
-                                                                    ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
-                                                                    : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                                                            ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                                                            : topup.payment_status === 'pending'
+                                                                ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                                                                : 'bg-red-500/10 text-red-500 border border-red-500/20'
                                                             }`}>
                                                             <span className={`w-1.5 h-1.5 rounded-full ${topup.payment_status === 'completed'
-                                                                    ? 'bg-emerald-500'
-                                                                    : topup.payment_status === 'pending'
-                                                                        ? 'bg-amber-500 animate-pulse'
-                                                                        : 'bg-red-500'
+                                                                ? 'bg-emerald-500'
+                                                                : topup.payment_status === 'pending'
+                                                                    ? 'bg-amber-500 animate-pulse'
+                                                                    : 'bg-red-500'
                                                                 }`} />
-                                                            {topup.payment_status === 'completed' ? 'Hoàn thành' : topup.payment_status === 'pending' ? 'Đang xử lý' : 'Thất bại'}
+                                                            {topup.payment_status === 'completed' ? t('topup.completed') : topup.payment_status === 'pending' ? t('topup.pending') : t('topup.failed')}
                                                         </span>
                                                     </td>
                                                     <td className={`py-4 px-6 text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
@@ -287,9 +289,9 @@ export default function Index({ creditPackages = [], recentTopups = [], currentB
                                 </svg>
                             </div>
                             <div>
-                                <h4 className={`font-semibold ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>Thanh toán an toàn & bảo mật</h4>
+                                <h4 className={`font-semibold ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>{t('topup.secure_ssl')}</h4>
                                 <p className={`text-sm mt-1 ${isDark ? 'text-blue-300/70' : 'text-blue-600/70'}`}>
-                                    Tất cả giao dịch được mã hóa SSL. Tiền sẽ được cộng vào ví ngay sau khi xác nhận thanh toán thành công.
+                                    {t('topup.secure_ssl_description')}
                                 </p>
                             </div>
                         </div>

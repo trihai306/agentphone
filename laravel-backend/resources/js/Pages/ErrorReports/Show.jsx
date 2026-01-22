@@ -1,6 +1,7 @@
 import { useForm, usePage, Link } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 
 const statusConfig = {
@@ -13,6 +14,7 @@ const statusConfig = {
 
 export default function Show({ report, statuses, types, severities }) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const isDark = theme === 'dark';
     const { flash } = usePage().props;
     const [showDeviceInfo, setShowDeviceInfo] = useState(false);
@@ -93,13 +95,13 @@ export default function Show({ report, statuses, types, severities }) {
                         <div className="lg:col-span-2 space-y-6">
                             {/* Description */}
                             <div className={`p-5 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
-                                <h2 className={`text-sm font-medium mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Description</h2>
+                                <h2 className={`text-sm font-medium mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('error_reports.description_field')}</h2>
                                 <p className={`whitespace-pre-wrap ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                     {report.description}
                                 </p>
                                 {report.page_url && (
                                     <div className={`mt-4 pt-4 border-t ${isDark ? 'border-[#2a2a2a]' : 'border-gray-100'}`}>
-                                        <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Page URL: </span>
+                                        <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('error_reports.page_url')}: </span>
                                         <a href={report.page_url} target="_blank" className={`text-sm ${isDark ? 'text-blue-400' : 'text-blue-600'} break-all`}>
                                             {report.page_url}
                                         </a>
@@ -111,7 +113,7 @@ export default function Show({ report, statuses, types, severities }) {
                             {report.screenshots?.length > 0 && (
                                 <div className={`p-5 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
                                     <h2 className={`text-sm font-medium mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                        Screenshots ({report.screenshots.length})
+                                        {t('error_reports.screenshots')} ({report.screenshots.length})
                                     </h2>
                                     <div className="grid grid-cols-3 gap-2">
                                         {report.screenshots.map((s, i) => (
@@ -126,12 +128,12 @@ export default function Show({ report, statuses, types, severities }) {
                             {/* Responses */}
                             <div className={`p-5 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
                                 <h2 className={`text-sm font-medium mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                    Discussion ({report.responses?.length || 0})
+                                    {t('error_reports.discussion')} ({report.responses?.length || 0})
                                 </h2>
 
                                 {report.responses?.length === 0 ? (
                                     <p className={`text-center py-6 text-sm ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                        No responses yet
+                                        {t('error_reports.no_responses')}
                                     </p>
                                 ) : (
                                     <div className="space-y-4 mb-4">
@@ -139,10 +141,10 @@ export default function Show({ report, statuses, types, severities }) {
                                             <div key={r.id} className={`p-3 rounded-lg ${r.is_admin_response ? (isDark ? 'bg-blue-900/20' : 'bg-blue-50') : (isDark ? 'bg-[#222]' : 'bg-gray-50')}`}>
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                                        {r.is_admin_response ? 'Admin' : 'You'}
+                                                        {r.is_admin_response ? t('error_reports.admin') : t('error_reports.you')}
                                                     </span>
                                                     {r.is_admin_response && (
-                                                        <span className={`text-xs px-1.5 py-0.5 rounded ${isDark ? 'bg-blue-900/40 text-blue-400' : 'bg-blue-100 text-blue-700'}`}>Support</span>
+                                                        <span className={`text-xs px-1.5 py-0.5 rounded ${isDark ? 'bg-blue-900/40 text-blue-400' : 'bg-blue-100 text-blue-700'}`}>{t('error_reports.support')}</span>
                                                     )}
                                                     <span className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
                                                         {new Date(r.created_at).toLocaleDateString()}
@@ -160,7 +162,7 @@ export default function Show({ report, statuses, types, severities }) {
                                         <textarea
                                             value={data.message}
                                             onChange={(e) => setData('message', e.target.value)}
-                                            placeholder="Write a response..."
+                                            placeholder={t('error_reports.write_response')}
                                             rows={3}
                                             className={`w-full px-3 py-2 rounded-lg text-sm resize-none ${isDark ? 'bg-[#222] border-[#2a2a2a] text-white placeholder-gray-600' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'
                                                 } border focus:outline-none`}
@@ -173,7 +175,7 @@ export default function Show({ report, statuses, types, severities }) {
                                                 className={`px-4 py-2 text-sm font-medium rounded-lg ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'
                                                     } disabled:opacity-50`}
                                             >
-                                                {processing ? 'Sending...' : 'Send'}
+                                                {processing ? t('error_reports.sending') : t('error_reports.send')}
                                             </button>
                                         </div>
                                     </form>
@@ -185,7 +187,7 @@ export default function Show({ report, statuses, types, severities }) {
                         <div className="space-y-4">
                             {/* Status */}
                             <div className={`p-4 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
-                                <h3 className={`text-xs font-medium mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Status</h3>
+                                <h3 className={`text-xs font-medium mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('error_reports.status')}</h3>
                                 <div className="space-y-2">
                                     {Object.entries(statuses).map(([key, label]) => (
                                         <div key={key} className={`flex items-center gap-2 text-sm ${report.status === key ? (isDark ? 'text-white' : 'text-gray-900') : (isDark ? 'text-gray-600' : 'text-gray-400')}`}>
@@ -199,7 +201,7 @@ export default function Show({ report, statuses, types, severities }) {
                             {/* Assignee */}
                             {report.assigned_admin && (
                                 <div className={`p-4 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
-                                    <h3 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Assigned To</h3>
+                                    <h3 className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('error_reports.assigned_to')}</h3>
                                     <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{report.assigned_admin.name}</p>
                                 </div>
                             )}
@@ -208,19 +210,19 @@ export default function Show({ report, statuses, types, severities }) {
                             {report.device_info && (
                                 <div className={`p-4 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
                                     <div className="flex items-center justify-between mb-2">
-                                        <h3 className={`text-xs font-medium ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Device</h3>
+                                        <h3 className={`text-xs font-medium ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('error_reports.device')}</h3>
                                         <button
                                             onClick={() => setShowDeviceInfo(!showDeviceInfo)}
                                             className={`text-xs ${isDark ? 'text-blue-400' : 'text-blue-600'}`}
                                         >
-                                            {showDeviceInfo ? 'Hide' : 'Show'}
+                                            {showDeviceInfo ? t('error_reports.hide') : t('error_reports.show')}
                                         </button>
                                     </div>
                                     {showDeviceInfo && (
                                         <div className={`text-xs space-y-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                            <p>Platform: {report.device_info.platform}</p>
-                                            <p>Screen: {report.device_info.screenWidth}x{report.device_info.screenHeight}</p>
-                                            {report.device_info.timezone && <p>Timezone: {report.device_info.timezone}</p>}
+                                            <p>{t('error_reports.platform')}: {report.device_info.platform}</p>
+                                            <p>{t('error_reports.screen')}: {report.device_info.screenWidth}x{report.device_info.screenHeight}</p>
+                                            {report.device_info.timezone && <p>{t('error_reports.timezone')}: {report.device_info.timezone}</p>}
                                         </div>
                                     )}
                                 </div>

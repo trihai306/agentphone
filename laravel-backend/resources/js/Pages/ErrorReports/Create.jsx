@@ -1,6 +1,7 @@
 import { useForm, usePage, router, Link } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { useState, useRef, useEffect } from 'react';
 
 const typeOptions = [
@@ -20,6 +21,7 @@ const severityOptions = [
 
 export default function Create() {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const isDark = theme === 'dark';
     const fileInputRef = useRef(null);
     const [screenshots, setScreenshots] = useState([]);
@@ -90,7 +92,7 @@ export default function Create() {
     };
 
     return (
-        <AppLayout title="New Report">
+        <AppLayout title={t('error_reports.new_report_title')}>
             <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
                 <div className="max-w-[700px] mx-auto px-6 py-6">
                     {/* Header */}
@@ -105,10 +107,10 @@ export default function Create() {
                         </Link>
                         <div>
                             <h1 className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                New Error Report
+                                {t('error_reports.new_report_title')}
                             </h1>
                             <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                Describe the issue in detail
+                                {t('error_reports.new_report_description')}
                             </p>
                         </div>
                     </div>
@@ -119,7 +121,7 @@ export default function Create() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                        Type
+                                        {t('error_reports.type')}
                                     </label>
                                     <div className="grid grid-cols-5 gap-2">
                                         {typeOptions.map((type) => (
@@ -128,8 +130,8 @@ export default function Create() {
                                                 type="button"
                                                 onClick={() => setData('error_type', type.value)}
                                                 className={`p-2 rounded-lg text-center transition-all ${data.error_type === type.value
-                                                        ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
-                                                        : isDark ? 'bg-[#222] hover:bg-[#2a2a2a]' : 'bg-gray-100 hover:bg-gray-200'
+                                                    ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
+                                                    : isDark ? 'bg-[#222] hover:bg-[#2a2a2a]' : 'bg-gray-100 hover:bg-gray-200'
                                                     }`}
                                                 title={type.label}
                                             >
@@ -140,7 +142,7 @@ export default function Create() {
                                 </div>
                                 <div>
                                     <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                        Severity
+                                        {t('error_reports.severity')}
                                     </label>
                                     <select
                                         value={data.severity}
@@ -161,7 +163,7 @@ export default function Create() {
                             <div className="space-y-4">
                                 <div>
                                     <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                        Title <span className="text-red-500">*</span>
+                                        {t('error_reports.title_field')} <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="text"
@@ -169,14 +171,14 @@ export default function Create() {
                                         onChange={(e) => setData('title', e.target.value)}
                                         className={`w-full px-4 py-2.5 rounded-lg text-sm ${isDark ? 'bg-[#222] border-[#2a2a2a] text-white' : 'bg-white border-gray-200 text-gray-900'
                                             } border focus:outline-none ${errors.title ? 'border-red-500' : ''}`}
-                                        placeholder="Brief summary of the issue"
+                                        placeholder={t('error_reports.title_placeholder')}
                                     />
                                     {errors.title && <p className="mt-1 text-sm text-red-500">{errors.title}</p>}
                                 </div>
 
                                 <div>
                                     <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                        Description <span className="text-red-500">*</span>
+                                        {t('error_reports.description_field')} <span className="text-red-500">*</span>
                                     </label>
                                     <textarea
                                         value={data.description}
@@ -184,14 +186,14 @@ export default function Create() {
                                         rows={5}
                                         className={`w-full px-4 py-2.5 rounded-lg text-sm resize-none ${isDark ? 'bg-[#222] border-[#2a2a2a] text-white' : 'bg-white border-gray-200 text-gray-900'
                                             } border focus:outline-none ${errors.description ? 'border-red-500' : ''}`}
-                                        placeholder="Describe the issue in detail. Include steps to reproduce if applicable..."
+                                        placeholder={t('error_reports.description_placeholder')}
                                     />
                                     {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
                                 </div>
 
                                 <div>
                                     <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                        Page URL
+                                        {t('error_reports.page_url')}
                                     </label>
                                     <input
                                         type="text"
@@ -207,7 +209,7 @@ export default function Create() {
                         {/* Screenshots */}
                         <div className={`p-6 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
                             <label className={`block text-sm font-medium mb-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                Screenshots
+                                {t('error_reports.screenshots')}
                             </label>
                             <div
                                 onClick={() => fileInputRef.current?.click()}
@@ -223,10 +225,10 @@ export default function Create() {
                                     className="hidden"
                                 />
                                 {uploading ? (
-                                    <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>Uploading...</p>
+                                    <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>{t('error_reports.uploading')}</p>
                                 ) : (
                                     <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>
-                                        Click to upload or drag images
+                                        {t('error_reports.click_upload')}
                                     </p>
                                 )}
                             </div>
@@ -256,7 +258,7 @@ export default function Create() {
                                 className={`px-4 py-2 text-sm font-medium rounded-lg ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
                                     }`}
                             >
-                                Cancel
+                                {t('error_reports.cancel')}
                             </Link>
                             <button
                                 type="submit"
@@ -264,7 +266,7 @@ export default function Create() {
                                 className={`px-6 py-2 text-sm font-medium rounded-lg ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'
                                     } disabled:opacity-50`}
                             >
-                                {processing ? 'Submitting...' : 'Submit Report'}
+                                {processing ? t('error_reports.submitting') : t('error_reports.submit')}
                             </button>
                         </div>
                     </form>

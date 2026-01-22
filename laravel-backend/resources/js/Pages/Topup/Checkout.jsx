@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 export default function Checkout({ package: pkg = {}, paymentMethods = [], bankInfo = {} }) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const isDark = theme === 'dark';
     const [selectedMethod, setSelectedMethod] = useState('bank_transfer');
     const [processing, setProcessing] = useState(false);
@@ -48,8 +50,8 @@ export default function Checkout({ package: pkg = {}, paymentMethods = [], bankI
     };
 
     return (
-        <AppLayout title="Thanh toán">
-            <Head title="Thanh toán" />
+        <AppLayout title={t('topup.checkout')}>
+            <Head title={t('topup.checkout')} />
 
             <div className={`min-h-screen ${isDark ? 'bg-[#09090b]' : 'bg-gradient-to-br from-slate-50 via-white to-slate-100'}`}>
                 {/* Background decoration */}
@@ -70,10 +72,10 @@ export default function Checkout({ package: pkg = {}, paymentMethods = [], bankI
                         </Link>
                         <div>
                             <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                Thanh toán
+                                {t('topup.checkout')}
                             </h1>
                             <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                Hoàn tất thanh toán để nạp tiền
+                                {t('topup.checkout_description')}
                             </p>
                         </div>
                     </div>
@@ -83,19 +85,19 @@ export default function Checkout({ package: pkg = {}, paymentMethods = [], bankI
                         <div className="lg:col-span-3 space-y-5">
                             <div className={`p-6 rounded-2xl backdrop-blur-xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white/80 border-gray-200/50 shadow-lg'}`}>
                                 <h2 className={`text-sm font-semibold uppercase tracking-wider mb-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                    Phương thức thanh toán
+                                    {t('topup.payment_methods')}
                                 </h2>
                                 <div className="space-y-3">
                                     {paymentMethods.map((method) => (
                                         <label
                                             key={method.id}
                                             className={`flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all border-2 ${selectedMethod === method.id
-                                                    ? isDark
-                                                        ? 'bg-emerald-500/10 border-emerald-500/50'
-                                                        : 'bg-emerald-50 border-emerald-500'
-                                                    : isDark
-                                                        ? 'border-white/10 hover:border-white/20 hover:bg-white/5'
-                                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                                ? isDark
+                                                    ? 'bg-emerald-500/10 border-emerald-500/50'
+                                                    : 'bg-emerald-50 border-emerald-500'
+                                                : isDark
+                                                    ? 'border-white/10 hover:border-white/20 hover:bg-white/5'
+                                                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                                                 }`}
                                         >
                                             <input
@@ -107,8 +109,8 @@ export default function Checkout({ package: pkg = {}, paymentMethods = [], bankI
                                                 className="sr-only"
                                             />
                                             <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${selectedMethod === method.id
-                                                    ? 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25'
-                                                    : isDark ? 'bg-white/10 text-gray-400' : 'bg-gray-100 text-gray-500'
+                                                ? 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25'
+                                                : isDark ? 'bg-white/10 text-gray-400' : 'bg-gray-100 text-gray-500'
                                                 }`}>
                                                 {methodIcons[method.id]}
                                             </div>
@@ -121,8 +123,8 @@ export default function Checkout({ package: pkg = {}, paymentMethods = [], bankI
                                                 </p>
                                             </div>
                                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedMethod === method.id
-                                                    ? 'border-emerald-500 bg-emerald-500'
-                                                    : isDark ? 'border-gray-600' : 'border-gray-300'
+                                                ? 'border-emerald-500 bg-emerald-500'
+                                                : isDark ? 'border-gray-600' : 'border-gray-300'
                                                 }`}>
                                                 {selectedMethod === method.id && (
                                                     <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -142,7 +144,7 @@ export default function Checkout({ package: pkg = {}, paymentMethods = [], bankI
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                     </svg>
                                     <span className={`text-sm font-medium ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
-                                        Thanh toán được mã hóa an toàn
+                                        {t('topup.secure_payment')}
                                     </span>
                                 </div>
                             </div>
@@ -152,7 +154,7 @@ export default function Checkout({ package: pkg = {}, paymentMethods = [], bankI
                         <div className="lg:col-span-2">
                             <div className={`sticky top-6 p-6 rounded-2xl backdrop-blur-xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white/80 border-gray-200/50 shadow-lg'}`}>
                                 <h2 className={`text-sm font-semibold uppercase tracking-wider mb-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                    Chi tiết đơn hàng
+                                    {t('topup.order_details')}
                                 </h2>
 
                                 {/* Package Card */}
@@ -165,19 +167,19 @@ export default function Checkout({ package: pkg = {}, paymentMethods = [], bankI
                                         </div>
                                         <div>
                                             <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{pkg.name}</p>
-                                            <p className={`text-xs ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>Gói nạp tiền</p>
+                                            <p className={`text-xs ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>{t('topup.topup_package')}</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="space-y-3 mb-5">
                                     <div className="flex justify-between text-sm">
-                                        <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Giá gói</span>
+                                        <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>{t('topup.package_price')}</span>
                                         <span className={isDark ? 'text-white' : 'text-gray-900'}>{formatCurrency(pkg.price)}</span>
                                     </div>
                                     {pkg.bonus > 0 && (
                                         <div className="flex justify-between text-sm">
-                                            <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Bonus</span>
+                                            <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>{t('topup.bonus')}</span>
                                             <span className="text-emerald-500 font-medium">+{formatCurrency(pkg.bonus)}</span>
                                         </div>
                                     )}
@@ -185,7 +187,7 @@ export default function Checkout({ package: pkg = {}, paymentMethods = [], bankI
 
                                 <div className={`pt-4 border-t ${isDark ? 'border-white/10' : 'border-gray-100'}`}>
                                     <div className="flex justify-between items-center mb-5">
-                                        <span className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Bạn nhận được</span>
+                                        <span className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{t('topup.you_receive')}</span>
                                         <span className="text-2xl font-bold text-emerald-500">
                                             {formatCurrency((pkg.price || 0) + (pkg.bonus || 0))}
                                         </span>
@@ -205,14 +207,14 @@ export default function Checkout({ package: pkg = {}, paymentMethods = [], bankI
                                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                                 </svg>
-                                                Đang xử lý...
+                                                {t('topup.processing')}
                                             </>
                                         ) : (
                                             <>
                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                 </svg>
-                                                Xác nhận thanh toán
+                                                {t('topup.confirm_payment')}
                                             </>
                                         )}
                                     </button>
@@ -221,7 +223,7 @@ export default function Checkout({ package: pkg = {}, paymentMethods = [], bankI
                                         className={`w-full block text-center py-3 text-sm font-medium rounded-xl transition-all ${isDark ? 'text-gray-400 hover:text-white hover:bg-white/5' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
                                             }`}
                                     >
-                                        Quay lại
+                                        {t('topup.back')}
                                     </Link>
                                 </div>
                             </div>

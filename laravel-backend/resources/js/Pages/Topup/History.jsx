@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 export default function History({ topups = { data: [] }, stats = {} }) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const isDark = theme === 'dark';
     const [filter, setFilter] = useState('all');
 
@@ -25,24 +27,24 @@ export default function History({ topups = { data: [] }, stats = {} }) {
     };
 
     const getStatusLabel = (status) => {
-        const labels = { completed: 'Completed', pending: 'Pending', failed: 'Failed', cancelled: 'Cancelled' };
+        const labels = { completed: t('topup.completed'), pending: t('topup.pending'), failed: t('topup.failed'), cancelled: t('topup.cancelled') };
         return labels[status] || status;
     };
 
     const filteredTopups = filter === 'all' ? topups.data : topups.data.filter(t => t.payment_status === filter);
 
     return (
-        <AppLayout title="Top Up History">
+        <AppLayout title={t('topup.history_title')}>
             <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
                 <div className="max-w-[900px] mx-auto px-6 py-6">
                     {/* Header */}
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <h1 className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                Transaction History
+                                {t('topup.history_title')}
                             </h1>
                             <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                Your top-up transactions
+                                {t('topup.history_description')}
                             </p>
                         </div>
                         <Link
@@ -50,32 +52,32 @@ export default function History({ topups = { data: [] }, stats = {} }) {
                             className={`px-4 py-2 text-sm font-medium rounded-lg ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'
                                 }`}
                         >
-                            + Top Up
+                            + {t('topup.title')}
                         </Link>
                     </div>
 
                     {/* Stats */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                         <div className={`p-4 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
-                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Current Balance</p>
+                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('topup.current_balance')}</p>
                             <p className={`text-xl font-semibold mt-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 {formatCurrency(stats.current_balance || 0)}
                             </p>
                         </div>
                         <div className={`p-4 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
-                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Total Deposited</p>
+                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('topup.total_deposited')}</p>
                             <p className={`text-xl font-semibold mt-1 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
                                 {formatCurrency(stats.total_amount || 0)}
                             </p>
                         </div>
                         <div className={`p-4 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
-                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Pending</p>
+                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('topup.pending')}</p>
                             <p className={`text-xl font-semibold mt-1 ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
                                 {formatCurrency(stats.pending_amount || 0)}
                             </p>
                         </div>
                         <div className={`p-4 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
-                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Transactions</p>
+                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('topup.transactions')}</p>
                             <p className={`text-xl font-semibold mt-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 {stats.total_topups || 0}
                             </p>
@@ -89,8 +91,8 @@ export default function History({ topups = { data: [] }, stats = {} }) {
                                 key={tab}
                                 onClick={() => setFilter(tab)}
                                 className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${filter === tab
-                                        ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
-                                        : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+                                    ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
+                                    : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
                                     }`}
                             >
                                 {tab.charAt(0).toUpperCase() + tab.slice(1)}

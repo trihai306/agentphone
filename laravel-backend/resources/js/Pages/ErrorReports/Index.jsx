@@ -1,6 +1,7 @@
 import { usePage, router, Link } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 const statusConfig = {
     pending: { label: 'Pending', color: 'amber' },
@@ -19,6 +20,7 @@ const severityConfig = {
 
 export default function Index({ reports, currentStatus, statusCounts, statuses, types, severities }) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const { flash } = usePage().props;
     const isDark = theme === 'dark';
 
@@ -41,10 +43,10 @@ export default function Index({ reports, currentStatus, statusCounts, statuses, 
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <h1 className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                Error Reports
+                                {t('error_reports.title')}
                             </h1>
                             <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                Track and manage your bug reports
+                                {t('error_reports.description')}
                             </p>
                         </div>
                         <Link
@@ -52,7 +54,7 @@ export default function Index({ reports, currentStatus, statusCounts, statuses, 
                             className={`px-4 py-2 text-sm font-medium rounded-lg ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'
                                 }`}
                         >
-                            + New Report
+                            {t('error_reports.new_report')}
                         </Link>
                     </div>
 
@@ -68,19 +70,19 @@ export default function Index({ reports, currentStatus, statusCounts, statuses, 
                         <button
                             onClick={() => handleFilterChange('all')}
                             className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${currentStatus === 'all'
-                                    ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
-                                    : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+                                ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
+                                : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
                                 }`}
                         >
-                            All ({statusCounts.all})
+                            {t('error_reports.all')} ({statusCounts.all})
                         </button>
                         {Object.entries(statuses).map(([key, label]) => (
                             <button
                                 key={key}
                                 onClick={() => handleFilterChange(key)}
                                 className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${currentStatus === key
-                                        ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
-                                        : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+                                    ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
+                                    : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
                                     }`}
                             >
                                 {label} {statusCounts[key] > 0 && `(${statusCounts[key]})`}
@@ -97,17 +99,17 @@ export default function Index({ reports, currentStatus, statusCounts, statuses, 
                                 </svg>
                             </div>
                             <h3 className={`text-lg font-medium mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                No reports
+                                {t('error_reports.no_reports')}
                             </h3>
                             <p className={`text-sm mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                You haven't submitted any error reports yet
+                                {t('error_reports.no_reports_yet')}
                             </p>
                             <Link
                                 href="/error-reports/create"
                                 className={`inline-block px-4 py-2 text-sm font-medium rounded-lg ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'
                                     }`}
                             >
-                                Create First Report
+                                {t('error_reports.create_first')}
                             </Link>
                         </div>
                     ) : (
@@ -137,20 +139,20 @@ export default function Index({ reports, currentStatus, statusCounts, statuses, 
                                             </td>
                                             <td className="py-4 px-4 text-center">
                                                 <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${report.status === 'resolved' || report.status === 'closed'
-                                                        ? isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-50 text-emerald-600'
-                                                        : report.status === 'pending'
-                                                            ? isDark ? 'bg-amber-900/30 text-amber-400' : 'bg-amber-50 text-amber-600'
-                                                            : isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-50 text-blue-600'
+                                                    ? isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-50 text-emerald-600'
+                                                    : report.status === 'pending'
+                                                        ? isDark ? 'bg-amber-900/30 text-amber-400' : 'bg-amber-50 text-amber-600'
+                                                        : isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-50 text-blue-600'
                                                     }`}>
                                                     {statuses[report.status]}
                                                 </span>
                                             </td>
                                             <td className="py-4 px-4 text-center">
                                                 <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${report.severity === 'critical'
-                                                        ? isDark ? 'bg-red-900/30 text-red-400' : 'bg-red-50 text-red-600'
-                                                        : report.severity === 'high'
-                                                            ? isDark ? 'bg-orange-900/30 text-orange-400' : 'bg-orange-50 text-orange-600'
-                                                            : isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-600'
+                                                    ? isDark ? 'bg-red-900/30 text-red-400' : 'bg-red-50 text-red-600'
+                                                    : report.severity === 'high'
+                                                        ? isDark ? 'bg-orange-900/30 text-orange-400' : 'bg-orange-50 text-orange-600'
+                                                        : isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-600'
                                                     }`}>
                                                     {severities[report.severity]}
                                                 </span>
@@ -177,10 +179,10 @@ export default function Index({ reports, currentStatus, statusCounts, statuses, 
                                                     onClick={() => link.url && router.get(link.url)}
                                                     disabled={!link.url}
                                                     className={`px-3 py-1 text-sm rounded-md ${link.active
-                                                            ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
-                                                            : link.url
-                                                                ? isDark ? 'text-gray-400 hover:bg-[#2a2a2a]' : 'text-gray-500 hover:bg-gray-100'
-                                                                : isDark ? 'text-gray-600' : 'text-gray-300'
+                                                        ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
+                                                        : link.url
+                                                            ? isDark ? 'text-gray-400 hover:bg-[#2a2a2a]' : 'text-gray-500 hover:bg-gray-100'
+                                                            : isDark ? 'text-gray-600' : 'text-gray-300'
                                                         }`}
                                                     dangerouslySetInnerHTML={{ __html: link.label }}
                                                 />
