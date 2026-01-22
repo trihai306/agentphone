@@ -1862,26 +1862,66 @@ object SocketJobManager {
                             bitmap.recycle()
                         }
                         
-                        // Send results back via API - UNIFIED response with both accessibility + OCR
-                        val resultData = mutableMapOf<String, Any>(
-                            "success" to true,
-                            "package_name" to packageName,
-                            "element_count" to elements.size,
-                            "elements" to elements,
-                            "text_elements" to ocrElements,  // OCR text elements
-                            "ocr_count" to ocrElements.size,
-                            "screen_width" to screenWidth,
-                            "screen_height" to screenHeight,
-                            "screenshot_width" to screenshotWidth,
-                            "screenshot_height" to screenshotHeight,
-                            "status_bar_height" to statusBarHeight,
-                            "nav_bar_height" to navBarHeight
-                        )
-                        // Add optional fields
-                        deviceId?.let { resultData["device_id"] = it }
-                        screenshotBase64?.let { resultData["screenshot"] = it }
+                        // ========== CHUNKED STREAMING ==========
+                        // Send elements in chunks to avoid large WebSocket payloads
+                        // Each chunk is ~50-100KB max to stay well under Soketi limits
+                        val chunkSize = 15  // 15 elements per chunk (with images ~3-5KB each)
                         
-                        publishEvent("inspect:result", resultData)
+                        // Combine elements and OCR for total count
+                        val totalElements = elements.size
+                        val totalOcr = ocrElements.size
+                        
+                        // Calculate chunks
+                        val elementChunks = elements.chunked(chunkSize)
+                        val ocrChunks = ocrElements.chunked(chunkSize)
+                        val totalChunks = maxOf(elementChunks.size, ocrChunks.size, 1)
+                        
+                        Log.i(TAG, "📦 Sending ${totalElements} elements + ${totalOcr} OCR in $totalChunks chunks")
+                        
+                        // Send chunks
+                        for (i in 0 until totalChunks) {
+                            val isFirstChunk = (i == 0)
+                            val isLastChunk = (i == totalChunks - 1)
+                            
+                            val chunkData = mutableMapOf<String, Any>(
+                                "chunk_index" to (i + 1),
+                                "total_chunks" to totalChunks,
+                                "is_complete" to isLastChunk,
+                                "success" to true,
+                                "package_name" to packageName,
+                                "elements" to (elementChunks.getOrNull(i) ?: emptyList()),
+                                "text_elements" to (ocrChunks.getOrNull(i) ?: emptyList()),
+                                "total_element_count" to totalElements,
+                                "total_ocr_count" to totalOcr,
+                                "screen_width" to screenWidth,
+                                "screen_height" to screenHeight,
+                                "screenshot_width" to screenshotWidth,
+                                "screenshot_height" to screenshotHeight,
+                                "status_bar_height" to statusBarHeight,
+                                "nav_bar_height" to navBarHeight
+                            )
+                            
+                            // Add device_id
+                            deviceId?.let { chunkData["device_id"] = it }
+                            
+                            // Add screenshot only in first chunk
+                            if (isFirstChunk && screenshotBase64 != null) {
+                                chunkData["screenshot"] = screenshotBase64
+                            }
+                            
+                            val chunkElements = (chunkData["elements"] as? List<*>)?.size ?: 0
+                            val chunkOcr = (chunkData["text_elements"] as? List<*>)?.size ?: 0
+                            Log.i(TAG, "📤 Sending chunk ${i+1}/$totalChunks: $chunkElements elements, $chunkOcr OCR")
+                            
+                            publishEvent("inspect:chunk", chunkData)
+                            
+                            // Small delay between chunks to avoid flooding
+                            if (!isLastChunk) {
+                                delay(100)
+                            }
+                        }
+                        
+                        Log.i(TAG, "✅ All $totalChunks chunks sent successfully")
                     }
                 }
                 

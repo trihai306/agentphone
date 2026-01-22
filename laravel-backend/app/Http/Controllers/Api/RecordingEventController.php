@@ -17,7 +17,7 @@ class RecordingEventController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'event' => 'required|string|in:recording:started,recording:stopped,recording:saved,inspect:result,visual:result',
+            'event' => 'required|string|in:recording:started,recording:stopped,recording:saved,inspect:result,inspect:chunk,visual:result',
             'device_id' => 'required|string',
             'timestamp' => 'required|integer',
             'session_id' => 'sometimes|string',
@@ -66,7 +66,7 @@ class RecordingEventController extends Controller
                         deviceId: $request->device_id,
                         success: $request->success ?? false,
                         elements: $request->elements ?? [],
-                        textElements: $request->text_elements ?? [],  // OCR text from unified API
+                        textElements: $request->text_elements ?? [],
                         packageName: $request->package_name,
                         screenshot: $request->screenshot,
                         screenWidth: $request->screen_width,
@@ -94,6 +94,50 @@ class RecordingEventController extends Controller
                     return response()->json([
                         'success' => false,
                         'message' => 'Failed to broadcast result'
+                    ], 500);
+                }
+            }
+
+            // Handle chunked element streaming (new approach)
+            if ($eventType === 'inspect:chunk') {
+                try {
+                    broadcast(new \App\Events\InspectElementsChunk(
+                        userId: $device->user_id,
+                        deviceId: $request->device_id,
+                        chunkIndex: $request->chunk_index ?? 1,
+                        totalChunks: $request->total_chunks ?? 1,
+                        elements: $request->elements ?? [],
+                        textElements: $request->text_elements ?? [],
+                        isComplete: $request->is_complete ?? false,
+                        packageName: $request->package_name,
+                        screenshot: $request->screenshot,
+                        screenWidth: $request->screen_width,
+                        screenHeight: $request->screen_height,
+                        screenshotWidth: $request->screenshot_width,
+                        screenshotHeight: $request->screenshot_height,
+                        statusBarHeight: $request->status_bar_height,
+                        navBarHeight: $request->nav_bar_height,
+                        totalElementCount: $request->total_element_count,
+                        totalOcrCount: $request->total_ocr_count,
+                        error: $request->error
+                    ));
+
+                    Log::info("Broadcast inspect:chunk to user channel", [
+                        'user_id' => $device->user_id,
+                        'device_id' => $request->device_id,
+                        'chunk' => ($request->chunk_index ?? 1) . '/' . ($request->total_chunks ?? 1),
+                        'is_complete' => $request->is_complete ?? false
+                    ]);
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Chunk broadcasted'
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error("Failed to broadcast inspect:chunk: " . $e->getMessage());
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to broadcast chunk'
                     ], 500);
                 }
             }

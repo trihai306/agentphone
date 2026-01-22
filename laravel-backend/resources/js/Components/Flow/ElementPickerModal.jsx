@@ -48,6 +48,10 @@ export default function ElementPickerModal({
     const [selectorStrategy, setSelectorStrategy] = useState('smart'); // smart | id | text | coordinates
     const scanTimeoutRef = useRef(null); // Timeout ID for scan timeout
 
+    // Chunk streaming state
+    const [chunkProgress, setChunkProgress] = useState({ current: 0, total: 0 });
+    const [isChunking, setIsChunking] = useState(false);
+
     // Calculate selector confidence score for an element
     const getConfidenceScore = useCallback((el) => {
         if (!el) return { score: 0, level: 'low', reason: 'No element' };
@@ -336,10 +340,67 @@ export default function ElementPickerModal({
             const channel = window.Echo.private(`user.${userId}`);
             console.log(`🔌 ElementPicker: Subscribing to private-user.${userId}`);
 
+            // Handler for legacy single-payload results
             channel.listen('.inspect.result', (data) => {
                 console.log('📥 Received inspect.result event:', data);
                 handleResult(data);
             });
+
+            // Handler for chunked streaming (new approach)
+            channel.listen('.inspect.chunk', (data) => {
+                console.log(`📦 Received chunk ${data.chunk_index}/${data.total_chunks}:`, {
+                    elements: data.elements?.length || 0,
+                    text_elements: data.text_elements?.length || 0,
+                    is_complete: data.is_complete
+                });
+
+                // Clear timeout on any chunk received
+                if (scanTimeoutRef.current) {
+                    clearTimeout(scanTimeoutRef.current);
+                    scanTimeoutRef.current = null;
+                }
+
+                // Update chunk progress
+                setChunkProgress({ current: data.chunk_index, total: data.total_chunks });
+                setIsChunking(true);
+
+                // First chunk: reset state and set metadata
+                if (data.chunk_index === 1) {
+                    setElements([]);
+                    setTextElements([]);
+                    setPackageName(data.package_name || '');
+                    setError(null);
+
+                    if (data.screenshot) {
+                        setScreenshotData(data.screenshot);
+                    }
+                    if (data.screen_width && data.screen_height) {
+                        setScreenDimensions({ width: data.screen_width, height: data.screen_height });
+                    }
+                    if (data.screenshot_width && data.screenshot_height) {
+                        setImageNaturalDimensions({ width: data.screenshot_width, height: data.screenshot_height });
+                    }
+                    if (data.status_bar_height !== undefined) {
+                        setStatusBarHeight(data.status_bar_height);
+                    }
+                }
+
+                // Accumulate elements from each chunk
+                if (data.elements && data.elements.length > 0) {
+                    setElements(prev => [...prev, ...data.elements]);
+                }
+                if (data.text_elements && data.text_elements.length > 0) {
+                    setTextElements(prev => [...prev, ...data.text_elements]);
+                }
+
+                // Final chunk: stop loading
+                if (data.is_complete) {
+                    setLoading(false);
+                    setIsChunking(false);
+                    console.log(`✅ All ${data.total_chunks} chunks received, total: ${data.total_element_count || 0} elements, ${data.total_ocr_count || 0} OCR`);
+                }
+            });
+
             channel.listen('.visual.result', (data) => {
                 console.log('📥 Received visual.result event:', data);
                 handleVisualResult(data);
@@ -348,6 +409,7 @@ export default function ElementPickerModal({
             return () => {
                 console.log(`🔌 ElementPicker: Unsubscribing from private-user.${userId}`);
                 channel.stopListening('.inspect.result');
+                channel.stopListening('.inspect.chunk');
                 channel.stopListening('.visual.result');
             };
         } else {
@@ -610,7 +672,10 @@ export default function ElementPickerModal({
                                         Element Inspector
                                     </h2>
                                     <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                        {elements.length + textElements.length} elements • {packageName || 'Đang chờ kết nối...'}
+                                        {isChunking
+                                            ? `Loading... ${elements.length + textElements.length} elements (chunk ${chunkProgress.current}/${chunkProgress.total})`
+                                            : `${elements.length + textElements.length} elements • ${packageName || 'Đang chờ kết nối...'}`
+                                        }
                                     </p>
                                 </div>
                             </div>
