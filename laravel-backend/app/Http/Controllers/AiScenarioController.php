@@ -1,0 +1,320 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\AiScenario;
+use App\Models\AiScenarioScene;
+use App\Services\AiScenarioService;
+use App\Services\AiGenerationService;
+use App\Services\MediaService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
+
+class AiScenarioController extends Controller
+{
+    protected AiScenarioService $scenarioService;
+    protected AiGenerationService $generationService;
+
+    public function __construct(AiScenarioService $scenarioService, AiGenerationService $generationService)
+    {
+        $this->scenarioService = $scenarioService;
+        $this->generationService = $generationService;
+    }
+
+    /**
+     * List user's scenarios
+     */
+    public function index(Request $request)
+    {
+        $user = Auth::user();
+
+        $scenarios = AiScenario::forUser($user->id)
+            ->latest()
+            ->with([
+                'scenes' => function ($q) {
+                    $q->orderBy('order');
+                }
+            ])
+            ->paginate(12);
+
+        return Inertia::render('AIStudio/Scenarios', [
+            'scenarios' => $scenarios,
+            'currentCredits' => $user->ai_credits,
+        ]);
+    }
+
+    /**
+     * Parse script into scenes (AJAX)
+     */
+    public function parseScript(Request $request)
+    {
+        $request->validate([
+            'script' => 'required|string|min:10|max:10000',
+            'output_type' => 'required|in:image,video',
+        ]);
+
+        try {
+            $result = $this->scenarioService->parseScript(
+                $request->input('script'),
+                $request->input('output_type')
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => $result,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Create and save a scenario with scenes
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'script' => 'required|string|min:10|max:10000',
+            'title' => 'nullable|string|max:255',
+            'output_type' => 'required|in:image,video',
+            'model' => 'required|string',
+            'scenes' => 'required|array|min:1|max:10',
+            'scenes.*.order' => 'required|integer|min:1',
+            'scenes.*.description' => 'required|string',
+            'scenes.*.prompt' => 'required|string',
+            'scenes.*.duration' => 'nullable|integer|min:4|max:8',
+            'settings' => 'nullable|array',
+        ]);
+
+        $user = Auth::user();
+
+        try {
+            $scenario = $this->scenarioService->createScenario($user, $request->all());
+
+            return response()->json([
+                'success' => true,
+                'scenario' => $this->formatScenario($scenario),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Show scenario detail
+     */
+    public function show(AiScenario $scenario)
+    {
+        $this->authorize('view', $scenario);
+
+        $scenario->load(['scenes.generation', 'user']);
+
+        return Inertia::render('AIStudio/ScenarioDetail', [
+            'scenario' => $this->formatScenario($scenario),
+            'currentCredits' => Auth::user()->ai_credits,
+        ]);
+    }
+
+    /**
+     * Generate all scenes
+     */
+    public function generateAll(AiScenario $scenario)
+    {
+        $this->authorize('update', $scenario);
+
+        try {
+            $scenario = $this->scenarioService->generateAll($scenario);
+
+            return response()->json([
+                'success' => true,
+                'scenario' => $this->formatScenario($scenario),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Update a single scene's prompt
+     */
+    public function updateScene(Request $request, AiScenario $scenario, AiScenarioScene $scene)
+    {
+        $this->authorize('update', $scenario);
+
+        if ($scene->ai_scenario_id !== $scenario->id) {
+            abort(404);
+        }
+
+        $request->validate([
+            'prompt' => 'required|string|max:2000',
+            'description' => 'nullable|string|max:500',
+            'duration' => 'nullable|integer|min:4|max:8',
+        ]);
+
+        $scene->update($request->only(['prompt', 'description', 'duration']));
+
+        // Recalculate credits
+        $scenario->refresh();
+        $totalCredits = $this->scenarioService->calculateTotalCredits(
+            $scenario->model,
+            $scenario->output_type,
+            $scenario->scenes->toArray(),
+            $scenario->settings ?? []
+        );
+        $scenario->update(['total_credits' => $totalCredits]);
+
+        return response()->json([
+            'success' => true,
+            'scene' => $this->formatScene($scene->fresh()),
+            'total_credits' => $totalCredits,
+        ]);
+    }
+
+    /**
+     * Check scenario status (polling endpoint)
+     */
+    public function checkStatus(AiScenario $scenario)
+    {
+        $this->authorize('view', $scenario);
+
+        // Sync scene statuses from their generations
+        foreach ($scenario->scenes as $scene) {
+            if ($scene->ai_generation_id && $scene->status === AiScenarioScene::STATUS_GENERATING) {
+                $this->scenarioService->syncSceneStatus($scene);
+            }
+        }
+
+        $scenario->refresh();
+        $scenario->load('scenes.generation');
+
+        return response()->json([
+            'success' => true,
+            'scenario' => $this->formatScenario($scenario),
+        ]);
+    }
+
+    /**
+     * Retry a failed scene
+     */
+    public function retryScene(AiScenario $scenario, AiScenarioScene $scene)
+    {
+        $this->authorize('update', $scenario);
+
+        if ($scene->ai_scenario_id !== $scenario->id) {
+            abort(404);
+        }
+
+        try {
+            $generation = $this->scenarioService->retryScene($scene);
+
+            return response()->json([
+                'success' => true,
+                'scene' => $this->formatScene($scene->fresh()),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Delete a scenario
+     */
+    public function destroy(AiScenario $scenario)
+    {
+        $this->authorize('delete', $scenario);
+
+        $this->scenarioService->deleteScenario($scenario);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Scenario deleted successfully',
+        ]);
+    }
+
+    /**
+     * Estimate credits for scenes before saving
+     */
+    public function estimateCredits(Request $request)
+    {
+        $request->validate([
+            'model' => 'required|string',
+            'output_type' => 'required|in:image,video',
+            'scenes' => 'required|array|min:1',
+            'settings' => 'nullable|array',
+        ]);
+
+        $totalCredits = $this->scenarioService->calculateTotalCredits(
+            $request->input('model'),
+            $request->input('output_type'),
+            $request->input('scenes'),
+            $request->input('settings', [])
+        );
+
+        return response()->json([
+            'success' => true,
+            'total_credits' => $totalCredits,
+            'per_scene' => $totalCredits / count($request->input('scenes')),
+        ]);
+    }
+
+    /**
+     * Format scenario for frontend
+     */
+    protected function formatScenario(AiScenario $scenario): array
+    {
+        return [
+            'id' => $scenario->id,
+            'title' => $scenario->title,
+            'script' => $scenario->script,
+            'output_type' => $scenario->output_type,
+            'model' => $scenario->model,
+            'settings' => $scenario->settings,
+            'status' => $scenario->status,
+            'status_color' => $scenario->status_color,
+            'total_credits' => $scenario->total_credits,
+            'progress' => $scenario->progress,
+            'completed_scenes' => $scenario->completed_scenes_count,
+            'total_scenes' => $scenario->total_scenes_count,
+            'scenes' => $scenario->scenes->map(fn($s) => $this->formatScene($s))->toArray(),
+            'created_at' => $scenario->created_at->toIso8601String(),
+            'updated_at' => $scenario->updated_at->toIso8601String(),
+        ];
+    }
+
+    /**
+     * Format scene for frontend
+     */
+    protected function formatScene(AiScenarioScene $scene): array
+    {
+        return [
+            'id' => $scene->id,
+            'order' => $scene->order,
+            'description' => $scene->description,
+            'prompt' => $scene->prompt,
+            'duration' => $scene->duration,
+            'status' => $scene->status,
+            'status_color' => $scene->status_color,
+            'error_message' => $scene->error_message,
+            'result_url' => $scene->generation?->result_url,
+            'generation' => $scene->generation ? [
+                'id' => $scene->generation->id,
+                'status' => $scene->generation->status,
+                'result_url' => $scene->generation->result_url,
+                'type' => $scene->generation->type,
+            ] : null,
+        ];
+    }
+}

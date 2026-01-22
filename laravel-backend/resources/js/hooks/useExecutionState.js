@@ -257,6 +257,29 @@ export function useExecutionState(nodes, edges) {
         return nodeStates[nodeId] || { status: NodeStatus.IDLE };
     }, [nodeStates]);
 
+    /**
+     * Update node state from external events (e.g., socket events from APK)
+     * This enables real-time node highlighting during workflow execution
+     */
+    const updateNodeState = useCallback((nodeId, status, error = null) => {
+        setNodeStates(prev => ({
+            ...prev,
+            [nodeId]: {
+                status,
+                startTime: status === NodeStatus.RUNNING ? Date.now() : prev[nodeId]?.startTime,
+                endTime: status !== NodeStatus.RUNNING ? Date.now() : null,
+                error,
+            }
+        }));
+
+        if (status === NodeStatus.RUNNING) {
+            setCurrentNodeId(nodeId);
+            setExecutionStatus(ExecutionStatus.RUNNING);
+        } else if (status === NodeStatus.SUCCESS || status === NodeStatus.ERROR) {
+            setCurrentNodeId(null);
+        }
+    }, []);
+
     return {
         // State
         executionStatus,
@@ -271,6 +294,7 @@ export function useExecutionState(nodes, edges) {
         resumeExecution,
         stopExecution,
         resetExecution,
+        updateNodeState, // For external socket events
 
         // Helpers
         getNodeState,

@@ -191,6 +191,18 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/generations/{generation}', [AiGenerationController::class, 'show'])->name('generations.show');
         Route::get('/generations/{generation}/status', [AiGenerationController::class, 'checkStatus'])->name('generations.status');
         Route::delete('/generations/{generation}', [AiGenerationController::class, 'delete'])->name('generations.delete');
+
+        // AI Scenarios (Script to Scenes)
+        Route::get('/scenarios', [\App\Http\Controllers\AiScenarioController::class, 'index'])->name('scenarios.index');
+        Route::post('/scenarios/parse', [\App\Http\Controllers\AiScenarioController::class, 'parseScript'])->name('scenarios.parse');
+        Route::post('/scenarios/estimate', [\App\Http\Controllers\AiScenarioController::class, 'estimateCredits'])->name('scenarios.estimate');
+        Route::post('/scenarios', [\App\Http\Controllers\AiScenarioController::class, 'store'])->name('scenarios.store');
+        Route::get('/scenarios/{scenario}', [\App\Http\Controllers\AiScenarioController::class, 'show'])->name('scenarios.show');
+        Route::get('/scenarios/{scenario}/status', [\App\Http\Controllers\AiScenarioController::class, 'checkStatus'])->name('scenarios.status');
+        Route::post('/scenarios/{scenario}/generate', [\App\Http\Controllers\AiScenarioController::class, 'generateAll'])->name('scenarios.generate');
+        Route::patch('/scenarios/{scenario}/scenes/{scene}', [\App\Http\Controllers\AiScenarioController::class, 'updateScene'])->name('scenarios.scenes.update');
+        Route::post('/scenarios/{scenario}/scenes/{scene}/retry', [\App\Http\Controllers\AiScenarioController::class, 'retryScene'])->name('scenarios.scenes.retry');
+        Route::delete('/scenarios/{scenario}', [\App\Http\Controllers\AiScenarioController::class, 'destroy'])->name('scenarios.destroy');
     });
 
 

@@ -6,13 +6,20 @@ import android.graphics.Bitmap
 import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
 import com.agent.portal.accessibility.PortalAccessibilityService
+import com.agent.portal.auth.AuthService
 import com.agent.portal.vision.TemplateMatchingService
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import java.io.FileOutputStream
 import java.lang.ref.WeakReference
+import java.util.concurrent.TimeUnit
 
 /**
  * Job Executor - Executes actions from configuration
@@ -23,6 +30,7 @@ import java.lang.ref.WeakReference
  * - Retry on failures
  * - Collect results
  * - Error handling
+ * - Report progress to backend for real-time UI updates
  */
 class JobExecutor(context: Context) {
 
@@ -32,6 +40,13 @@ class JobExecutor(context: Context) {
         get() = contextRef.get() ?: throw IllegalStateException("Context is no longer available")
     private val actionResults = mutableListOf<ActionResult>()
     private val templateMatcher = TemplateMatchingService()
+    private val gson = Gson()
+    
+    // HTTP client for progress reporting
+    private val httpClient = OkHttpClient.Builder()
+        .connectTimeout(5, TimeUnit.SECONDS)
+        .readTimeout(5, TimeUnit.SECONDS)
+        .build()
 
     /**
      * Execute job with action configuration
@@ -54,7 +69,16 @@ class JobExecutor(context: Context) {
                 // Check condition if present
                 if (action.condition != null && !checkCondition(action.condition)) {
                     Log.d(TAG, "Skipping action ${action.id} - condition not met")
+                    // Report skipped status
+                    job.flowId?.let { flowId ->
+                        reportProgress(flowId, action.id, "skipped", index + 1, config.actions.size, "Condition not met")
+                    }
                     continue
+                }
+
+                // Report running status BEFORE executing action
+                job.flowId?.let { flowId ->
+                    reportProgress(flowId, action.id, "running", index + 1, config.actions.size)
                 }
 
                 // Execute action
@@ -63,6 +87,11 @@ class JobExecutor(context: Context) {
 
                 // Handle action result
                 if (!result.success) {
+                    // Report error status
+                    job.flowId?.let { flowId ->
+                        reportProgress(flowId, action.id, "error", index + 1, config.actions.size, result.error)
+                    }
+                    
                     if (action.optional) {
                         Log.w(TAG, "Optional action failed: ${action.id} - ${result.error}")
                     } else {
@@ -83,6 +112,11 @@ class JobExecutor(context: Context) {
                                 Log.w(TAG, "Skipping failed action: ${action.id}")
                             }
                         }
+                    }
+                } else {
+                    // Report success status
+                    job.flowId?.let { flowId ->
+                        reportProgress(flowId, action.id, "success", index + 1, config.actions.size)
                     }
                 }
 
@@ -118,6 +152,57 @@ class JobExecutor(context: Context) {
                 ),
                 executionTime = executionTime
             )
+        }
+    }
+
+    /**
+     * Report action progress to backend for real-time UI updates
+     * This enables node highlighting during workflow execution
+     */
+    private suspend fun reportProgress(
+        flowId: Int,
+        actionId: String,
+        status: String,
+        sequence: Int,
+        totalActions: Int,
+        message: String? = null,
+        errorBranchTarget: String? = null
+    ) {
+        withContext(Dispatchers.IO) {
+            try {
+                val baseUrl = AuthService.baseUrl ?: return@withContext
+                val token = AuthService.authToken ?: return@withContext
+                
+                val payload = mapOf(
+                    "flow_id" to flowId,
+                    "action_id" to actionId,
+                    "status" to status,
+                    "sequence" to sequence,
+                    "total_actions" to totalActions,
+                    "message" to message,
+                    "error_branch_target" to errorBranchTarget
+                )
+                
+                val json = gson.toJson(payload)
+                val requestBody = json.toRequestBody("application/json".toMediaType())
+                
+                val request = Request.Builder()
+                    .url("$baseUrl/api/workflow/test-run/progress")
+                    .post(requestBody)
+                    .addHeader("Authorization", "Bearer $token")
+                    .addHeader("Accept", "application/json")
+                    .build()
+                
+                httpClient.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        Log.w(TAG, "Failed to report progress: ${response.code}")
+                    } else {
+                        Log.d(TAG, "Progress reported: $actionId -> $status")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error reporting progress", e)
+            }
         }
     }
 

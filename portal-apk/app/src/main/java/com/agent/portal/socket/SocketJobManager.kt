@@ -2937,6 +2937,9 @@ data class Job(
     @SerializedName("workflow_name")
     val workflowName: String? = null,
 
+    @SerializedName("flow_id")
+    val flowId: Int? = null,
+
     @SerializedName("params")
     val params: Map<String, Any>? = null,
 

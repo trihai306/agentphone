@@ -73,3 +73,11 @@ Broadcast::channel('device.{deviceId}', function ($user, $deviceId) {
     // Check if this device belongs to the user
     return $user->devices()->where('device_id', $deviceId)->exists();
 });
+
+// Private channel for flow execution status (node status updates)
+// User can subscribe to flows they own
+Broadcast::channel('flow.{flowId}', function ($user, $flowId) {
+    return \App\Models\Flow::where('id', $flowId)
+        ->where('user_id', $user->id)
+        ->exists();
+});

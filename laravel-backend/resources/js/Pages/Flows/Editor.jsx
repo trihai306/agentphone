@@ -215,11 +215,44 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         resumeExecution,
         stopExecution,
         resetExecution,
+        updateNodeState,
         isRunning,
         isPaused,
         isCompleted,
         hasError,
     } = useExecutionState(nodes, edges);
+
+    // Listen for real-time workflow action progress from APK via socket
+    useEffect(() => {
+        if (!auth?.user?.id) return;
+
+        const channel = window.Echo?.private(`user.${auth.user.id}`);
+        if (!channel) return;
+
+        const handleActionProgress = (event) => {
+            // Only update if this event is for the current flow
+            if (event.flow_id !== flow?.id) return;
+
+            // Map action_id to node_id (action_id format: "node_<nodeId>_action_<index>")
+            const actionId = event.action_id;
+            const nodeIdMatch = actionId?.match(/^node_([^_]+)/);
+            const nodeId = nodeIdMatch ? nodeIdMatch[1] : null;
+
+            if (nodeId && event.status) {
+                updateNodeState(
+                    nodeId,
+                    event.status, // 'running', 'success', 'error'
+                    event.message || null
+                );
+            }
+        };
+
+        channel.listen('.workflow.action.progress', handleActionProgress);
+
+        return () => {
+            channel.stopListening('.workflow.action.progress', handleActionProgress);
+        };
+    }, [auth?.user?.id, flow?.id, updateNodeState]);
 
     // Sync selectedNode when nodes change (fix stale state bug)
     useEffect(() => {

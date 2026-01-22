@@ -29,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
         \Illuminate\Support\Facades\Gate::policy(\App\Models\UserBankAccount::class, \App\Policies\UserBankAccountPolicy::class);
         \Illuminate\Support\Facades\Gate::policy(\App\Models\Device::class, \App\Policies\DevicePolicy::class);
         \Illuminate\Support\Facades\Gate::policy(\App\Models\MarketplaceListing::class, \App\Policies\MarketplaceListingPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\AiScenario::class, \App\Policies\AiScenarioPolicy::class);
 
         \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
             return $user->hasRole('admin') ? true : null;
