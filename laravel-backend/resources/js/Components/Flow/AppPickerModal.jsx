@@ -90,10 +90,12 @@ export default function AppPickerModal({
     // Auto-fetch on open - always request when modal opens with valid device
     useEffect(() => {
         if (isOpen && deviceId) {
-            // Small delay to ensure socket subscription is ready
+            // 1s delay to ensure socket subscription is fully ready
+            console.log('🔌 AppPicker: Waiting 1s for socket to be ready before requesting apps...');
             const timer = setTimeout(() => {
+                console.log('📤 AppPicker: Now requesting apps (after socket delay)');
                 requestApps();
-            }, 500);
+            }, 1000);
             return () => clearTimeout(timer);
         }
     }, [isOpen, deviceId, requestApps]);
