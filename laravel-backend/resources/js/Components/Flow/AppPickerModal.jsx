@@ -56,18 +56,7 @@ export default function AppPickerModal({
         }
     }, [isOpen, userId]);
 
-    // Auto-fetch on open - always request when modal opens with valid device
-    useEffect(() => {
-        if (isOpen && deviceId) {
-            // Small delay to ensure socket subscription is ready
-            const timer = setTimeout(() => {
-                requestApps();
-            }, 500);
-            return () => clearTimeout(timer);
-        }
-    }, [isOpen, deviceId, requestApps]);
-
-    // Request apps list from device
+    // Request apps list from device - define BEFORE the useEffect that uses it
     const requestApps = useCallback(async () => {
         if (!deviceId) {
             setError(t('flows.editor.config.no_device_selected', 'No device selected'));
@@ -97,6 +86,17 @@ export default function AppPickerModal({
             setLoading(false);
         }
     }, [deviceId, t]);
+
+    // Auto-fetch on open - always request when modal opens with valid device
+    useEffect(() => {
+        if (isOpen && deviceId) {
+            // Small delay to ensure socket subscription is ready
+            const timer = setTimeout(() => {
+                requestApps();
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [isOpen, deviceId, requestApps]);
 
     // Reset state on close
     useEffect(() => {
