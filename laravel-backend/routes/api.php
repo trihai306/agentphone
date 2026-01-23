@@ -150,6 +150,9 @@ Route::middleware('auth:sanctum')->post('/pusher/auth', [\App\Http\Controllers\A
 // Pusher/Soketi webhook for presence events (no auth - verified by webhook secret)
 Route::post('/pusher/webhook', [\App\Http\Controllers\Api\PresenceWebhookController::class, 'handle']);
 
+// Pusher presence disconnect detection (new implementation for real-time device status)
+Route::post('/pusher/webhooks', [\App\Http\Controllers\PusherWebhookController::class, 'handle']);
+
 // Job API endpoints for APK
 Route::prefix('jobs')->group(function () {
     // Get job action config (APK calls this when receiving job:new)
