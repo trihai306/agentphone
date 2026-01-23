@@ -24,12 +24,25 @@ export default function AppPickerModal({
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Listen for apps list result from socket
+    // Use ref to avoid stale closure in socket callback
+    const isOpenRef = useRef(isOpen);
     useEffect(() => {
-        if (!isOpen || !userId) return;
+        isOpenRef.current = isOpen;
+    }, [isOpen]);
+
+    // Listen for apps list result from socket - keep subscription active always
+    useEffect(() => {
+        if (!userId) return;
 
         const handleResult = (data) => {
-            console.log('📱 Received apps.result:', data);
+            console.log('📱 Received apps.result:', data, 'isOpen:', isOpenRef.current);
+
+            // Only process if modal is currently open
+            if (!isOpenRef.current) {
+                console.log('⏸️ Modal closed, ignoring apps.result');
+                return;
+            }
+
             setLoading(false);
 
             if (data.success) {
@@ -43,7 +56,7 @@ export default function AppPickerModal({
 
         if (window.Echo) {
             const channel = window.Echo.private(`user.${userId}`);
-            console.log(`🔌 AppPicker: Subscribing to private-user.${userId}`);
+            console.log(`🔌 AppPicker: Subscribing to private-user.${userId} (persistent)`);
 
             channel.listen('.apps.result', handleResult);
 
@@ -54,7 +67,7 @@ export default function AppPickerModal({
         } else {
             console.error('❌ AppPicker: window.Echo not available!');
         }
-    }, [isOpen, userId]);
+    }, [userId]); // Only depend on userId, not isOpen
 
     // Request apps list from device - define BEFORE the useEffect that uses it
     const requestApps = useCallback(async () => {
