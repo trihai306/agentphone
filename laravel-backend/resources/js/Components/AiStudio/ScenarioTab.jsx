@@ -104,32 +104,23 @@ export default function ScenarioTab({
         });
     };
 
-    // Parse script/images into scenes
+    // Parse script into scenes (with optional reference images)
     const handleParse = async () => {
-        // Validate based on input mode
-        if (inputMode === 'text') {
-            if (!script.trim() || script.length < 10) {
-                addToast('Vui lòng nhập kịch bản (ít nhất 10 ký tự)', 'warning');
-                return;
-            }
-        } else {
-            if (sourceImages.length === 0) {
-                addToast('Vui lòng upload ít nhất 1 ảnh', 'warning');
-                return;
-            }
+        // Always require script text
+        if (!script.trim() || script.length < 10) {
+            addToast('Vui lòng nhập kịch bản (ít nhất 10 ký tự)', 'warning');
+            return;
         }
 
         setParsing(true);
         try {
             let payload = {
+                script,
                 output_type: outputType,
-                input_mode: inputMode,
             };
 
-            if (inputMode === 'text') {
-                payload.script = script;
-            } else {
-                // Convert images to base64
+            // If user uploaded reference images, include them
+            if (sourceImages.length > 0) {
                 const imagesBase64 = await Promise.all(
                     sourceImages.map(async (img) => ({
                         data: await fileToBase64(img.file),
@@ -144,8 +135,8 @@ export default function ScenarioTab({
             if (response.data.success) {
                 const parsedScenes = response.data.data.scenes;
 
-                // If using images mode, attach source images to corresponding scenes
-                if (inputMode === 'images') {
+                // Attach source images to corresponding scenes for Image-to-Video
+                if (sourceImages.length > 0) {
                     parsedScenes.forEach((scene, i) => {
                         if (sourceImages[i]) {
                             scene.image = sourceImages[i].file;
