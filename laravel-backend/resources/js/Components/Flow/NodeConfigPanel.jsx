@@ -165,6 +165,7 @@ export default function NodeConfigPanel({
                     <OpenAppActionConfig
                         data={nodeData}
                         updateData={updateData}
+                        updateMultipleData={updateMultipleData}
                         isDark={isDark}
                         selectedDevice={selectedDevice}
                         userId={userId}
@@ -1418,15 +1419,16 @@ function ScrollActionConfig({ data, updateData, isDark }) {
     );
 }
 
-function OpenAppActionConfig({ data, updateData, isDark, selectedDevice, userId }) {
+function OpenAppActionConfig({ data, updateData, updateMultipleData, isDark, selectedDevice, userId }) {
     const { t } = useTranslation();
     const [showAppPicker, setShowAppPicker] = useState(false);
 
     const handleAppSelect = (app) => {
-        updateData('packageName', app.packageName);
-        if (app.appName) {
-            updateData('appName', app.appName);
-        }
+        // Use updateMultipleData to update both fields atomically
+        updateMultipleData({
+            packageName: app.packageName,
+            appName: app.appName || app.name
+        });
     };
 
     return (
