@@ -1,6 +1,6 @@
 <x-filament-panels::page>
     <div class="space-y-4">
-        {{-- Stats Row - Force horizontal --}}
+        {{-- Stats Row --}}
         <div class="flex flex-wrap gap-3">
             <div
                 class="flex-1 min-w-[80px] max-w-[120px] bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-700 text-center">
@@ -64,7 +64,7 @@
             </div>
         </div>
 
-        {{-- Scheduled Tasks - Compact table --}}
+        {{-- Scheduled Tasks --}}
         <x-filament::section>
             <x-slot name="heading">
                 <span class="text-sm">Scheduled Tasks</span>
@@ -106,10 +106,32 @@
                                         {{ $schedule['frequency'] }}
                                     </span>
                                 </td>
+                                <td class="px-2 py-2 text-center">
+                                    @if($schedule['last_run'])
+                                        <div class="flex items-center gap-1 justify-center">
+                                            @if($schedule['last_status'] === 'success')
+                                                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                                <span
+                                                    class="text-[10px] text-green-600 dark:text-green-400">{{ $schedule['last_run'] }}</span>
+                                            @else
+                                                <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                                                <span class="text-[10px] text-red-600 dark:text-red-400">Lỗi</span>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <span class="text-[10px] text-gray-400">Chưa chạy</span>
+                                    @endif
+                                </td>
                                 <td class="px-4 py-2 text-right">
                                     <x-filament::button size="xs" color="gray"
-                                        wire:click="runCommand('{{ $schedule['command'] }}')">
-                                        <x-heroicon-o-play class="w-3 h-3" />
+                                        wire:click="runCommand('{{ $schedule['command'] }}')" wire:loading.attr="disabled"
+                                        wire:target="runCommand('{{ $schedule['command'] }}')">
+                                        <span wire:loading.remove wire:target="runCommand('{{ $schedule['command'] }}')">
+                                            <x-heroicon-o-play class="w-3 h-3" />
+                                        </span>
+                                        <span wire:loading wire:target="runCommand('{{ $schedule['command'] }}')">
+                                            <x-heroicon-o-arrow-path class="w-3 h-3 animate-spin" />
+                                        </span>
                                     </x-filament::button>
                                 </td>
                             </tr>
@@ -119,7 +141,7 @@
             </div>
         </x-filament::section>
 
-        {{-- Data Retention - Grid --}}
+        {{-- Data Retention --}}
         <x-filament::section>
             <x-slot name="heading">
                 <span class="text-sm">Data Retention (ngày)</span>

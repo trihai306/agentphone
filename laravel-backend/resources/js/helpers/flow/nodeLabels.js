@@ -57,6 +57,11 @@ export const generateSmartLabel = (eventData) => {
             if (truncatedText) return `Double tap '${truncatedText}'`;
             return 'Double Tap';
 
+        case 'repeat_click':
+            const count = actionData.clickCount || 3;
+            if (truncatedText) return `Click '${truncatedText}' ${count}x`;
+            return `Repeat Click ${count}x`;
+
         case 'text_input':
         case 'set_text':
             const inputText = actionData.text || text || '';

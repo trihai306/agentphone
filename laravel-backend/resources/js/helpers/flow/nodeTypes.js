@@ -17,6 +17,7 @@ export const getNodeTypeFromEvent = (eventType) => {
         'long_tap': 'long_tap',
         'long_press': 'long_press',
         'double_tap': 'double_tap',
+        'repeat_click': 'repeat_click',
         'text_input': 'text_input',
         'set_text': 'text_input',
         'scroll': 'scroll',

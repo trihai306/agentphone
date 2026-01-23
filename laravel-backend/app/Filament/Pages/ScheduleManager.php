@@ -7,6 +7,7 @@ use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Cache;
 
 class ScheduleManager extends Page
 {
@@ -36,7 +37,7 @@ class ScheduleManager extends Page
 
     protected function loadSchedules(): void
     {
-        $this->schedules = [
+        $commands = [
             [
                 'name' => 'Đồng bộ trạng thái thiết bị',
                 'command' => 'devices:sync-presence',
@@ -73,6 +74,16 @@ class ScheduleManager extends Page
                 'group' => 'maintenance',
             ],
         ];
+
+        // Add last run info from cache
+        foreach ($commands as &$cmd) {
+            $cacheKey = 'schedule_last_run:' . $cmd['command'];
+            $lastRun = Cache::get($cacheKey);
+            $cmd['last_run'] = $lastRun ? $lastRun['time'] : null;
+            $cmd['last_status'] = $lastRun ? $lastRun['status'] : null;
+        }
+
+        $this->schedules = $commands;
     }
 
     protected function loadCleanupLog(): void
@@ -83,7 +94,7 @@ class ScheduleManager extends Page
             $this->lastCleanupRun = date('d/m/Y H:i:s', File::lastModified($logPath));
             $content = File::get($logPath);
             $lines = explode("\n", $content);
-            $this->cleanupLog = array_slice(array_filter($lines), -50); // Last 50 lines
+            $this->cleanupLog = array_slice(array_filter($lines), -50);
         }
     }
 
@@ -96,26 +107,43 @@ class ScheduleManager extends Page
                 $params = $dryRun ? ['--dry-run' => true] : ['--force' => true];
             }
 
+            $startTime = now();
             Artisan::call($command, $params);
             $output = Artisan::output();
+            $duration = now()->diffInMilliseconds($startTime);
+
+            // Save last run status to cache
+            Cache::put('schedule_last_run:' . $command, [
+                'time' => now()->format('d/m H:i:s'),
+                'status' => 'success',
+                'duration' => $duration,
+            ], now()->addHours(24));
 
             Notification::make()
-                ->title('Command executed successfully')
-                ->body("Command: {$command}")
+                ->title('✅ Thành công')
+                ->body("{$command} - {$duration}ms")
                 ->success()
                 ->send();
 
-            // Reload cleanup log if it was the cleanup command
-            if ($command === 'cleanup:old-data') {
-                $this->loadCleanupLog();
-            }
+            // Reload schedules to reflect new status
+            $this->loadSchedules();
+            $this->loadCleanupLog();
 
         } catch (\Exception $e) {
+            // Save failed status
+            Cache::put('schedule_last_run:' . $command, [
+                'time' => now()->format('d/m H:i:s'),
+                'status' => 'failed',
+                'error' => $e->getMessage(),
+            ], now()->addHours(24));
+
             Notification::make()
-                ->title('Command failed')
+                ->title('❌ Lỗi')
                 ->body($e->getMessage())
                 ->danger()
                 ->send();
+
+            $this->loadSchedules();
         }
     }
 
@@ -145,28 +173,6 @@ class ScheduleManager extends Page
         } catch (\Exception $e) {
             Notification::make()
                 ->title('Failed to clear cache')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
-        }
-    }
-
-    public function optimizeDatabase(): void
-    {
-        try {
-            Artisan::call('cleanup:old-data', ['--force' => true]);
-
-            Notification::make()
-                ->title('Database optimized')
-                ->body('Old data has been cleaned and tables optimized')
-                ->success()
-                ->send();
-
-            $this->loadCleanupLog();
-
-        } catch (\Exception $e) {
-            Notification::make()
-                ->title('Optimization failed')
                 ->body($e->getMessage())
                 ->danger()
                 ->send();

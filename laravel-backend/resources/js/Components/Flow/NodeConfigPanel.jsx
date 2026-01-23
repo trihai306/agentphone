@@ -39,6 +39,7 @@ import {
     AssertConfig,
     ElementCheckConfig,
     WaitForElementConfig,
+    RepeatClickConfig,
 } from './NodeConfig/actions';
 
 /**
@@ -273,6 +274,18 @@ export default function NodeConfigPanel({
                 {/* Wait For Element config */}
                 {nodeType === 'wait_for_element' && (
                     <WaitForElementConfig
+                        data={nodeData}
+                        updateData={updateData}
+                        updateMultipleData={updateMultipleData}
+                        isDark={isDark}
+                        selectedDevice={selectedDevice}
+                        userId={userId}
+                    />
+                )}
+
+                {/* Repeat Click config */}
+                {nodeType === 'repeat_click' && (
+                    <RepeatClickConfig
                         data={nodeData}
                         updateData={updateData}
                         updateMultipleData={updateMultipleData}

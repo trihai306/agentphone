@@ -32,6 +32,7 @@ function NodePalette({ onDragStart }) {
                 { type: 'back', label: 'Back', icon: '←', color: '#6366f1', description: 'Press BACK button' },
                 { type: 'home', label: 'Home', icon: '🏠', color: '#8b5cf6', description: 'Press HOME button' },
                 { type: 'open_app', label: 'Open App', icon: '📱', color: '#22c55e', description: 'Launch an app' },
+                { type: 'repeat_click', label: 'Repeat Click', icon: '🔄', color: '#8b5cf6', description: 'Click multiple times' },
             ]
         },
         logic: {
