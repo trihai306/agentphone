@@ -404,21 +404,31 @@ class DeviceController extends Controller
      */
     public function checkAccessibility(Request $request): JsonResponse
     {
+        \Log::info('🔍 checkAccessibility called', [
+            'device_id' => $request->input('device_id'),
+            'user_id' => $request->user()?->id,
+            'ip' => $request->ip(),
+        ]);
+
         $request->validate(['device_id' => 'required|string']);
 
         $device = $this->deviceService->findByDeviceId($request->user(), $request->input('device_id'));
 
         if (!$device) {
+            \Log::warning('❌ Device not found', ['device_id' => $request->input('device_id')]);
             return response()->json(['success' => false, 'message' => 'Device not found'], 404);
         }
 
         if (!$this->deviceService->requestAccessibilityCheck($device, $request->user()->id)) {
+            \Log::warning('❌ Device offline or check failed', ['device_id' => $device->device_id]);
             return response()->json([
                 'success' => false,
                 'message' => 'Device is offline',
                 'accessibility_enabled' => $device->accessibility_enabled ?? false,
             ], 400);
         }
+
+        \Log::info('✅ Accessibility check request sent', ['device_id' => $device->device_id]);
 
         return response()->json([
             'success' => true,
