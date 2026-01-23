@@ -10,3 +10,4 @@ export { OpenAppActionConfig } from './OpenAppActionConfig';
 export { AssertConfig } from './AssertConfig';
 export { ElementCheckConfig } from './ElementCheckConfig';
 export { WaitForElementConfig } from './WaitForElementConfig';
+export { RepeatClickConfig } from './RepeatClickConfig';
