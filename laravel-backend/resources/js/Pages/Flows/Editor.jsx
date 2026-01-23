@@ -2049,6 +2049,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
     const nodeTemplates = [
         // Recorded Actions
+        { type: 'open_app', label: t('flows.editor.nodes.open_app', 'Open App'), icon: 'app', color: '#10b981', bgColor: 'rgba(16, 185, 129, 0.15)', description: t('flows.editor.nodes.open_app_desc', 'Launch an app'), category: 'action' },
         { type: 'click', label: t('flows.editor.nodes.click'), icon: 'cursor', color: '#3b82f6', bgColor: 'rgba(59, 130, 246, 0.15)', description: t('flows.editor.nodes.click_desc', 'Tap on element'), category: 'action' },
         { type: 'text_input', label: t('flows.editor.nodes.type_text'), icon: 'keyboard', color: '#a855f7', bgColor: 'rgba(168, 85, 247, 0.15)', description: t('flows.editor.nodes.type_text_desc', 'Input text'), category: 'action' },
         { type: 'scroll', label: t('flows.editor.nodes.scroll'), icon: 'scroll', color: '#f59e0b', bgColor: 'rgba(245, 158, 11, 0.15)', description: t('flows.editor.nodes.scroll_desc', 'Scroll view'), category: 'action' },
