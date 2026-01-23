@@ -226,9 +226,23 @@ class DeviceService
      */
     public function requestInstalledApps(Device $device, int $userId): bool
     {
+        \Log::info('🔍 requestInstalledApps called', [
+            'device_id' => $device->device_id,
+            'socket_connected' => $device->socket_connected,
+            'user_id' => $userId,
+        ]);
+
         if (!$device->socket_connected) {
+            \Log::warning('❌ Device socket not connected, cannot request apps', [
+                'device_id' => $device->device_id,
+            ]);
             return false;
         }
+
+        \Log::info('📤 Broadcasting GetInstalledAppsRequest to device', [
+            'device_id' => $device->device_id,
+            'user_id' => $userId,
+        ]);
 
         broadcast(new \App\Events\GetInstalledAppsRequest($device->device_id, $userId));
         return true;
