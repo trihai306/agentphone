@@ -56,15 +56,16 @@ export default function AppPickerModal({
         }
     }, [isOpen, userId]);
 
-    // Auto-fetch on open
+    // Auto-fetch on open - always request when modal opens with valid device
     useEffect(() => {
-        if (isOpen && deviceId && apps.length === 0) {
+        if (isOpen && deviceId) {
+            // Small delay to ensure socket subscription is ready
             const timer = setTimeout(() => {
                 requestApps();
-            }, 300);
+            }, 500);
             return () => clearTimeout(timer);
         }
-    }, [isOpen, deviceId]);
+    }, [isOpen, deviceId, requestApps]);
 
     // Request apps list from device
     const requestApps = useCallback(async () => {
