@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { VariableInput } from './VariablePicker';
 import ElementPickerModal from './ElementPickerModal';
+import AppPickerModal from './AppPickerModal';
 import MediaPickerModal from '@/Components/MediaPickerModal';
 
 /**
@@ -165,6 +166,8 @@ export default function NodeConfigPanel({
                         data={nodeData}
                         updateData={updateData}
                         isDark={isDark}
+                        selectedDevice={selectedDevice}
+                        userId={userId}
                     />
                 )}
 
@@ -1415,8 +1418,17 @@ function ScrollActionConfig({ data, updateData, isDark }) {
     );
 }
 
-function OpenAppActionConfig({ data, updateData, isDark }) {
+function OpenAppActionConfig({ data, updateData, isDark, selectedDevice, userId }) {
     const { t } = useTranslation();
+    const [showAppPicker, setShowAppPicker] = useState(false);
+
+    const handleAppSelect = (app) => {
+        updateData('packageName', app.packageName);
+        if (app.appName) {
+            updateData('appName', app.appName);
+        }
+    };
+
     return (
         <>
             <ConfigSection title={t('flows.editor.config.package_name', { defaultValue: 'Package Name' })} isDark={isDark}>
@@ -1483,6 +1495,34 @@ function OpenAppActionConfig({ data, updateData, isDark }) {
                     {t('flows.editor.config.startup_wait_desc', { defaultValue: 'Wait for app to fully load' })}
                 </p>
             </ConfigSection>
+
+            {/* Pick from device */}
+            {selectedDevice && (
+                <ConfigSection title={t('flows.editor.config.pick_from_device', { defaultValue: 'Pick from Device' })} isDark={isDark}>
+                    <button
+                        onClick={() => setShowAppPicker(true)}
+                        className={`w-full px-4 py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${isDark
+                            ? 'bg-gradient-to-r from-emerald-500/20 to-green-500/20 hover:from-emerald-500/30 hover:to-green-500/30 text-emerald-400 border border-emerald-500/30'
+                            : 'bg-gradient-to-r from-emerald-50 to-green-50 hover:from-emerald-100 hover:to-green-100 text-emerald-600 border border-emerald-200'
+                            }`}
+                    >
+                        <span>📱</span>
+                        {t('flows.editor.config.select_installed_app', { defaultValue: 'Select Installed App' })}
+                    </button>
+                    <p className={`text-[10px] mt-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                        {t('flows.editor.config.pick_app_hint', { defaultValue: 'Choose from apps installed on the connected device' })}
+                    </p>
+                </ConfigSection>
+            )}
+
+            {/* App Picker Modal */}
+            <AppPickerModal
+                isOpen={showAppPicker}
+                onClose={() => setShowAppPicker(false)}
+                onSelect={handleAppSelect}
+                deviceId={selectedDevice?.device_id}
+                userId={userId}
+            />
         </>
     );
 }

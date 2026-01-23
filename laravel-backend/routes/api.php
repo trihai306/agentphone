@@ -71,6 +71,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Visual inspection (OCR) 
     Route::post('/devices/visual-inspect', [DeviceController::class, 'visualInspect']);
 
+    // Installed apps list - request and receive from device
+    Route::post('/devices/apps', [DeviceController::class, 'getInstalledApps']);
+    Route::post('/devices/apps-result', [DeviceController::class, 'installedAppsResult']);
+
     // Subscription management
     Route::prefix('subscriptions')->group(function () {
         Route::get('/current', [ServicePackageController::class, 'current']);

@@ -222,6 +222,27 @@ class DeviceService
     }
 
     /**
+     * Request installed apps list from device
+     */
+    public function requestInstalledApps(Device $device, int $userId): bool
+    {
+        if (!$device->socket_connected) {
+            return false;
+        }
+
+        broadcast(new \App\Events\GetInstalledAppsRequest($device->device_id, $userId));
+        return true;
+    }
+
+    /**
+     * Broadcast installed apps list to frontend
+     */
+    public function broadcastInstalledAppsResult(int $userId, string $deviceId, bool $success, array $apps, ?string $error = null): void
+    {
+        broadcast(new \App\Events\InstalledAppsResult($userId, $deviceId, $success, $apps, $error));
+    }
+
+    /**
      * Broadcast accessibility status to frontend
      */
     public function broadcastAccessibilityStatus(Device $device, bool $accessibilityEnabled): void

@@ -260,6 +260,57 @@ class DeviceController extends Controller
     }
 
     /**
+     * Request installed apps list from device
+     */
+    public function getInstalledApps(Request $request): JsonResponse
+    {
+        $request->validate(['device_id' => 'required|string']);
+
+        $device = $this->deviceService->findByDeviceId($request->user(), $request->input('device_id'));
+
+        if (!$device) {
+            return response()->json(['success' => false, 'message' => 'Device not found'], 404);
+        }
+
+        if (!$this->deviceService->requestInstalledApps($device, $request->user()->id)) {
+            return response()->json(['success' => false, 'message' => 'Device is offline'], 400);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Installed apps request sent to device',
+            'device_id' => $device->device_id,
+        ]);
+    }
+
+    /**
+     * Receive installed apps list from device
+     */
+    public function installedAppsResult(Request $request): JsonResponse
+    {
+        $request->validate([
+            'device_id' => 'required|string',
+            'success' => 'required|boolean',
+            'apps' => 'sometimes|array',
+            'error' => 'sometimes|string|nullable',
+        ]);
+
+        $this->deviceService->broadcastInstalledAppsResult(
+            $request->user()->id,
+            $request->input('device_id'),
+            $request->input('success'),
+            $request->input('apps', []),
+            $request->input('error')
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Apps list result received',
+            'app_count' => count($request->input('apps', [])),
+        ]);
+    }
+
+    /**
      * Request visual inspection (OCR text detection) from device
      */
     public function visualInspect(Request $request): JsonResponse
