@@ -437,14 +437,13 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     const handleEdgeClick = useCallback((edgeId, position, currentDelay) => {
         const edge = edges.find(e => e.id === edgeId);
         if (edge) {
-            setSelectedEdgeForDelay(edge);
-            setEdgePopoverPosition({
+            const popoverPosition = {
                 x: position.x + (reactFlowWrapper.current?.getBoundingClientRect()?.left || 0),
                 y: position.y + (reactFlowWrapper.current?.getBoundingClientRect()?.top || 0) - 20
-            });
-            setShowEdgeDelayPopover(true);
+            };
+            openEdgeDelay(edge, popoverPosition);
         }
-    }, [edges]);
+    }, [edges, openEdgeDelay]);
 
     // Update edges with execution state and delay click handler
     const edgesWithExecution = useMemo(() => {
@@ -581,36 +580,8 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     // generateSmartLabel -> imported from helpers/flow/nodeLabels
 
 
-    // Map event type to node type
-    // Return the exact event type so SmartActionNode can display correct icon/color
-    const getNodeType = useCallback((eventType) => {
-        const typeMap = {
-            'open_app': 'open_app',
-            'click': 'click',
-            'tap': 'tap',                       // Keep specific
-            'long_click': 'long_press',
-            'long_tap': 'long_tap',             // Keep specific 
-            'long_press': 'long_press',
-            'double_tap': 'double_tap',         // Keep specific
-            'text_input': 'text_input',
-            'set_text': 'text_input',
-            'scroll': 'scroll',
-            'scroll_up': 'scroll_up',           // Keep specific direction
-            'scroll_down': 'scroll_down',
-            'scroll_left': 'scroll_left',
-            'scroll_right': 'scroll_right',
-            'swipe': 'swipe',
-            'swipe_left': 'swipe_left',         // Keep specific direction
-            'swipe_right': 'swipe_right',
-            'swipe_up': 'swipe_up',
-            'swipe_down': 'swipe_down',
-            'key_event': 'key_event',
-            'back': 'back',                     // Keep specific
-            'home': 'home',
-            'focus': 'focus',
-        };
-        return typeMap[eventType] || eventType; // Fallback to eventType itself
-    }, []);
+    // getNodeType -> use imported getNodeTypeFromEvent
+    const getNodeType = getNodeTypeFromEvent;
 
     // Create a Loop node from consecutive actions
     const createLoopNodeFromActions = useCallback((actions, position) => {
@@ -1492,10 +1463,10 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
     // Handler for updating edge delay config
     const handleEdgeDelayUpdate = useCallback((delayConfig) => {
-        if (!selectedEdgeForDelay) return;
+        if (!modals.edgeDelay.edge) return;
 
         setEdges((eds) => eds.map((e) => {
-            if (e.id === selectedEdgeForDelay.id) {
+            if (e.id === modals.edgeDelay.edge.id) {
                 return {
                     ...e,
                     data: {
@@ -1507,12 +1478,11 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
             return e;
         }));
 
-        setShowEdgeDelayPopover(false);
-        setSelectedEdgeForDelay(null);
+        closeModal(MODAL_TYPES.EDGE_DELAY);
 
         // Trigger auto-save
         debouncedSave(nodes, edges);
-    }, [selectedEdgeForDelay, nodes, edges, debouncedSave]);
+    }, [modals.edgeDelay.edge, nodes, edges, debouncedSave, closeModal, MODAL_TYPES]);
 
     const onDragOver = useCallback((event) => {
         event.preventDefault();
@@ -3162,9 +3132,9 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 setSelectedEdgeForDelay(null);
                             }}
                             onSave={handleEdgeDelayUpdate}
-                            position={edgePopoverPosition}
+                            position={modals.edgeDelay.position || { x: 0, y: 0 }}
                             isDark={isDark}
-                            initialDelay={selectedEdgeForDelay?.data?.delay || { mode: 'none', fixedMs: 500, minMs: 500, maxMs: 1500 }}
+                            initialDelay={modals.edgeDelay.edge?.data?.delay || { mode: 'none', fixedMs: 500, minMs: 500, maxMs: 1500 }}
                         />
 
                         {/* Right Panel - Node Properties */}
@@ -3540,8 +3510,8 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
             </div>
             {/* Media Picker Modal */}
             <MediaPickerModal
-                isOpen={showMediaPicker}
-                onClose={() => setShowMediaPicker(false)}
+                isOpen={modals.mediaPicker.isOpen}
+                onClose={() => closeModal(MODAL_TYPES.MEDIA_PICKER)}
                 onSelect={handleMediaFileSelected}
                 onSelectFolder={handleMediaFolderSelected}
                 allowFolderSelection={true}
@@ -3549,10 +3519,9 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                 fileType="any"
             />
 
-            {/* Collection Picker Modal */}
             <CollectionPickerModal
-                isOpen={showCollectionPicker}
-                onClose={() => setShowCollectionPicker(false)}
+                isOpen={modals.collectionPicker.isOpen}
+                onClose={() => closeModal(MODAL_TYPES.COLLECTION_PICKER)}
                 onSelect={handleCollectionSelected}
                 collections={collections}
             />
