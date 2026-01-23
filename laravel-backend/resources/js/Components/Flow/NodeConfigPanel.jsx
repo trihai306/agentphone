@@ -1458,29 +1458,6 @@ function OpenAppActionConfig({ data, updateData, updateMultipleData, isDark, sel
                 />
             </ConfigSection>
 
-            <ConfigSection title={t('flows.editor.config.quick_select', { defaultValue: 'Quick Select' })} isDark={isDark}>
-                <div className="grid grid-cols-2 gap-2">
-                    {[
-                        { name: 'Facebook', pkg: 'com.facebook.katana', icon: '📘' },
-                        { name: 'Instagram', pkg: 'com.instagram.android', icon: '📷' },
-                        { name: 'TikTok', pkg: 'com.zhiliaoapp.musically', icon: '🎵' },
-                        { name: 'YouTube', pkg: 'com.google.android.youtube', icon: '🎬' },
-                    ].map(app => (
-                        <button
-                            key={app.pkg}
-                            onClick={() => updateData('packageName', app.pkg)}
-                            className={`flex items-center gap-2 px-2 py-1.5 rounded text-xs transition-all ${isDark
-                                ? 'bg-[#1a1a1a] hover:bg-[#252525] text-gray-300'
-                                : 'bg-gray-50 hover:bg-gray-100 text-gray-700'
-                                }`}
-                        >
-                            <span>{app.icon}</span>
-                            <span>{app.name}</span>
-                        </button>
-                    ))}
-                </div>
-            </ConfigSection>
-
             <ConfigSection title={t('flows.editor.config.startup_wait', { defaultValue: 'Startup Wait (ms)' })} isDark={isDark}>
                 <input
                     type="number"
