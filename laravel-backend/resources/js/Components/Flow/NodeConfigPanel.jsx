@@ -1416,6 +1416,7 @@ function ScrollActionConfig({ data, updateData, isDark }) {
 }
 
 function OpenAppActionConfig({ data, updateData, isDark }) {
+    const { t } = useTranslation();
     return (
         <>
             <ConfigSection title={t('flows.editor.config.package_name', { defaultValue: 'Package Name' })} isDark={isDark}>
