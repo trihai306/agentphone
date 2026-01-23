@@ -97,7 +97,7 @@ class AdminPanelProvider extends PanelProvider
             ->authGuard('web')
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
-            ->sidebarCollapsibleOnDesktop()
+            ->topNavigation() // Menu hiển thị ở header thay vì sidebar
             ->maxContentWidth('full')
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->renderHook(
