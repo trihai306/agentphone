@@ -5,6 +5,10 @@ namespace App\Filament\Pages;
 use App\Filament\Widgets\WorkflowStatsOverview;
 use App\Filament\Widgets\WorkflowStatusChart;
 use App\Filament\Widgets\RecentWorkflowsTable;
+use App\Filament\Widgets\JobStatsOverview;
+use App\Filament\Widgets\JobStatusChart;
+use App\Filament\Widgets\JobTrendChart;
+use App\Filament\Widgets\RecentJobsTable;
 use Filament\Pages\Page;
 
 class WorkflowDashboard extends Page
@@ -15,9 +19,9 @@ class WorkflowDashboard extends Page
 
     protected static ?string $slug = 'workflow-analytics';
 
-    protected static ?string $navigationLabel = 'Thống Kê Workflow';
+    protected static ?string $navigationLabel = 'Workflow & Jobs';
 
-    protected static ?string $title = 'Dashboard Workflow';
+    protected static ?string $title = 'Dashboard Workflow & Jobs';
 
     protected static ?string $navigationGroup = 'Dashboard';
 
@@ -27,6 +31,7 @@ class WorkflowDashboard extends Page
     {
         return [
             WorkflowStatsOverview::class,
+            JobStatsOverview::class,
         ];
     }
 
@@ -34,13 +39,16 @@ class WorkflowDashboard extends Page
     {
         return [
             WorkflowStatusChart::class,
+            JobStatusChart::class,
+            JobTrendChart::class,
             RecentWorkflowsTable::class,
+            RecentJobsTable::class,
         ];
     }
 
     public function getHeaderWidgetsColumns(): int|array
     {
-        return 4;
+        return 1;
     }
 
     public function getFooterWidgetsColumns(): int|array
@@ -48,7 +56,7 @@ class WorkflowDashboard extends Page
         return [
             'default' => 1,
             'md' => 2,
-            'xl' => 2,
+            'xl' => 3,
         ];
     }
 }
