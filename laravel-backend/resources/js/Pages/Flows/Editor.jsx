@@ -2084,7 +2084,25 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 <div className="relative device-selector-container">
                                     {/* Enhanced Toolbar Button */}
                                     <button
-                                        onClick={() => modals.deviceSelector.isOpen ? closeModal(MODAL_TYPES.DEVICE_SELECTOR) : openModal(MODAL_TYPES.DEVICE_SELECTOR)}
+                                        onClick={async () => {
+                                            if (modals.deviceSelector.isOpen) {
+                                                closeModal(MODAL_TYPES.DEVICE_SELECTOR);
+                                            } else {
+                                                openModal(MODAL_TYPES.DEVICE_SELECTOR);
+
+                                                // Trigger accessibility check when opening selector
+                                                if (selectedDevice?.device_id) {
+                                                    try {
+                                                        await axios.post('/devices/check-accessibility', {
+                                                            device_id: selectedDevice.device_id
+                                                        });
+                                                        console.log('🔍 Device selector: Accessibility check triggered for:', selectedDevice.device_id);
+                                                    } catch (err) {
+                                                        console.warn('⚠️ Device selector: Accessibility check failed:', err);
+                                                    }
+                                                }
+                                            }
+                                        }}
                                         className={`h-9 px-3 flex items-center gap-2 text-sm font-medium rounded-lg transition-all duration-300 border backdrop-blur-sm ${selectedDevice
                                             ? isDark
                                                 ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-emerald-500/40 text-emerald-300 shadow-lg shadow-emerald-500/20'
