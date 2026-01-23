@@ -86,17 +86,21 @@ export default function AppPickerModal({
             setLoading(false);
         }
     }, [deviceId, t]);
-    // Use ref to track if we've fetched in current session (avoids dependency issues)
-    const hasFetchedRef = useRef(false);
 
-    // Auto-fetch on open - only once per modal session
+    // Track the open state changes to know when to fetch
+    const prevOpenRef = useRef(false);
+
+    // Auto-fetch when modal opens (detect open transition: false -> true)
     useEffect(() => {
-        if (isOpen && deviceId && !hasFetchedRef.current) {
-            hasFetchedRef.current = true;
-            console.log('🔌 AppPicker: Scheduling auto-fetch (1s delay)...');
+        const wasOpen = prevOpenRef.current;
+        prevOpenRef.current = isOpen;
+
+        // Only fetch when modal transitions from closed to open
+        if (isOpen && !wasOpen && deviceId) {
+            console.log('🔌 AppPicker: Modal just opened, scheduling auto-fetch (1s delay)...');
+            setApps([]); // Clear previous apps immediately
             const timer = setTimeout(() => {
                 console.log('📤 AppPicker: Auto-fetching apps now...');
-                // Inline the request logic to avoid callback dependency issues
                 setLoading(true);
                 setError(null);
                 window.axios.post('/devices/apps', { device_id: deviceId })
@@ -122,11 +126,8 @@ export default function AppPickerModal({
     // Reset state on close
     useEffect(() => {
         if (!isOpen) {
-            // Reset fetch flag so next open will fetch again
-            hasFetchedRef.current = false;
             setSearchQuery('');
             setError(null);
-            // Don't reset apps - they'll be refreshed on next open
         }
     }, [isOpen]);
 
