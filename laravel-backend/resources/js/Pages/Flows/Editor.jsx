@@ -575,99 +575,11 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         setRecordedNodeCount(prev => prev - 1);
     }, [recordedActions]);
 
-    // Normalize event type for comparison (group similar actions)
-    const normalizeEventType = useCallback((eventType) => {
-        const normalizeMap = {
-            'tap': 'click',
-            'long_click': 'click',
-            'long_press': 'click',
-            'set_text': 'text_input',
-            // Scroll: keep up/down distinct for separate Loops
-            'scroll': 'scroll',           // Generic scroll
-            'scroll_up': 'scroll_up',     // Scroll up - distinct from down
-            'scroll_down': 'scroll_down', // Scroll down - distinct from up
-            // Swipe: keep direction for distinct Loops
-            'swipe_left': 'swipe_left',
-            'swipe_right': 'swipe_right',
-            'swipe_up': 'swipe_up',
-            'swipe_down': 'swipe_down',
-            'back': 'key_event',
-            'home': 'key_event',
-        };
-        return normalizeMap[eventType] || eventType;
-    }, []);
+    // normalizeEventType -> imported from helpers/flow/loopDetection
 
-    // Extract app name from package name (e.g., "com.google.chrome" -> "Chrome")
-    const getAppNameFromPackage = useCallback((packageName) => {
-        if (!packageName) return '';
-        const parts = packageName.split('.');
-        const lastPart = parts[parts.length - 1];
-        // Capitalize first letter
-        return lastPart.charAt(0).toUpperCase() + lastPart.slice(1);
-    }, []);
+    // getAppNameFromPackage -> imported as getAppName
+    // generateSmartLabel -> imported from helpers/flow/nodeLabels
 
-    // Generate smart, descriptive label for nodes
-    const generateSmartLabel = useCallback((eventData) => {
-        const eventType = eventData.event_type || eventData.eventType || '';
-        const text = eventData.text || '';
-        const appName = eventData.app_name || getAppNameFromPackage(eventData.package_name || eventData.packageName);
-        const actionData = eventData.action_data || {};
-
-        // Truncate text for display
-        const truncatedText = text.length > 25 ? text.substring(0, 22) + '...' : text;
-
-        switch (eventType) {
-            case 'tap':
-            case 'click':
-                if (truncatedText) return `Tap '${truncatedText}'`;
-                return appName ? `Tap in ${appName}` : 'Tap';
-
-            case 'long_tap':
-            case 'long_click':
-            case 'long_press':
-                if (truncatedText) return `Long press '${truncatedText}'`;
-                return 'Long Press';
-
-            case 'double_tap':
-                if (truncatedText) return `Double tap '${truncatedText}'`;
-                return 'Double Tap';
-
-            case 'text_input':
-            case 'set_text':
-                const inputText = actionData.text || text || '';
-                const displayText = inputText.length > 20 ? inputText.substring(0, 17) + '...' : inputText;
-                return displayText ? `Type '${displayText}'` : 'Type Text';
-
-            case 'scroll_up':
-                return 'Scroll Up';
-            case 'scroll_down':
-                return 'Scroll Down';
-            case 'scroll':
-                const direction = actionData.direction || 'down';
-                return `Scroll ${direction.charAt(0).toUpperCase() + direction.slice(1)}`;
-
-            case 'swipe_left':
-                return 'Swipe Left';
-            case 'swipe_right':
-                return 'Swipe Right';
-            case 'swipe_up':
-                return 'Swipe Up';
-            case 'swipe_down':
-                return 'Swipe Down';
-
-            case 'open_app':
-                return appName ? `Open ${appName}` : 'Open App';
-
-            case 'back':
-                return 'Press Back';
-            case 'home':
-                return 'Press Home';
-
-            default:
-                // Fallback: capitalize event type
-                return eventType.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-        }
-    }, [getAppNameFromPackage]);
 
     // Map event type to node type
     // Return the exact event type so SmartActionNode can display correct icon/color
