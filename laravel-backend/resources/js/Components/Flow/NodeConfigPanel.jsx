@@ -1429,6 +1429,12 @@ function OpenAppActionConfig({ data, updateData, updateMultipleData, isDark, sel
     const { t } = useTranslation();
     const [showAppPicker, setShowAppPicker] = useState(false);
 
+    // DEBUG: Log selectedDevice to check if device_id exists
+    console.log('🔍 OpenAppActionConfig: selectedDevice =', selectedDevice);
+    console.log('🔍 OpenAppActionConfig: deviceId =', selectedDevice?.device_id);
+    console.log('🔍 OpenAppActionConfig: deviceApps =', deviceApps);
+    console.log('🔍 OpenAppActionConfig: onRequestDeviceApps =', typeof onRequestDeviceApps);
+
     const handleAppSelect = (app) => {
         // Use updateMultipleData to update both fields atomically
         updateMultipleData({
