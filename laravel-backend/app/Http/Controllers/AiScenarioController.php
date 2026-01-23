@@ -59,10 +59,39 @@ class AiScenarioController extends Controller
     }
 
     /**
-     * Parse script into scenes (AJAX)
+     * Parse script or images into scenes (AJAX)
      */
     public function parseScript(Request $request)
     {
+        $inputMode = $request->input('input_mode', 'text');
+
+        if ($inputMode === 'images') {
+            // Image-based parsing
+            $request->validate([
+                'images' => 'required|array|min:1|max:10',
+                'images.*.data' => 'required|string',
+                'output_type' => 'required|in:image,video',
+            ]);
+
+            try {
+                $result = $this->scenarioService->parseImages(
+                    $request->input('images'),
+                    $request->input('output_type')
+                );
+
+                return response()->json([
+                    'success' => true,
+                    'data' => $result,
+                ]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'error' => $e->getMessage(),
+                ], 422);
+            }
+        }
+
+        // Text-based parsing (default)
         $request->validate([
             'script' => 'required|string|min:10|max:10000',
             'output_type' => 'required|in:image,video',

@@ -19,7 +19,7 @@ class WorkflowDashboard extends Page
 
     protected static ?string $title = 'Dashboard Workflow';
 
-    protected static ?string $navigationGroup = 'Phân Tích';
+    protected static ?string $navigationGroup = '📊 Dashboard';
 
     protected static ?int $navigationSort = 4;
 

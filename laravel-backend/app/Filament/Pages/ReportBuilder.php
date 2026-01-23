@@ -26,7 +26,7 @@ class ReportBuilder extends Page implements HasForms
 
     protected static ?string $title = 'Công Cụ Tạo Báo Cáo';
 
-    protected static ?string $navigationGroup = 'Phân Tích';
+    protected static ?string $navigationGroup = '📊 Dashboard';
 
     protected static ?int $navigationSort = 5;
 

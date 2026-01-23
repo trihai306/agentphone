@@ -19,7 +19,7 @@ class NotificationCenter extends Page implements HasForms
 
     protected static ?string $navigationIcon = 'heroicon-o-bell-alert';
     protected static ?string $navigationLabel = 'Notification Center';
-    protected static ?string $navigationGroup = 'Service Management';
+    protected static ?string $navigationGroup = '⚙️ Hệ Thống';
     protected static ?int $navigationSort = 100;
     protected static string $view = 'filament.pages.notification-center';
 

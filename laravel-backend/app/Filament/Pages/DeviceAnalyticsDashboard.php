@@ -20,7 +20,7 @@ class DeviceAnalyticsDashboard extends Page
 
     protected static ?string $title = 'Dashboard Thiết Bị & Kết Nối';
 
-    protected static ?string $navigationGroup = 'Phân Tích';
+    protected static ?string $navigationGroup = '📊 Dashboard';
 
     protected static ?int $navigationSort = 2;
 

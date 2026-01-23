@@ -115,6 +115,142 @@ class AiScenarioService
     }
 
     /**
+     * Parse images into scenes using Gemini Vision
+     */
+    public function parseImages(array $images, string $outputType = 'video'): array
+    {
+        if (empty($this->geminiApiKey)) {
+            throw new \Exception('Gemini API key is not configured');
+        }
+
+        if (empty($images)) {
+            throw new \Exception('No images provided');
+        }
+
+        // Build multimodal content with images
+        $parts = [];
+
+        // Add prompt first
+        $parts[] = ['text' => $this->buildImageParsePrompt($outputType, count($images))];
+
+        // Add each image
+        foreach ($images as $index => $image) {
+            // Extract base64 data and mime type from data URL
+            $dataUrl = $image['data'];
+            if (preg_match('/^data:image\/(\w+);base64,(.+)$/', $dataUrl, $matches)) {
+                $mimeType = 'image/' . $matches[1];
+                $base64Data = $matches[2];
+
+                $parts[] = [
+                    'inline_data' => [
+                        'mime_type' => $mimeType,
+                        'data' => $base64Data,
+                    ]
+                ];
+            }
+        }
+
+        $url = "{$this->geminiApiUrl}/models/gemini-2.0-flash:generateContent";
+
+        $response = Http::timeout(120) // Longer timeout for images
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+                'x-goog-api-key' => $this->geminiApiKey,
+            ])
+            ->post($url, [
+                'contents' => [
+                    [
+                        'parts' => $parts
+                    ]
+                ],
+                'generationConfig' => [
+                    'temperature' => 0.7,
+                    'topK' => 40,
+                    'topP' => 0.95,
+                    'maxOutputTokens' => 8192,
+                    'responseMimeType' => 'application/json',
+                ],
+            ]);
+
+        if (!$response->successful()) {
+            Log::error('Gemini parse images error', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            throw new \Exception('Failed to parse images: ' . $response->body());
+        }
+
+        $data = $response->json();
+        $content = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
+
+        try {
+            $parsed = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            Log::error('Failed to parse Gemini image response', ['content' => $content]);
+            throw new \Exception('Failed to parse AI response as JSON');
+        }
+
+        // Format scenes to match image order
+        $scenes = $parsed['scenes'] ?? [];
+        $formattedScenes = [];
+        foreach ($scenes as $index => $scene) {
+            $formattedScenes[] = [
+                'order' => $index + 1,
+                'description' => $scene['description'] ?? 'Scene ' . ($index + 1),
+                'prompt' => $scene['prompt'] ?? $scene['description'] ?? '',
+                'duration' => max(self::MIN_SCENE_DURATION, (int) ($scene['suggested_duration'] ?? self::DEFAULT_SCENE_DURATION)),
+            ];
+        }
+
+        return [
+            'title' => $parsed['title'] ?? 'Video từ ảnh',
+            'scenes' => $formattedScenes,
+            'total_scenes' => count($formattedScenes),
+        ];
+    }
+
+    /**
+     * Build prompt for image-based scene generation
+     */
+    protected function buildImageParsePrompt(string $outputType, int $imageCount): string
+    {
+        $mediaType = $outputType === 'video' ? 'video clips' : 'images';
+        $durationNote = $outputType === 'video'
+            ? "- \"suggested_duration\": thời lượng video đề xuất (4-15 giây, dựa trên độ phức tạp của ảnh)"
+            : "";
+
+        return <<<PROMPT
+Bạn là một chuyên gia AI phân tích hình ảnh và sáng tạo nội dung. Nhiệm vụ của bạn là phân tích {$imageCount} ảnh được cung cấp và tạo kịch bản video dựa trên nội dung mỗi ảnh.
+
+YÊU CẦU:
+1. Mỗi ảnh sẽ trở thành 1 cảnh (scene) riêng biệt
+2. Phân tích kỹ nội dung, bối cảnh, nhân vật, hành động trong mỗi ảnh
+3. Tạo prompt chi tiết bằng tiếng Anh để AI có thể tạo {$mediaType} dựa trên ảnh gốc
+4. Prompt phải mô tả:
+   - Mọi thứ có trong ảnh (objects, people, scenery)
+   - Phong cách nghệ thuật, màu sắc chủ đạo
+   - Góc camera, ánh sáng
+   - Chuyển động gợi ý cho video (nếu là video)
+5. Giữ nguyên thứ tự ảnh được cung cấp
+
+OUTPUT FORMAT (JSON):
+{
+  "title": "Tiêu đề gợi ý dựa trên nội dung các ảnh",
+  "scenes": [
+    {
+      "order": 1,
+      "description": "Mô tả ngắn gọn bằng tiếng Việt về nội dung ảnh",
+      "prompt": "Detailed English prompt describing exactly what's in the image, including scene setting, subjects, colors, lighting, mood, and suggested camera movements for video. Start with: 'Starting from the reference image: ...'",
+      {$durationNote}
+    }
+  ]
+}
+
+Phân tích lần lượt từng ảnh theo thứ tự. Chỉ trả về JSON, không có text khác.
+PROMPT;
+    }
+
+    /**
      * Build the AI prompt for parsing scripts
      */
     protected function buildParsePrompt(string $script, string $outputType): string

@@ -25,7 +25,7 @@ export default function ScenarioTab({
     const [step, setStep] = useState('input'); // input, scenes, generating
     const [inputMode, setInputMode] = useState('text'); // 'text' or 'images'
     const [script, setScript] = useState('');
-    const [sourceImages, setSourceImages] = useState([]); // Array of {file, preview, description}
+    const [sourceImages, setSourceImages] = useState([]); // Array of {file, preview}
     const [outputType, setOutputType] = useState('video');
     const [model, setModel] = useState('');
     const [parsing, setParsing] = useState(false);
@@ -37,19 +37,9 @@ export default function ScenarioTab({
         resolution: '1080p',
         aspect_ratio: '16:9',
         generate_audio: true,
-        audio_style: 'natural', // natural, dramatic, upbeat
+        audio_style: 'natural',
         background_music: false,
-        music_style: 'none', // none, ambient, upbeat, dramatic, cinematic
-    });
-    const [totalCredits, setTotalCredits] = useState(0);
-    const [scenario, setScenario] = useState(null);
-    const [settings, setSettings] = useState({
-        resolution: '1080p',
-        aspect_ratio: '16:9',
-        generate_audio: true,
-        audio_style: 'natural', // natural, dramatic, upbeat
-        background_music: false,
-        music_style: 'none', // none, ambient, upbeat, dramatic, cinematic
+        music_style: 'none',
     });
 
     const models = outputType === 'video' ? videoModels : imageModels;
@@ -84,27 +74,92 @@ export default function ScenarioTab({
         }
     }, [models, outputType]);
 
-    // Parse script into scenes
+    // Handle multiple images upload
+    const handleImagesUpload = (e) => {
+        const files = Array.from(e.target.files);
+        const newImages = files.map(file => ({
+            file,
+            preview: URL.createObjectURL(file),
+        }));
+        setSourceImages(prev => [...prev, ...newImages].slice(0, 10)); // Max 10 images
+    };
+
+    // Remove an image
+    const handleRemoveImage = (index) => {
+        setSourceImages(prev => {
+            const updated = [...prev];
+            URL.revokeObjectURL(updated[index].preview); // Cleanup
+            updated.splice(index, 1);
+            return updated;
+        });
+    };
+
+    // Convert file to base64
+    const fileToBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    };
+
+    // Parse script/images into scenes
     const handleParse = async () => {
-        if (!script.trim() || script.length < 10) {
-            addToast('Vui lòng nhập kịch bản (ít nhất 10 ký tự)', 'warning');
-            return;
+        // Validate based on input mode
+        if (inputMode === 'text') {
+            if (!script.trim() || script.length < 10) {
+                addToast('Vui lòng nhập kịch bản (ít nhất 10 ký tự)', 'warning');
+                return;
+            }
+        } else {
+            if (sourceImages.length === 0) {
+                addToast('Vui lòng upload ít nhất 1 ảnh', 'warning');
+                return;
+            }
         }
 
         setParsing(true);
         try {
-            const response = await axios.post('/ai-studio/scenarios/parse', {
-                script,
+            let payload = {
                 output_type: outputType,
-            });
+                input_mode: inputMode,
+            };
+
+            if (inputMode === 'text') {
+                payload.script = script;
+            } else {
+                // Convert images to base64
+                const imagesBase64 = await Promise.all(
+                    sourceImages.map(async (img) => ({
+                        data: await fileToBase64(img.file),
+                        name: img.file.name,
+                    }))
+                );
+                payload.images = imagesBase64;
+            }
+
+            const response = await axios.post('/ai-studio/scenarios/parse', payload);
 
             if (response.data.success) {
-                setScenes(response.data.data.scenes);
+                const parsedScenes = response.data.data.scenes;
+
+                // If using images mode, attach source images to corresponding scenes
+                if (inputMode === 'images') {
+                    parsedScenes.forEach((scene, i) => {
+                        if (sourceImages[i]) {
+                            scene.image = sourceImages[i].file;
+                            scene.imagePreview = sourceImages[i].preview;
+                        }
+                    });
+                }
+
+                setScenes(parsedScenes);
                 setTitle(response.data.data.title || '');
                 setStep('scenes');
 
                 // Estimate credits
-                await estimateCredits(response.data.data.scenes);
+                await estimateCredits(parsedScenes);
             }
         } catch (error) {
             addToast(error.response?.data?.error || 'Không thể phân tích kịch bản', 'error');
@@ -139,15 +194,6 @@ export default function ScenarioTab({
             estimateCredits(scenes);
         }
     }, [settings, scenes]);
-    // Convert file to base64
-    const fileToBase64 = (file) => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
-        });
-    };
 
     // Save and generate all scenes
     const handleGenerate = async () => {
@@ -325,21 +371,54 @@ export default function ScenarioTab({
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Main Input Panel */}
                         <div className={`lg:col-span-2 p-6 rounded-2xl ${isDark ? 'bg-[#1a1a1a] border border-[#2a2a2a]' : 'bg-white border border-slate-200 shadow-sm'}`}>
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-violet-600/30 to-indigo-600/30' : 'bg-gradient-to-br from-violet-100 to-indigo-100'}`}>
-                                    <span className="text-xl">📝</span>
+                            {/* Header with Input Mode Tabs */}
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-violet-600/30 to-indigo-600/30' : 'bg-gradient-to-br from-violet-100 to-indigo-100'}`}>
+                                        <span className="text-xl">{inputMode === 'text' ? '📝' : '🖼️'}</span>
+                                    </div>
+                                    <div>
+                                        <h2 className={`text-lg font-bold ${themeClasses.textPrimary}`}>
+                                            {inputMode === 'text' ? 'Nhập Kịch Bản' : 'Upload Ảnh'}
+                                        </h2>
+                                        <p className={`text-xs ${themeClasses.textMuted}`}>
+                                            {inputMode === 'text'
+                                                ? 'AI sẽ tự động chia thành các cảnh'
+                                                : 'AI sẽ phân tích ảnh và tạo kịch bản'}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h2 className={`text-lg font-bold ${themeClasses.textPrimary}`}>Nhập Kịch Bản</h2>
-                                    <p className={`text-xs ${themeClasses.textMuted}`}>AI sẽ tự động chia thành các cảnh</p>
+
+                                {/* Input Mode Toggle */}
+                                <div className={`flex p-1 rounded-xl ${isDark ? 'bg-[#0a0a0a]' : 'bg-slate-100'}`}>
+                                    <button
+                                        onClick={() => setInputMode('text')}
+                                        className={`px-4 py-2 text-xs font-medium rounded-lg transition-all ${inputMode === 'text'
+                                            ? isDark ? 'bg-[#2a2a2a] text-white shadow' : 'bg-white text-slate-900 shadow-md'
+                                            : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+                                            }`}
+                                    >
+                                        📝 Văn bản
+                                    </button>
+                                    <button
+                                        onClick={() => setInputMode('images')}
+                                        className={`px-4 py-2 text-xs font-medium rounded-lg transition-all ${inputMode === 'images'
+                                            ? isDark ? 'bg-[#2a2a2a] text-white shadow' : 'bg-white text-slate-900 shadow-md'
+                                            : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+                                            }`}
+                                    >
+                                        🖼️ Từ ảnh
+                                    </button>
                                 </div>
                             </div>
 
-                            {/* Script Input */}
-                            <textarea
-                                value={script}
-                                onChange={(e) => setScript(e.target.value)}
-                                placeholder="Nhập kịch bản của bạn tại đây...
+                            {/* Text Input Mode */}
+                            {inputMode === 'text' && (
+                                <>
+                                    <textarea
+                                        value={script}
+                                        onChange={(e) => setScript(e.target.value)}
+                                        placeholder="Nhập kịch bản của bạn tại đây...
 
 Ví dụ:
 Cảnh 1: Một buổi sáng đẹp trời, ánh nắng chiếu qua cửa sổ phòng ngủ.
@@ -347,21 +426,97 @@ Cảnh 2: Một cô gái tỉnh dậy, vươn vai và mỉm cười.
 Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
 
 💡 Mẹo: Mô tả chi tiết từng cảnh, AI sẽ tự động tạo prompt cho mỗi cảnh."
-                                rows={12}
-                                className={`w-full px-4 py-4 rounded-xl border text-sm resize-none transition-all focus:outline-none focus:ring-2 ${isDark
-                                    ? 'bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder-slate-500 focus:border-violet-500 focus:ring-violet-500/20'
-                                    : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-violet-400 focus:ring-violet-400/20'
-                                    }`}
-                            />
+                                        rows={12}
+                                        className={`w-full px-4 py-4 rounded-xl border text-sm resize-none transition-all focus:outline-none focus:ring-2 ${isDark
+                                            ? 'bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder-slate-500 focus:border-violet-500 focus:ring-violet-500/20'
+                                            : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-violet-400 focus:ring-violet-400/20'
+                                            }`}
+                                    />
+                                    <div className="flex items-center justify-between mt-3">
+                                        <p className={`text-xs ${themeClasses.textMuted}`}>
+                                            {script.length}/10,000 ký tự
+                                        </p>
+                                        <p className={`text-xs ${script.length >= 10 ? 'text-emerald-500' : themeClasses.textMuted}`}>
+                                            {script.length >= 10 ? '✓ Đủ độ dài' : 'Tối thiểu 10 ký tự'}
+                                        </p>
+                                    </div>
+                                </>
+                            )}
 
-                            <div className="flex items-center justify-between mt-3">
-                                <p className={`text-xs ${themeClasses.textMuted}`}>
-                                    {script.length}/10,000 ký tự
-                                </p>
-                                <p className={`text-xs ${script.length >= 10 ? 'text-emerald-500' : themeClasses.textMuted}`}>
-                                    {script.length >= 10 ? '✓ Đủ độ dài' : 'Tối thiểu 10 ký tự'}
-                                </p>
-                            </div>
+                            {/* Images Input Mode */}
+                            {inputMode === 'images' && (
+                                <div className="space-y-4">
+                                    {/* Drop Zone */}
+                                    <label className={`block relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${isDark
+                                        ? 'border-[#2a2a2a] hover:border-violet-500/50 hover:bg-violet-600/5'
+                                        : 'border-slate-200 hover:border-violet-400 hover:bg-violet-50/50'
+                                        }`}>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            multiple
+                                            onChange={handleImagesUpload}
+                                            className="hidden"
+                                        />
+                                        <div className="space-y-3">
+                                            <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center ${isDark ? 'bg-[#2a2a2a]' : 'bg-slate-100'}`}>
+                                                <span className="text-3xl">🖼️</span>
+                                            </div>
+                                            <div>
+                                                <p className={`text-sm font-medium ${themeClasses.textPrimary}`}>
+                                                    Kéo thả ảnh hoặc click để chọn
+                                                </p>
+                                                <p className={`text-xs mt-1 ${themeClasses.textMuted}`}>
+                                                    Hỗ trợ JPG, PNG, WEBP • Tối đa 10 ảnh
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </label>
+
+                                    {/* Images Preview Grid */}
+                                    {sourceImages.length > 0 && (
+                                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                                            {sourceImages.map((img, index) => (
+                                                <div key={index} className="relative group aspect-square">
+                                                    <img
+                                                        src={img.preview}
+                                                        alt={`Image ${index + 1}`}
+                                                        className="w-full h-full object-cover rounded-xl"
+                                                    />
+                                                    <div className={`absolute inset-0 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity ${isDark ? 'bg-black/60' : 'bg-black/40'}`}>
+                                                        <button
+                                                            onClick={() => handleRemoveImage(index)}
+                                                            className="p-2 rounded-lg bg-rose-500 text-white hover:bg-rose-600 transition-colors"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </div>
+                                                    <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${isDark ? 'bg-violet-600 text-white' : 'bg-violet-500 text-white'}`}>
+                                                        {index + 1}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Status */}
+                                    <div className="flex items-center justify-between">
+                                        <p className={`text-xs ${themeClasses.textMuted}`}>
+                                            {sourceImages.length}/10 ảnh
+                                        </p>
+                                        <p className={`text-xs ${sourceImages.length > 0 ? 'text-emerald-500' : themeClasses.textMuted}`}>
+                                            {sourceImages.length > 0 ? `✓ ${sourceImages.length} ảnh đã chọn` : 'Chưa có ảnh nào'}
+                                        </p>
+                                    </div>
+
+                                    {/* Info */}
+                                    <div className={`p-4 rounded-xl ${isDark ? 'bg-violet-600/10 border border-violet-500/20' : 'bg-violet-50 border border-violet-100'}`}>
+                                        <p className={`text-xs ${isDark ? 'text-violet-300' : 'text-violet-700'}`}>
+                                            💡 <strong>Mẹo:</strong> Mỗi ảnh sẽ trở thành một cảnh. AI sẽ phân tích nội dung ảnh và tự động tạo prompt mô tả chi tiết để làm video.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Settings Panel */}
