@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class AiScenarioService
 {
@@ -19,8 +20,9 @@ class AiScenarioService
     // Maximum scenes allowed per scenario
     const MAX_SCENES = 10;
 
-    // Minimum duration per scene (seconds)
+    // Duration per scene (seconds)
     const MIN_SCENE_DURATION = 4;
+    const MAX_SCENE_DURATION = 15;
     const DEFAULT_SCENE_DURATION = 6;
 
     public function __construct(AiGenerationService $generationService)
@@ -119,7 +121,7 @@ class AiScenarioService
     {
         $mediaType = $outputType === 'video' ? 'video clips' : 'images';
         $durationNote = $outputType === 'video'
-            ? "- \"suggested_duration\": thời lượng video đề xuất (4-8 giây)"
+            ? "- \"suggested_duration\": thời lượng video đề xuất (4-15 giây, mặc định 6 giây)"
             : "";
 
         return <<<PROMPT
@@ -183,18 +185,78 @@ PROMPT;
 
             // Create scenes
             foreach ($data['scenes'] as $sceneData) {
+                // Handle source_image if provided (can be base64 or URL)
+                $sourceImagePath = null;
+                if (!empty($sceneData['source_image'])) {
+                    $sourceImagePath = $this->processSourceImage(
+                        $sceneData['source_image'],
+                        $user->id,
+                        $scenario->id
+                    );
+                }
+
                 AiScenarioScene::create([
                     'ai_scenario_id' => $scenario->id,
                     'order' => $sceneData['order'],
                     'description' => $sceneData['description'],
                     'prompt' => $sceneData['prompt'],
                     'duration' => $sceneData['duration'] ?? self::DEFAULT_SCENE_DURATION,
+                    'source_image_path' => $sourceImagePath,
                     'status' => AiScenarioScene::STATUS_PENDING,
                 ]);
             }
 
             return $scenario->fresh(['scenes']);
         });
+    }
+
+    /**
+     * Process source image (base64 or URL) and save to storage
+     */
+    protected function processSourceImage(string $imageData, int $userId, int $scenarioId): ?string
+    {
+        try {
+            // Check if it's a base64 image
+            if (str_starts_with($imageData, 'data:image')) {
+                // Extract the base64 content
+                $parts = explode(',', $imageData, 2);
+                if (count($parts) !== 2) {
+                    return null;
+                }
+
+                $imageContent = base64_decode($parts[1]);
+                if ($imageContent === false) {
+                    return null;
+                }
+
+                // Determine extension from mime type
+                $mimeType = str_contains($parts[0], 'png') ? 'png' :
+                    (str_contains($parts[0], 'gif') ? 'gif' : 'jpg');
+
+                // Generate filename
+                $filename = "scenario_{$scenarioId}_" . time() . '_' . uniqid() . ".{$mimeType}";
+                $path = "ai-scenarios/{$userId}/{$filename}";
+
+                // Save to storage
+                Storage::disk('public')->put($path, $imageContent);
+
+                // Return the full URL for the AI provider
+                return asset("storage/{$path}");
+            }
+
+            // If it's already a URL, return as-is
+            if (filter_var($imageData, FILTER_VALIDATE_URL)) {
+                return $imageData;
+            }
+
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Failed to process source image', [
+                'scenario_id' => $scenarioId,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
     }
 
     /**
@@ -291,7 +353,13 @@ PROMPT;
 
             // Generate based on output type
             if ($scenario->output_type === 'video') {
-                $generation = $this->generationService->generateVideo($user, $params);
+                // Use Image-to-Video if scene has a reference image
+                if (!empty($scene->source_image_path)) {
+                    $params['source_image'] = $scene->source_image_path;
+                    $generation = $this->generationService->generateVideoFromImage($user, $params);
+                } else {
+                    $generation = $this->generationService->generateVideo($user, $params);
+                }
             } else {
                 $generation = $this->generationService->generateImage($user, [
                     'model' => $scenario->model,

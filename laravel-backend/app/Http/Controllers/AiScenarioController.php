@@ -100,7 +100,8 @@ class AiScenarioController extends Controller
             'scenes.*.order' => 'required|integer|min:1',
             'scenes.*.description' => 'required|string',
             'scenes.*.prompt' => 'required|string',
-            'scenes.*.duration' => 'nullable|integer|min:4|max:8',
+            'scenes.*.duration' => 'nullable|integer|min:4|max:15',
+            'scenes.*.source_image' => 'nullable|string', // Base64 or URL
             'settings' => 'nullable|array',
         ]);
 

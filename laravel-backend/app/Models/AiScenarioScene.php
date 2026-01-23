@@ -13,6 +13,7 @@ class AiScenarioScene extends Model
         'description',
         'prompt',
         'duration',
+        'source_image_path', // Reference image for Image-to-Video
         'ai_generation_id',
         'status',
         'error_message',

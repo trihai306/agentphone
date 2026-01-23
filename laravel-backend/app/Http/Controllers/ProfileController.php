@@ -15,9 +15,40 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
+        // Load relationships for stats
+        $storagePlan = $user->getOrCreateStoragePlan();
+        $usedStorage = $user->mediaFiles()->sum('size');
+        $maxStorage = $storagePlan?->max_storage_bytes ?? 0;
+
+        // Get main wallet balance
+        $mainWallet = $user->wallets()->where('type', 'main')->first();
+
         return Inertia::render('Profile/Edit', [
             'user' => $user->load(['customFields.values']),
-            'devicesCount' => $user->devices()->count(),
+            'stats' => [
+                'devices' => $user->devices()->count(),
+                'workflows' => $user->flows()->count(),
+                'campaigns' => $user->campaigns()->count(),
+                'jobs' => $user->workflowJobs()->count(),
+                'aiCredits' => $user->ai_credits ?? 0,
+                'walletBalance' => $mainWallet?->balance ?? 0,
+                'mediaFiles' => $user->mediaFiles()->count(),
+                'dataCollections' => $user->dataCollections()->count(),
+            ],
+            'storage' => [
+                'used' => $usedStorage,
+                'max' => $maxStorage,
+                'planName' => $storagePlan?->name ?? 'Free',
+            ],
+            'activePackages' => $user->activeServicePackages()
+                ->with('servicePackage')
+                ->get()
+                ->map(fn($pkg) => [
+                    'id' => $pkg->id,
+                    'name' => $pkg->servicePackage?->name ?? 'Unknown',
+                    'expires_at' => $pkg->expires_at?->format('d/m/Y'),
+                    'status' => $pkg->status,
+                ]),
         ]);
     }
 
