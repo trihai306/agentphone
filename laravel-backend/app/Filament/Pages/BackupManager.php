@@ -21,7 +21,7 @@ class BackupManager extends Page
 
     protected static ?string $title = 'Quản Lý Backup & Bảo Trì';
 
-    protected static ?string $navigationGroup = '⚙️ Hệ Thống';
+    protected static ?string $navigationGroup = 'Hệ Thống';
 
     protected static ?int $navigationSort = 13;
 

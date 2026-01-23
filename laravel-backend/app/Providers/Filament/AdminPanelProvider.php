@@ -47,29 +47,29 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->navigationGroups([
                 NavigationGroup::make()
-                    ->label('📊 Dashboard')
+                    ->label('Dashboard')
                     ->collapsible()
                     ->collapsed(false),
                 NavigationGroup::make()
-                    ->label('👥 Người Dùng')
+                    ->label('Người Dùng')
                     ->collapsible(),
                 NavigationGroup::make()
-                    ->label('⚡ Automation')
+                    ->label('Automation')
                     ->collapsible(),
                 NavigationGroup::make()
-                    ->label('📁 Nội Dung')
+                    ->label('Nội Dung')
                     ->collapsible(),
                 NavigationGroup::make()
-                    ->label('🤖 AI Studio')
+                    ->label('AI Studio')
                     ->collapsible(),
                 NavigationGroup::make()
-                    ->label('💰 Tài Chính')
+                    ->label('Tài Chính')
                     ->collapsible(),
                 NavigationGroup::make()
-                    ->label('🛒 Marketplace')
+                    ->label('Marketplace')
                     ->collapsible(),
                 NavigationGroup::make()
-                    ->label('⚙️ Hệ Thống')
+                    ->label('Hệ Thống')
                     ->collapsible(),
             ])
             ->middleware([

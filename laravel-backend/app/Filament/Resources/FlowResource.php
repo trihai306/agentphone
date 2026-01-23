@@ -19,7 +19,7 @@ class FlowResource extends Resource
 
     protected static ?string $navigationLabel = 'Flow Builder';
 
-    protected static ?string $navigationGroup = '⚡ Automation';
+    protected static ?string $navigationGroup = 'Automation';
 
     protected static ?int $navigationSort = 30;
 

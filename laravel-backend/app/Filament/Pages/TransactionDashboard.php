@@ -20,7 +20,7 @@ class TransactionDashboard extends Page
 
     protected static ?string $title = 'Dashboard Giao Dịch & Doanh Thu';
 
-    protected static ?string $navigationGroup = '📊 Dashboard';
+    protected static ?string $navigationGroup = 'Dashboard';
 
     protected static ?int $navigationSort = 1;
 

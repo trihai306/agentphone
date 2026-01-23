@@ -27,7 +27,7 @@ class TransactionResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Giao dịch';
 
-    protected static ?string $navigationGroup = '💰 Tài Chính';
+    protected static ?string $navigationGroup = 'Tài Chính';
 
     protected static ?int $navigationSort = 1;
 

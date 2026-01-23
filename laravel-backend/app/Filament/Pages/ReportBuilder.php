@@ -26,7 +26,7 @@ class ReportBuilder extends Page implements HasForms
 
     protected static ?string $title = 'Công Cụ Tạo Báo Cáo';
 
-    protected static ?string $navigationGroup = '📊 Dashboard';
+    protected static ?string $navigationGroup = 'Dashboard';
 
     protected static ?int $navigationSort = 5;
 
@@ -51,7 +51,7 @@ class ReportBuilder extends Page implements HasForms
                             ->label('Loại Báo Cáo')
                             ->options([
                                 'revenue' => '💰 Doanh Thu',
-                                'users' => '👥 Người Dùng',
+                                'users' => 'Người Dùng',
                                 'transactions' => '💳 Giao Dịch',
                                 'orders' => '🛒 Đơn Hàng',
                             ])

@@ -16,7 +16,7 @@ class UserMediaResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-photo';
 
-    protected static ?string $navigationGroup = '📁 Nội Dung';
+    protected static ?string $navigationGroup = 'Nội Dung';
 
     protected static ?string $navigationLabel = 'Media Files';
 

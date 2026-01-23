@@ -16,7 +16,7 @@ class MediaStoragePlanResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-server-stack';
 
-    protected static ?string $navigationGroup = '💰 Tài Chính';
+    protected static ?string $navigationGroup = 'Tài Chính';
 
     protected static ?string $navigationLabel = 'Gói Lưu Trữ';
 

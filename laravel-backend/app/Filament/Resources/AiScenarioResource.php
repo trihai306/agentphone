@@ -16,7 +16,7 @@ class AiScenarioResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-film';
 
-    protected static ?string $navigationGroup = '🤖 AI Studio';
+    protected static ?string $navigationGroup = 'AI Studio';
 
     protected static ?string $navigationLabel = 'Kịch Bản AI';
 

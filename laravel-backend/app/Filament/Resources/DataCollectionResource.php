@@ -17,7 +17,7 @@ class DataCollectionResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-circle-stack';
 
-    protected static ?string $navigationGroup = '📁 Nội Dung';
+    protected static ?string $navigationGroup = 'Nội Dung';
 
     protected static ?string $navigationLabel = 'Data Collections';
 

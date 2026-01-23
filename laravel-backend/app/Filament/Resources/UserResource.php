@@ -37,7 +37,7 @@ class UserResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Người dùng';
 
-    protected static ?string $navigationGroup = '👥 Người Dùng';
+    protected static ?string $navigationGroup = 'Người Dùng';
 
     protected static ?int $navigationSort = 1;
 

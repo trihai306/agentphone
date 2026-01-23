@@ -19,7 +19,7 @@ class AiGenerationResource extends Resource
 
     protected static ?string $navigationLabel = 'AI Generations';
 
-    protected static ?string $navigationGroup = '🤖 AI Studio';
+    protected static ?string $navigationGroup = 'AI Studio';
 
     protected static ?int $navigationSort = 2;
 

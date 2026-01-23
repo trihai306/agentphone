@@ -16,7 +16,7 @@ class ScenarioTemplateResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-document-duplicate';
 
-    protected static ?string $navigationGroup = '🤖 AI Studio';
+    protected static ?string $navigationGroup = 'AI Studio';
 
     protected static ?string $navigationLabel = 'Templates';
 

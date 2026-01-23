@@ -22,7 +22,7 @@ class Settings extends Page implements HasForms
 
     protected static ?string $title = 'Cài Đặt Hệ Thống';
 
-    protected static ?string $navigationGroup = '⚙️ Hệ Thống';
+    protected static ?string $navigationGroup = 'Hệ Thống';
 
     protected static ?int $navigationSort = 11;
 

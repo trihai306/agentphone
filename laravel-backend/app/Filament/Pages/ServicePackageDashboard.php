@@ -20,7 +20,7 @@ class ServicePackageDashboard extends Page
 
     protected static ?string $title = 'Dashboard Gói Dịch Vụ';
 
-    protected static ?string $navigationGroup = '📊 Dashboard';
+    protected static ?string $navigationGroup = 'Dashboard';
 
     protected static ?int $navigationSort = 3;
 

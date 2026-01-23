@@ -23,7 +23,7 @@ class SystemNotificationResource extends Resource
 
     protected static ?string $navigationLabel = 'System Notifications';
 
-    protected static ?string $navigationGroup = '⚙️ Hệ Thống';
+    protected static ?string $navigationGroup = 'Hệ Thống';
 
     protected static ?int $navigationSort = 99;
 

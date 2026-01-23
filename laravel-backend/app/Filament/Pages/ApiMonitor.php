@@ -20,7 +20,7 @@ class ApiMonitor extends Page
 
     protected static ?string $title = 'Giám Sát API';
 
-    protected static ?string $navigationGroup = '⚙️ Hệ Thống';
+    protected static ?string $navigationGroup = 'Hệ Thống';
 
     protected static ?int $navigationSort = 12;
 
