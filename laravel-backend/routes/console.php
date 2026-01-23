@@ -3,53 +3,61 @@
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
+use Illuminate\Support\Facades\Cache;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+// Helper to track schedule runs
+$trackRun = function ($command) {
+    Cache::put('schedule_last_run:' . $command, [
+        'time' => now()->format('d/m H:i:s'),
+        'status' => 'success',
+    ], now()->addHours(24));
+};
+
 // =============================================
 // DEVICE & JOB MANAGEMENT (Every Minute)
 // =============================================
 
-// Sync device presence from Redis to DB every minute
-Schedule::command('devices:sync-presence')->everyMinute();
+Schedule::command('devices:sync-presence')
+    ->everyMinute()
+    ->onSuccess(fn() => Cache::put('schedule_last_run:devices:sync-presence', ['time' => now()->format('d/m H:i:s'), 'status' => 'success'], now()->addHours(24)));
 
-// Dispatch scheduled workflow jobs every minute
-Schedule::command('jobs:dispatch-scheduled')->everyMinute();
+Schedule::command('jobs:dispatch-scheduled')
+    ->everyMinute()
+    ->onSuccess(fn() => Cache::put('schedule_last_run:jobs:dispatch-scheduled', ['time' => now()->format('d/m H:i:s'), 'status' => 'success'], now()->addHours(24)));
 
-// Check for inactive devices (no heartbeat for 5+ minutes)
-Schedule::command('devices:check-online-status')->everyMinute();
+Schedule::command('devices:check-online-status')
+    ->everyMinute()
+    ->onSuccess(fn() => Cache::put('schedule_last_run:devices:check-online-status', ['time' => now()->format('d/m H:i:s'), 'status' => 'success'], now()->addHours(24)));
 
 // =============================================
 // DATA CLEANUP (Daily at 3 AM)
 // =============================================
 
-// Clean up old logs and unused data
 Schedule::command('cleanup:old-data --force')
     ->dailyAt('03:00')
     ->withoutOverlapping()
     ->runInBackground()
-    ->appendOutputTo(storage_path('logs/cleanup.log'));
+    ->appendOutputTo(storage_path('logs/cleanup.log'))
+    ->onSuccess(fn() => Cache::put('schedule_last_run:cleanup:old-data', ['time' => now()->format('d/m H:i:s'), 'status' => 'success'], now()->addHours(24)));
 
 // =============================================
 // MAINTENANCE (Weekly)
 // =============================================
 
-// Clear expired cache entries
 Schedule::command('cache:prune-stale-tags')
     ->weekly()
     ->sundays()
-    ->at('04:00');
-
-// Prune old telescope entries (if using telescope)
-// Schedule::command('telescope:prune --hours=48')->daily();
+    ->at('04:00')
+    ->onSuccess(fn() => Cache::put('schedule_last_run:cache:prune-stale-tags', ['time' => now()->format('d/m H:i:s'), 'status' => 'success'], now()->addHours(24)));
 
 // =============================================
-// NOTIFICATIONS (Hourly)
+// NOTIFICATIONS (Hourly - disabled for now)
 // =============================================
 
-// Send scheduled notifications
-Schedule::command('notifications:send-scheduled')
-    ->hourly()
-    ->withoutOverlapping();
+// Schedule::command('notifications:send-scheduled')
+//     ->hourly()
+//     ->withoutOverlapping();
