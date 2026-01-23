@@ -33,6 +33,29 @@ import { useModalManager } from '@/hooks/useModalManager';
 import { useDeviceManager } from '@/hooks/useDeviceManager';
 import { useDebugPanel } from '@/hooks/useDebugPanel';
 
+// Helper functions
+import {
+    generateSmartLabel,
+    getAppNameFromPackage as getAppName,
+    truncateText
+} from '@/helpers/flow/nodeLabels';
+import {
+    getNodeTypeFromEvent,
+    generateNodeId,
+    calculateNodePosition
+} from '@/helpers/flow/nodeTypes';
+import {
+    normalizeEventType,
+    isLoopableEventType,
+    detectLoop,
+    LOOP_EXCLUDED_TYPES
+} from '@/helpers/flow/loopDetection';
+import {
+    normalizeEventData,
+    extractCoordinates,
+    calculateBoundsCenter
+} from '@/helpers/flow/eventNormalization';
+
 // Custom node types
 import CustomNode from '../../Components/Flow/CustomNode';
 import InputNode from '../../Components/Flow/InputNode';
