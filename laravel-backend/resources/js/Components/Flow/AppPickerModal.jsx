@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 
@@ -86,26 +86,47 @@ export default function AppPickerModal({
             setLoading(false);
         }
     }, [deviceId, t]);
+    // Use ref to track if we've fetched in current session (avoids dependency issues)
+    const hasFetchedRef = useRef(false);
 
-    // Auto-fetch on open - always request when modal opens with valid device
+    // Auto-fetch on open - only once per modal session
     useEffect(() => {
-        if (isOpen && deviceId) {
-            // 1s delay to ensure socket subscription is fully ready
-            console.log('🔌 AppPicker: Waiting 1s for socket to be ready before requesting apps...');
+        if (isOpen && deviceId && !hasFetchedRef.current) {
+            hasFetchedRef.current = true;
+            console.log('🔌 AppPicker: Scheduling auto-fetch (1s delay)...');
             const timer = setTimeout(() => {
-                console.log('📤 AppPicker: Now requesting apps (after socket delay)');
-                requestApps();
+                console.log('📤 AppPicker: Auto-fetching apps now...');
+                // Inline the request logic to avoid callback dependency issues
+                setLoading(true);
+                setError(null);
+                window.axios.post('/devices/apps', { device_id: deviceId })
+                    .then(response => {
+                        if (!response?.data?.success) {
+                            setError(response?.data?.message || 'Failed to request apps');
+                            setLoading(false);
+                        } else {
+                            console.log('📥 API success - waiting for socket event...');
+                            // Safety timeout - stop loading after 10s
+                            setTimeout(() => setLoading(false), 10000);
+                        }
+                    })
+                    .catch(err => {
+                        setError(err.response?.data?.message || 'Cannot connect to server');
+                        setLoading(false);
+                    });
             }, 1000);
             return () => clearTimeout(timer);
         }
-    }, [isOpen, deviceId, requestApps]);
+    }, [isOpen, deviceId]);
 
     // Reset state on close
     useEffect(() => {
         if (!isOpen) {
-            setApps([]);
+            // Reset fetch flag so next open will fetch again
+            hasFetchedRef.current = false;
             setSearchQuery('');
             setError(null);
+            // Don't reset apps - they'll be refreshed on next open
         }
     }, [isOpen]);
 
