@@ -17,7 +17,7 @@ class RecordingEventController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'event' => 'required|string|in:recording:started,recording:stopped,recording:saved,inspect:result,inspect:chunk,visual:result',
+            'event' => 'required|string|in:recording:started,recording:stopped,recording:saved,inspect:result,inspect:chunk,visual:result,apps:result',
             'device_id' => 'required|string',
             'timestamp' => 'required|integer',
             'session_id' => 'sometimes|string',
@@ -175,6 +175,36 @@ class RecordingEventController extends Controller
                     return response()->json([
                         'success' => false,
                         'message' => 'Failed to broadcast visual result'
+                    ], 500);
+                }
+            }
+
+            // Handle apps:result event (installed apps list from APK)
+            if ($eventType === 'apps:result') {
+                try {
+                    broadcast(new \App\Events\InstalledAppsResult(
+                        userId: $device->user_id,
+                        deviceId: $request->device_id,
+                        success: $request->success ?? true,
+                        apps: $request->apps ?? [],
+                        error: $request->error
+                    ));
+
+                    Log::info("Broadcast apps:result to user channel", [
+                        'user_id' => $device->user_id,
+                        'device_id' => $request->device_id,
+                        'app_count' => count($request->apps ?? [])
+                    ]);
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Apps list broadcasted'
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error("Failed to broadcast apps:result: " . $e->getMessage());
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to broadcast apps list'
                     ], 500);
                 }
             }
