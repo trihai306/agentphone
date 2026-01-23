@@ -308,8 +308,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                         ...node.data,
                         onSelectCollection: (nodeId) => {
                             setSelectedNode(null); // Close config panel when opening modal
-                            setCollectionPickerNodeId(nodeId);
-                            setShowCollectionPicker(true);
+                            openCollectionPicker(nodeId);
                         },
                         onUpdateData: (nodeId, key, value) => {
                             setNodes((nds) => nds.map(n =>
@@ -330,8 +329,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                         ...node.data,
                         onBrowseMedia: (nodeId) => {
                             setSelectedNode(null); // Close config panel when opening modal
-                            setMediaPickerNodeId(nodeId);
-                            setShowMediaPicker(true);
+                            openMediaPicker(nodeId);
                         }
                     }
                 };
@@ -423,8 +421,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                     ...(node.type === 'loop' && {
                         onEditSubFlow: (nodeId) => {
                             setSelectedNode(null); // Close config panel when opening modal
-                            setEditingLoopNodeId(nodeId);
-                            setShowLoopSubFlowModal(true);
+                            openLoopSubFlow(nodeId);
                         }
                     }),
                 }
@@ -657,8 +654,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                 originalActionCount: actions.length,
                 onEditSubFlow: (nodeId) => {
                     setSelectedNode(null); // Close config panel when opening modal
-                    setEditingLoopNodeId(nodeId);
-                    setShowLoopSubFlowModal(true);
+                    openLoopSubFlow(nodeId);
                 },
             },
         };
@@ -1514,7 +1510,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                 }
                 : node
         ));
-        setShowMediaPicker(false);
+        closeModal('mediaPicker');
     };
 
     // Handler for media folder selection (random file from folder)
@@ -1537,7 +1533,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                 }
                 : node
         ));
-        setShowMediaPicker(false);
+        closeModal('mediaPicker');
     };
 
     // Handler for collection selection
@@ -1558,7 +1554,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                 }
                 : node
         ));
-        setShowCollectionPicker(false);
+        closeModal('collectionPicker');
     };
 
     const onDrop = useCallback((event) => {
@@ -1588,16 +1584,14 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                 ...(type === 'file_input' && {
                     onBrowseMedia: (nodeId) => {
                         setSelectedNode(null); // Close config panel when opening modal
-                        setMediaPickerNodeId(nodeId);
-                        setShowMediaPicker(true);
+                        openMediaPicker(nodeId);
                     }
                 }),
                 // Add collection picker callback for DataSourceNode
                 ...(type === 'data_source' && {
                     onSelectCollection: (nodeId) => {
                         setSelectedNode(null); // Close config panel when opening modal
-                        setCollectionPickerNodeId(nodeId);
-                        setShowCollectionPicker(true);
+                        openCollectionPicker(nodeId);
                     },
                     // Callback for updating data inline (e.g., outputName)
                     onUpdateData: (nodeId, key, value) => {
@@ -1822,7 +1816,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     // Clear all nodes from the workflow
     const handleClearAllNodes = useCallback(() => {
         if (nodes.length === 0) return;
-        setShowClearConfirm(true);
+        openModal('clearConfirm');
     }, [nodes.length]);
 
     const confirmClearAllNodes = useCallback(() => {
@@ -1840,7 +1834,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
         setSelectedNode(null);
         setSelectedNodes([]);
-        setShowClearConfirm(false);
+        closeModal('clearConfirm');
     }, [nodes.length, viewport, saveFlow]);
 
     useEffect(() => {
@@ -1917,13 +1911,13 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     // Close device selector when clicking outside
     useEffect(() => {
         const handleClickOutside = (e) => {
-            if (showDeviceSelector && !e.target.closest('.device-selector-container')) {
-                setShowDeviceSelector(false);
+            if (modals.deviceSelector.isOpen && !e.target.closest('.device-selector-container')) {
+                closeModal(MODAL_TYPES.DEVICE_SELECTOR);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [showDeviceSelector]);
+    }, [modals.deviceSelector.isOpen, closeModal, MODAL_TYPES]);
 
     const nodeTemplates = [
         // Recorded Actions
@@ -2090,7 +2084,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 <div className="relative device-selector-container">
                                     {/* Enhanced Toolbar Button */}
                                     <button
-                                        onClick={() => setShowDeviceSelector(!showDeviceSelector)}
+                                        onClick={() => modals.deviceSelector.isOpen ? closeModal(MODAL_TYPES.DEVICE_SELECTOR) : openModal(MODAL_TYPES.DEVICE_SELECTOR)}
                                         className={`h-9 px-3 flex items-center gap-2 text-sm font-medium rounded-lg transition-all duration-300 border backdrop-blur-sm ${selectedDevice
                                             ? isDark
                                                 ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-emerald-500/40 text-emerald-300 shadow-lg shadow-emerald-500/20'
@@ -2101,7 +2095,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                             }`}
                                         title={selectedDevice ? `Connected: ${selectedDevice.name}` : `${onlineDevices.length} device(s) online`}
                                         aria-label="Device selector"
-                                        aria-expanded={showDeviceSelector}
+                                        aria-expanded={modals.deviceSelector.isOpen}
                                     >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -2127,13 +2121,13 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                             </span>
                                         )}
 
-                                        <svg className={`w-3 h-3 transition-transform duration-200 ${showDeviceSelector ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className={`w-3 h-3 transition-transform duration-200 ${modals.deviceSelector.isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                         </svg>
                                     </button>
 
                                     {/* Premium Glassmorphic Dropdown */}
-                                    {showDeviceSelector && (
+                                    {modals.deviceSelector.isOpen && (
                                         <div
                                             className={`absolute top-full right-0 mt-2 w-96 rounded-2xl shadow-2xl border overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 ${isDark
                                                 ? 'bg-[#1a1a1a]/95 backdrop-blur-xl border-[#2a2a2a]'
@@ -2191,7 +2185,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                                                 key={device.id}
                                                                 onClick={async () => {
                                                                     setSelectedDevice(device);
-                                                                    setTimeout(() => setShowDeviceSelector(false), 300);
+                                                                    setTimeout(() => closeModal('deviceSelector'), 300);
 
                                                                     // Request realtime accessibility check via socket
                                                                     try {
@@ -2313,7 +2307,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                                     <button
                                                         onClick={() => {
                                                             setSelectedDevice(null);
-                                                            setShowDeviceSelector(false);
+                                                            closeModal('deviceSelector');
                                                         }}
                                                         className={`w-full text-xs font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 ${isDark
                                                             ? 'text-red-400 hover:bg-red-500/10 hover:text-red-300 active:bg-red-500/20'
@@ -2464,7 +2458,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
                         {/* Preview Button */}
                         <button
-                            onClick={() => setShowPreviewModal(true)}
+                            onClick={() => openModal('preview')}
                             disabled={nodes.filter(n => n.data?.screenshotUrl).length === 0}
                             className={`h-8 px-2.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 border ${nodes.filter(n => n.data?.screenshotUrl).length > 0
                                 ? isDark
@@ -2531,7 +2525,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                         {/* Language Switcher */}
                         <div className="relative">
                             <button
-                                onClick={() => setShowLangDropdown(!showLangDropdown)}
+                                onClick={() => modals.langDropdown.isOpen ? closeModal('langDropdown') : openModal('langDropdown')}
                                 className={`h-8 px-2 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 border ${isDark
                                     ? 'bg-[#1a1a1a] hover:bg-[#252525] text-gray-300 border-[#2a2a2a] hover:border-[#3a3a3a]'
                                     : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-300'
@@ -2546,7 +2540,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                             </button>
 
                             {/* Language Dropdown */}
-                            {showLangDropdown && (
+                            {modals.langDropdown.isOpen && (
                                 <div className={`absolute top-full right-0 mt-1 w-32 rounded-lg shadow-xl border overflow-hidden z-50 ${isDark
                                     ? 'bg-[#1a1a1a] border-[#2a2a2a]'
                                     : 'bg-white border-gray-200'
@@ -2554,7 +2548,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                     <button
                                         onClick={() => {
                                             changeLanguage('vi');
-                                            setShowLangDropdown(false);
+                                            closeModal('langDropdown');
                                         }}
                                         className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 transition-colors ${getCurrentLanguage() === 'vi'
                                             ? isDark
@@ -2571,7 +2565,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                     <button
                                         onClick={() => {
                                             changeLanguage('en');
-                                            setShowLangDropdown(false);
+                                            closeModal('langDropdown');
                                         }}
                                         className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 transition-colors ${getCurrentLanguage() === 'en'
                                             ? isDark
@@ -3126,11 +3120,8 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
                         {/* Edge Delay Popover */}
                         <EdgeDelayPopover
-                            isOpen={showEdgeDelayPopover}
-                            onClose={() => {
-                                setShowEdgeDelayPopover(false);
-                                setSelectedEdgeForDelay(null);
-                            }}
+                            isOpen={modals.edgeDelay.isOpen}
+                            onClose={() => closeModal('edgeDelay')}
                             onSave={handleEdgeDelayUpdate}
                             position={modals.edgeDelay.position || { x: 0, y: 0 }}
                             isDark={isDark}
@@ -3580,12 +3571,9 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
             {/* Loop Sub-Flow Editor Modal */}
             <LoopSubFlowModal
-                isOpen={showLoopSubFlowModal}
-                onClose={() => {
-                    setShowLoopSubFlowModal(false);
-                    setEditingLoopNodeId(null);
-                }}
-                loopNode={nodes.find(n => n.id === editingLoopNodeId)}
+                isOpen={modals.loopSubFlow.isOpen}
+                onClose={() => closeModal('loopSubFlow')}
+                loopNode={nodes.find(n => n.id === modals.loopSubFlow.nodeId)}
                 onSaveSubFlow={(nodeId, subFlow) => {
                     setNodes(prev => prev.map(node =>
                         node.id === nodeId
@@ -3600,8 +3588,8 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
             {/* Workflow Preview Modal */}
             <WorkflowPreviewModal
-                isOpen={showPreviewModal}
-                onClose={() => setShowPreviewModal(false)}
+                isOpen={modals.preview.isOpen}
+                onClose={() => closeModal('preview')}
                 nodes={nodes}
                 workflowName={flowName}
             />
@@ -3788,12 +3776,12 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
             </button>
 
             {/* Clear All Confirmation Modal */}
-            {showClearConfirm && (
+            {modals.clearConfirm.isOpen && (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center">
                     {/* Backdrop */}
                     <div
                         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                        onClick={() => setShowClearConfirm(false)}
+                        onClick={() => closeModal('clearConfirm')}
                     />
                     {/* Modal */}
                     <div className={`relative z-10 w-full max-w-md mx-4 rounded-2xl shadow-2xl overflow-hidden ${isDark ? 'bg-[#1a1a1a]' : 'bg-white'}`}>
@@ -3821,7 +3809,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                         {/* Actions */}
                         <div className={`px-6 py-4 flex gap-3 border-t ${isDark ? 'border-[#2a2a2a]' : 'border-gray-200'}`}>
                             <button
-                                onClick={() => setShowClearConfirm(false)}
+                                onClick={() => closeModal('clearConfirm')}
                                 className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition-colors ${isDark ? 'bg-[#252525] hover:bg-[#2a2a2a] text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
                             >
                                 Cancel
