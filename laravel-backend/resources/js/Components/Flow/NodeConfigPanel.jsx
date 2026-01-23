@@ -2497,6 +2497,7 @@ function AssertConfig({ data, updateData, updateMultipleData, isDark, selectedDe
 
 // Element Check Config - Check element with True/False branching
 function ElementCheckConfig({ data, updateData, updateMultipleData, isDark, selectedDevice, userId }) {
+    const { t } = useTranslation();
     const [showPicker, setShowPicker] = useState(false);
     const checkType = data.checkType || 'exists';
 
@@ -2659,6 +2660,7 @@ function ElementCheckConfig({ data, updateData, updateMultipleData, isDark, sele
 
 // Wait For Element Config - Wait with timeout
 function WaitForElementConfig({ data, updateData, updateMultipleData, isDark, selectedDevice, userId }) {
+    const { t } = useTranslation();
     const [showPicker, setShowPicker] = useState(false);
 
     const handleElementSelect = (element) => {
@@ -2784,6 +2786,7 @@ function WaitForElementConfig({ data, updateData, updateMultipleData, isDark, se
 
 // Start/End Config
 function StartEndConfig({ data, updateData, isDark, nodeType }) {
+    const { t } = useTranslation();
     return (
         <>
             <div className={`p-4 rounded-lg ${isDark ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
@@ -3044,6 +3047,7 @@ function FileInputConfig({ data, updateData, isDark }) {
 
 // Process Config - Data transformation
 function ProcessConfig({ data, updateData, isDark, upstreamVariables }) {
+    const { t } = useTranslation();
     const processType = data.processType || 'transform';
 
     return (
