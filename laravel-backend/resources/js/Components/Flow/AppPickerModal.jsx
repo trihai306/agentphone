@@ -78,7 +78,7 @@ export default function AppPickerModal({
 
         try {
             console.log('📤 Requesting apps list from device:', deviceId);
-            const response = await window.axios.post('/api/devices/apps', { device_id: deviceId });
+            const response = await window.axios.post('/devices/apps', { device_id: deviceId });
 
             if (!response?.data?.success) {
                 setError(response?.data?.message || 'Failed to request apps');

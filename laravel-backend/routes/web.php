@@ -150,6 +150,9 @@ Route::middleware(['auth'])->group(function () {
     // Accessibility Check Routes (Web auth for Flow Editor)
     Route::post('/devices/check-accessibility', [\App\Http\Controllers\DeviceController::class, 'checkAccessibility'])->name('devices.checkAccessibility');
 
+    // App Picker Route (Web auth for Flow Editor)
+    Route::post('/devices/apps', [\App\Http\Controllers\DeviceController::class, 'getInstalledApps'])->name('devices.apps');
+
     // Quick Action Routes (send real-time actions to device)
     Route::post('/devices/send-action', [\App\Http\Controllers\DeviceController::class, 'sendAction'])->name('devices.sendAction');
 
