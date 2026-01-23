@@ -2212,11 +2212,6 @@ object SocketJobManager {
                 
                 val context = contextRef?.get() ?: run {
                     Log.e(TAG, "❌ Context not available")
-                    publishEvent("apps:result", mapOf(
-                        "success" to false,
-                        "apps" to emptyList<Any>(),
-                        "error" to "Context not available"
-                    ))
                     return@launch
                 }
                 
@@ -2292,21 +2287,91 @@ object SocketJobManager {
                 // Sort apps by name
                 appsList.sortBy { (it["name"] as? String)?.lowercase() }
                 
-                Log.i(TAG, "✅ Collected ${appsList.size} apps, publishing apps:result event...")
+                Log.i(TAG, "✅ Collected ${appsList.size} apps, sending to backend via API...")
                 
-                // Use publishEvent (same pattern as inspect:elements)
-                publishEvent("apps:result", mapOf(
+                // Send result back to backend via HTTP API (NOT publishEvent!)
+                val sessionManager = com.agent.portal.auth.SessionManager(context)
+                val session = sessionManager.getSession()
+                val token = session?.token ?: run {
+                    Log.w(TAG, "No auth token, cannot send apps result")
+                    return@launch
+                }
+                
+                // Use NetworkUtils for proper host resolution
+                val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
+                
+                val payload = mapOf(
+                    "device_id" to (deviceId ?: "unknown"),
                     "success" to true,
                     "apps" to appsList
-                ))
+                )
+                
+                val client = okhttp3.OkHttpClient()
+                val json = gson.toJson(payload)
+                Log.i(TAG, "📤 Sending apps:result (${json.length / 1024}KB)...")
+                
+                val requestBody = okhttp3.RequestBody.create(
+                    "application/json".toMediaTypeOrNull(),
+                    json
+                )
+                
+                val request = okhttp3.Request.Builder()
+                    .url("$apiUrl/devices/apps-result")
+                    .post(requestBody)
+                    .addHeader("Authorization", "Bearer $token")
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Accept", "application/json")
+                    .build()
+                
+                val response = client.newCall(request).execute()
+                
+                if (response.isSuccessful) {
+                    Log.i(TAG, "✅ Apps list result sent to backend successfully")
+                } else {
+                    Log.w(TAG, "Failed to send apps result: ${response.code}")
+                }
+                
+                response.close()
                 
             } catch (e: Exception) {
                 Log.e(TAG, "Error getting installed apps", e)
-                publishEvent("apps:result", mapOf(
-                    "success" to false,
-                    "apps" to emptyList<Any>(),
-                    "error" to (e.message ?: "Unknown error")
-                ))
+                
+                // Try to send error to backend
+                try {
+                    val context = contextRef?.get()
+                    val sessionManager = com.agent.portal.auth.SessionManager(context!!)
+                    val session = sessionManager.getSession()
+                    val token = session?.token
+                    
+                    if (token != null) {
+                        val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
+                        val payload = mapOf(
+                            "device_id" to (deviceId ?: "unknown"),
+                            "success" to false,
+                            "apps" to emptyList<Any>(),
+                            "error" to (e.message ?: "Unknown error")
+                        )
+                        
+                        val client = okhttp3.OkHttpClient()
+                        val json = gson.toJson(payload)
+                        val requestBody = okhttp3.RequestBody.create(
+                            "application/json".toMediaTypeOrNull(),
+                            json
+                        )
+                        
+                        val request = okhttp3.Request.Builder()
+                            .url("$apiUrl/devices/apps-result")
+                            .post(requestBody)
+                            .addHeader("Authorization", "Bearer $token")
+                            .addHeader("Content-Type", "application/json")
+                            .addHeader("Accept", "application/json")
+                            .build()
+                        
+                        client.newCall(request).execute().close()
+                    }
+                } catch (err: Exception) {
+                    Log.e(TAG, "Failed to send error to backend", err)
+                }
             }
         }
     }
