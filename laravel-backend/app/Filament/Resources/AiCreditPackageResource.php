@@ -20,7 +20,7 @@ class AiCreditPackageResource extends Resource
 
     protected static ?string $navigationLabel = 'AI Credit Packages';
 
-    protected static ?string $navigationGroup = 'AI Management';
+    protected static ?string $navigationGroup = '🤖 AI Studio';
 
     protected static ?int $navigationSort = 1;
 

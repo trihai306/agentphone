@@ -47,21 +47,37 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->navigationGroups([
                 NavigationGroup::make()
-                    ->label('Phân Tích')
+                    ->label('📊 Dashboard')
                     ->icon('heroicon-o-chart-bar')
                     ->collapsible()
                     ->collapsed(false),
                 NavigationGroup::make()
-                    ->label('User Management')
+                    ->label('👥 Người Dùng')
                     ->icon('heroicon-o-users')
                     ->collapsible(),
                 NavigationGroup::make()
-                    ->label('Finance Management')
+                    ->label('⚡ Automation')
+                    ->icon('heroicon-o-bolt')
+                    ->collapsible(),
+                NavigationGroup::make()
+                    ->label('📁 Nội Dung')
+                    ->icon('heroicon-o-folder')
+                    ->collapsible(),
+                NavigationGroup::make()
+                    ->label('🤖 AI Studio')
+                    ->icon('heroicon-o-sparkles')
+                    ->collapsible(),
+                NavigationGroup::make()
+                    ->label('💰 Tài Chính')
                     ->icon('heroicon-o-banknotes')
                     ->collapsible(),
                 NavigationGroup::make()
-                    ->label('Service Management')
-                    ->icon('heroicon-o-cube')
+                    ->label('🛒 Marketplace')
+                    ->icon('heroicon-o-shopping-bag')
+                    ->collapsible(),
+                NavigationGroup::make()
+                    ->label('⚙️ Hệ Thống')
+                    ->icon('heroicon-o-cog-6-tooth')
                     ->collapsible(),
             ])
             ->middleware([
@@ -86,7 +102,7 @@ class AdminPanelProvider extends PanelProvider
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->renderHook(
                 PanelsRenderHook::BODY_END,
-                fn () => Blade::render('@include("filament.scripts.echo")')
+                fn() => Blade::render('@include("filament.scripts.echo")')
             );
     }
 }

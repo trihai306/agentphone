@@ -19,7 +19,7 @@ class ActivityLogResource extends Resource
 
     protected static ?string $navigationLabel = 'Nhật Ký Hoạt Động';
 
-    protected static ?string $navigationGroup = 'Hệ Thống';
+    protected static ?string $navigationGroup = '⚙️ Hệ Thống';
 
     protected static ?int $navigationSort = 10;
 

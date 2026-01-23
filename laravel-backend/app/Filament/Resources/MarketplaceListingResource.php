@@ -19,7 +19,7 @@ class MarketplaceListingResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
 
-    protected static ?string $navigationGroup = 'Marketplace';
+    protected static ?string $navigationGroup = '🛒 Marketplace';
 
     protected static ?string $navigationLabel = 'Listings';
 

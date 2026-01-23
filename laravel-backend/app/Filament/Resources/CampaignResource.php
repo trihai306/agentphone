@@ -26,7 +26,7 @@ class CampaignResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Chiến dịch';
 
-    protected static ?string $navigationGroup = 'Automation';
+    protected static ?string $navigationGroup = '⚡ Automation';
 
     protected static ?int $navigationSort = 1;
 

@@ -23,7 +23,7 @@ class SystemNotificationResource extends Resource
 
     protected static ?string $navigationLabel = 'System Notifications';
 
-    protected static ?string $navigationGroup = 'Service Management';
+    protected static ?string $navigationGroup = '⚙️ Hệ Thống';
 
     protected static ?int $navigationSort = 99;
 
@@ -72,8 +72,8 @@ class SystemNotificationResource extends Resource
                             ->label('Target User')
                             ->options(User::pluck('name', 'id'))
                             ->searchable()
-                            ->visible(fn (Forms\Get $get) => $get('target') === SystemNotification::TARGET_SPECIFIC_USER)
-                            ->required(fn (Forms\Get $get) => $get('target') === SystemNotification::TARGET_SPECIFIC_USER),
+                            ->visible(fn(Forms\Get $get) => $get('target') === SystemNotification::TARGET_SPECIFIC_USER)
+                            ->required(fn(Forms\Get $get) => $get('target') === SystemNotification::TARGET_SPECIFIC_USER),
                     ])
                     ->columns(2),
 
@@ -112,17 +112,17 @@ class SystemNotificationResource extends Resource
                             ->label('Already Broadcasted')
                             ->disabled()
                             ->dehydrated(false)
-                            ->visible(fn ($record) => $record !== null),
+                            ->visible(fn($record) => $record !== null),
 
                         Forms\Components\Placeholder::make('broadcasted_at')
                             ->label('Broadcasted At')
-                            ->content(fn ($record) => $record?->broadcasted_at?->format('Y-m-d H:i:s') ?? 'Not yet')
-                            ->visible(fn ($record) => $record !== null),
+                            ->content(fn($record) => $record?->broadcasted_at?->format('Y-m-d H:i:s') ?? 'Not yet')
+                            ->visible(fn($record) => $record !== null),
 
                         Forms\Components\Placeholder::make('created_at')
                             ->label('Created At')
-                            ->content(fn ($record) => $record?->created_at?->format('Y-m-d H:i:s') ?? '-')
-                            ->visible(fn ($record) => $record !== null),
+                            ->content(fn($record) => $record?->created_at?->format('Y-m-d H:i:s') ?? '-')
+                            ->visible(fn($record) => $record !== null),
                     ])
                     ->columns(2)
                     ->collapsed(),
@@ -136,12 +136,12 @@ class SystemNotificationResource extends Resource
                 Tables\Columns\TextColumn::make('title')
                     ->searchable()
                     ->limit(40)
-                    ->tooltip(fn ($record) => $record->title),
+                    ->tooltip(fn($record) => $record->title),
 
                 Tables\Columns\TextColumn::make('message')
                     ->limit(50)
                     ->toggleable()
-                    ->tooltip(fn ($record) => $record->message),
+                    ->tooltip(fn($record) => $record->message),
 
                 Tables\Columns\BadgeColumn::make('type')
                     ->colors([
@@ -157,7 +157,7 @@ class SystemNotificationResource extends Resource
                         'warning' => SystemNotification::TARGET_ADMINS,
                         'primary' => SystemNotification::TARGET_SPECIFIC_USER,
                     ])
-                    ->formatStateUsing(fn ($state) => match ($state) {
+                    ->formatStateUsing(fn($state) => match ($state) {
                         SystemNotification::TARGET_ALL => 'All Users',
                         SystemNotification::TARGET_ADMINS => 'Admins',
                         SystemNotification::TARGET_SPECIFIC_USER => 'Specific User',
@@ -230,7 +230,7 @@ class SystemNotificationResource extends Resource
                         ->label('Send Now')
                         ->icon('heroicon-o-paper-airplane')
                         ->color('success')
-                        ->visible(fn ($record) => !$record->is_broadcasted && $record->is_active)
+                        ->visible(fn($record) => !$record->is_broadcasted && $record->is_active)
                         ->requiresConfirmation()
                         ->modalHeading('Broadcast Notification')
                         ->modalDescription('This will immediately send this notification to all targeted users. This action cannot be undone.')

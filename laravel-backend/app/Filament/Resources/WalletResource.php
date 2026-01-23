@@ -26,7 +26,7 @@ class WalletResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Ví tiền';
 
-    protected static ?string $navigationGroup = 'Finance Management';
+    protected static ?string $navigationGroup = '💰 Tài Chính';
 
     protected static ?int $navigationSort = 2;
 

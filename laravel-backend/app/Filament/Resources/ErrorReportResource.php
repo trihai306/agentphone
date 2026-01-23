@@ -25,7 +25,7 @@ class ErrorReportResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Báo cáo lỗi';
 
-    protected static ?string $navigationGroup = 'Hỗ trợ';
+    protected static ?string $navigationGroup = '⚙️ Hệ Thống';
 
     protected static ?int $navigationSort = 1;
 

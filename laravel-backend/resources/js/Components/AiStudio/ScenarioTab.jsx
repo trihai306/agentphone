@@ -23,12 +23,24 @@ export default function ScenarioTab({
 
     // States
     const [step, setStep] = useState('input'); // input, scenes, generating
+    const [inputMode, setInputMode] = useState('text'); // 'text' or 'images'
     const [script, setScript] = useState('');
+    const [sourceImages, setSourceImages] = useState([]); // Array of {file, preview, description}
     const [outputType, setOutputType] = useState('video');
     const [model, setModel] = useState('');
     const [parsing, setParsing] = useState(false);
     const [scenes, setScenes] = useState([]);
     const [title, setTitle] = useState('');
+    const [totalCredits, setTotalCredits] = useState(0);
+    const [scenario, setScenario] = useState(null);
+    const [settings, setSettings] = useState({
+        resolution: '1080p',
+        aspect_ratio: '16:9',
+        generate_audio: true,
+        audio_style: 'natural', // natural, dramatic, upbeat
+        background_music: false,
+        music_style: 'none', // none, ambient, upbeat, dramatic, cinematic
+    });
     const [totalCredits, setTotalCredits] = useState(0);
     const [scenario, setScenario] = useState(null);
     const [settings, setSettings] = useState({

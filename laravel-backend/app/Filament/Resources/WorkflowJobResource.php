@@ -27,7 +27,7 @@ class WorkflowJobResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Công việc';
 
-    protected static ?string $navigationGroup = 'Automation';
+    protected static ?string $navigationGroup = '⚡ Automation';
 
     protected static ?int $navigationSort = 2;
 

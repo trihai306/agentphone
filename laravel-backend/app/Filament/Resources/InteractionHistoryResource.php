@@ -26,7 +26,7 @@ class InteractionHistoryResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Lịch sử tương tác';
 
-    protected static ?string $navigationGroup = 'Analytics';
+    protected static ?string $navigationGroup = '📊 Dashboard';
 
     protected static ?int $navigationSort = 2;
 

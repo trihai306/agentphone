@@ -26,7 +26,7 @@ class UserServicePackageResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Đơn hàng gói dịch vụ';
 
-    protected static ?string $navigationGroup = 'Service Management';
+    protected static ?string $navigationGroup = '💰 Tài Chính';
 
     protected static ?int $navigationSort = 2;
 
