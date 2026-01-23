@@ -372,6 +372,14 @@ object SocketJobManager {
                     "config:update" -> handleConfigUpdate(event.data)
                     "recording.stop_requested" -> handleRecordingStopRequested(event.data)
                     "workflow:test" -> handleWorkflowTest(event.data)
+                    "inspect:elements" -> {
+                        Log.w(TAG, "🔍 INSPECT:ELEMENTS received via main onEvent!")
+                        handleInspectElements(event.data ?: "")
+                    }
+                    "check:accessibility" -> {
+                        Log.w(TAG, "📱 CHECK:ACCESSIBILITY received via main onEvent!")
+                        handleCheckAccessibility(event.data ?: "")
+                    }
                     "visual:inspect" -> {
                         // DEPRECATED: OCR now included in inspect:elements
                         Log.i(TAG, "⚠️ Ignoring visual:inspect - OCR in inspect:elements")
@@ -470,13 +478,43 @@ object SocketJobManager {
             override fun onAuthenticationFailure(message: String?, e: Exception?) {}
         })
 
+        // Explicit bind for inspect:elements - most critical for Element Inspector
+        deviceChannel?.bind("inspect:elements", object : com.pusher.client.channel.PrivateChannelEventListener {
+            override fun onEvent(event: PusherEvent) {
+                Log.w(TAG, "🔍 EXPLICIT BIND: inspect:elements received!")
+                Log.i(TAG, "📥 inspect:elements data: ${event.data?.take(200)}")
+                handleInspectElements(event.data ?: "")
+            }
+            override fun onSubscriptionSucceeded(channelName: String) {
+                Log.i(TAG, "✅ inspect:elements bind succeeded on: $channelName")
+            }
+            override fun onAuthenticationFailure(message: String?, e: Exception?) {
+                Log.e(TAG, "❌ inspect:elements auth failed: $message", e)
+            }
+        })
+
+        // Explicit bind for check:accessibility
+        deviceChannel?.bind("check:accessibility", object : com.pusher.client.channel.PrivateChannelEventListener {
+            override fun onEvent(event: PusherEvent) {
+                Log.w(TAG, "📱 EXPLICIT BIND: check:accessibility received!")
+                handleCheckAccessibility(event.data ?: "")
+            }
+            override fun onSubscriptionSucceeded(channelName: String) {}
+            override fun onAuthenticationFailure(message: String?, e: Exception?) {}
+        })
+
         // Add global event listener to route events (individual binds may not fire reliably)
         deviceChannel?.bindGlobal { event ->
+            Log.d(TAG, "🌐 GLOBAL: Received event: ${event?.eventName}")
             // Route events silently - only log errors
             when (event?.eventName) {
                 "workflow:test" -> handleWorkflowTest(event.data ?: "")
-                "inspect:elements" -> handleInspectElements(event.data ?: "")
-                "check:accessibility" -> handleCheckAccessibility(event.data ?: "")
+                "inspect:elements" -> {
+                    Log.w(TAG, "🔍 GLOBAL: inspect:elements - already handled by explicit bind")
+                }
+                "check:accessibility" -> {
+                    Log.w(TAG, "📱 GLOBAL: check:accessibility - already handled by explicit bind")
+                }
                 "apps:request" -> handleGetInstalledApps(event.data ?: "")
                 "job:new" -> handleNewJob(event.data ?: "")
                 "recording.stop_requested" -> handleRecordingStopRequested(event.data ?: "")
