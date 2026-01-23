@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '../../Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 
-export default function Edit({ user }) {
+export default function Edit({ user, devicesCount = 0 }) {
     const { t } = useTranslation();
     const { theme } = useTheme();
     const { flash } = usePage().props;
@@ -89,7 +89,7 @@ export default function Edit({ user }) {
                             </div>
                             <div className={`p-3 rounded-lg ${isDark ? 'bg-[#222]' : 'bg-gray-50'}`}>
                                 <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('navigation.devices')}</p>
-                                <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>0</p>
+                                <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{devicesCount}</p>
                             </div>
                         </div>
                     </div>

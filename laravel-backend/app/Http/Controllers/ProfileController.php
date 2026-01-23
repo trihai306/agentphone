@@ -13,8 +13,11 @@ class ProfileController extends Controller
 {
     public function edit(Request $request)
     {
+        $user = $request->user();
+
         return Inertia::render('Profile/Edit', [
-            'user' => $request->user()->load(['customFields.values']),
+            'user' => $user->load(['customFields.values']),
+            'devicesCount' => $user->devices()->count(),
         ]);
     }
 
