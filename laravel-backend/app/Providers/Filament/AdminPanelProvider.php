@@ -48,36 +48,28 @@ class AdminPanelProvider extends PanelProvider
             ->navigationGroups([
                 NavigationGroup::make()
                     ->label('📊 Dashboard')
-                    ->icon('heroicon-o-chart-bar')
                     ->collapsible()
                     ->collapsed(false),
                 NavigationGroup::make()
                     ->label('👥 Người Dùng')
-                    ->icon('heroicon-o-users')
                     ->collapsible(),
                 NavigationGroup::make()
                     ->label('⚡ Automation')
-                    ->icon('heroicon-o-bolt')
                     ->collapsible(),
                 NavigationGroup::make()
                     ->label('📁 Nội Dung')
-                    ->icon('heroicon-o-folder')
                     ->collapsible(),
                 NavigationGroup::make()
                     ->label('🤖 AI Studio')
-                    ->icon('heroicon-o-sparkles')
                     ->collapsible(),
                 NavigationGroup::make()
                     ->label('💰 Tài Chính')
-                    ->icon('heroicon-o-banknotes')
                     ->collapsible(),
                 NavigationGroup::make()
                     ->label('🛒 Marketplace')
-                    ->icon('heroicon-o-shopping-bag')
                     ->collapsible(),
                 NavigationGroup::make()
                     ->label('⚙️ Hệ Thống')
-                    ->icon('heroicon-o-cog-6-tooth')
                     ->collapsible(),
             ])
             ->middleware([
