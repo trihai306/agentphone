@@ -32,7 +32,7 @@ class JobStatsOverview extends BaseWidget
 
         // Campaign stats
         $totalCampaigns = Campaign::count();
-        $activeCampaigns = Campaign::where('status', Campaign::STATUS_RUNNING)->count();
+        $activeCampaigns = Campaign::where('status', Campaign::STATUS_ACTIVE)->count();
 
         // Success rate
         $finishedJobs = $completedJobs + $failedJobs;
