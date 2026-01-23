@@ -29,6 +29,9 @@ import { useToast } from '@/Components/Layout/ToastProvider';
 import { useExecutionState, ExecutionStatus, NodeStatus } from '@/hooks/useExecutionState';
 import { useUndoRedo } from '@/hooks/useUndoRedo';
 import { useDeviceApps } from '@/hooks/useDeviceApps';
+import { useModalManager } from '@/hooks/useModalManager';
+import { useDeviceManager } from '@/hooks/useDeviceManager';
+import { useDebugPanel } from '@/hooks/useDebugPanel';
 
 // Custom node types
 import CustomNode from '../../Components/Flow/CustomNode';
@@ -135,7 +138,6 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     // Use usePage to get props directly - workaround for Inertia prop hydration bug
     const { props } = usePage();
     const { auth } = props; // Get auth for socket channel subscription
-    const [onlineDevices, setOnlineDevices] = useState(props.onlineDevices || []);
     const collections = props.dataCollections || dataCollections;
 
     const { theme } = useTheme();
@@ -143,28 +145,45 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     const { addToast } = useToast();
     const { t } = useTranslation();
 
+    // ===== Phase 2 Custom Hooks =====
+    // Device management
+    const { selectedDevice, onlineDevices, setSelectedDevice, setOnlineDevices } = useDeviceManager(props.onlineDevices || [], auth);
+
+    // Device apps (Phase 1)
+    const { apps: deviceApps, appsLoading: deviceAppsLoading, requestApps: requestDeviceApps } = useDeviceApps(auth?.user?.id);
+
+    // Modal management
+    const modalManager = useModalManager();
+    const { modals, openModal, closeModal, openMediaPicker, openCollectionPicker, openLoopSubFlow, openEdgeDelay, MODAL_TYPES } = modalManager;
+
+    // Debug panel
+    const { debugEvents, showDebugPanel, setShowDebugPanel, addDebugEvent, toggleDebugPanel } = useDebugPanel();
+
+    // ===== Core Flow State =====
     const [nodes, setNodes] = useState(flow.nodes || []);
     const [edges, setEdges] = useState(flow.edges || []);
     const [viewport, setViewport] = useState(flow.viewport || { x: 0, y: 0, zoom: 1 });
 
     // Undo/Redo history management
     const { takeSnapshot, undo, redo, canUndo, canRedo } = useUndoRedo(nodes, edges, setNodes, setEdges);
+
+    // ===== Flow Persistence State (TODO: extract to useFlowPersistence) =====
     const [saving, setSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState(null);
-    const [showSidebar, setShowSidebar] = useState(true);
     const [flowName, setFlowName] = useState(flow.name);
     const [editingName, setEditingName] = useState(false);
+
+    // ===== Canvas Interaction State (TODO: extract to useFlowCanvas) =====
     const [selectedNode, setSelectedNode] = useState(null);
     const [selectedNodes, setSelectedNodes] = useState([]); // Multi-select support
     const [isDraggingOver, setIsDraggingOver] = useState(false);
     const [draggedNodeType, setDraggedNodeType] = useState(null);
-    const [showLogPanel, setShowLogPanel] = useState(false);
-    const [selectedDevice, setSelectedDevice] = useState(null);
-    const [showLangDropdown, setShowLangDropdown] = useState(false);
-    const [showDeviceSelector, setShowDeviceSelector] = useState(false);
-    const [showClearConfirm, setShowClearConfirm] = useState(false);
 
-    // Recording mode state
+    // ===== UI State =====
+    const [showSidebar, setShowSidebar] = useState(true);
+    const [showLogPanel, setShowLogPanel] = useState(false);
+
+    // ===== Recording Mode State (TODO: extract to useRecordingMode) =====
     const [isRecording, setIsRecording] = useState(false);
     const [recordingSession, setRecordingSession] = useState(null);
     const [recordedNodeCount, setRecordedNodeCount] = useState(0);
@@ -172,35 +191,12 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     const [recordedActions, setRecordedActions] = useState([]);
     const [showRecordingPanel, setShowRecordingPanel] = useState(false);
     const [isRecordingPaused, setIsRecordingPaused] = useState(false);
-    const consecutiveActionsRef = useRef([]); // Track repeated actions for loop detection (useRef to avoid stale closure)
+    const consecutiveActionsRef = useRef([]);
     const recordingTimerRef = useRef(null);
 
     // Test Run state
     const [testRunning, setTestRunning] = useState(false);
 
-    // Media Picker state
-    const [showMediaPicker, setShowMediaPicker] = useState(false);
-    const [mediaPickerNodeId, setMediaPickerNodeId] = useState(null);
-
-    // Collection Picker state
-    const [showCollectionPicker, setShowCollectionPicker] = useState(false);
-    const [collectionPickerNodeId, setCollectionPickerNodeId] = useState(null);
-
-    // Loop Sub-Flow Modal state
-    const [showLoopSubFlowModal, setShowLoopSubFlowModal] = useState(false);
-    const [editingLoopNodeId, setEditingLoopNodeId] = useState(null);
-
-    // Workflow Preview Modal state
-    const [showPreviewModal, setShowPreviewModal] = useState(false);
-
-    // Edge Delay Popover state
-    const [showEdgeDelayPopover, setShowEdgeDelayPopover] = useState(false);
-    const [selectedEdgeForDelay, setSelectedEdgeForDelay] = useState(null);
-    const [edgePopoverPosition, setEdgePopoverPosition] = useState({ x: 0, y: 0 });
-
-    // Debug Panel state - shows raw APK event data
-    const [debugEvents, setDebugEvents] = useState([]);
-    const [showDebugPanel, setShowDebugPanel] = useState(false);
     const reactFlowWrapper = useRef(null);
     const { screenToFlowPosition, fitView, zoomIn, zoomOut, getZoom } = useReactFlow();
     const saveTimeoutRef = useRef(null);
@@ -223,9 +219,6 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         isCompleted,
         hasError,
     } = useExecutionState(nodes, edges);
-
-    // Device apps hook - listen for apps.result from APK
-    const { apps: deviceApps, appsLoading: deviceAppsLoading, requestApps: requestDeviceApps } = useDeviceApps(auth?.user?.id);
 
     // Listen for real-time workflow action progress from APK via socket
     useEffect(() => {
@@ -273,32 +266,8 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         }
     }, [nodes]);
 
-    // Auto-select first online device when page loads
-    useEffect(() => {
-        if (!selectedDevice && onlineDevices && onlineDevices.length > 0) {
-            setSelectedDevice(onlineDevices[0]);
-        }
-    }, [onlineDevices]);
+    // NOTE: Device auto-select and accessibility check now handled by useDeviceManager hook
 
-    // Auto-check accessibility status when device is selected (including auto-select)
-    useEffect(() => {
-        if (!selectedDevice?.device_id) return;
-
-        // Trigger accessibility check via socket
-        const checkAccessibility = async () => {
-            try {
-                await axios.post('/devices/check-accessibility', {
-                    device_id: selectedDevice.device_id
-                });
-            } catch (err) {
-                console.warn('Auto accessibility check failed:', err);
-            }
-        };
-
-        // Small delay to ensure socket is ready
-        const timeoutId = setTimeout(checkAccessibility, 500);
-        return () => clearTimeout(timeoutId);
-    }, [selectedDevice?.device_id]);
 
 
     // Inject callbacks into data_source and file_input nodes after initial load

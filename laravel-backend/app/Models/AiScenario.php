@@ -11,8 +11,7 @@ class AiScenario extends Model
 {
     protected $fillable = [
         'user_id',
-        'scenario_folder_id',
-        'media_folder_id',
+        'folder_id',
         'template_id',
         'title',
         'script',
@@ -79,11 +78,11 @@ class AiScenario extends Model
     }
 
     /**
-     * Get the folder this scenario belongs to
+     * Get the folder this scenario belongs to (reuse UserMediaFolder)
      */
     public function folder(): BelongsTo
     {
-        return $this->belongsTo(ScenarioFolder::class, 'scenario_folder_id');
+        return $this->belongsTo(UserMediaFolder::class, 'folder_id');
     }
 
     /**
@@ -92,14 +91,6 @@ class AiScenario extends Model
     public function template(): BelongsTo
     {
         return $this->belongsTo(ScenarioTemplate::class, 'template_id');
-    }
-
-    /**
-     * Get the media folder where outputs are saved
-     */
-    public function mediaFolder(): BelongsTo
-    {
-        return $this->belongsTo(UserMediaFolder::class, 'media_folder_id');
     }
 
     /**
@@ -155,7 +146,7 @@ class AiScenario extends Model
      */
     public function scopeInFolder($query, $folderId)
     {
-        return $query->where('scenario_folder_id', $folderId);
+        return $query->where('folder_id', $folderId);
     }
 
     /**

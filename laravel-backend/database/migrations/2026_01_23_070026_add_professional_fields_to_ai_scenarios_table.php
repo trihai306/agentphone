@@ -11,14 +11,14 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('ai_scenarios', function (Blueprint $table) {
-            $table->foreignId('scenario_folder_id')->nullable()->after('user_id')->constrained()->onDelete('set null');
-            $table->foreignId('media_folder_id')->nullable()->after('scenario_folder_id')->constrained('user_media_folders')->onDelete('set null');
-            $table->foreignId('template_id')->nullable()->after('media_folder_id')->constrained('scenario_templates')->onDelete('set null');
+            // Dùng lại user_media_folders có sẵn thay vì tạo scenario_folders riêng
+            $table->foreignId('folder_id')->nullable()->after('user_id')->constrained('user_media_folders')->onDelete('set null');
+            $table->foreignId('template_id')->nullable()->after('folder_id')->constrained('scenario_templates')->onDelete('set null');
             $table->boolean('is_draft')->default(false)->after('status');
             $table->json('metadata')->nullable()->after('settings'); // tags, category, etc.
             $table->timestamp('published_at')->nullable()->after('is_draft');
 
-            $table->index('scenario_folder_id');
+            $table->index('folder_id');
             $table->index('is_draft');
         });
     }
@@ -29,10 +29,9 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('ai_scenarios', function (Blueprint $table) {
-            $table->dropForeign(['scenario_folder_id']);
-            $table->dropForeign(['media_folder_id']);
+            $table->dropForeign(['folder_id']);
             $table->dropForeign(['template_id']);
-            $table->dropColumn(['scenario_folder_id', 'media_folder_id', 'template_id', 'is_draft', 'metadata', 'published_at']);
+            $table->dropColumn(['folder_id', 'template_id', 'is_draft', 'metadata', 'published_at']);
         });
     }
 };
