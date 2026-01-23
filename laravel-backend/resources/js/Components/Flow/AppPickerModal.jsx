@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 
 /**
  * AppPickerModal - Select installed app from connected device
  * 
- * Similar to ElementPickerModal but for selecting apps to launch.
- * Requests installed apps list from APK via socket.
+ * Receives apps list from parent component via props.
+ * Parent component manages socket subscription using useDeviceApps hook.
  */
 export default function AppPickerModal({
     isOpen,
@@ -14,91 +14,16 @@ export default function AppPickerModal({
     onSelect,
     deviceId,
     userId,
+    apps = [],
+    loading = false,
+    onRequestApps,
 }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     const { t } = useTranslation();
 
-    const [apps, setApps] = useState([]);
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
-
-    // Use ref to avoid stale closure in socket callback
-    const isOpenRef = useRef(isOpen);
-    useEffect(() => {
-        isOpenRef.current = isOpen;
-    }, [isOpen]);
-
-    // Listen for apps list result from socket - keep subscription active always
-    useEffect(() => {
-        if (!userId) return;
-
-        const handleResult = (data) => {
-            console.log('📱 Received apps.result:', data, 'isOpen:', isOpenRef.current);
-
-            // Only process if modal is currently open
-            if (!isOpenRef.current) {
-                console.log('⏸️ Modal closed, ignoring apps.result');
-                return;
-            }
-
-            setLoading(false);
-
-            if (data.success) {
-                setApps(data.apps || []);
-                setError(null);
-            } else {
-                setError(data.error || 'Failed to get apps list');
-                setApps([]);
-            }
-        };
-
-        if (window.Echo) {
-            const channel = window.Echo.private(`user.${userId}`);
-            console.log(`🔌 AppPicker: Subscribing to private-user.${userId} (persistent)`);
-
-            channel.listen('.apps.result', handleResult);
-
-            return () => {
-                console.log(`🔌 AppPicker: Unsubscribing from private-user.${userId}`);
-                channel.stopListening('.apps.result');
-            };
-        } else {
-            console.error('❌ AppPicker: window.Echo not available!');
-        }
-    }, [userId]); // Only depend on userId, not isOpen
-
-    // Request apps list from device - define BEFORE the useEffect that uses it
-    const requestApps = useCallback(async () => {
-        if (!deviceId) {
-            setError(t('flows.editor.config.no_device_selected', 'No device selected'));
-            return;
-        }
-
-        setLoading(true);
-        setError(null);
-
-        try {
-            console.log('📤 Requesting apps list from device:', deviceId);
-            const response = await window.axios.post('/devices/apps', { device_id: deviceId });
-
-            if (!response?.data?.success) {
-                setError(response?.data?.message || 'Failed to request apps');
-                setLoading(false);
-            } else {
-                console.log('📥 API response success - waiting for socket event...');
-                // Safety timeout - if no response in 10s, stop loading
-                setTimeout(() => {
-                    setLoading(false);
-                }, 10000);
-            }
-        } catch (err) {
-            const message = err.response?.data?.message || 'Cannot connect to server';
-            setError(message);
-            setLoading(false);
-        }
-    }, [deviceId, t]);
 
     // Track the open state changes to know when to fetch
     const prevOpenRef = useRef(false);
@@ -109,32 +34,14 @@ export default function AppPickerModal({
         prevOpenRef.current = isOpen;
 
         // Only fetch when modal transitions from closed to open
-        if (isOpen && !wasOpen && deviceId) {
-            console.log('🔌 AppPicker: Modal just opened, scheduling auto-fetch (1s delay)...');
-            setApps([]); // Clear previous apps immediately
-            const timer = setTimeout(() => {
+        if (isOpen && !wasOpen && deviceId && onRequestApps) {
+            console.log('🔌 AppPicker: Modal just opened, requesting apps...');
+            setTimeout(() => {
                 console.log('📤 AppPicker: Auto-fetching apps now...');
-                setLoading(true);
-                setError(null);
-                window.axios.post('/devices/apps', { device_id: deviceId })
-                    .then(response => {
-                        if (!response?.data?.success) {
-                            setError(response?.data?.message || 'Failed to request apps');
-                            setLoading(false);
-                        } else {
-                            console.log('📥 API success - waiting for socket event...');
-                            // Safety timeout - stop loading after 10s
-                            setTimeout(() => setLoading(false), 10000);
-                        }
-                    })
-                    .catch(err => {
-                        setError(err.response?.data?.message || 'Cannot connect to server');
-                        setLoading(false);
-                    });
+                onRequestApps(deviceId);
             }, 1000);
-            return () => clearTimeout(timer);
         }
-    }, [isOpen, deviceId]);
+    }, [isOpen, deviceId, onRequestApps]);
 
     // Reset state on close
     useEffect(() => {
@@ -200,7 +107,7 @@ export default function AppPickerModal({
 
                             <div className="flex items-center gap-2">
                                 <button
-                                    onClick={requestApps}
+                                    onClick={() => onRequestApps?.(deviceId)}
                                     disabled={loading}
                                     className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${loading
                                         ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
@@ -252,7 +159,7 @@ export default function AppPickerModal({
                                 <span className="text-4xl mb-3">⚠️</span>
                                 <p className={`text-sm ${isDark ? 'text-red-400' : 'text-red-500'}`}>{error}</p>
                                 <button
-                                    onClick={requestApps}
+                                    onClick={() => onRequestApps?.(deviceId)}
                                     className={`mt-4 px-4 py-2 rounded-lg text-sm font-medium ${isDark
                                         ? 'bg-white/10 hover:bg-white/20 text-white'
                                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'

@@ -28,6 +28,7 @@ import { useToast } from '@/Components/Layout/ToastProvider';
 // Execution state
 import { useExecutionState, ExecutionStatus, NodeStatus } from '@/hooks/useExecutionState';
 import { useUndoRedo } from '@/hooks/useUndoRedo';
+import { useDeviceApps } from '@/hooks/useDeviceApps';
 
 // Custom node types
 import CustomNode from '../../Components/Flow/CustomNode';
@@ -222,6 +223,9 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         isCompleted,
         hasError,
     } = useExecutionState(nodes, edges);
+
+    // Device apps hook - listen for apps.result from APK
+    const { apps: deviceApps, appsLoading: deviceAppsLoading, requestApps: requestDeviceApps } = useDeviceApps(auth?.user?.id);
 
     // Listen for real-time workflow action progress from APK via socket
     useEffect(() => {
@@ -3660,6 +3664,9 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                     selectedDevice={selectedDevice}
                     userId={props.auth?.user?.id}
                     dataSourceNodes={nodes.filter(n => n.type === 'data_source' && n.data?.collectionId)}
+                    deviceApps={deviceApps}
+                    deviceAppsLoading={deviceAppsLoading}
+                    onRequestDeviceApps={requestDeviceApps}
                 />
             )}
 

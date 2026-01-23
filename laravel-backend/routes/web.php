@@ -209,6 +209,17 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/scenarios/{scenario}/scenes/{scene}', [\App\Http\Controllers\AiScenarioController::class, 'updateScene'])->name('scenarios.scenes.update');
         Route::post('/scenarios/{scenario}/scenes/{scene}/retry', [\App\Http\Controllers\AiScenarioController::class, 'retryScene'])->name('scenarios.scenes.retry');
         Route::delete('/scenarios/{scenario}', [\App\Http\Controllers\AiScenarioController::class, 'destroy'])->name('scenarios.destroy');
+
+        // Scenario Folders
+        Route::get('/scenario-folders', [\App\Http\Controllers\ScenarioFolderController::class, 'index'])->name('scenario-folders.index');
+        Route::post('/scenario-folders', [\App\Http\Controllers\ScenarioFolderController::class, 'store'])->name('scenario-folders.store');
+        Route::patch('/scenario-folders/{folder}', [\App\Http\Controllers\ScenarioFolderController::class, 'update'])->name('scenario-folders.update');
+        Route::delete('/scenario-folders/{folder}', [\App\Http\Controllers\ScenarioFolderController::class, 'destroy'])->name('scenario-folders.destroy');
+
+        // Scenario Templates
+        Route::get('/scenario-templates', [\App\Http\Controllers\ScenarioTemplateController::class, 'index'])->name('scenario-templates.index');
+        Route::get('/scenario-templates/{template}', [\App\Http\Controllers\ScenarioTemplateController::class, 'show'])->name('scenario-templates.show');
+        Route::post('/scenario-templates/{template}/parse', [\App\Http\Controllers\ScenarioTemplateController::class, 'parse'])->name('scenario-templates.parse');
     });
 
 

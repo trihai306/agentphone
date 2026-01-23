@@ -19,6 +19,9 @@ export default function NodeConfigPanel({
     selectedDevice = null,
     userId = null,
     dataSourceNodes = [],
+    deviceApps = [],
+    deviceAppsLoading = false,
+    onRequestDeviceApps,
 }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
@@ -169,6 +172,9 @@ export default function NodeConfigPanel({
                         isDark={isDark}
                         selectedDevice={selectedDevice}
                         userId={userId}
+                        deviceApps={deviceApps}
+                        deviceAppsLoading={deviceAppsLoading}
+                        onRequestDeviceApps={onRequestDeviceApps}
                     />
                 )}
 
@@ -1419,7 +1425,7 @@ function ScrollActionConfig({ data, updateData, isDark }) {
     );
 }
 
-function OpenAppActionConfig({ data, updateData, updateMultipleData, isDark, selectedDevice, userId }) {
+function OpenAppActionConfig({ data, updateData, updateMultipleData, isDark, selectedDevice, userId, deviceApps, deviceAppsLoading, onRequestDeviceApps }) {
     const { t } = useTranslation();
     const [showAppPicker, setShowAppPicker] = useState(false);
 
@@ -1524,6 +1530,9 @@ function OpenAppActionConfig({ data, updateData, updateMultipleData, isDark, sel
                 onSelect={handleAppSelect}
                 deviceId={selectedDevice?.device_id}
                 userId={userId}
+                apps={deviceApps}
+                loading={deviceAppsLoading}
+                onRequestApps={onRequestDeviceApps}
             />
         </>
     );

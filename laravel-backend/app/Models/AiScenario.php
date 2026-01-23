@@ -11,19 +11,28 @@ class AiScenario extends Model
 {
     protected $fillable = [
         'user_id',
+        'scenario_folder_id',
+        'media_folder_id',
+        'template_id',
         'title',
         'script',
         'output_type',
         'model',
         'settings',
         'status',
+        'is_draft',
+        'metadata',
+        'published_at',
         'total_credits',
         'error_message',
     ];
 
     protected $casts = [
         'settings' => 'array',
+        'metadata' => 'array',
         'total_credits' => 'integer',
+        'is_draft' => 'boolean',
+        'published_at' => 'datetime',
     ];
 
     // Status constants
@@ -70,6 +79,30 @@ class AiScenario extends Model
     }
 
     /**
+     * Get the folder this scenario belongs to
+     */
+    public function folder(): BelongsTo
+    {
+        return $this->belongsTo(ScenarioFolder::class, 'scenario_folder_id');
+    }
+
+    /**
+     * Get the template this scenario was created from
+     */
+    public function template(): BelongsTo
+    {
+        return $this->belongsTo(ScenarioTemplate::class, 'template_id');
+    }
+
+    /**
+     * Get the media folder where outputs are saved
+     */
+    public function mediaFolder(): BelongsTo
+    {
+        return $this->belongsTo(UserMediaFolder::class, 'media_folder_id');
+    }
+
+    /**
      * Scope: For a specific user
      */
     public function scopeForUser($query, $userId)
@@ -99,6 +132,30 @@ class AiScenario extends Model
     public function scopeLatest($query)
     {
         return $query->orderByDesc('created_at');
+    }
+
+    /**
+     * Scope: Drafts only
+     */
+    public function scopeDrafts($query)
+    {
+        return $query->where('is_draft', true);
+    }
+
+    /**
+     * Scope: Published only
+     */
+    public function scopePublished($query)
+    {
+        return $query->where('is_draft', false);
+    }
+
+    /**
+     * Scope: In specific folder
+     */
+    public function scopeInFolder($query, $folderId)
+    {
+        return $query->where('scenario_folder_id', $folderId);
     }
 
     /**
