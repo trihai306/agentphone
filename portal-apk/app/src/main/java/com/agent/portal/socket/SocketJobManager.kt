@@ -477,6 +477,7 @@ object SocketJobManager {
                 "workflow:test" -> handleWorkflowTest(event.data ?: "")
                 "inspect:elements" -> handleInspectElements(event.data ?: "")
                 "check:accessibility" -> handleCheckAccessibility(event.data ?: "")
+                "apps:request" -> handleGetInstalledApps(event.data ?: "")
                 "job:new" -> handleNewJob(event.data ?: "")
                 "recording.stop_requested" -> handleRecordingStopRequested(event.data ?: "")
             }
@@ -2197,6 +2198,181 @@ object SocketJobManager {
         } catch (e: Exception) {
             Log.e(TAG, "Error checking accessibility service status", e)
             return false
+        }
+    }
+
+    /**
+     * Handle get installed apps request from web
+     * Gets list of launchable apps and sends back via HTTP API
+     */
+    private fun handleGetInstalledApps(data: String) {
+        scope.launch {
+            try {
+                Log.i(TAG, "📱 Getting installed apps list...")
+                
+                val context = contextRef?.get() ?: run {
+                    Log.e(TAG, "❌ Context not available")
+                    return@launch
+                }
+                
+                // Get session for auth
+                val sessionManager = com.agent.portal.auth.SessionManager(context)
+                val session = sessionManager.getSession()
+                val token = session?.token ?: run {
+                    Log.w(TAG, "No auth token, cannot send apps list")
+                    return@launch
+                }
+                
+                // Get list of launchable apps
+                val packageManager = context.packageManager
+                val mainIntent = android.content.Intent(android.content.Intent.ACTION_MAIN, null)
+                mainIntent.addCategory(android.content.Intent.CATEGORY_LAUNCHER)
+                
+                val appsList = mutableListOf<Map<String, Any?>>()
+                
+                val resolveInfoList = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                    packageManager.queryIntentActivities(
+                        mainIntent,
+                        android.content.pm.PackageManager.ResolveInfoFlags.of(0L)
+                    )
+                } else {
+                    @Suppress("DEPRECATION")
+                    packageManager.queryIntentActivities(mainIntent, 0)
+                }
+                
+                Log.i(TAG, "Found ${resolveInfoList.size} launchable apps")
+                
+                for (resolveInfo in resolveInfoList) {
+                    try {
+                        val appInfo = resolveInfo.activityInfo.applicationInfo
+                        val packageName = appInfo.packageName
+                        val appName = packageManager.getApplicationLabel(appInfo).toString()
+                        
+                        // Get app icon as base64 (small size for performance)
+                        var iconBase64: String? = null
+                        try {
+                            val drawable = packageManager.getApplicationIcon(appInfo)
+                            if (drawable is android.graphics.drawable.BitmapDrawable) {
+                                val bitmap = drawable.bitmap
+                                val scaledBitmap = android.graphics.Bitmap.createScaledBitmap(bitmap, 48, 48, true)
+                                val outputStream = java.io.ByteArrayOutputStream()
+                                scaledBitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 80, outputStream)
+                                iconBase64 = android.util.Base64.encodeToString(outputStream.toByteArray(), android.util.Base64.NO_WRAP)
+                                if (scaledBitmap != bitmap) {
+                                    scaledBitmap.recycle()
+                                }
+                            } else {
+                                // Convert other drawable types to bitmap
+                                val width = drawable.intrinsicWidth.coerceIn(1, 48)
+                                val height = drawable.intrinsicHeight.coerceIn(1, 48)
+                                val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
+                                val canvas = android.graphics.Canvas(bitmap)
+                                drawable.setBounds(0, 0, canvas.width, canvas.height)
+                                drawable.draw(canvas)
+                                val scaledBitmap = android.graphics.Bitmap.createScaledBitmap(bitmap, 48, 48, true)
+                                val outputStream = java.io.ByteArrayOutputStream()
+                                scaledBitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 80, outputStream)
+                                iconBase64 = android.util.Base64.encodeToString(outputStream.toByteArray(), android.util.Base64.NO_WRAP)
+                                if (scaledBitmap != bitmap) {
+                                    scaledBitmap.recycle()
+                                }
+                                bitmap.recycle()
+                            }
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Failed to get icon for $packageName: ${e.message}")
+                        }
+                        
+                        appsList.add(mapOf(
+                            "packageName" to packageName,
+                            "name" to appName,
+                            "icon" to iconBase64
+                        ))
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to get app info: ${e.message}")
+                    }
+                }
+                
+                // Sort apps by name
+                appsList.sortBy { (it["name"] as? String)?.lowercase() }
+                
+                Log.i(TAG, "✅ Collected ${appsList.size} apps, sending to backend...")
+                
+                // Send result back to backend via HTTP
+                val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
+                
+                val payload = mapOf(
+                    "device_id" to (deviceId ?: "unknown"),
+                    "success" to true,
+                    "apps" to appsList
+                )
+                
+                val client = okhttp3.OkHttpClient.Builder()
+                    .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                    .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                    .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                    .build()
+                    
+                val json = gson.toJson(payload)
+                val requestBody = okhttp3.RequestBody.create(
+                    "application/json".toMediaTypeOrNull(),
+                    json
+                )
+                
+                val request = okhttp3.Request.Builder()
+                    .url("$apiUrl/devices/apps-result")
+                    .post(requestBody)
+                    .addHeader("Authorization", "Bearer $token")
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Accept", "application/json")
+                    .build()
+                
+                val response = client.newCall(request).execute()
+                
+                if (response.isSuccessful) {
+                    Log.i(TAG, "✅ Apps list sent to backend (${appsList.size} apps, ${json.length / 1024}KB)")
+                } else {
+                    Log.w(TAG, "Failed to send apps list: ${response.code}")
+                }
+                
+                response.close()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error getting installed apps", e)
+                
+                // Send error result
+                try {
+                    val context = contextRef?.get() ?: return@launch
+                    val sessionManager = com.agent.portal.auth.SessionManager(context)
+                    val session = sessionManager.getSession()
+                    val token = session?.token ?: return@launch
+                    val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
+                    
+                    val errorPayload = mapOf(
+                        "device_id" to (deviceId ?: "unknown"),
+                        "success" to false,
+                        "apps" to emptyList<Any>(),
+                        "error" to (e.message ?: "Unknown error")
+                    )
+                    
+                    val client = okhttp3.OkHttpClient()
+                    val json = gson.toJson(errorPayload)
+                    val requestBody = okhttp3.RequestBody.create(
+                        "application/json".toMediaTypeOrNull(),
+                        json
+                    )
+                    
+                    val request = okhttp3.Request.Builder()
+                        .url("$apiUrl/devices/apps-result")
+                        .post(requestBody)
+                        .addHeader("Authorization", "Bearer $token")
+                        .addHeader("Content-Type", "application/json")
+                        .addHeader("Accept", "application/json")
+                        .build()
+                    
+                    client.newCall(request).execute().close()
+                } catch (e2: Exception) {
+                    Log.e(TAG, "Failed to send error result", e2)
+                }
+            }
         }
     }
 
