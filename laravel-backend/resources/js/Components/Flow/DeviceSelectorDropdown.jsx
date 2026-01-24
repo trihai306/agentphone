@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useTheme } from '@/Components/ThemeProvider';
+import { useTheme } from '@/Contexts/ThemeContext';
 import { deviceApi } from '@/services/api';
 
 /**
