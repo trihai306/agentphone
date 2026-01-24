@@ -1352,45 +1352,11 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         setDraggedNodeType({ type: nodeType, color });
 
         // Create custom drag image
-        const dragImage = document.createElement('div');
-        dragImage.className = 'flow-drag-preview';
-        dragImage.innerHTML = `
-            <div style="
-                background: ${isDark ? '#1e1e1e' : '#ffffff'};
-                border: 2px solid ${color};
-                border-radius: 8px;
-                padding: 8px 16px;
-                color: ${color};
-                font-size: 12px;
-                font-weight: 600;
-                box-shadow: 0 8px 32px rgba(0,0,0,${isDark ? '0.4' : '0.15'});
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            ">
-                <span style="
-                    width: 8px;
-                    height: 8px;
-                    background: ${color};
-                    border-radius: 50%;
-                "></span>
-                ${nodeLabel}
-            </div>
-        `;
-        dragImage.style.position = 'absolute';
-        dragImage.style.top = '-1000px';
-        dragImage.style.left = '-1000px';
-        document.body.appendChild(dragImage);
-        event.dataTransfer.setDragImage(dragImage, 60, 20);
-
-        // Remove after drag ends, not immediately
-        requestAnimationFrame(() => {
-            setTimeout(() => {
-                if (dragImage.parentNode) {
-                    document.body.removeChild(dragImage);
-                }
-            }, 100);
-        });
+        // Use a simple transparent 1x1 gif for drag image
+        // IMPORTANT: Do NOT create and remove DOM elements during drag - it cancels the drag operation!
+        const img = new Image();
+        img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+        event.dataTransfer.setDragImage(img, 0, 0);
     };
 
     // Note: NodeIcon and LogIcon are now imported from FlowIcons.jsx
