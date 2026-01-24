@@ -6,12 +6,11 @@ import { useState, useRef, useCallback, useEffect } from 'react';
  * 
  * @param {Object} config - Configuration
  * @param {Object} config.flow - Flow object with id and name
- * @param {Array} config.nodes - Current nodes array
- * @param {Array} config.edges - Current edges array
- * @param {Object} config.viewport - Current viewport state
+ * @param {boolean} config.autoSaveEnabled - Whether auto-save is enabled (default: false)
+ * @param {number} config.autoSaveDelay - Delay in ms before auto-save triggers (default: 1000)
  * @returns {Object} Persistence state and functions
  */
-export function useFlowPersistence({ flow, nodes, edges, viewport }) {
+export function useFlowPersistence({ flow, autoSaveEnabled = false, autoSaveDelay = 1000 }) {
     const [saving, setSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState(null);
     const [flowName, setFlowName] = useState(flow.name);
@@ -19,80 +18,105 @@ export function useFlowPersistence({ flow, nodes, edges, viewport }) {
 
     const saveTimeoutRef = useRef(null);
 
-    // Auto-save flow data when nodes/edges/viewport change
-    useEffect(() => {
-        // Clear previous timeout
-        if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current);
-        }
-
-        // Debounce save - wait 2 seconds after last change
-        saveTimeoutRef.current = setTimeout(() => {
-            saveFlow();
-        }, 2000);
-
-        return () => {
-            if (saveTimeoutRef.current) {
-                clearTimeout(saveTimeoutRef.current);
-            }
-        };
-    }, [nodes, edges, viewport]);
-
     // Save flow data to server
-    const saveFlow = useCallback(async () => {
+    const saveFlow = useCallback(async (nodes, edges, viewport) => {
         if (!flow?.id) {
             console.warn('⚠️ useFlowPersistence: No flow ID');
-            return;
+            return { success: false, error: 'No flow ID' };
         }
 
         setSaving(true);
 
         try {
-            const response = await window.axios.post(`/flows/${flow.id}/save`, {
-                nodes,
-                edges,
-                viewport,
-                name: flowName,
+            const response = await fetch(`/flows/${flow.id}/save-state`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    nodes,
+                    edges,
+                    viewport,
+                }),
             });
 
-            if (response.data.success) {
-                setLastSaved(new Date());
-                console.log('✅ useFlowPersistence: Flow saved');
+            if (response.ok) {
+                const data = await response.json();
+                setLastSaved(new Date(data.saved_at));
                 return { success: true };
             }
-            return { success: false, error: response.data.message };
+            return { success: false, error: 'Save failed' };
         } catch (error) {
             console.error('❌ useFlowPersistence: Save failed:', error);
             return { success: false, error: error.message };
         } finally {
             setSaving(false);
         }
-    }, [flow?.id, nodes, edges, viewport, flowName]);
+    }, [flow?.id]);
+
+    // Debounced save - triggers after delay, can be called multiple times
+    const debouncedSave = useCallback((nodes, edges, viewport) => {
+        if (!autoSaveEnabled) return;
+
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+        }
+
+        saveTimeoutRef.current = setTimeout(() => {
+            saveFlow(nodes, edges, viewport);
+        }, autoSaveDelay);
+    }, [autoSaveEnabled, autoSaveDelay, saveFlow]);
+
+    // Manual save - immediate, no debouncing
+    const manualSave = useCallback(async (nodes, edges, viewport) => {
+        // Clear any pending debounced save
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+            saveTimeoutRef.current = null;
+        }
+        return saveFlow(nodes, edges, viewport);
+    }, [saveFlow]);
 
     // Save flow name
     const saveName = useCallback(async (newName) => {
         if (!flow?.id || !newName) {
             console.warn('⚠️ useFlowPersistence: Invalid flow ID or name');
-            return;
+            return { success: false, error: 'Invalid flow ID or name' };
         }
 
         try {
-            const response = await window.axios.post(`/flows/${flow.id}/update-name`, {
-                name: newName,
+            const response = await fetch(`/flows/${flow.id}/update-name`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ name: newName }),
             });
 
-            if (response.data.success) {
+            if (response.ok) {
                 setFlowName(newName);
                 setEditingName(false);
-                console.log('✅ useFlowPersistence: Name saved:', newName);
                 return { success: true };
             }
-            return { success: false, error: response.data.message };
+            return { success: false, error: 'Name save failed' };
         } catch (error) {
             console.error('❌ useFlowPersistence: Name save failed:', error);
             return { success: false, error: error.message };
         }
     }, [flow?.id]);
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+            }
+        };
+    }, []);
 
     return {
         // State
@@ -105,6 +129,8 @@ export function useFlowPersistence({ flow, nodes, edges, viewport }) {
         setFlowName,
         setEditingName,
         saveFlow,
+        debouncedSave,
+        manualSave,
         saveName,
     };
 }

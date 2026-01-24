@@ -32,6 +32,7 @@ import { useDeviceApps } from '@/hooks/useDeviceApps';
 import { useModalManager } from '@/hooks/useModalManager';
 import { useDeviceManager } from '@/hooks/useDeviceManager';
 import { useDebugPanel } from '@/hooks/useDebugPanel';
+import { useFlowPersistence } from '@/hooks/useFlowPersistence';
 
 // Helper functions
 import {
@@ -191,11 +192,19 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     // Undo/Redo history management
     const { takeSnapshot, undo, redo, canUndo, canRedo } = useUndoRedo(nodes, edges, setNodes, setEdges);
 
-    // ===== Flow Persistence State (TODO: extract to useFlowPersistence) =====
-    const [saving, setSaving] = useState(false);
-    const [lastSaved, setLastSaved] = useState(null);
-    const [flowName, setFlowName] = useState(flow.name);
-    const [editingName, setEditingName] = useState(false);
+    // ===== Flow Persistence (extracted to hook) =====
+    const {
+        saving,
+        lastSaved,
+        flowName,
+        editingName,
+        setFlowName,
+        setEditingName,
+        saveFlow,
+        debouncedSave,
+        manualSave,
+        saveName,
+    } = useFlowPersistence({ flow, autoSaveEnabled: false });
 
     // ===== Canvas Interaction State (TODO: extract to useFlowCanvas) =====
     const [selectedNode, setSelectedNode] = useState(null);
@@ -224,7 +233,6 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
     const reactFlowWrapper = useRef(null);
     const { screenToFlowPosition, fitView, zoomIn, zoomOut, getZoom } = useReactFlow();
-    const saveTimeoutRef = useRef(null);
 
     // Execution state hook
     const {
@@ -1274,46 +1282,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         }
     }, [props.auth?.user?.id, selectedDevice?.device_id, addToast, flow.id, setNodes]);
 
-    // Auto-save function
-    const saveFlow = useCallback(async (currentNodes, currentEdges, currentViewport) => {
-        setSaving(true);
-        try {
-            const response = await fetch(`/flows/${flow.id}/save-state`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({
-                    nodes: currentNodes,
-                    edges: currentEdges,
-                    viewport: currentViewport,
-                }),
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setLastSaved(new Date(data.saved_at));
-            }
-        } catch (error) {
-            console.error('Save failed:', error);
-        } finally {
-            setSaving(false);
-        }
-    }, [flow.id]);
-
-    // Debounced auto-save (DISABLED - use Ctrl+S for manual save)
-    const debouncedSave = useCallback((currentNodes, currentEdges, currentViewport) => {
-        // Auto-save disabled - user requested manual save only
-        // Uncomment below to re-enable auto-save:
-        // if (saveTimeoutRef.current) {
-        //     clearTimeout(saveTimeoutRef.current);
-        // }
-        // saveTimeoutRef.current = setTimeout(() => {
-        //     saveFlow(currentNodes, currentEdges, currentViewport);
-        // }, 1000);
-    }, [saveFlow]);
+    // Note: saveFlow and debouncedSave are now provided by useFlowPersistence hook
 
     const onNodesChange = useCallback((changes) => {
         // Snapshot before node removals for undo
@@ -1897,11 +1866,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [selectedNode, selectedNodes, editingName, deleteSelectedNodes, nodes, undo, redo, wrapSelectedNodesInLoop]);
 
-    useEffect(() => {
-        return () => {
-            if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-        };
-    }, []);
+    // Note: saveTimeoutRef cleanup is now handled by useFlowPersistence hook
 
     // Auto show log panel when execution starts
     useEffect(() => {
