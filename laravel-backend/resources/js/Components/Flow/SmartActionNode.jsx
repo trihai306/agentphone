@@ -220,8 +220,8 @@ function SmartActionNode({ data, selected, id }) {
             {/* Main Card - n8n style horizontal card */}
             <div
                 className={`
-                    relative flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer
-                    min-w-[180px] max-w-[240px]
+                    relative flex items-center gap-4 px-4 py-3.5 rounded-xl cursor-pointer
+                    min-w-[220px] max-w-[300px]
                     transition-all duration-200 group
                     ${selected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}
                     ${isRunning ? 'animate-pulse' : ''}
@@ -236,12 +236,12 @@ function SmartActionNode({ data, selected, id }) {
             >
                 {/* Icon with colored background */}
                 <div
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${isRunning ? 'animate-pulse' : ''}`}
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${isRunning ? 'animate-pulse' : ''}`}
                     style={{
                         backgroundColor: `${colors.primary}20`,
                     }}
                 >
-                    <div className="w-5 h-5 [&>svg]:w-full [&>svg]:h-full" style={{ color: colors.primary }}>
+                    <div className="w-6 h-6 [&>svg]:w-full [&>svg]:h-full" style={{ color: colors.primary }}>
                         {isRunning ? (
                             <svg className="w-full h-full animate-spin" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
@@ -261,11 +261,11 @@ function SmartActionNode({ data, selected, id }) {
 
                 {/* Text content */}
                 <div className="flex-1 min-w-0">
-                    <div className={`text-sm font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    <div className={`text-base font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
                         {colors.label}
                     </div>
                     {(displayLabel || subtitle) && (
-                        <div className={`text-xs truncate mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        <div className={`text-sm truncate mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                             {displayLabel || subtitle}
                         </div>
                     )}
