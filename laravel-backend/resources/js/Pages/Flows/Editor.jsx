@@ -58,6 +58,7 @@ import GlassDataSourceNode from '../../Components/Flow/GlassDataSourceNode';
 import GlassConditionNode from '../../Components/Flow/GlassConditionNode';
 import GlassTextInputNode from '../../Components/Flow/GlassTextInputNode';
 import GlassHttpNode from '../../Components/Flow/GlassHttpNode';
+import GlassAINode from '../../Components/Flow/GlassAINode';
 import SmartActionNode from '../../Components/Flow/SmartActionNode';
 import ElementCheckNode from '../../Components/Flow/ElementCheckNode';
 import WaitForElementNode from '../../Components/Flow/WaitForElementNode';
@@ -124,7 +125,8 @@ const nodeTypes = {
     file_input: FileInputNode,
     text_data: GlassTextInputNode,
     data_source: GlassDataSourceNode,
-    ai_process: AINode,
+    ai_process: GlassAINode,
+    ai_call: GlassAINode,
     http: GlassHttpNode,
 };
 
@@ -1342,6 +1344,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         { type: 'file_input', label: t('flows.editor.nodes.file_upload'), icon: 'upload', color: '#06b6d4', bgColor: 'rgba(6, 182, 212, 0.15)', description: t('flows.editor.nodes.file_upload_desc', 'Upload files/images'), category: 'resource' },
         { type: 'data_source', label: t('flows.editor.nodes.data_source'), icon: 'database', color: '#f59e0b', bgColor: 'rgba(245, 158, 11, 0.15)', description: t('flows.editor.nodes.data_source_desc', 'Connect test data'), category: 'resource' },
         { type: 'ai_process', label: t('flows.editor.nodes.ai_process'), icon: 'sparkles', color: '#ec4899', bgColor: 'rgba(236, 72, 153, 0.15)', description: t('flows.editor.nodes.ai_process_desc', 'AI integration'), category: 'resource' },
+        { type: 'ai_call', label: t('flows.editor.nodes.ai_call', 'AI Call'), icon: 'ai', color: '#8b5cf6', bgColor: 'rgba(139, 92, 246, 0.15)', description: t('flows.editor.nodes.ai_call_desc', 'Call AI API'), category: 'resource' },
     ];
 
     // Legacy HTML5 drag handler (keep for compatibility but not actively used)

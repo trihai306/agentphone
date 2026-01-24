@@ -165,7 +165,7 @@ export default function NodeConfigPanel({
                     />
                 )}
 
-                {nodeType === 'ai_process' && (
+                {['ai_process', 'ai_call'].includes(nodeType) && (
                     <AIConfig
                         data={nodeData}
                         updateData={updateData}

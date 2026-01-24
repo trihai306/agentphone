@@ -2,10 +2,10 @@ import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { NodeStatus } from '@/hooks/useExecutionState';
-import GlassNode from './GlassNode';
 
 /**
  * GlassLoopNode - Premium glassmorphic loop node
+ * Layout: Horizontal (Input Left → Outputs Right)
  */
 function GlassLoopNode({ id, data, selected }) {
     const { theme } = useTheme();
@@ -24,7 +24,7 @@ function GlassLoopNode({ id, data, selected }) {
     const currentIteration = data?.currentIteration;
     const totalIterations = data?.totalIterations;
 
-    const color = '#6366f1'; // Indigo
+    const color = '#14b8a6'; // Teal
 
     const LoopIcon = (
         <svg className="w-5 h-5" fill="none" stroke={color} viewBox="0 0 24 24" strokeWidth={2}>
@@ -37,43 +37,19 @@ function GlassLoopNode({ id, data, selected }) {
 
     return (
         <div className={`group transition-all duration-300 ${selected ? 'scale-[1.02]' : ''} ${isRunning ? 'animate-pulse' : ''}`}>
-            {/* Top Handle - Execution Flow Input */}
+            {/* Input Handle - Left */}
             <Handle
                 type="target"
-                position={Position.Top}
-                className="!w-4 !h-4 !border-[3px] !-top-2 transition-all duration-300"
+                position={Position.Left}
+                className="!w-4 !h-4 !border-[3px] !-left-2 transition-all duration-300"
                 style={{
+                    top: '50%',
+                    transform: 'translateY(-50%)',
                     backgroundColor: isRunning ? '#6366f1' : isSuccess ? '#10b981' : color,
                     borderColor: isDark ? '#0a0a0a' : '#ffffff',
                     boxShadow: `0 0 15px ${color}60`,
                 }}
             />
-
-            {/* LEFT Handle - Data Input from DataSourceNode */}
-            <Handle
-                type="target"
-                position={Position.Left}
-                id="data-input"
-                className="!w-5 !h-5 !border-[3px] transition-all duration-300 group-hover:!scale-110"
-                style={{
-                    backgroundColor: '#f59e0b', // Amber - matches DataSourceNode
-                    borderColor: isDark ? '#0a0a0a' : '#ffffff',
-                    boxShadow: `0 0 15px rgba(245, 158, 11, 0.5)`,
-                    left: '-10px',
-                }}
-            />
-
-            {/* Data Input Label */}
-            {hasDataSource && (
-                <div
-                    className="absolute left-[-8px] top-1/2 transform -translate-x-full -translate-y-1/2 mr-2"
-                    style={{ pointerEvents: 'none' }}
-                >
-                    <span className={`px-2 py-0.5 rounded text-[9px] font-mono whitespace-nowrap ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600'}`}>
-                        {dataSourceName ? `{{${dataSourceName}}}` : '📊 Data'} ◂
-                    </span>
-                </div>
-            )}
 
             {/* Main Card */}
             <div
@@ -97,7 +73,7 @@ function GlassLoopNode({ id, data, selected }) {
                     style={{ background: `linear-gradient(135deg, ${color}15 0%, ${color}05 100%)` }}
                 >
                     <div
-                        className="w-9 h-9 rounded-xl flex items-center justify-center"
+                        className="w-10 h-10 rounded-xl flex items-center justify-center"
                         style={{
                             background: `linear-gradient(135deg, ${color}30 0%, ${color}15 100%)`,
                             boxShadow: `0 4px 12px ${color}30`,
@@ -110,7 +86,7 @@ function GlassLoopNode({ id, data, selected }) {
                             {isRunning ? '⚡ Iterating...' : '🔄 Loop'}
                         </h3>
                         <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {data?.label || 'For Each Item'}
+                            {data?.label || 'Lặp'}
                         </p>
                     </div>
                     {/* Iteration Counter */}
@@ -126,41 +102,8 @@ function GlassLoopNode({ id, data, selected }) {
 
                 {/* Body */}
                 <div className={`px-4 py-3 border-t space-y-3 ${isDark ? 'border-white/5' : 'border-black/5'}`}>
-                    {/* Connected Data Source Info */}
-                    {hasDataSource && data?.connectedCollectionName ? (
-                        <div className={`p-3 rounded-xl ${isDark ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-amber-50 border border-amber-200'}`}>
-                            <div className="flex items-center justify-between mb-2">
-                                <span className={`text-[10px] uppercase font-semibold ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
-                                    📊 Data Source Connected
-                                </span>
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600'}`}>
-                                    {data.connectedRecordCount || 0} records
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{data.connectedCollectionName}</span>
-                                <span className={isDark ? 'text-gray-600' : 'text-gray-300'}>→</span>
-                                <code className="text-cyan-400 text-xs font-mono">{`{{${dataSourceName || 'item'}}}`}</code>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className={`p-3 rounded-xl ${isDark ? 'bg-black/30' : 'bg-gray-50'}`}>
-                            <div className="flex items-center justify-between mb-2">
-                                <span className={`text-[10px] uppercase font-semibold ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    Source
-                                </span>
-                                <span className="font-mono text-xs" style={{ color }}>{sourceVariable}</span>
-                            </div>
-                            {!hasDataSource && (
-                                <p className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                    💡 Connect a DataSource node for data-driven loop
-                                </p>
-                            )}
-                        </div>
-                    )}
-
                     {/* Variable Info */}
-                    <div className={`p-2 rounded-lg ${isDark ? 'bg-black/20' : 'bg-gray-50/50'}`}>
+                    <div className={`p-3 rounded-xl ${isDark ? 'bg-black/30' : 'bg-gray-50'}`}>
                         <div className="flex items-center gap-4 text-xs">
                             <div className="flex items-center gap-1.5">
                                 <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>Item:</span>
@@ -179,37 +122,15 @@ function GlassLoopNode({ id, data, selected }) {
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
-                            <span>All iterations completed</span>
+                            <span>Completed</span>
                         </div>
                     )}
-
-                    {/* Edit Sub-Flow Button */}
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            data?.onEditSubFlow?.(id);
-                        }}
-                        className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${isDark
-                            ? 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20'
-                            : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200'
-                            }`}
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        Edit Sub-Flow
-                        {data?.subFlow?.nodes?.length > 2 && (
-                            <span className={`px-1.5 py-0.5 rounded text-[10px] ${isDark ? 'bg-indigo-500/30' : 'bg-indigo-200'}`}>
-                                {data.subFlow.nodes.length - 2} actions
-                            </span>
-                        )}
-                    </button>
                 </div>
 
                 {/* Branch Labels */}
                 <div className={`flex justify-between px-4 py-2 text-[10px] font-semibold border-t ${isDark ? 'border-white/5' : 'border-black/5'}`}>
-                    <span style={{ color }}>↓ Each Item</span>
-                    <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>Complete →</span>
+                    <span style={{ color }}>↻ Each Item</span>
+                    <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>Done →</span>
                 </div>
 
                 {/* Progress Bar */}
@@ -226,28 +147,28 @@ function GlassLoopNode({ id, data, selected }) {
                 )}
             </div>
 
-            {/* Loop Body Handle (Left) */}
+            {/* Loop Body Handle - Right Top */}
             <Handle
                 type="source"
-                position={Position.Bottom}
+                position={Position.Right}
                 id="loop"
-                className="!w-4 !h-4 !border-[3px] !-bottom-2"
+                className="!w-4 !h-4 !border-[3px] !-right-2 transition-transform hover:!scale-125"
                 style={{
-                    left: '25%',
+                    top: '35%',
                     backgroundColor: color,
                     borderColor: isDark ? '#0a0a0a' : '#ffffff',
                     boxShadow: `0 0 15px ${color}60`,
                 }}
             />
 
-            {/* Complete Handle (Right) */}
+            {/* Complete Handle - Right Bottom */}
             <Handle
                 type="source"
-                position={Position.Bottom}
+                position={Position.Right}
                 id="complete"
-                className="!w-4 !h-4 !border-[3px] !-bottom-2"
+                className="!w-4 !h-4 !border-[3px] !-right-2 transition-transform hover:!scale-125"
                 style={{
-                    left: '75%',
+                    top: '65%',
                     backgroundColor: isSuccess ? '#10b981' : (isDark ? '#4b5563' : '#9ca3af'),
                     borderColor: isDark ? '#0a0a0a' : '#ffffff',
                     boxShadow: '0 0 15px rgba(107, 114, 128, 0.5)',

@@ -5,6 +5,7 @@ import { NodeStatus } from '@/hooks/useExecutionState';
 
 /**
  * GlassConditionNode - Premium glassmorphic condition/branching node
+ * Layout: Horizontal (Input Left → Output Right)
  */
 function GlassConditionNode({ id, data, selected }) {
     const { theme } = useTheme();
@@ -22,21 +23,23 @@ function GlassConditionNode({ id, data, selected }) {
 
     return (
         <div className={`group transition-all duration-300 ${selected ? 'scale-[1.02]' : ''} ${isRunning ? 'animate-pulse' : ''}`}>
-            {/* Top Handle */}
+            {/* Input Handle - Left */}
             <Handle
                 type="target"
-                position={Position.Top}
-                className="!w-4 !h-4 !border-[3px] !-top-2 transition-all duration-300 group-hover:!scale-110"
+                position={Position.Left}
+                className="!w-4 !h-4 !border-[3px] !-left-2 transition-all duration-300 group-hover:!scale-110"
                 style={{
+                    top: '50%',
+                    transform: 'translateY(-50%)',
                     backgroundColor: isRunning ? '#6366f1' : isSuccess ? '#10b981' : isError ? '#ef4444' : color,
                     borderColor: isDark ? '#0a0a0a' : '#ffffff',
                     boxShadow: `0 0 15px ${color}60`,
                 }}
             />
 
-            {/* Diamond Shape Container */}
+            {/* Main Container */}
             <div
-                className={`relative min-w-[200px] rounded-2xl overflow-hidden ${selected ? 'ring-2 ring-offset-2' : ''}`}
+                className={`relative min-w-[220px] rounded-2xl overflow-hidden ${selected ? 'ring-2 ring-offset-2' : ''}`}
                 style={{
                     background: isDark
                         ? `linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.9) 100%)`
@@ -56,7 +59,7 @@ function GlassConditionNode({ id, data, selected }) {
                     style={{ background: `linear-gradient(135deg, ${color}15 0%, ${color}05 100%)` }}
                 >
                     <div
-                        className="w-9 h-9 rounded-xl flex items-center justify-center"
+                        className="w-10 h-10 rounded-xl flex items-center justify-center"
                         style={{
                             background: `linear-gradient(135deg, ${color}30 0%, ${color}15 100%)`,
                             boxShadow: `0 4px 12px ${color}30`,
@@ -71,7 +74,7 @@ function GlassConditionNode({ id, data, selected }) {
                             ❓ Condition
                         </h3>
                         <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {data?.label || 'If / Else Branch'}
+                            {data?.label || 'Điều Kiện'}
                         </p>
                     </div>
                     {/* Result Indicator */}
@@ -87,9 +90,8 @@ function GlassConditionNode({ id, data, selected }) {
                     )}
                 </div>
 
-                {/* Body */}
+                {/* Body - Condition Expression */}
                 <div className={`px-4 py-3 border-t ${isDark ? 'border-white/5' : 'border-black/5'}`}>
-                    {/* Condition Expression */}
                     <div className={`p-3 rounded-xl font-mono text-xs ${isDark ? 'bg-black/30 text-gray-300' : 'bg-gray-50 text-gray-600'}`}>
                         <code>{condition}</code>
                     </div>
@@ -102,29 +104,29 @@ function GlassConditionNode({ id, data, selected }) {
                 </div>
             </div>
 
-            {/* True Handle (Left) */}
+            {/* True Handle - Right Top */}
             <Handle
                 type="source"
-                position={Position.Bottom}
+                position={Position.Right}
                 id="true"
-                className="!w-4 !h-4 !border-[3px] !-bottom-2"
+                className="!w-4 !h-4 !border-[3px] !-right-2 transition-transform hover:!scale-125"
                 style={{
-                    left: '25%',
-                    backgroundColor: lastResult === true ? '#10b981' : '#10b981',
+                    top: '35%',
+                    backgroundColor: '#10b981',
                     borderColor: isDark ? '#0a0a0a' : '#ffffff',
                     boxShadow: '0 0 15px rgba(16, 185, 129, 0.5)',
                 }}
             />
 
-            {/* False Handle (Right) */}
+            {/* False Handle - Right Bottom */}
             <Handle
                 type="source"
-                position={Position.Bottom}
+                position={Position.Right}
                 id="false"
-                className="!w-4 !h-4 !border-[3px] !-bottom-2"
+                className="!w-4 !h-4 !border-[3px] !-right-2 transition-transform hover:!scale-125"
                 style={{
-                    left: '75%',
-                    backgroundColor: lastResult === false ? '#ef4444' : '#ef4444',
+                    top: '65%',
+                    backgroundColor: '#ef4444',
                     borderColor: isDark ? '#0a0a0a' : '#ffffff',
                     boxShadow: '0 0 15px rgba(239, 68, 68, 0.5)',
                 }}
