@@ -22,19 +22,25 @@ export default function NodeSidebar({
     const NodeItem = ({ template }) => (
         <div
             key={template.type}
-            draggable
-            onDragStart={(e) => onDragStart(e, template.type, template.label, template.color)}
-            className={`group relative flex items-center ${sidebarExpanded ? 'gap-2 p-2' : 'justify-center p-1.5'} rounded-lg cursor-grab active:cursor-grabbing border transition-all duration-200 hover:scale-[1.02] ${isDark ? 'bg-[#1a1a1a] hover:bg-[#1e1e1e] border-[#252525] hover:border-[#333]' : 'bg-gray-50 hover:bg-white border-gray-200 hover:border-gray-300'}`}
+            draggable={true}
+            onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = 'move';
+                onDragStart(e, template.type, template.label, template.color);
+            }}
+            onDragEnd={(e) => {
+                e.preventDefault();
+            }}
+            className={`group relative flex items-center ${sidebarExpanded ? 'gap-2 p-2' : 'justify-center p-1.5'} rounded-lg cursor-grab active:cursor-grabbing border transition-all duration-200 hover:scale-[1.02] select-none ${isDark ? 'bg-[#1a1a1a] hover:bg-[#1e1e1e] border-[#252525] hover:border-[#333]' : 'bg-gray-50 hover:bg-white border-gray-200 hover:border-gray-300'}`}
             title={!sidebarExpanded ? template.label : undefined}
         >
             <div
-                className={`${sidebarExpanded ? 'w-7 h-7' : 'w-8 h-8'} rounded-md flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:scale-110`}
+                className={`${sidebarExpanded ? 'w-7 h-7' : 'w-8 h-8'} rounded-md flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:scale-110 pointer-events-none`}
                 style={{ backgroundColor: template.bgColor }}
             >
                 <NodeIcon icon={template.icon} color={template.color} />
             </div>
             {sidebarExpanded && (
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 pointer-events-none">
                     <p className={`text-[11px] font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{template.label}</p>
                 </div>
             )}
