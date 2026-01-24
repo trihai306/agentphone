@@ -38,11 +38,37 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
     const [title, setTitle] = useState('');
     const [totalCredits, setTotalCredits] = useState(0);
     const [scenario, setScenario] = useState(null);
+
+    // NEW: Style and Platform for intelligent prompt engineering
+    const [style, setStyle] = useState('cinematic');
+    const [platform, setPlatform] = useState('general');
+    const [aiMetadata, setAiMetadata] = useState(null); // Stores theme, mood, director_notes etc.
+
     const [settings, setSettings] = useState({
         resolution: '1080p',
         aspect_ratio: '16:9',
         generate_audio: true,
     });
+
+    // Style options for visual selection
+    const styleOptions = [
+        { id: 'cinematic', icon: '🎬', name: 'Cinematic', desc: 'Phong cách điện ảnh Hollywood' },
+        { id: 'documentary', icon: '📹', name: 'Documentary', desc: 'Tài liệu, chân thực' },
+        { id: 'commercial', icon: '💼', name: 'Commercial', desc: 'Quảng cáo cao cấp' },
+        { id: 'social_media', icon: '📱', name: 'Social Media', desc: 'Viral, bắt trend' },
+        { id: 'storytelling', icon: '📖', name: 'Storytelling', desc: 'Kể chuyện cảm xúc' },
+        { id: 'minimal', icon: '✨', name: 'Minimal', desc: 'Tối giản, thanh lịch' },
+    ];
+
+    // Platform options
+    const platformOptions = [
+        { id: 'general', name: 'Đa nền tảng' },
+        { id: 'youtube', name: 'YouTube' },
+        { id: 'tiktok', name: 'TikTok' },
+        { id: 'instagram', name: 'Instagram' },
+        { id: 'ads', name: 'Quảng cáo' },
+        { id: 'presentation', name: 'Thuyết trình' },
+    ];
 
     const models = outputType === 'video' ? videoModels : imageModels;
 
@@ -66,13 +92,25 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
             const response = await axios.post('/ai-studio/scenarios/parse', {
                 script,
                 output_type: outputType,
+                style,      // NEW: Send style for professional prompt
+                platform,   // NEW: Send platform for platform-specific optimization
             });
 
             if (response.data.success) {
-                setScenes(response.data.data.scenes);
-                setTitle(response.data.data.title || '');
+                const data = response.data.data;
+                setScenes(data.scenes);
+                setTitle(data.title || '');
+                // Store enhanced AI metadata
+                setAiMetadata({
+                    theme: data.theme,
+                    overall_mood: data.overall_mood,
+                    color_palette: data.color_palette,
+                    background_music_suggestion: data.background_music_suggestion,
+                    director_notes: data.director_notes,
+                    total_duration: data.total_duration,
+                });
                 setStep('scenes');
-                await estimateCredits(response.data.data.scenes);
+                await estimateCredits(data.scenes);
             }
         } catch (error) {
             addToast(error.response?.data?.error || 'Không thể phân tích kịch bản', 'error');
@@ -185,6 +223,10 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
         setScript('');
         setTitle('');
         setTotalCredits(0);
+        // Reset enhanced options
+        setStyle('cinematic');
+        setPlatform('general');
+        setAiMetadata(null);
     };
 
     return (
@@ -224,10 +266,10 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                         {['input', 'scenes', 'generating'].map((s, i) => (
                             <div key={s} className="flex items-center">
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${step === s
-                                        ? 'bg-violet-600 text-white'
-                                        : i < ['input', 'scenes', 'generating'].indexOf(step)
-                                            ? isDark ? 'bg-violet-500/30 text-violet-300' : 'bg-violet-100 text-violet-700'
-                                            : isDark ? 'bg-[#2a2a2a] text-slate-500' : 'bg-slate-100 text-slate-400'
+                                    ? 'bg-violet-600 text-white'
+                                    : i < ['input', 'scenes', 'generating'].indexOf(step)
+                                        ? isDark ? 'bg-violet-500/30 text-violet-300' : 'bg-violet-100 text-violet-700'
+                                        : isDark ? 'bg-[#2a2a2a] text-slate-500' : 'bg-slate-100 text-slate-400'
                                     }`}>
                                     {i + 1}
                                 </div>
@@ -256,8 +298,8 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                             key={type}
                                             onClick={() => { setOutputType(type); setModel(''); }}
                                             className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${outputType === type
-                                                    ? isDark ? 'bg-[#2a2a2a] text-white shadow' : 'bg-white text-slate-900 shadow-md'
-                                                    : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+                                                ? isDark ? 'bg-[#2a2a2a] text-white shadow' : 'bg-white text-slate-900 shadow-md'
+                                                : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
                                                 }`}
                                         >
                                             {type === 'video' ? '🎬 Video' : '🖼️ Ảnh'}
@@ -283,19 +325,73 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                 </select>
                             </div>
 
+                            {/* NEW: Style Selection - Visual Cards */}
+                            <div className="mb-5">
+                                <label className={`block text-sm font-semibold mb-3 ${themeClasses.textSecondary}`}>
+                                    🎨 Phong cách video
+                                </label>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                    {styleOptions.map((s) => (
+                                        <button
+                                            key={s.id}
+                                            type="button"
+                                            onClick={() => setStyle(s.id)}
+                                            className={`p-3 rounded-xl border-2 text-left transition-all ${style === s.id
+                                                ? isDark
+                                                    ? 'border-violet-500 bg-violet-500/10'
+                                                    : 'border-violet-500 bg-violet-50'
+                                                : isDark
+                                                    ? 'border-[#2a2a2a] bg-[#0a0a0a] hover:border-[#3a3a3a]'
+                                                    : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-lg">{s.icon}</span>
+                                                <span className={`font-medium text-sm ${themeClasses.textPrimary}`}>{s.name}</span>
+                                            </div>
+                                            <p className={`text-xs mt-1 ${themeClasses.textMuted}`}>{s.desc}</p>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* NEW: Platform Selection */}
+                            <div className="mb-5">
+                                <label className={`block text-sm font-semibold mb-2 ${themeClasses.textSecondary}`}>
+                                    📺 Nền tảng mục tiêu
+                                </label>
+                                <div className={`flex flex-wrap gap-2`}>
+                                    {platformOptions.map((p) => (
+                                        <button
+                                            key={p.id}
+                                            type="button"
+                                            onClick={() => setPlatform(p.id)}
+                                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${platform === p.id
+                                                ? 'bg-violet-600 text-white'
+                                                : isDark
+                                                    ? 'bg-[#2a2a2a] text-slate-300 hover:bg-[#3a3a3a]'
+                                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                                }`}
+                                        >
+                                            {p.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
                             {/* Script Input */}
                             <div className="mb-4">
                                 <label className={`block text-sm font-semibold mb-2 ${themeClasses.textSecondary}`}>Kịch Bản</label>
                                 <textarea
                                     value={script}
                                     onChange={(e) => setScript(e.target.value)}
-                                    placeholder="Nhập kịch bản của bạn... AI sẽ phân tích và chia thành các cảnh riêng biệt."
-                                    rows={10}
+                                    placeholder="Nhập kịch bản của bạn... AI sẽ phân tích và chia thành các cảnh riêng biệt với góc quay, ánh sáng, chuyển cảnh chuyên nghiệp."
+                                    rows={8}
                                     className={`w-full px-4 py-3 rounded-xl border text-sm resize-none transition-colors ${isDark ? 'bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
                                         }`}
                                 />
                                 <p className={`mt-2 text-xs ${themeClasses.textMuted}`}>
-                                    Tối thiểu 10 ký tự, tối đa 10,000 ký tự. AI sẽ chia thành tối đa 10 cảnh.
+                                    💡 AI sẽ tự động thêm góc quay, ánh sáng, chuyển cảnh chuyên nghiệp theo phong cách đã chọn.
                                 </p>
                             </div>
 
@@ -304,8 +400,8 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                 onClick={handleParse}
                                 disabled={parsing || script.length < 10}
                                 className={`w-full py-4 rounded-xl font-semibold text-base transition-all ${!parsing && script.length >= 10
-                                        ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-500/30'
-                                        : isDark ? 'bg-[#2a2a2a] text-slate-500 cursor-not-allowed' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                    ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-500/30'
+                                    : isDark ? 'bg-[#2a2a2a] text-slate-500 cursor-not-allowed' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                     }`}
                             >
                                 {parsing ? (
@@ -374,8 +470,8 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                         onClick={handleGenerate}
                                         disabled={currentCredits < totalCredits}
                                         className={`flex-1 py-3 rounded-xl font-semibold ${currentCredits >= totalCredits
-                                                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-500/30'
-                                                : isDark ? 'bg-[#2a2a2a] text-slate-500 cursor-not-allowed' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                            ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-500/30'
+                                            : isDark ? 'bg-[#2a2a2a] text-slate-500 cursor-not-allowed' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                             }`}
                                     >
                                         🚀 Tạo {scenes.length} {outputType === 'video' ? 'video' : 'ảnh'}
@@ -401,8 +497,8 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                             {scenes.map((scene) => (
                                 <div key={scene.id} className={`p-4 rounded-xl flex items-center gap-4 ${isDark ? 'bg-[#1a1a1a] border border-[#2a2a2a]' : 'bg-white border border-slate-200'}`}>
                                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${scene.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' :
-                                            scene.status === 'generating' ? 'bg-amber-500/20 text-amber-400' :
-                                                scene.status === 'failed' ? 'bg-rose-500/20 text-rose-400' : isDark ? 'bg-[#2a2a2a] text-slate-500' : 'bg-slate-100 text-slate-400'
+                                        scene.status === 'generating' ? 'bg-amber-500/20 text-amber-400' :
+                                            scene.status === 'failed' ? 'bg-rose-500/20 text-rose-400' : isDark ? 'bg-[#2a2a2a] text-slate-500' : 'bg-slate-100 text-slate-400'
                                         }`}>
                                         {scene.status === 'completed' ? '✓' : scene.status === 'generating' ? '⏳' : scene.status === 'failed' ? '✕' : scene.order}
                                     </div>

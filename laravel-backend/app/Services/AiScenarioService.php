@@ -37,14 +37,17 @@ class AiScenarioService
 
     /**
      * Parse a script into scenes using Gemini AI
+     * @param string $script The raw script text
+     * @param string $outputType 'video' or 'image'
+     * @param array $options Additional options: style, platform, mood
      */
-    public function parseScript(string $script, string $outputType = 'video'): array
+    public function parseScript(string $script, string $outputType = 'video', array $options = []): array
     {
         if (empty($this->geminiApiKey)) {
             throw new \Exception('Gemini API key is not configured');
         }
 
-        $prompt = $this->buildParsePrompt($script, $outputType);
+        $prompt = $this->buildParsePrompt($script, $outputType, $options);
 
         $url = "{$this->geminiApiUrl}/models/gemini-2.0-flash:generateContent";
 
@@ -96,21 +99,31 @@ class AiScenarioService
             $scenes = array_slice($scenes, 0, self::MAX_SCENES);
         }
 
-        // Ensure each scene has required fields
+        // Ensure each scene has required fields with enhanced metadata
         $formattedScenes = [];
         foreach ($scenes as $index => $scene) {
             $formattedScenes[] = [
                 'order' => $index + 1,
                 'description' => $scene['description'] ?? 'Scene ' . ($index + 1),
                 'prompt' => $scene['prompt'] ?? $scene['description'] ?? '',
-                'duration' => max(self::MIN_SCENE_DURATION, (int) ($scene['suggested_duration'] ?? self::DEFAULT_SCENE_DURATION)),
+                'duration' => max(self::MIN_SCENE_DURATION, min(self::MAX_SCENE_DURATION, (int) ($scene['suggested_duration'] ?? self::DEFAULT_SCENE_DURATION))),
+                // Enhanced metadata from professional prompt
+                'camera_movement' => $scene['camera_movement'] ?? null,
+                'transition_to_next' => $scene['transition_to_next'] ?? null,
+                'audio_cue' => $scene['audio_cue'] ?? null,
             ];
         }
 
         return [
             'title' => $parsed['title'] ?? null,
+            'theme' => $parsed['theme'] ?? null,
+            'overall_mood' => $parsed['overall_mood'] ?? null,
+            'color_palette' => $parsed['color_palette'] ?? [],
+            'background_music_suggestion' => $parsed['background_music_suggestion'] ?? null,
+            'director_notes' => $parsed['director_notes'] ?? null,
             'scenes' => $formattedScenes,
             'total_scenes' => count($formattedScenes),
+            'total_duration' => (int) ($parsed['total_duration'] ?? array_sum(array_column($formattedScenes, 'duration'))),
         ];
     }
 
@@ -252,45 +265,152 @@ PROMPT;
 
     /**
      * Build the AI prompt for parsing scripts
+     * Enhanced with professional cinematography context
      */
-    protected function buildParsePrompt(string $script, string $outputType): string
+    protected function buildParsePrompt(string $script, string $outputType, array $options = []): string
     {
         $mediaType = $outputType === 'video' ? 'video clips' : 'images';
         $durationNote = $outputType === 'video'
-            ? "- \"suggested_duration\": thời lượng video đề xuất (4-15 giây, mặc định 6 giây)"
-            : "";
+            ? '"suggested_duration": 5'
+            : '';
+
+        // Extract options
+        $style = $options['style'] ?? 'cinematic';
+        $platform = $options['platform'] ?? 'general';
+        $mood = $options['mood'] ?? null;
+
+        $styleGuide = $this->getStyleGuide($style);
+        $platformGuide = $this->getPlatformGuide($platform);
+        $moodInstruction = $mood ? "\n## MOOD YÊU CẦU: {$mood}" : '';
 
         return <<<PROMPT
-Bạn là một chuyên gia biên kịch và đạo diễn phim. Nhiệm vụ của bạn là phân tích kịch bản sau và chia thành các cảnh riêng biệt để tạo {$mediaType}.
+# BẠN LÀ MỘT CHUYÊN GIA BIÊN KỊCH & ĐẠO DIỄN PHIM CHUYÊN NGHIỆP
 
-KỊCH BẢN:
+## VAI TRÒ
+Bạn là đạo diễn quảng cáo với 20 năm kinh nghiệm, từng làm việc cho các thương hiệu lớn như Apple, Nike, Samsung. Bạn có khả năng biến ý tưởng thô thành kịch bản hình ảnh chuyên nghiệp.
+
+## NHIỆM VỤ
+Phân tích và chuyển đổi kịch bản sau thành chuỗi cảnh {$mediaType} chuyên nghiệp.
+
+## KỊCH BẢN GỐC
 {$script}
 
-YÊU CẦU:
-1. Chia kịch bản thành tối đa 10 cảnh (scenes)
-2. Mỗi cảnh phải độc lập và có thể tạo thành 1 {$mediaType} riêng
-3. Prompt cho mỗi cảnh phải chi tiết, mô tả rõ:
-   - Khung cảnh/bối cảnh
-   - Nhân vật (nếu có)
-   - Hành động chính
-   - Ánh sáng, màu sắc, mood
-4. Prompt phải bằng tiếng Anh để AI generation hiểu tốt hơn
+## PHONG CÁCH: {$style}
+{$styleGuide}
 
-OUTPUT FORMAT (JSON):
+## NỀN TẢNG MỤC TIÊU: {$platform}
+{$platformGuide}
+{$moodInstruction}
+
+## YÊU CẦU KỸ THUẬT CHI TIẾT
+
+### 1. PHÂN TÍCH KỊCH BẢN
+- Xác định chủ đề chính, thông điệp cốt lõi
+- Tìm điểm cao trào (climax) và cấu trúc 3 hồi (setup → conflict → resolution)
+- Nhận diện nhân vật, bối cảnh, tone giọng
+
+### 2. SCENE BREAKDOWN
+Chia thành 3-8 cảnh (tối đa 10). Mỗi cảnh PHẢI có:
+
+**A. Visual Composition**
+- Camera: Wide/Medium/Close-up/Extreme close-up
+- Angle: Eye-level/High/Low/Dutch angle/Bird's eye
+- Movement: Static/Pan/Tilt/Dolly/Tracking/Crane
+
+**B. Lighting Design**
+- Key light direction và intensity
+- Mood lighting (High-key/Low-key/Natural/Dramatic)
+- Color temperature (Warm/Cool/Neutral)
+
+**C. Color Grading**
+- Primary palette (dominant colors)
+- LUT suggestion (Teal & Orange/Film Noir/Pastel...)
+- Saturation level
+
+**D. Motion & Pacing**
+- Speed: Normal/Slow-mo/Time-lapse
+- Transition type: Cut/Dissolve/Wipe/Match cut
+
+**E. Audio Cues**
+- Sound design hints (ambient, SFX)
+- Music mood suggestion
+
+### 3. PROMPT ENGINEERING CHO AI VIDEO
+Prompt tiếng Anh PHẢI:
+- Bắt đầu bằng style keyword: "Cinematic 4K footage of..."
+- Mô tả camera movement cụ thể
+- Chỉ định lighting và mood
+- Kết thúc bằng: "shot on ARRI Alexa, 24fps, shallow depth of field"
+
+### 4. CHARACTER CONSISTENCY
+Nếu có nhân vật xuất hiện nhiều cảnh:
+- Mô tả chi tiết ngoại hình 1 lần
+- Reference lại ở các cảnh sau để consistency
+
+## OUTPUT FORMAT (STRICTLY JSON)
 {
-  "title": "Tiêu đề gợi ý cho kịch bản",
+  "title": "Tiêu đề sáng tạo, hấp dẫn",
+  "theme": "Chủ đề chính",
+  "overall_mood": "Mood tổng thể",
+  "color_palette": ["#hex1", "#hex2", "#hex3"],
+  "background_music_suggestion": "Thể loại nhạc nền phù hợp",
   "scenes": [
     {
       "order": 1,
-      "description": "Mô tả ngắn gọn bằng tiếng Việt",
-      "prompt": "Detailed English prompt for AI video/image generation. Include scene setting, characters, actions, lighting, mood, camera angle.",
-      {$durationNote}
+      "description": "Mô tả ngắn gọn bằng tiếng Việt (1-2 câu)",
+      "prompt": "Cinematic 4K footage of [detailed scene description]. Camera [specific movement]. Lighting: [type]. Color grade: [style]. Shot on ARRI Alexa Mini, 24fps, anamorphic lens, shallow depth of field.",
+      {$durationNote},
+      "camera_movement": "dolly in slowly",
+      "transition_to_next": "dissolve",
+      "audio_cue": "soft piano begins"
     }
-  ]
+  ],
+  "total_duration": 25,
+  "director_notes": "Ghi chú đạo diễn về cách kết nối các cảnh"
 }
 
-Chỉ trả về JSON, không có text khác.
+## QUY TẮC BẮT BUỘC
+1. Prompt PHẢI bằng tiếng Anh, professional terminology
+2. Mỗi cảnh 4-15 giây, tổng video không quá 2 phút
+3. Consistent character descriptions
+4. Smooth visual transitions
+5. Output CHỈ CÓ JSON, không có text khác
+
 PROMPT;
+    }
+
+    /**
+     * Get style guide for video production
+     */
+    protected function getStyleGuide(string $style): string
+    {
+        $styles = [
+            'cinematic' => 'Phong cách điện ảnh Hollywood: Ánh sáng dramatic với deep shadows, góc quay cinematic (wide establishing → intimate close-ups), màu sắc được grade chuyên nghiệp với rich contrast. Slow camera movements, meaningful pauses. Tham khảo: Denis Villeneuve, Christopher Nolan.',
+            'documentary' => 'Phong cách tài liệu: Handheld camera tạo cảm giác real-time, natural lighting không setup, intimate close-ups bắt emotion thật. Raw textures, authentic environments. Không over-produced.',
+            'commercial' => 'Phong cách quảng cáo cao cấp: Crisp 4K visuals, hero product shots với perfect lighting, dynamic camera movements (orbits, reveals). Aspirational lifestyle, polished finish. Tham khảo: Apple advertising.',
+            'social_media' => 'Phong cách social media/viral: Vertical 9:16 framing, punchy visuals grab attention trong 1-3 giây đầu, quick cuts rhythmic. Bold colors, dynamic text overlays implied, trend-aware aesthetics.',
+            'storytelling' => 'Phong cách kể chuyện emotional: Character-driven với focus on faces và reactions. Warm color tones, soft lighting tạo intimacy. Meaningful pauses for impact, music-synced emotional beats. Tham khảo: Pixar storytelling principles.',
+            'minimal' => 'Phong cách tối giản: Clean solid backgrounds, single subject focus, generous negative space. Muted desaturated colors, elegant slow movements. Simple = sophisticated.',
+        ];
+
+        return $styles[$style] ?? $styles['cinematic'];
+    }
+
+    /**
+     * Get platform-specific guidelines
+     */
+    protected function getPlatformGuide(string $platform): string
+    {
+        $platforms = [
+            'youtube' => 'YouTube: Landscape 16:9. Hook mạnh trong 5 giây đầu. Structure với chapters-friendly segments. Longer scenes (6-15s) cho retention. Subtitles-friendly framing.',
+            'tiktok' => 'TikTok/Reels: Portrait 9:16 MANDATORY. Ultra-fast pacing, mỗi scene 3-5 giây max. First frame = scroll-stopper. Trend-aware transitions. Text-safe zones.',
+            'instagram' => 'Instagram: Square 1:1 hoặc Portrait 4:5. Aesthetic-focused, muted premium colors. Story-worthy moments. Clean compositions cho grid appearance.',
+            'ads' => 'Quảng cáo: Value proposition trong 3 giây đầu. Clear CTA scene cuối. Brand colors consistently. Professional voiceover-ready pacing.',
+            'presentation' => 'Presentation/Corporate: Clean professional look, informative framing, B-roll style. Expert authoritative tone. 16:9 landscape, graphics-friendly.',
+            'general' => 'Đa nền tảng: Flexible 16:9 landscape default. Universally appealing, can be cropped. Balanced pacing phù hợp nhiều platforms.',
+        ];
+
+        return $platforms[$platform] ?? $platforms['general'];
     }
 
     /**

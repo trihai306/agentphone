@@ -95,12 +95,24 @@ class AiScenarioController extends Controller
         $request->validate([
             'script' => 'required|string|min:10|max:10000',
             'output_type' => 'required|in:image,video',
+            // NEW: Style and platform options for professional prompt engineering
+            'style' => 'nullable|in:cinematic,documentary,commercial,social_media,storytelling,minimal',
+            'platform' => 'nullable|in:youtube,tiktok,instagram,ads,presentation,general',
+            'mood' => 'nullable|string|max:100',
         ]);
+
+        // Build options for enhanced parsing
+        $options = [
+            'style' => $request->input('style', 'cinematic'),
+            'platform' => $request->input('platform', 'general'),
+            'mood' => $request->input('mood'),
+        ];
 
         try {
             $result = $this->scenarioService->parseScript(
                 $request->input('script'),
-                $request->input('output_type')
+                $request->input('output_type'),
+                $options
             );
 
             return response()->json([

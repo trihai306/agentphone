@@ -34,6 +34,7 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
             title: t('navigation.resources', { defaultValue: 'Tài nguyên' }),
             items: [
                 { href: '/ai-studio', icon: 'ai', label: t('navigation.ai_studio', { defaultValue: 'AI Studio' }), active: url?.startsWith('/ai-studio'), highlight: true },
+                { href: '/ai-credits', icon: 'credits', label: t('navigation.ai_credits', { defaultValue: 'Nạp Credit' }), active: url?.startsWith('/ai-credits') },
                 { href: '/marketplace', icon: 'shop', label: t('navigation.marketplace', { defaultValue: 'Marketplace' }), active: url?.startsWith('/marketplace') },
                 { href: '/media', icon: 'media', label: t('navigation.media'), active: url?.startsWith('/media') },
             ]
