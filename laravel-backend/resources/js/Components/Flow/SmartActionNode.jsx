@@ -200,187 +200,163 @@ function SmartActionNode({ data, selected, id }) {
     const statusColor = isRunning ? '#6366f1' : isSuccess ? '#10b981' : isError ? '#ef4444' : colors.primary;
 
     return (
-        <div className={`flex transition-all duration-300 ${selected ? 'scale-[1.02]' : ''} ${isPending ? 'opacity-60' : ''}`}>
-            {/* Input Handle - Left side */}
+        <div className={`relative transition-all duration-300 ${selected ? 'scale-[1.02]' : ''} ${isPending ? 'opacity-60' : ''}`}>
+            {/* Input Handle - Left edge center */}
             <Handle
                 type="target"
                 position={Position.Left}
                 id="input"
-                className="!w-3 !h-3 !border-2 !rounded-full transition-all"
+                className="!w-3 !h-3 !border-2 !rounded-full !-left-1.5"
                 style={{
                     backgroundColor: isDark ? '#1a1a1a' : '#fff',
                     borderColor: statusColor,
                     boxShadow: isRunning ? `0 0 10px ${statusColor}` : 'none',
-                    left: '-6px',
                     top: '50%',
                     transform: 'translateY(-50%)'
                 }}
             />
 
-            {/* Data Input Handle - Left side (only for nodes that support data input) */}
-            {supportsDataInput && (
-                <Handle
-                    type="target"
-                    position={Position.Left}
-                    id="data-input"
-                    className="!w-3 !h-3 !border-2 !rounded-full transition-all"
-                    style={{
-                        backgroundColor: connectedDataSource ? '#f59e0b' : (isDark ? '#1a1a1a' : '#fff'),
-                        borderColor: '#f59e0b',
-                        boxShadow: connectedDataSource ? '0 0 10px rgba(245, 158, 11, 0.5)' : 'none',
-                        left: '-6px',
-                        top: '70%',
-                        transform: 'translateY(-50%)'
-                    }}
-                />
-            )}
-
-            {/* Main Node Card */}
+            {/* Main Node Card - Single unified card */}
             <div
                 className={`
-                    relative min-w-[200px] max-w-[280px] rounded-l-2xl overflow-hidden transition-all duration-300
+                    min-w-[220px] max-w-[280px] rounded-xl overflow-hidden transition-all duration-300
                     ${selected ? `ring-2 ring-offset-2 ${isDark ? 'ring-offset-[#0a0a0a]' : 'ring-offset-white'}` : ''}
                 `}
                 style={{
                     background: isDark
-                        ? 'linear-gradient(180deg, rgba(30,30,30,0.95) 0%, rgba(20,20,20,0.98) 100%)'
-                        : 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.98) 100%)',
-                    backdropFilter: 'blur(20px)',
-                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-                    borderRight: 'none',
+                        ? 'linear-gradient(180deg, rgba(30,30,30,0.98) 0%, rgba(22,22,22,1) 100%)'
+                        : 'linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(250,250,250,1) 100%)',
+                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
                     boxShadow: selected
-                        ? `0 0 20px ${colors.primary}40, 0 8px 32px rgba(0,0,0,0.2)`
-                        : isDark ? '0 4px 24px rgba(0,0,0,0.4)' : '0 4px 24px rgba(0,0,0,0.1)',
+                        ? `0 0 0 2px ${colors.primary}40, 0 8px 24px rgba(0,0,0,0.15)`
+                        : isDark ? '0 4px 20px rgba(0,0,0,0.5)' : '0 2px 12px rgba(0,0,0,0.08)',
                     ringColor: colors.primary
                 }}
             >
-                {/* Header */}
+                {/* Header with colored accent */}
                 <div
-                    className="flex items-center gap-2.5 px-3 py-2.5"
+                    className="flex items-center gap-2.5 px-3 py-2"
                     style={{
-                        background: `linear-gradient(135deg, ${colors.primary}20 0%, ${colors.primary}10 100%)`,
-                        borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`
+                        background: `linear-gradient(135deg, ${colors.primary}15 0%, transparent 100%)`,
+                        borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'}`
                     }}
                 >
-                    {/* Icon Container */}
+                    {/* Icon */}
                     <div
-                        className={`w-8 h-8 rounded-xl flex items-center justify-center ${isRunning ? 'animate-pulse' : ''}`}
-                        style={{ background: `${colors.primary}30` }}
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${isRunning ? 'animate-pulse' : ''}`}
+                        style={{ background: `${colors.primary}25` }}
                     >
-                        <div style={{ color: colors.primary }}>
+                        <div className="w-3.5 h-3.5" style={{ color: colors.primary }}>
                             {isRunning ? (
-                                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <svg className="w-full h-full animate-spin" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                 </svg>
                             ) : isSuccess ? (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                                <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
                             ) : isError ? (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                                <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             ) : ActionIcon}
                         </div>
                     </div>
 
-                    {/* Title & Type */}
+                    {/* Title */}
                     <div className="flex-1 min-w-0">
-                        <div className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-white/90' : 'text-gray-800'}`}>
+                        <div className={`text-[11px] font-bold uppercase tracking-wide ${isDark ? 'text-white' : 'text-gray-800'}`}>
                             {colors.label}
                         </div>
-                        {data?.repeatCount > 1 && (
-                            <div className="text-[10px] font-medium" style={{ color: colors.primary }}>
-                                ×{data.repeatCount} times
-                            </div>
-                        )}
                     </div>
 
-                    {/* Status Badges */}
-                    <div className="flex items-center gap-1">
-                        {data?.isRecorded && (
-                            <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-red-500/20 text-red-400">
-                                REC
-                            </span>
-                        )}
-                    </div>
+                    {/* REC Badge */}
+                    {data?.isRecorded && (
+                        <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-red-500 text-white">
+                            REC
+                        </span>
+                    )}
                 </div>
 
                 {/* Body */}
-                <div className={`px-3 py-2.5 space-y-2 ${isDark ? 'bg-[#141414]' : 'bg-white'}`}>
+                <div className={`px-3 py-2 ${isDark ? 'bg-[#161616]' : 'bg-white'}`}>
                     {/* Label */}
                     {label && (
-                        <p className={`text-sm font-medium truncate ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                        <p className={`text-sm font-medium truncate mb-1.5 ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
                             {label}
                         </p>
                     )}
 
-                    {/* Smart Selector */}
-                    <div className={`flex items-center gap-2 px-2 py-1.5 rounded-lg ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
-                        <span className="text-xs font-bold" style={{ color: colors.primary }}>
-                            {selector.icon}
-                        </span>
-                        <span className={`text-[11px] font-mono flex-1 truncate ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {/* Selector info */}
+                    <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
+                        <span style={{ color: colors.primary }}>{selector.icon}</span>
+                        <span className={`font-mono truncate ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                             {selector.value}
                         </span>
                     </div>
 
-                    {/* Expand Toggle */}
+                    {/* More toggle */}
                     <button
                         onClick={() => setIsExpanded(!isExpanded)}
-                        className={`w-full text-center text-[10px] py-1 rounded-md transition-colors ${isDark ? 'text-gray-500 hover:bg-white/5' : 'text-gray-400 hover:bg-gray-100'}`}
+                        className={`w-full text-center text-[9px] py-1 mt-1.5 rounded transition-colors ${isDark ? 'text-gray-600 hover:text-gray-400' : 'text-gray-400 hover:text-gray-600'}`}
                     >
                         {isExpanded ? '▲ Less' : '▼ More'}
                     </button>
                 </div>
+
+                {/* Output Footer - Clean integrated design */}
+                <div className={`flex items-center justify-end gap-3 px-3 py-1.5 border-t ${isDark ? 'border-white/5 bg-[#131313]' : 'border-gray-100 bg-gray-50/50'}`}>
+                    {/* Success output */}
+                    <div className="flex items-center gap-1 group cursor-pointer">
+                        <span className={`text-[9px] font-medium ${isDark ? 'text-emerald-400/70' : 'text-emerald-600/70'} group-hover:text-emerald-400`}>
+                            ✓
+                        </span>
+                        <div
+                            className={`w-2 h-2 rounded-full border transition-transform group-hover:scale-125 ${isSuccess ? 'bg-emerald-500 border-emerald-400' : isDark ? 'bg-emerald-900/50 border-emerald-700' : 'bg-emerald-100 border-emerald-300'}`}
+                        />
+                    </div>
+
+                    {/* Error output */}
+                    <div className="flex items-center gap-1 group cursor-pointer">
+                        <span className={`text-[9px] font-medium ${isDark ? 'text-red-400/70' : 'text-red-600/70'} group-hover:text-red-400`}>
+                            ✗
+                        </span>
+                        <div
+                            className={`w-2 h-2 rounded-full border transition-transform group-hover:scale-125 ${isError ? 'bg-red-500 border-red-400' : isDark ? 'bg-red-900/50 border-red-700' : 'bg-red-100 border-red-300'}`}
+                        />
+                    </div>
+                </div>
             </div>
 
-            {/* Output Handle Bar - Professional integrated panel */}
-            <div
-                className={`flex flex-col justify-center rounded-r-xl min-w-[44px] ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-50'}`}
+            {/* Output Handles - On right edge, aligned with footer dots */}
+            <Handle
+                type="source"
+                position={Position.Right}
+                id="true"
+                className="!w-3 !h-3 !border-2 !rounded-full !-right-1.5"
                 style={{
-                    borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-                    borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-                    borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                    backgroundColor: isSuccess ? '#10b981' : (isDark ? '#064e3b' : '#d1fae5'),
+                    borderColor: '#22c55e',
+                    boxShadow: isSuccess ? '0 0 8px #10b981' : 'none',
+                    bottom: '20px',
+                    top: 'auto',
                 }}
-            >
-                {/* Success/TRUE Handle */}
-                <div className="group flex items-center gap-1 px-2 py-2 border-b border-dashed border-gray-700/30 hover:bg-emerald-500/10 transition-colors cursor-pointer relative">
-                    <Handle
-                        type="source"
-                        position={Position.Right}
-                        id="true"
-                        className="!w-2.5 !h-2.5 !border-2 !rounded-full !relative !transform-none transition-all group-hover:!scale-125"
-                        style={{
-                            backgroundColor: isSuccess ? '#10b981' : (isDark ? '#065f46' : '#d1fae5'),
-                            borderColor: '#22c55e',
-                            boxShadow: isSuccess ? '0 0 8px #10b981' : 'none',
-                        }}
-                    />
-                    <span className={`text-[9px] font-semibold uppercase tracking-wide ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                        ✓
-                    </span>
-                </div>
-
-                {/* Error/FALSE Handle */}
-                <div className="group flex items-center gap-1 px-2 py-2 hover:bg-red-500/10 transition-colors cursor-pointer relative">
-                    <Handle
-                        type="source"
-                        position={Position.Right}
-                        id="false"
-                        className="!w-2.5 !h-2.5 !border-2 !rounded-full !relative !transform-none transition-all group-hover:!scale-125"
-                        style={{
-                            backgroundColor: isError ? '#ef4444' : (isDark ? '#7f1d1d' : '#fee2e2'),
-                            borderColor: '#f87171',
-                            boxShadow: isError ? '0 0 8px #ef4444' : 'none',
-                        }}
-                    />
-                    <span className={`text-[9px] font-semibold uppercase tracking-wide ${isDark ? 'text-red-400' : 'text-red-600'}`}>
-                        ✗
-                    </span>
-                </div>
-            </div>
+            />
+            <Handle
+                type="source"
+                position={Position.Right}
+                id="false"
+                className="!w-3 !h-3 !border-2 !rounded-full !-right-1.5"
+                style={{
+                    backgroundColor: isError ? '#ef4444' : (isDark ? '#7f1d1d' : '#fee2e2'),
+                    borderColor: '#f87171',
+                    boxShadow: isError ? '0 0 8px #ef4444' : 'none',
+                    bottom: '20px',
+                    top: 'auto',
+                    transform: 'translateY(12px)',
+                }}
+            />
         </div>
     );
 }
