@@ -38,14 +38,17 @@ export function MouseDragProvider({ children, onDropInCanvas, isDark = false }) 
 
     // Start dragging
     const startDrag = useCallback((nodeType, nodeLabel, nodeColor, bgColor) => {
+        console.log('[MouseDrag] startDrag called:', { nodeType, nodeLabel, nodeColor, bgColor });
         const data = { type: nodeType, label: nodeLabel, color: nodeColor, bgColor };
         dragDataRef.current = data; // Set ref immediately for synchronous access
         setDragData(data);
         setIsDragging(true);
+        console.log('[MouseDrag] isDragging set to true');
     }, []);
 
     // Stop dragging
     const stopDrag = useCallback(() => {
+        console.log('[MouseDrag] stopDrag called');
         setIsDragging(false);
         setDragData(null);
         dragDataRef.current = null;
@@ -53,7 +56,13 @@ export function MouseDragProvider({ children, onDropInCanvas, isDark = false }) 
 
     // Handle global mouse move and mouse up
     useEffect(() => {
-        if (!isDragging) return;
+        console.log('[MouseDrag] useEffect triggered, isDragging:', isDragging);
+        if (!isDragging) {
+            console.log('[MouseDrag] Not dragging, skipping event listener setup');
+            return;
+        }
+
+        console.log('[MouseDrag] Setting up mousemove and mouseup listeners');
 
         const handleMouseMove = (e) => {
             setCursorPosition({ x: e.clientX, y: e.clientY });

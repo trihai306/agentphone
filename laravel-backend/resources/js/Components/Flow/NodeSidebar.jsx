@@ -23,9 +23,12 @@ export default function NodeSidebar({
 
     // Handle mousedown to start custom drag
     const handleMouseDown = (e, template) => {
+        console.log('[NodeSidebar] handleMouseDown called for:', template.type, template.label);
+        console.log('[NodeSidebar] startDrag function:', typeof startDrag);
         e.preventDefault();
         e.stopPropagation();
         startDrag(template.type, template.label, template.color, template.bgColor);
+        console.log('[NodeSidebar] startDrag called successfully');
     };
 
     const NodeItem = ({ template }) => (
