@@ -200,17 +200,18 @@ function SmartActionNode({ data, selected, id }) {
     const statusColor = isRunning ? '#6366f1' : isSuccess ? '#10b981' : isError ? '#ef4444' : colors.primary;
 
     return (
-        <div className={`transition-all duration-300 ${selected ? 'scale-[1.02]' : ''} ${isPending ? 'opacity-60' : ''}`}>
-            {/* Input Handle - Flow Control (Left side for horizontal flow) */}
+        <div className={`flex transition-all duration-300 ${selected ? 'scale-[1.02]' : ''} ${isPending ? 'opacity-60' : ''}`}>
+            {/* Input Handle - Left side */}
             <Handle
                 type="target"
                 position={Position.Left}
                 id="input"
-                className="!w-4 !h-4 !border-2 !-left-2 !rounded-lg transition-all"
+                className="!w-3 !h-3 !border-2 !rounded-full transition-all"
                 style={{
                     backgroundColor: isDark ? '#1a1a1a' : '#fff',
                     borderColor: statusColor,
                     boxShadow: isRunning ? `0 0 10px ${statusColor}` : 'none',
+                    left: '-6px',
                     top: '50%',
                     transform: 'translateY(-50%)'
                 }}
@@ -222,21 +223,22 @@ function SmartActionNode({ data, selected, id }) {
                     type="target"
                     position={Position.Left}
                     id="data-input"
-                    className="!w-4 !h-4 !border-2 !-left-2 !rounded-lg transition-all"
+                    className="!w-3 !h-3 !border-2 !rounded-full transition-all"
                     style={{
                         backgroundColor: connectedDataSource ? '#f59e0b' : (isDark ? '#1a1a1a' : '#fff'),
                         borderColor: '#f59e0b',
                         boxShadow: connectedDataSource ? '0 0 10px rgba(245, 158, 11, 0.5)' : 'none',
-                        top: '50%',
+                        left: '-6px',
+                        top: '70%',
                         transform: 'translateY(-50%)'
                     }}
                 />
             )}
 
-            {/* Main Node Container */}
+            {/* Main Node Card */}
             <div
                 className={`
-                    relative min-w-[240px] max-w-[300px] rounded-2xl overflow-hidden transition-all duration-300
+                    relative min-w-[200px] max-w-[280px] rounded-l-2xl overflow-hidden transition-all duration-300
                     ${selected ? `ring-2 ring-offset-2 ${isDark ? 'ring-offset-[#0a0a0a]' : 'ring-offset-white'}` : ''}
                 `}
                 style={{
@@ -245,6 +247,7 @@ function SmartActionNode({ data, selected, id }) {
                         : 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.98) 100%)',
                     backdropFilter: 'blur(20px)',
                     border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                    borderRight: 'none',
                     boxShadow: selected
                         ? `0 0 20px ${colors.primary}40, 0 8px 32px rgba(0,0,0,0.2)`
                         : isDark ? '0 4px 24px rgba(0,0,0,0.4)' : '0 4px 24px rgba(0,0,0,0.1)',
@@ -301,26 +304,11 @@ function SmartActionNode({ data, selected, id }) {
                                 REC
                             </span>
                         )}
-                        {connectedDataSource && (
-                            <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-amber-500/20 text-amber-400">
-                                DATA
-                            </span>
-                        )}
-                        {inputVariable && (
-                            <span className="px-1.5 py-0.5 rounded-md text-[9px] font-medium bg-violet-500/20 text-violet-400">
-                                IN
-                            </span>
-                        )}
-                        {outputVariable && (
-                            <span className="px-1.5 py-0.5 rounded-md text-[9px] font-medium bg-emerald-500/20 text-emerald-400">
-                                OUT
-                            </span>
-                        )}
                     </div>
                 </div>
 
                 {/* Body */}
-                <div className={`px-3 py-3 space-y-2 ${isDark ? 'bg-[#141414]' : 'bg-white'}`}>
+                <div className={`px-3 py-2.5 space-y-2 ${isDark ? 'bg-[#141414]' : 'bg-white'}`}>
                     {/* Label */}
                     {label && (
                         <p className={`text-sm font-medium truncate ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
@@ -329,136 +317,14 @@ function SmartActionNode({ data, selected, id }) {
                     )}
 
                     {/* Smart Selector */}
-                    <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
+                    <div className={`flex items-center gap-2 px-2 py-1.5 rounded-lg ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
                         <span className="text-xs font-bold" style={{ color: colors.primary }}>
                             {selector.icon}
                         </span>
                         <span className={`text-[11px] font-mono flex-1 truncate ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                             {selector.value}
                         </span>
-                        <span className={`text-[9px] uppercase font-medium ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                            {selector.type}
-                        </span>
                     </div>
-
-                    {/* Text Input Value (for text_input type) */}
-                    {(actionType === 'text_input' || actionType === 'set_text') && text && (
-                        <div className={`px-2.5 py-2 rounded-lg border ${isDark ? 'bg-purple-500/5 border-purple-500/20' : 'bg-purple-50 border-purple-200'}`}>
-                            <div className="flex items-center gap-1 mb-1">
-                                <svg className="w-3 h-3 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                </svg>
-                                <span className="text-[10px] text-purple-400 font-medium">Input Text</span>
-                            </div>
-                            <p className={`text-xs font-mono ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
-                                "{text}"
-                            </p>
-                        </div>
-                    )}
-
-                    {/* Connected Data Source Visual (data wire connection) */}
-                    {connectedVariable && (
-                        <div className={`px-2.5 py-2 rounded-lg border ${isDark ? 'bg-amber-500/5 border-amber-500/20' : 'bg-amber-50 border-amber-200'}`}>
-                            <div className="flex items-center gap-1 mb-1">
-                                <svg className="w-3 h-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-                                </svg>
-                                <span className="text-[10px] text-amber-400 font-medium">Data Binding</span>
-                            </div>
-                            <p className={`text-xs font-mono ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
-                                {connectedVariable}
-                            </p>
-                        </div>
-                    )}
-
-                    {/* Variable Bindings */}
-                    {inputVariable && (
-                        <div className={`flex items-center gap-2 text-[10px] ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                            </svg>
-                            <span className="font-mono">{`{{${inputVariable}}}`}</span>
-                        </div>
-                    )}
-
-                    {/* Expanded Details - All APK Event Data */}
-                    {isExpanded && (
-                        <div className={`pt-2 mt-2 border-t space-y-1.5 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-                            {/* Package Name */}
-                            {data?.packageName && (
-                                <div className={`flex items-start gap-2 text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    <span className="shrink-0 text-pink-400">📦 Package:</span>
-                                    <span className="font-mono break-all">{data.packageName}</span>
-                                </div>
-                            )}
-
-                            {/* Class Name */}
-                            {data?.className && (
-                                <div className={`flex items-start gap-2 text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    <span className="shrink-0 text-orange-400">🏷️ Class:</span>
-                                    <span className="font-mono break-all">{data.className}</span>
-                                </div>
-                            )}
-
-                            {/* Resource ID */}
-                            {resourceId && (
-                                <div className={`flex items-start gap-2 text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    <span className="shrink-0 text-blue-400"># ID:</span>
-                                    <span className="font-mono break-all text-green-400">{resourceId}</span>
-                                </div>
-                            )}
-
-                            {/* Content Description */}
-                            {data?.contentDescription && (
-                                <div className={`flex items-start gap-2 text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    <span className="shrink-0 text-purple-400">📝 Desc:</span>
-                                    <span className="font-mono break-all">{data.contentDescription}</span>
-                                </div>
-                            )}
-
-                            {/* Bounds */}
-                            {bounds && (
-                                <div className={`flex items-start gap-2 text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    <span className="shrink-0 text-cyan-400">⬜ Bounds:</span>
-                                    <span className="font-mono">{bounds}</span>
-                                </div>
-                            )}
-
-                            {/* Coordinates */}
-                            {coordinates && (
-                                <div className={`flex items-center gap-2 text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    <span className="text-yellow-400">📍 Coords:</span>
-                                    <span className="font-mono">({coordinates.x}, {coordinates.y})</span>
-                                </div>
-                            )}
-
-                            {/* Action Data */}
-                            {data?.actionData && Object.keys(data.actionData).length > 0 && (
-                                <div className={`flex flex-col gap-1 text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    <span className="text-fuchsia-400">⚡ Action Data:</span>
-                                    <div className={`font-mono text-[9px] p-1.5 rounded ${isDark ? 'bg-white/5' : 'bg-gray-100'} break-all`}>
-                                        {JSON.stringify(data.actionData, null, 2)}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Timeout */}
-                            {timeout !== 5000 && (
-                                <div className={`flex items-center gap-2 text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    <span>⏱ Timeout:</span>
-                                    <span className="font-mono">{timeout}ms</span>
-                                </div>
-                            )}
-
-                            {/* Retry Count */}
-                            {retryCount > 0 && (
-                                <div className={`flex items-center gap-2 text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    <span>🔄 Retry:</span>
-                                    <span className="font-mono">{retryCount}x</span>
-                                </div>
-                            )}
-                        </div>
-                    )}
 
                     {/* Expand Toggle */}
                     <button
@@ -468,66 +334,51 @@ function SmartActionNode({ data, selected, id }) {
                         {isExpanded ? '▲ Less' : '▼ More'}
                     </button>
                 </div>
-
-                {/* Footer - Output Info */}
-                {outputVariable && (
-                    <div
-                        className={`px-3 py-2 text-[10px] ${isDark ? 'bg-emerald-500/5 border-t border-emerald-500/10' : 'bg-emerald-50 border-t border-emerald-100'}`}
-                    >
-                        <div className="flex items-center gap-1.5">
-                            <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>
-                            <span className={`${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                                Output: <span className="font-mono font-medium">{`{{${outputVariable}}}`}</span>
-                            </span>
-                        </div>
-                    </div>
-                )}
             </div>
 
-            {/* Output Handles - Professional compact design on right edge */}
-            <div className="absolute right-0 top-0 bottom-0 flex flex-col justify-center gap-3 translate-x-1/2">
-                {/* TRUE Handle - Success Path */}
-                <div className="group relative flex items-center">
+            {/* Output Handle Bar - Professional integrated panel */}
+            <div
+                className={`flex flex-col justify-center rounded-r-xl min-w-[44px] ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-50'}`}
+                style={{
+                    borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                    borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                    borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                }}
+            >
+                {/* Success/TRUE Handle */}
+                <div className="group flex items-center gap-1 px-2 py-2 border-b border-dashed border-gray-700/30 hover:bg-emerald-500/10 transition-colors cursor-pointer relative">
                     <Handle
                         type="source"
                         position={Position.Right}
                         id="true"
-                        className="!relative !transform-none !w-3.5 !h-3.5 !border-2 !rounded-full transition-all duration-200 group-hover:!scale-125 group-hover:!w-4 group-hover:!h-4"
+                        className="!w-2.5 !h-2.5 !border-2 !rounded-full !relative !transform-none transition-all group-hover:!scale-125"
                         style={{
-                            backgroundColor: isSuccess ? '#10b981' : (isDark ? '#0a2e1a' : '#dcfce7'),
+                            backgroundColor: isSuccess ? '#10b981' : (isDark ? '#065f46' : '#d1fae5'),
                             borderColor: '#22c55e',
-                            boxShadow: isSuccess ? '0 0 8px #10b981' : '0 1px 3px rgba(34, 197, 94, 0.3)',
-                            cursor: 'crosshair'
+                            boxShadow: isSuccess ? '0 0 8px #10b981' : 'none',
                         }}
                     />
-                    {/* Tooltip on hover */}
-                    <div className={`absolute left-full ml-2 px-2 py-1 rounded text-[10px] font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 ${isDark ? 'bg-emerald-500/90 text-white' : 'bg-emerald-600 text-white'
-                        }`}>
-                        ✓ Success
-                    </div>
+                    <span className={`text-[9px] font-semibold uppercase tracking-wide ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                        ✓
+                    </span>
                 </div>
 
-                {/* FALSE Handle - Failure Path */}
-                <div className="group relative flex items-center">
+                {/* Error/FALSE Handle */}
+                <div className="group flex items-center gap-1 px-2 py-2 hover:bg-red-500/10 transition-colors cursor-pointer relative">
                     <Handle
                         type="source"
                         position={Position.Right}
                         id="false"
-                        className="!relative !transform-none !w-3.5 !h-3.5 !border-2 !rounded-full transition-all duration-200 group-hover:!scale-125 group-hover:!w-4 group-hover:!h-4"
+                        className="!w-2.5 !h-2.5 !border-2 !rounded-full !relative !transform-none transition-all group-hover:!scale-125"
                         style={{
-                            backgroundColor: isError ? '#ef4444' : (isDark ? '#2e0a0a' : '#fef2f2'),
+                            backgroundColor: isError ? '#ef4444' : (isDark ? '#7f1d1d' : '#fee2e2'),
                             borderColor: '#f87171',
-                            boxShadow: isError ? '0 0 8px #ef4444' : '0 1px 3px rgba(248, 113, 113, 0.3)',
-                            cursor: 'crosshair'
+                            boxShadow: isError ? '0 0 8px #ef4444' : 'none',
                         }}
                     />
-                    {/* Tooltip on hover */}
-                    <div className={`absolute left-full ml-2 px-2 py-1 rounded text-[10px] font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 ${isDark ? 'bg-red-500/90 text-white' : 'bg-red-600 text-white'
-                        }`}>
-                        ✗ Error
-                    </div>
+                    <span className={`text-[9px] font-semibold uppercase tracking-wide ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                        ✗
+                    </span>
                 </div>
             </div>
         </div>
