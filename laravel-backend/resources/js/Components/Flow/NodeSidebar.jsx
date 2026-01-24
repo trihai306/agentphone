@@ -81,7 +81,7 @@ export default function NodeSidebar({
     );
 
     return (
-        <div className={`${sidebarExpanded ? 'w-64' : 'w-14'} flex flex-col overflow-hidden transition-all duration-300 border-r ${isDark ? 'bg-[#0f0f0f] border-[#1e1e1e]' : 'bg-white border-gray-200'}`}>
+        <div className={`${sidebarExpanded ? 'w-64' : 'w-14'} flex flex-col transition-all duration-300 border-r ${isDark ? 'bg-[#0f0f0f] border-[#1e1e1e]' : 'bg-white border-gray-200'}`}>
             {/* Sidebar Header */}
             <div className={`h-12 px-2 flex items-center ${sidebarExpanded ? 'justify-between' : 'justify-center'} flex-shrink-0 border-b ${isDark ? 'border-[#1e1e1e]' : 'border-gray-200'}`}>
                 {sidebarExpanded && (
@@ -115,7 +115,7 @@ export default function NodeSidebar({
             )}
 
             {/* Node List with Categories */}
-            <div className="flex-1 overflow-y-auto flow-editor-sidebar" style={{ scrollBehavior: 'smooth' }}>
+            <div className="flex-1 overflow-y-auto overflow-x-visible flow-editor-sidebar" style={{ scrollBehavior: 'smooth' }}>
                 <CategorySection
                     category="action"
                     label={t('flows.editor.categories.recorded_actions')}
