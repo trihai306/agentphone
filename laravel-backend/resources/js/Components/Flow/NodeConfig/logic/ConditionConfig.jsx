@@ -97,37 +97,169 @@ export function ConditionConfig({ data, updateData, updateMultipleData, isDark, 
             {/* Variable Condition Mode */}
             {conditionType === 'variable' && (
                 <>
-                    <ConfigSection title={t('flows.editor.config.left_value')} isDark={isDark}>
-                        <VariableInput
-                            value={data.leftValue || ''}
-                            onChange={(val) => updateData('leftValue', val)}
-                            placeholder="{{item.status}}"
-                            availableVariables={upstreamVariables}
-                        />
+                    {/* Logic Operator Toggle */}
+                    <ConfigSection title="Logic Operator" isDark={isDark}>
+                        <div className="flex gap-2">
+                            {['AND', 'OR'].map((op) => {
+                                const isSelected = (data.logicOperator || 'AND') === op;
+                                return (
+                                    <button
+                                        key={op}
+                                        onClick={() => updateData('logicOperator', op)}
+                                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-bold transition-all ${isSelected
+                                                ? op === 'AND'
+                                                    ? 'bg-blue-500 text-white'
+                                                    : 'bg-amber-500 text-white'
+                                                : isDark
+                                                    ? 'bg-[#1a1a1a] text-gray-400 border border-[#2a2a2a]'
+                                                    : 'bg-gray-100 text-gray-500 border border-gray-200'
+                                            }`}
+                                    >
+                                        {op === 'AND' ? '∧ AND' : '∨ OR'}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <p className={`text-[10px] mt-1.5 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                            {(data.logicOperator || 'AND') === 'AND'
+                                ? 'Tất cả điều kiện phải đúng'
+                                : 'Chỉ cần một điều kiện đúng'}
+                        </p>
                     </ConfigSection>
 
-                    <ConfigSection title={t('flows.editor.config.operator')} isDark={isDark}>
-                        <select
-                            value={data.operator || '=='}
-                            onChange={(e) => updateData('operator', e.target.value)}
-                            className={`w-full px-3 py-2 text-sm rounded-lg border ${isDark
-                                ? 'bg-[#0f0f0f] border-[#2a2a2a] text-white'
-                                : 'bg-white border-gray-200 text-gray-900'
-                                }`}
-                        >
-                            {variableOperators.map(op => (
-                                <option key={op.value} value={op.value}>{op.label}</option>
+                    {/* Conditions List */}
+                    <ConfigSection
+                        title={t('flows.editor.config.conditions', 'Điều Kiện')}
+                        isDark={isDark}
+                        badge={
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded ${isDark ? 'bg-orange-500/20 text-orange-400' : 'bg-orange-100 text-orange-600'}`}>
+                                {(data.conditions || [{ leftValue: data.leftValue, operator: data.operator, rightValue: data.rightValue }]).length}
+                            </span>
+                        }
+                    >
+                        <div className="space-y-2">
+                            {(data.conditions && data.conditions.length > 0
+                                ? data.conditions
+                                : [{ leftValue: data.leftValue || '', operator: data.operator || '==', rightValue: data.rightValue || '' }]
+                            ).map((cond, idx) => (
+                                <div
+                                    key={idx}
+                                    className={`p-2.5 rounded-xl space-y-2 ${isDark ? 'bg-[#0f0f0f] border border-[#1a1a1a]' : 'bg-gray-50 border border-gray-100'}`}
+                                >
+                                    {/* Row Header */}
+                                    <div className="flex items-center justify-between">
+                                        <span className={`text-[10px] font-semibold ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                            #{idx + 1}
+                                        </span>
+                                        {(data.conditions?.length || 1) > 1 && (
+                                            <button
+                                                onClick={() => {
+                                                    const newConditions = [...(data.conditions || [])];
+                                                    newConditions.splice(idx, 1);
+                                                    updateData('conditions', newConditions);
+                                                }}
+                                                className={`p-1 rounded transition-colors ${isDark ? 'hover:bg-red-500/20 text-red-400' : 'hover:bg-red-50 text-red-500'}`}
+                                            >
+                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* 3-Column Grid: Left | Operator | Right */}
+                                    <div className="grid grid-cols-[1fr_auto_1fr] gap-1.5 items-center">
+                                        {/* Left Value */}
+                                        <VariableInput
+                                            value={cond.leftValue || ''}
+                                            onChange={(val) => {
+                                                if (data.conditions) {
+                                                    const newConditions = [...data.conditions];
+                                                    newConditions[idx] = { ...cond, leftValue: val };
+                                                    updateData('conditions', newConditions);
+                                                } else {
+                                                    updateData('leftValue', val);
+                                                }
+                                            }}
+                                            placeholder="{{var}}"
+                                            availableVariables={upstreamVariables}
+                                            className="!text-xs"
+                                        />
+
+                                        {/* Operator */}
+                                        <select
+                                            value={cond.operator || '=='}
+                                            onChange={(e) => {
+                                                if (data.conditions) {
+                                                    const newConditions = [...data.conditions];
+                                                    newConditions[idx] = { ...cond, operator: e.target.value };
+                                                    updateData('conditions', newConditions);
+                                                } else {
+                                                    updateData('operator', e.target.value);
+                                                }
+                                            }}
+                                            className={`px-2 py-1.5 text-xs rounded-lg border font-bold text-center ${isDark
+                                                ? 'bg-orange-500/10 border-orange-500/30 text-orange-400'
+                                                : 'bg-orange-50 border-orange-200 text-orange-600'
+                                                }`}
+                                            style={{ minWidth: '60px' }}
+                                        >
+                                            {variableOperators.map(op => (
+                                                <option key={op.value} value={op.value}>{op.label}</option>
+                                            ))}
+                                        </select>
+
+                                        {/* Right Value */}
+                                        <VariableInput
+                                            value={cond.rightValue || ''}
+                                            onChange={(val) => {
+                                                if (data.conditions) {
+                                                    const newConditions = [...data.conditions];
+                                                    newConditions[idx] = { ...cond, rightValue: val };
+                                                    updateData('conditions', newConditions);
+                                                } else {
+                                                    updateData('rightValue', val);
+                                                }
+                                            }}
+                                            placeholder="value"
+                                            availableVariables={upstreamVariables}
+                                            className="!text-xs"
+                                        />
+                                    </div>
+
+                                    {/* Logic connector */}
+                                    {idx < (data.conditions?.length || 1) - 1 && (
+                                        <div className="flex justify-center">
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${(data.logicOperator || 'AND') === 'AND'
+                                                    ? 'bg-blue-500/20 text-blue-400'
+                                                    : 'bg-amber-500/20 text-amber-400'
+                                                }`}>
+                                                {data.logicOperator || 'AND'}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
                             ))}
-                        </select>
-                    </ConfigSection>
 
-                    <ConfigSection title={t('flows.editor.config.right_value')} isDark={isDark}>
-                        <VariableInput
-                            value={data.rightValue || ''}
-                            onChange={(val) => updateData('rightValue', val)}
-                            placeholder="active"
-                            availableVariables={upstreamVariables}
-                        />
+                            {/* Add Condition Button */}
+                            <button
+                                onClick={() => {
+                                    const currentConditions = data.conditions || [
+                                        { leftValue: data.leftValue || '', operator: data.operator || '==', rightValue: data.rightValue || '' }
+                                    ];
+                                    updateData('conditions', [...currentConditions, { leftValue: '', operator: '==', rightValue: '' }]);
+                                }}
+                                className={`w-full py-2.5 rounded-xl text-xs font-medium transition-all border-2 border-dashed flex items-center justify-center gap-2 ${isDark
+                                    ? 'border-[#2a2a2a] text-gray-500 hover:border-orange-500/50 hover:text-orange-400'
+                                    : 'border-gray-200 text-gray-400 hover:border-orange-500 hover:text-orange-600'
+                                    }`}
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Thêm Điều Kiện
+                            </button>
+                        </div>
                     </ConfigSection>
                 </>
             )}
