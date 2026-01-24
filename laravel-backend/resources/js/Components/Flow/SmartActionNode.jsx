@@ -486,41 +486,49 @@ function SmartActionNode({ data, selected, id }) {
                 )}
             </div>
 
-            {/* Output Handles - Right side for horizontal flow */}
-            {/* TRUE Handle - Success Path (upper right) */}
-            <div className="absolute -right-7 top-[35%] transform -translate-y-1/2 flex items-center group">
-                <Handle
-                    type="source"
-                    position={Position.Right}
-                    id="true"
-                    className="!relative !transform-none !w-5 !h-5 !border-2 !rounded-lg transition-all group-hover:scale-110"
-                    style={{
-                        backgroundColor: isDark ? '#0a2e1a' : '#dcfce7',
-                        borderColor: isSuccess ? '#10b981' : '#22c55e',
-                        boxShadow: isSuccess ? '0 0 12px #10b981' : '0 2px 4px rgba(34, 197, 94, 0.2)'
-                    }}
-                />
-                <span className={`ml-1 text-[9px] font-bold uppercase tracking-wide whitespace-nowrap ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                    ✓ TRUE
-                </span>
-            </div>
+            {/* Output Handles - Professional compact design on right edge */}
+            <div className="absolute right-0 top-0 bottom-0 flex flex-col justify-center gap-3 translate-x-1/2">
+                {/* TRUE Handle - Success Path */}
+                <div className="group relative flex items-center">
+                    <Handle
+                        type="source"
+                        position={Position.Right}
+                        id="true"
+                        className="!relative !transform-none !w-3.5 !h-3.5 !border-2 !rounded-full transition-all duration-200 group-hover:!scale-125 group-hover:!w-4 group-hover:!h-4"
+                        style={{
+                            backgroundColor: isSuccess ? '#10b981' : (isDark ? '#0a2e1a' : '#dcfce7'),
+                            borderColor: '#22c55e',
+                            boxShadow: isSuccess ? '0 0 8px #10b981' : '0 1px 3px rgba(34, 197, 94, 0.3)',
+                            cursor: 'crosshair'
+                        }}
+                    />
+                    {/* Tooltip on hover */}
+                    <div className={`absolute left-full ml-2 px-2 py-1 rounded text-[10px] font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 ${isDark ? 'bg-emerald-500/90 text-white' : 'bg-emerald-600 text-white'
+                        }`}>
+                        ✓ Success
+                    </div>
+                </div>
 
-            {/* FALSE Handle - Failure Path (lower right) */}
-            <div className="absolute -right-7 top-[65%] transform -translate-y-1/2 flex items-center group">
-                <Handle
-                    type="source"
-                    position={Position.Right}
-                    id="false"
-                    className="!relative !transform-none !w-5 !h-5 !border-2 !rounded-lg transition-all group-hover:scale-110"
-                    style={{
-                        backgroundColor: isDark ? '#2e0a0a' : '#fef2f2',
-                        borderColor: isError ? '#ef4444' : '#f87171',
-                        boxShadow: isError ? '0 0 12px #ef4444' : '0 2px 4px rgba(248, 113, 113, 0.2)'
-                    }}
-                />
-                <span className={`ml-1 text-[9px] font-bold uppercase tracking-wide whitespace-nowrap ${isDark ? 'text-red-400' : 'text-red-600'}`}>
-                    ✗ FALSE
-                </span>
+                {/* FALSE Handle - Failure Path */}
+                <div className="group relative flex items-center">
+                    <Handle
+                        type="source"
+                        position={Position.Right}
+                        id="false"
+                        className="!relative !transform-none !w-3.5 !h-3.5 !border-2 !rounded-full transition-all duration-200 group-hover:!scale-125 group-hover:!w-4 group-hover:!h-4"
+                        style={{
+                            backgroundColor: isError ? '#ef4444' : (isDark ? '#2e0a0a' : '#fef2f2'),
+                            borderColor: '#f87171',
+                            boxShadow: isError ? '0 0 8px #ef4444' : '0 1px 3px rgba(248, 113, 113, 0.3)',
+                            cursor: 'crosshair'
+                        }}
+                    />
+                    {/* Tooltip on hover */}
+                    <div className={`absolute left-full ml-2 px-2 py-1 rounded text-[10px] font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 ${isDark ? 'bg-red-500/90 text-white' : 'bg-red-600 text-white'
+                        }`}>
+                        ✗ Error
+                    </div>
+                </div>
             </div>
         </div>
     );
