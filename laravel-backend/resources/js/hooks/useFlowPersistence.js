@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { flowApi } from '@/services/api';
 
 /**
  * Custom hook to manage flow persistence (auto-save, manual save)
@@ -28,26 +29,13 @@ export function useFlowPersistence({ flow, autoSaveEnabled = false, autoSaveDela
         setSaving(true);
 
         try {
-            const response = await fetch(`/flows/${flow.id}/save-state`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({
-                    nodes,
-                    edges,
-                    viewport,
-                }),
-            });
+            const result = await flowApi.saveState(flow.id, { nodes, edges, viewport });
 
-            if (response.ok) {
-                const data = await response.json();
-                setLastSaved(new Date(data.saved_at));
+            if (result.success) {
+                setLastSaved(new Date(result.data.saved_at));
                 return { success: true };
             }
-            return { success: false, error: 'Save failed' };
+            return { success: false, error: result.error || 'Save failed' };
         } catch (error) {
             console.error('❌ useFlowPersistence: Save failed:', error);
             return { success: false, error: error.message };
@@ -87,22 +75,14 @@ export function useFlowPersistence({ flow, autoSaveEnabled = false, autoSaveDela
         }
 
         try {
-            const response = await fetch(`/flows/${flow.id}/update-name`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({ name: newName }),
-            });
+            const result = await flowApi.updateName(flow.id, newName);
 
-            if (response.ok) {
+            if (result.success) {
                 setFlowName(newName);
                 setEditingName(false);
                 return { success: true };
             }
-            return { success: false, error: 'Name save failed' };
+            return { success: false, error: result.error || 'Name save failed' };
         } catch (error) {
             console.error('❌ useFlowPersistence: Name save failed:', error);
             return { success: false, error: error.message };
@@ -125,9 +105,11 @@ export function useFlowPersistence({ flow, autoSaveEnabled = false, autoSaveDela
         flowName,
         editingName,
 
-        // Functions
+        // Setters  
         setFlowName,
         setEditingName,
+
+        // Actions
         saveFlow,
         debouncedSave,
         manualSave,

@@ -35,6 +35,7 @@ import { useDebugPanel } from '@/hooks/useDebugPanel';
 import { useFlowPersistence } from '@/hooks/useFlowPersistence';
 import { useNodeCreation } from '@/hooks/useNodeCreation';
 import { useLoopOperations } from '@/hooks/useLoopOperations';
+import { deviceApi, flowApi, recordingApi } from '@/services/api';
 
 // Helper functions
 import {
@@ -662,18 +663,10 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         // Helper function to register listener on backend
         const registerListener = async () => {
             try {
-                await fetch('/recording-listener/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        device_id: selectedDevice.device_id,
-                        flow_id: flow.id,
-                        user_id: props.auth?.user?.id,
-                    }),
+                await recordingApi.registerListener({
+                    deviceId: selectedDevice.device_id,
+                    flowId: flow.id,
+                    userId: props.auth?.user?.id,
                 });
             } catch (error) {
                 console.warn('Failed to register workflow listener:', error);
@@ -683,17 +676,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         // Helper function to unregister listener on backend
         const unregisterListener = async () => {
             try {
-                await fetch('/recording-listener/unregister', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        device_id: selectedDevice.device_id,
-                    }),
-                });
+                await recordingApi.unregisterListener(selectedDevice.device_id);
             } catch (error) {
                 console.warn('Failed to unregister workflow listener:', error);
             }
@@ -1491,9 +1474,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                                 // Trigger accessibility check when opening selector
                                                 if (selectedDevice?.device_id) {
                                                     try {
-                                                        await axios.post('/devices/check-accessibility', {
-                                                            device_id: selectedDevice.device_id
-                                                        });
+                                                        await deviceApi.checkAccessibility(selectedDevice.device_id);
                                                         console.log('🔍 Device selector: Accessibility check triggered for:', selectedDevice.device_id);
                                                     } catch (err) {
                                                         console.warn('⚠️ Device selector: Accessibility check failed:', err);
@@ -1605,12 +1586,10 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
                                                                     // Request realtime accessibility check via socket
                                                                     try {
-                                                                        const response = await axios.post('/devices/check-accessibility', {
-                                                                            device_id: device.device_id
-                                                                        });
+                                                                        const result = await deviceApi.checkAccessibility(device.device_id);
 
                                                                         // Show warning based on current DB value (realtime update will come via socket)
-                                                                        if (!response.data.current_status) {
+                                                                        if (result.success && !result.data.current_status) {
                                                                             addToast(`⚠️ ${t('flows.editor.accessibility.checking')}`, 'info');
                                                                         }
                                                                     } catch (err) {
@@ -1777,15 +1756,15 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                                 }))
                                             );
 
-                                            const response = await axios.post(`/flows/${flow.id}/test-run`, {
+                                            const result = await flowApi.testRun(flow.id, {
                                                 device_id: selectedDevice.id,
                                             });
-                                            if (response.data.success) {
-                                                addToast(t('flows.editor.run.success', { device: selectedDevice.name, count: response.data.data.actions_count }), 'success');
+                                            if (result.success) {
+                                                addToast(t('flows.editor.run.success', { device: selectedDevice.name, count: result.data.data?.actions_count }), 'success');
                                             }
                                         } catch (error) {
-                                            console.error('🚀 Test-run error:', error.response?.data || error);
-                                            addToast(t('flows.editor.run.failed', { error: error.response?.data?.message || error.message }), 'error');
+                                            console.error('🚀 Test-run error:', error);
+                                            addToast(t('flows.editor.run.failed', { error: error.message }), 'error');
                                         } finally {
                                             setTestRunning(false);
                                         }
