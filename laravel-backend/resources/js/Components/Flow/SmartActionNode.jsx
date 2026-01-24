@@ -201,16 +201,18 @@ function SmartActionNode({ data, selected, id }) {
 
     return (
         <div className={`transition-all duration-300 ${selected ? 'scale-[1.02]' : ''} ${isPending ? 'opacity-60' : ''}`}>
-            {/* Input Handle - Flow Control (Top) */}
+            {/* Input Handle - Flow Control (Left side for horizontal flow) */}
             <Handle
                 type="target"
-                position={Position.Top}
+                position={Position.Left}
                 id="input"
-                className="!w-4 !h-4 !border-2 !-top-2 !rounded-lg transition-all"
+                className="!w-4 !h-4 !border-2 !-left-2 !rounded-lg transition-all"
                 style={{
                     backgroundColor: isDark ? '#1a1a1a' : '#fff',
                     borderColor: statusColor,
-                    boxShadow: isRunning ? `0 0 10px ${statusColor}` : 'none'
+                    boxShadow: isRunning ? `0 0 10px ${statusColor}` : 'none',
+                    top: '50%',
+                    transform: 'translateY(-50%)'
                 }}
             />
 
@@ -484,47 +486,42 @@ function SmartActionNode({ data, selected, id }) {
                 )}
             </div>
 
-            {/* Output Handles Container with Labels */}
-            <div className="relative">
-                {/* TRUE Handle - Success Path */}
-                <div className="absolute -bottom-7 left-[25%] transform -translate-x-1/2 flex flex-col items-center group">
-                    <Handle
-                        type="source"
-                        position={Position.Bottom}
-                        id="true"
-                        className="!relative !transform-none !w-5 !h-5 !border-2 !rounded-lg transition-all group-hover:scale-110"
-                        style={{
-                            backgroundColor: isDark ? '#0a2e1a' : '#dcfce7',
-                            borderColor: isSuccess ? '#10b981' : '#22c55e',
-                            boxShadow: isSuccess ? '0 0 12px #10b981' : '0 2px 4px rgba(34, 197, 94, 0.2)'
-                        }}
-                    />
-                    <span className={`mt-1 text-[9px] font-bold uppercase tracking-wide transition-opacity ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                        ✓ TRUE
-                    </span>
-                </div>
-
-                {/* FALSE Handle - Failure Path */}
-                <div className="absolute -bottom-7 left-[75%] transform -translate-x-1/2 flex flex-col items-center group">
-                    <Handle
-                        type="source"
-                        position={Position.Bottom}
-                        id="false"
-                        className="!relative !transform-none !w-5 !h-5 !border-2 !rounded-lg transition-all group-hover:scale-110"
-                        style={{
-                            backgroundColor: isDark ? '#2e0a0a' : '#fef2f2',
-                            borderColor: isError ? '#ef4444' : '#f87171',
-                            boxShadow: isError ? '0 0 12px #ef4444' : '0 2px 4px rgba(248, 113, 113, 0.2)'
-                        }}
-                    />
-                    <span className={`mt-1 text-[9px] font-bold uppercase tracking-wide transition-opacity ${isDark ? 'text-red-400' : 'text-red-600'}`}>
-                        ✗ FALSE
-                    </span>
-                </div>
+            {/* Output Handles - Right side for horizontal flow */}
+            {/* TRUE Handle - Success Path (upper right) */}
+            <div className="absolute -right-7 top-[35%] transform -translate-y-1/2 flex items-center group">
+                <Handle
+                    type="source"
+                    position={Position.Right}
+                    id="true"
+                    className="!relative !transform-none !w-5 !h-5 !border-2 !rounded-lg transition-all group-hover:scale-110"
+                    style={{
+                        backgroundColor: isDark ? '#0a2e1a' : '#dcfce7',
+                        borderColor: isSuccess ? '#10b981' : '#22c55e',
+                        boxShadow: isSuccess ? '0 0 12px #10b981' : '0 2px 4px rgba(34, 197, 94, 0.2)'
+                    }}
+                />
+                <span className={`ml-1 text-[9px] font-bold uppercase tracking-wide whitespace-nowrap ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                    ✓ TRUE
+                </span>
             </div>
 
-            {/* Spacer for handle labels */}
-            <div className="h-5" />
+            {/* FALSE Handle - Failure Path (lower right) */}
+            <div className="absolute -right-7 top-[65%] transform -translate-y-1/2 flex items-center group">
+                <Handle
+                    type="source"
+                    position={Position.Right}
+                    id="false"
+                    className="!relative !transform-none !w-5 !h-5 !border-2 !rounded-lg transition-all group-hover:scale-110"
+                    style={{
+                        backgroundColor: isDark ? '#2e0a0a' : '#fef2f2',
+                        borderColor: isError ? '#ef4444' : '#f87171',
+                        boxShadow: isError ? '0 0 12px #ef4444' : '0 2px 4px rgba(248, 113, 113, 0.2)'
+                    }}
+                />
+                <span className={`ml-1 text-[9px] font-bold uppercase tracking-wide whitespace-nowrap ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                    ✗ FALSE
+                </span>
+            </div>
         </div>
     );
 }

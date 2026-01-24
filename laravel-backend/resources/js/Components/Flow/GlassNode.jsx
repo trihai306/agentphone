@@ -17,7 +17,7 @@ function GlassNode({
     title,
     subtitle,
     showQuickAdd = true,
-    handles = { top: true, bottom: true },
+    handles = { left: true, right: true },
     className = '',
 }) {
     const { theme } = useTheme();
@@ -44,16 +44,18 @@ function GlassNode({
         <div
             className={`group transition-all duration-300 ${selected ? 'scale-[1.02]' : ''} ${isRunning ? 'animate-pulse' : ''} ${className}`}
         >
-            {/* Top Handle */}
-            {handles.top && (
+            {/* Left Handle - Input (for horizontal flow) */}
+            {handles.left && (
                 <Handle
                     type="target"
-                    position={Position.Top}
-                    className="!w-4 !h-4 !border-[3px] !-top-2 transition-all duration-300 group-hover:!scale-110"
+                    position={Position.Left}
+                    className="!w-4 !h-4 !border-[3px] !-left-2 transition-all duration-300 group-hover:!scale-110"
                     style={{
                         backgroundColor: stateColor,
                         borderColor: isDark ? '#0a0a0a' : '#ffffff',
                         boxShadow: `0 0 15px ${stateColor}60`,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
                     }}
                 />
             )}
@@ -165,13 +167,13 @@ function GlassNode({
                 )}
             </div>
 
-            {/* Bottom Handle with Quick Add */}
-            {handles.bottom && (
-                <div className="relative">
+            {/* Right Handle - Output (for horizontal flow) */}
+            {handles.right && (
+                <div className="absolute right-0 top-1/2 -translate-y-1/2">
                     <Handle
                         type="source"
-                        position={Position.Bottom}
-                        className="!w-4 !h-4 !border-[3px] !-bottom-2 transition-all duration-300 group-hover:!scale-110"
+                        position={Position.Right}
+                        className="!w-4 !h-4 !border-[3px] !-right-2 transition-all duration-300 group-hover:!scale-110"
                         style={{
                             backgroundColor: stateColor,
                             borderColor: isDark ? '#0a0a0a' : '#ffffff',
@@ -183,9 +185,9 @@ function GlassNode({
                     {showQuickAdd && (
                         <button
                             className={`
-                                absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-8
+                                absolute top-1/2 -translate-y-1/2 right-0 translate-x-8
                                 w-6 h-6 rounded-full flex items-center justify-center
-                                opacity-0 group-hover:opacity-100 group-hover:translate-y-10
+                                opacity-0 group-hover:opacity-100 group-hover:translate-x-10
                                 transition-all duration-300 cursor-pointer z-10
                             `}
                             style={{
@@ -194,7 +196,6 @@ function GlassNode({
                             }}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                // Trigger quick add menu
                                 if (data?.onQuickAdd) {
                                     data.onQuickAdd(id);
                                 }
