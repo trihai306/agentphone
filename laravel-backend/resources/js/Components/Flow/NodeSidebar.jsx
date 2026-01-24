@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
-import { useTranslation } from '@/hooks/useTranslation';
+import { useTranslation } from 'react-i18next';
 import { NodeIcon } from './FlowIcons';
 
 /**
