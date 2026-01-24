@@ -23,47 +23,33 @@ export default function NodeSidebar({
 
     // Handle mousedown to start custom drag
     const handleMouseDown = (e, template) => {
-        console.log('[NodeSidebar] handleMouseDown called for:', template.type, template.label);
-        console.log('[NodeSidebar] startDrag function:', typeof startDrag);
         e.preventDefault();
         e.stopPropagation();
         startDrag(template.type, template.label, template.color, template.bgColor);
-        console.log('[NodeSidebar] startDrag called successfully');
     };
 
-    const NodeItem = ({ template }) => {
-        // Debug: log when component renders
-        console.log('[NodeItem] Rendering:', template.type);
-
-        return (
+    const NodeItem = ({ template }) => (
+        <div
+            onMouseDown={(e) => handleMouseDown(e, template)}
+            data-node-type={template.type}
+            data-node-label={template.label}
+            data-node-color={template.color}
+            className={`group relative flex items-center ${sidebarExpanded ? 'gap-2 p-2' : 'justify-center p-1.5'} rounded-lg cursor-grab active:cursor-grabbing border select-none ${isDark ? 'bg-[#1a1a1a] hover:bg-[#1e1e1e] border-[#252525] hover:border-[#333]' : 'bg-gray-50 hover:bg-white border-gray-200 hover:border-gray-300'}`}
+            title={!sidebarExpanded ? template.label : undefined}
+        >
             <div
-                onMouseDown={(e) => {
-                    console.log('[NodeItem] onMouseDown event fired for:', template.type);
-                    handleMouseDown(e, template);
-                }}
-                onClick={(e) => {
-                    console.log('[NodeItem] onClick event fired for:', template.type);
-                }}
-                data-node-type={template.type}
-                data-node-label={template.label}
-                data-node-color={template.color}
-                className={`group relative flex items-center ${sidebarExpanded ? 'gap-2 p-2' : 'justify-center p-1.5'} rounded-lg cursor-grab active:cursor-grabbing border select-none ${isDark ? 'bg-[#1a1a1a] hover:bg-[#1e1e1e] border-[#252525] hover:border-[#333]' : 'bg-gray-50 hover:bg-white border-gray-200 hover:border-gray-300'}`}
-                title={!sidebarExpanded ? template.label : undefined}
+                className={`${sidebarExpanded ? 'w-7 h-7' : 'w-8 h-8'} rounded-md flex items-center justify-center flex-shrink-0 pointer-events-none`}
+                style={{ backgroundColor: template.bgColor }}
             >
-                <div
-                    className={`${sidebarExpanded ? 'w-7 h-7' : 'w-8 h-8'} rounded-md flex items-center justify-center flex-shrink-0 pointer-events-none`}
-                    style={{ backgroundColor: template.bgColor }}
-                >
-                    <NodeIcon icon={template.icon} color={template.color} />
-                </div>
-                {sidebarExpanded && (
-                    <div className="flex-1 min-w-0 pointer-events-none">
-                        <p className={`text-[11px] font-semibold truncate pointer-events-none ${isDark ? 'text-white' : 'text-gray-900'}`}>{template.label}</p>
-                    </div>
-                )}
+                <NodeIcon icon={template.icon} color={template.color} />
             </div>
-        );
-    };
+            {sidebarExpanded && (
+                <div className="flex-1 min-w-0 pointer-events-none">
+                    <p className={`text-[11px] font-semibold truncate pointer-events-none ${isDark ? 'text-white' : 'text-gray-900'}`}>{template.label}</p>
+                </div>
+            )}
+        </div>
+    );
 
     const CategorySection = ({ category, label, color, templates }) => (
         <div className={`border-b ${isDark ? 'border-[#1e1e1e]' : 'border-gray-200'}`}>

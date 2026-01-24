@@ -38,17 +38,14 @@ export function MouseDragProvider({ children, onDropInCanvas, isDark = false }) 
 
     // Start dragging
     const startDrag = useCallback((nodeType, nodeLabel, nodeColor, bgColor) => {
-        console.log('[MouseDrag] startDrag called:', { nodeType, nodeLabel, nodeColor, bgColor });
         const data = { type: nodeType, label: nodeLabel, color: nodeColor, bgColor };
-        dragDataRef.current = data; // Set ref immediately for synchronous access
+        dragDataRef.current = data;
         setDragData(data);
         setIsDragging(true);
-        console.log('[MouseDrag] isDragging set to true');
     }, []);
 
     // Stop dragging
     const stopDrag = useCallback(() => {
-        console.log('[MouseDrag] stopDrag called');
         setIsDragging(false);
         setDragData(null);
         dragDataRef.current = null;
@@ -56,28 +53,18 @@ export function MouseDragProvider({ children, onDropInCanvas, isDark = false }) 
 
     // Handle global mouse move and mouse up
     useEffect(() => {
-        console.log('[MouseDrag] useEffect triggered, isDragging:', isDragging);
-        if (!isDragging) {
-            console.log('[MouseDrag] Not dragging, skipping event listener setup');
-            return;
-        }
-
-        console.log('[MouseDrag] Setting up mousemove and mouseup listeners');
+        if (!isDragging) return;
 
         const handleMouseMove = (e) => {
             setCursorPosition({ x: e.clientX, y: e.clientY });
         };
 
         const handleMouseUp = (e) => {
-            // Use refs to get the latest values (avoids stale closure)
             const currentDragData = dragDataRef.current;
             const currentOnDrop = onDropInCanvasRef.current;
 
-            console.log('[MouseDrag] mouseup at', e.clientX, e.clientY, 'dragData:', currentDragData);
-
             // Use elementFromPoint to reliably detect what's under the cursor
             const elementAtPoint = document.elementFromPoint(e.clientX, e.clientY);
-            console.log('[MouseDrag] elementAtPoint:', elementAtPoint?.className);
 
             // Check if we're still in the sidebar (if so, don't drop)
             const isInSidebar = elementAtPoint?.closest('.flow-editor-sidebar');
@@ -90,16 +77,11 @@ export function MouseDragProvider({ children, onDropInCanvas, isDark = false }) 
             // Fallback: if not detected directly but we're not in sidebar, find any react-flow
             if (!reactFlowPane && !isInSidebar) {
                 reactFlowPane = document.querySelector('.react-flow');
-                console.log('[MouseDrag] Using fallback react-flow detection');
             }
 
-            console.log('[MouseDrag] reactFlowPane found:', !!reactFlowPane, 'isInSidebar:', !!isInSidebar);
-
             if (reactFlowPane && currentDragData && currentOnDrop && !isInSidebar) {
-                // Get the position relative to the react-flow container
                 const container = reactFlowPane.closest('.react-flow') || reactFlowPane;
                 const rect = container.getBoundingClientRect();
-                console.log('[MouseDrag] Dropping node at', e.clientX - rect.left, e.clientY - rect.top);
                 currentOnDrop({
                     type: currentDragData.type,
                     label: currentDragData.label,
