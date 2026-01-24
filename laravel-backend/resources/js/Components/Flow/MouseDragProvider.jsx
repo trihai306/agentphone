@@ -23,19 +23,35 @@ export function MouseDragProvider({ children, onDropInCanvas, isDark = false }) 
     const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
     const dragPreviewRef = useRef(null);
 
+    // Use refs to always have the latest values in event handlers (avoids stale closure)
+    const dragDataRef = useRef(null);
+    const onDropInCanvasRef = useRef(onDropInCanvas);
+
+    // Keep refs updated
+    useEffect(() => {
+        dragDataRef.current = dragData;
+    }, [dragData]);
+
+    useEffect(() => {
+        onDropInCanvasRef.current = onDropInCanvas;
+    }, [onDropInCanvas]);
+
     // Start dragging
     const startDrag = useCallback((nodeType, nodeLabel, nodeColor, bgColor) => {
+        const data = { type: nodeType, label: nodeLabel, color: nodeColor, bgColor };
+        dragDataRef.current = data; // Set ref immediately for synchronous access
+        setDragData(data);
         setIsDragging(true);
-        setDragData({ type: nodeType, label: nodeLabel, color: nodeColor, bgColor });
     }, []);
 
     // Stop dragging
     const stopDrag = useCallback(() => {
         setIsDragging(false);
         setDragData(null);
+        dragDataRef.current = null;
     }, []);
 
-    // Handle global mouse move
+    // Handle global mouse move and mouse up
     useEffect(() => {
         if (!isDragging) return;
 
@@ -44,8 +60,11 @@ export function MouseDragProvider({ children, onDropInCanvas, isDark = false }) 
         };
 
         const handleMouseUp = (e) => {
+            // Use refs to get the latest values (avoids stale closure)
+            const currentDragData = dragDataRef.current;
+            const currentOnDrop = onDropInCanvasRef.current;
+
             // Use elementFromPoint to reliably detect what's under the cursor
-            // (e.target can be wrong if drag preview is covering elements)
             const elementAtPoint = document.elementFromPoint(e.clientX, e.clientY);
 
             // Check if we dropped on the canvas (react-flow area)
@@ -53,14 +72,14 @@ export function MouseDragProvider({ children, onDropInCanvas, isDark = false }) 
                 elementAtPoint?.closest('.react-flow__renderer') ||
                 elementAtPoint?.closest('.react-flow');
 
-            if (reactFlowPane && dragData && onDropInCanvas) {
+            if (reactFlowPane && currentDragData && currentOnDrop) {
                 // Get the position relative to the react-flow container
                 const container = reactFlowPane.closest('.react-flow');
                 if (container) {
                     const rect = container.getBoundingClientRect();
-                    onDropInCanvas({
-                        type: dragData.type,
-                        label: dragData.label,
+                    currentOnDrop({
+                        type: currentDragData.type,
+                        label: currentDragData.label,
                         clientX: e.clientX,
                         clientY: e.clientY,
                         offsetX: e.clientX - rect.left,
@@ -90,7 +109,7 @@ export function MouseDragProvider({ children, onDropInCanvas, isDark = false }) 
             document.body.style.cursor = '';
             document.body.style.userSelect = '';
         };
-    }, [isDragging, dragData, onDropInCanvas, stopDrag]);
+    }, [isDragging, stopDrag]);
 
     const value = {
         isDragging,
