@@ -197,164 +197,118 @@ function SmartActionNode({ data, selected, id }) {
     }, [actionType]);
 
     // Execution status indicator
-    const statusColor = isRunning ? '#6366f1' : isSuccess ? '#10b981' : isError ? '#ef4444' : colors.primary;
+    // Display label - prefer custom label, fallback to action type label
+    const displayLabel = label || colors.label;
+    const shortLabel = displayLabel.length > 15 ? displayLabel.substring(0, 15) + '...' : displayLabel;
 
     return (
-        <div className={`relative transition-all duration-300 ${selected ? 'scale-[1.02]' : ''} ${isPending ? 'opacity-60' : ''}`}>
-            {/* Input Handle - Left edge center */}
+        <div className={`flex flex-col items-center transition-all duration-200 ${isPending ? 'opacity-50' : ''}`}>
+            {/* Input Handle - Left side of card */}
             <Handle
                 type="target"
                 position={Position.Left}
                 id="input"
-                className="!w-3 !h-3 !border-2 !rounded-full !-left-1.5"
+                className="!w-2.5 !h-2.5 !border-[1.5px] !rounded-full"
                 style={{
-                    backgroundColor: isDark ? '#1a1a1a' : '#fff',
-                    borderColor: statusColor,
-                    boxShadow: isRunning ? `0 0 10px ${statusColor}` : 'none',
-                    top: '50%',
-                    transform: 'translateY(-50%)'
+                    backgroundColor: isDark ? '#1e1e1e' : '#fff',
+                    borderColor: isDark ? '#404040' : '#d1d5db',
+                    left: '-5px',
+                    top: '25px',
                 }}
             />
 
-            {/* Main Node Card - Single unified card */}
+            {/* Main Card - n8n style compact square */}
             <div
                 className={`
-                    min-w-[220px] max-w-[280px] rounded-xl overflow-hidden transition-all duration-300
-                    ${selected ? `ring-2 ring-offset-2 ${isDark ? 'ring-offset-[#0a0a0a]' : 'ring-offset-white'}` : ''}
+                    relative w-[50px] h-[50px] rounded-lg flex items-center justify-center cursor-pointer
+                    transition-all duration-200
+                    ${selected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}
+                    ${isRunning ? 'animate-pulse' : ''}
                 `}
                 style={{
-                    background: isDark
-                        ? 'linear-gradient(180deg, rgba(30,30,30,0.98) 0%, rgba(22,22,22,1) 100%)'
-                        : 'linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(250,250,250,1) 100%)',
-                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+                    backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
+                    border: `1px solid ${selected ? '#3b82f6' : isDark ? '#333' : '#e5e7eb'}`,
                     boxShadow: selected
-                        ? `0 0 0 2px ${colors.primary}40, 0 8px 24px rgba(0,0,0,0.15)`
-                        : isDark ? '0 4px 20px rgba(0,0,0,0.5)' : '0 2px 12px rgba(0,0,0,0.08)',
-                    ringColor: colors.primary
+                        ? '0 4px 12px rgba(59, 130, 246, 0.3)'
+                        : isDark ? '0 2px 8px rgba(0,0,0,0.4)' : '0 1px 3px rgba(0,0,0,0.1)',
                 }}
             >
-                {/* Header with colored accent */}
+                {/* Colored Icon */}
                 <div
-                    className="flex items-center gap-2.5 px-3 py-2"
-                    style={{
-                        background: `linear-gradient(135deg, ${colors.primary}15 0%, transparent 100%)`,
-                        borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'}`
-                    }}
+                    className="w-6 h-6 flex items-center justify-center"
+                    style={{ color: colors.primary }}
                 >
-                    {/* Icon */}
-                    <div
-                        className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${isRunning ? 'animate-pulse' : ''}`}
-                        style={{ background: `${colors.primary}25` }}
-                    >
-                        <div className="w-3.5 h-3.5" style={{ color: colors.primary }}>
-                            {isRunning ? (
-                                <svg className="w-full h-full animate-spin" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                </svg>
-                            ) : isSuccess ? (
-                                <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                </svg>
-                            ) : isError ? (
-                                <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            ) : ActionIcon}
-                        </div>
-                    </div>
-
-                    {/* Title */}
-                    <div className="flex-1 min-w-0">
-                        <div className={`text-[11px] font-bold uppercase tracking-wide ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                            {colors.label}
-                        </div>
-                    </div>
-
-                    {/* REC Badge */}
-                    {data?.isRecorded && (
-                        <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-red-500 text-white">
-                            REC
-                        </span>
+                    {isRunning ? (
+                        <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                    ) : isSuccess ? (
+                        <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                    ) : isError ? (
+                        <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    ) : (
+                        <div className="w-5 h-5">{ActionIcon}</div>
                     )}
                 </div>
 
-                {/* Body */}
-                <div className={`px-3 py-2 ${isDark ? 'bg-[#161616]' : 'bg-white'}`}>
-                    {/* Label */}
-                    {label && (
-                        <p className={`text-sm font-medium truncate mb-1.5 ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
-                            {label}
-                        </p>
-                    )}
+                {/* REC indicator */}
+                {data?.isRecorded && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white" />
+                )}
 
-                    {/* Selector info */}
-                    <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
-                        <span style={{ color: colors.primary }}>{selector.icon}</span>
-                        <span className={`font-mono truncate ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                            {selector.value}
-                        </span>
-                    </div>
-
-                    {/* More toggle */}
-                    <button
-                        onClick={() => setIsExpanded(!isExpanded)}
-                        className={`w-full text-center text-[9px] py-1 mt-1.5 rounded transition-colors ${isDark ? 'text-gray-600 hover:text-gray-400' : 'text-gray-400 hover:text-gray-600'}`}
-                    >
-                        {isExpanded ? '▲ Less' : '▼ More'}
-                    </button>
-                </div>
-
-                {/* Output Footer - Clean integrated design */}
-                <div className={`flex items-center justify-end gap-3 px-3 py-1.5 border-t ${isDark ? 'border-white/5 bg-[#131313]' : 'border-gray-100 bg-gray-50/50'}`}>
-                    {/* Success output */}
-                    <div className="flex items-center gap-1 group cursor-pointer">
-                        <span className={`text-[9px] font-medium ${isDark ? 'text-emerald-400/70' : 'text-emerald-600/70'} group-hover:text-emerald-400`}>
-                            ✓
-                        </span>
-                        <div
-                            className={`w-2 h-2 rounded-full border transition-transform group-hover:scale-125 ${isSuccess ? 'bg-emerald-500 border-emerald-400' : isDark ? 'bg-emerald-900/50 border-emerald-700' : 'bg-emerald-100 border-emerald-300'}`}
-                        />
-                    </div>
-
-                    {/* Error output */}
-                    <div className="flex items-center gap-1 group cursor-pointer">
-                        <span className={`text-[9px] font-medium ${isDark ? 'text-red-400/70' : 'text-red-600/70'} group-hover:text-red-400`}>
-                            ✗
-                        </span>
-                        <div
-                            className={`w-2 h-2 rounded-full border transition-transform group-hover:scale-125 ${isError ? 'bg-red-500 border-red-400' : isDark ? 'bg-red-900/50 border-red-700' : 'bg-red-100 border-red-300'}`}
-                        />
+                {/* Quick add button - shows on hover */}
+                <div className="absolute -right-3 top-1/2 -translate-y-1/2 opacity-0 hover:opacity-100 group-hover:opacity-100">
+                    <div className="w-4 h-4 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center cursor-pointer text-gray-500 text-xs">
+                        +
                     </div>
                 </div>
             </div>
 
-            {/* Output Handles - On right edge, aligned with footer dots */}
+            {/* Label below card - n8n style */}
+            <div
+                className={`mt-1.5 text-center max-w-[80px] ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+            >
+                <div className="text-[11px] font-medium leading-tight truncate">
+                    {shortLabel}
+                </div>
+                {selector.type !== 'auto' && (
+                    <div className={`text-[9px] mt-0.5 truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                        {selector.value.length > 12 ? selector.value.substring(0, 12) + '...' : selector.value}
+                    </div>
+                )}
+            </div>
+
+            {/* Output Handles - Right side, small dots only (no labels) */}
+            {/* Success/True handle */}
             <Handle
                 type="source"
                 position={Position.Right}
                 id="true"
-                className="!w-3 !h-3 !border-2 !rounded-full !-right-1.5"
+                className="!w-2.5 !h-2.5 !border-[1.5px] !rounded-full"
                 style={{
-                    backgroundColor: isSuccess ? '#10b981' : (isDark ? '#064e3b' : '#d1fae5'),
+                    backgroundColor: isSuccess ? '#10b981' : (isDark ? '#065f46' : '#d1fae5'),
                     borderColor: '#22c55e',
-                    boxShadow: isSuccess ? '0 0 8px #10b981' : 'none',
-                    bottom: '20px',
-                    top: 'auto',
+                    right: '-5px',
+                    top: '18px',
                 }}
             />
+
+            {/* Error/False handle */}
             <Handle
                 type="source"
                 position={Position.Right}
                 id="false"
-                className="!w-3 !h-3 !border-2 !rounded-full !-right-1.5"
+                className="!w-2.5 !h-2.5 !border-[1.5px] !rounded-full"
                 style={{
                     backgroundColor: isError ? '#ef4444' : (isDark ? '#7f1d1d' : '#fee2e2'),
                     borderColor: '#f87171',
-                    boxShadow: isError ? '0 0 8px #ef4444' : 'none',
-                    bottom: '20px',
-                    top: 'auto',
-                    transform: 'translateY(12px)',
+                    right: '-5px',
+                    top: '32px',
                 }}
             />
         </div>
