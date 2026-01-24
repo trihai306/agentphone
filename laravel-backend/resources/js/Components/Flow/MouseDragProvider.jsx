@@ -44,11 +44,14 @@ export function MouseDragProvider({ children, onDropInCanvas, isDark = false }) 
         };
 
         const handleMouseUp = (e) => {
+            // Use elementFromPoint to reliably detect what's under the cursor
+            // (e.target can be wrong if drag preview is covering elements)
+            const elementAtPoint = document.elementFromPoint(e.clientX, e.clientY);
+
             // Check if we dropped on the canvas (react-flow area)
-            const target = e.target;
-            const reactFlowPane = target.closest('.react-flow__pane') ||
-                target.closest('.react-flow__renderer') ||
-                target.closest('.react-flow');
+            const reactFlowPane = elementAtPoint?.closest('.react-flow__pane') ||
+                elementAtPoint?.closest('.react-flow__renderer') ||
+                elementAtPoint?.closest('.react-flow');
 
             if (reactFlowPane && dragData && onDropInCanvas) {
                 // Get the position relative to the react-flow container
