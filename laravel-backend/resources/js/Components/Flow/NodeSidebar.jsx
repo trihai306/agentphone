@@ -19,16 +19,27 @@ export default function NodeSidebar({
 
     if (!showSidebar) return null;
 
+    const handleDragStart = (e, template) => {
+        // Set data directly on the native event
+        e.dataTransfer.setData('application/reactflow/type', template.type);
+        e.dataTransfer.setData('application/reactflow/label', template.label);
+        e.dataTransfer.setData('text/plain', template.type);
+        e.dataTransfer.effectAllowed = 'move';
+
+        // Call parent handler for visual feedback
+        if (onDragStart) {
+            onDragStart(e, template.type, template.label, template.color);
+        }
+    };
+
     const NodeItem = ({ template }) => (
         <div
             key={template.type}
-            draggable={true}
-            onDragStart={(e) => {
-                onDragStart(e, template.type, template.label, template.color);
-            }}
-            onDragEnd={(e) => {
-                e.preventDefault();
-            }}
+            draggable="true"
+            onDragStart={(e) => handleDragStart(e, template)}
+            data-node-type={template.type}
+            data-node-label={template.label}
+            data-node-color={template.color}
             className={`group relative flex items-center ${sidebarExpanded ? 'gap-2 p-2' : 'justify-center p-1.5'} rounded-lg cursor-grab active:cursor-grabbing border transition-all duration-200 hover:scale-[1.02] select-none ${isDark ? 'bg-[#1a1a1a] hover:bg-[#1e1e1e] border-[#252525] hover:border-[#333]' : 'bg-gray-50 hover:bg-white border-gray-200 hover:border-gray-300'}`}
             title={!sidebarExpanded ? template.label : undefined}
         >
@@ -40,7 +51,7 @@ export default function NodeSidebar({
             </div>
             {sidebarExpanded && (
                 <div className="flex-1 min-w-0 pointer-events-none">
-                    <p className={`text-[11px] font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{template.label}</p>
+                    <p className={`text-[11px] font-semibold truncate pointer-events-none ${isDark ? 'text-white' : 'text-gray-900'}`}>{template.label}</p>
                 </div>
             )}
         </div>
