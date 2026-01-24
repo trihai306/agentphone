@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTheme } from '@/hooks/useTheme';
+import { useTheme } from '@/Contexts/ThemeContext';
 
 /**
  * RecordingPanel - Floating overlay that shows during recording mode
