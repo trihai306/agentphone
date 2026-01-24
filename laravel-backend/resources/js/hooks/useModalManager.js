@@ -5,7 +5,7 @@ import { useReducer, useCallback } from 'react';
  * Manages all modals in the Flow Editor
  */
 
-const MODAL_TYPES = {
+export const MODAL_TYPES = {
     MEDIA_PICKER: 'mediaPicker',
     COLLECTION_PICKER: 'collectionPicker',
     LOOP_SUBFLOW: 'loopSubFlow',
