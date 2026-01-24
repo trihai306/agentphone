@@ -926,21 +926,21 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
             }
             // ========== END TEXT INPUT MERGING ==========
 
-            // Auto-layout: position below last node
-            const baseX = 400;
-            const baseY = 100;
-            const nodeHeight = 150; // Increased for Loop nodes
+            // Auto-layout: position to the right of last node (HORIZONTAL layout)
+            const baseX = 100;
+            const baseY = 200;
+            const nodeWidth = 280; // Width of node cards
             const gap = 80;
 
-            let newY = baseY;
+            let newX = baseX;
             if (lastNode && lastNode.position) {
-                newY = lastNode.position.y + nodeHeight + gap;
+                newX = lastNode.position.x + nodeWidth + gap;
             }
 
             const newNode = {
                 id: newNodeId,
                 type: getNodeType(eventData.event_type),
-                position: { x: baseX, y: newY },
+                position: { x: newX, y: baseY },
                 data: {
                     label: nodeSuggestion.data?.label || eventData.event_type,
                     color: nodeSuggestion.data?.color || 'blue',
