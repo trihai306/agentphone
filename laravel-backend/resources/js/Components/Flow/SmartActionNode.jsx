@@ -277,13 +277,6 @@ function SmartActionNode({ data, selected, id }) {
                         <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                     </div>
                 )}
-
-                {/* Quick add button - shows on hover */}
-                <div className="absolute -right-5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="w-6 h-6 rounded-full bg-white border border-gray-200 hover:bg-blue-500 hover:border-blue-500 hover:text-white flex items-center justify-center cursor-pointer text-gray-400 text-base font-medium transition-all shadow-sm">
-                        +
-                    </div>
-                </div>
             </div>
 
             {/* Output Handles - Right side, vertically spaced */}
