@@ -1344,8 +1344,10 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     ];
 
     const onDragStart = (event, nodeType, nodeLabel, color) => {
+        // Set data - use both custom and text/plain for compatibility
         event.dataTransfer.setData('application/reactflow/type', nodeType);
         event.dataTransfer.setData('application/reactflow/label', nodeLabel);
+        event.dataTransfer.setData('text/plain', nodeType); // Fallback for cross-browser
         event.dataTransfer.effectAllowed = 'move';
         setDraggedNodeType({ type: nodeType, color });
 
@@ -1377,9 +1379,18 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         `;
         dragImage.style.position = 'absolute';
         dragImage.style.top = '-1000px';
+        dragImage.style.left = '-1000px';
         document.body.appendChild(dragImage);
         event.dataTransfer.setDragImage(dragImage, 60, 20);
-        setTimeout(() => document.body.removeChild(dragImage), 0);
+
+        // Remove after drag ends, not immediately
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                if (dragImage.parentNode) {
+                    document.body.removeChild(dragImage);
+                }
+            }, 100);
+        });
     };
 
     // Note: NodeIcon and LogIcon are now imported from FlowIcons.jsx

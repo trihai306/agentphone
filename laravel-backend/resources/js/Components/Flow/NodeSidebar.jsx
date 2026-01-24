@@ -24,7 +24,6 @@ export default function NodeSidebar({
             key={template.type}
             draggable={true}
             onDragStart={(e) => {
-                e.dataTransfer.effectAllowed = 'move';
                 onDragStart(e, template.type, template.label, template.color);
             }}
             onDragEnd={(e) => {
