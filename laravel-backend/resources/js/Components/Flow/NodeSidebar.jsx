@@ -40,11 +40,11 @@ export default function NodeSidebar({
             data-node-type={template.type}
             data-node-label={template.label}
             data-node-color={template.color}
-            className={`group relative flex items-center ${sidebarExpanded ? 'gap-2 p-2' : 'justify-center p-1.5'} rounded-lg cursor-grab active:cursor-grabbing border transition-all duration-200 hover:scale-[1.02] select-none ${isDark ? 'bg-[#1a1a1a] hover:bg-[#1e1e1e] border-[#252525] hover:border-[#333]' : 'bg-gray-50 hover:bg-white border-gray-200 hover:border-gray-300'}`}
+            className={`group relative flex items-center ${sidebarExpanded ? 'gap-2 p-2' : 'justify-center p-1.5'} rounded-lg cursor-grab active:cursor-grabbing border select-none ${isDark ? 'bg-[#1a1a1a] hover:bg-[#1e1e1e] border-[#252525] hover:border-[#333]' : 'bg-gray-50 hover:bg-white border-gray-200 hover:border-gray-300'}`}
             title={!sidebarExpanded ? template.label : undefined}
         >
             <div
-                className={`${sidebarExpanded ? 'w-7 h-7' : 'w-8 h-8'} rounded-md flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:scale-110 pointer-events-none`}
+                className={`${sidebarExpanded ? 'w-7 h-7' : 'w-8 h-8'} rounded-md flex items-center justify-center flex-shrink-0 pointer-events-none`}
                 style={{ backgroundColor: template.bgColor }}
             >
                 <NodeIcon icon={template.icon} color={template.color} />
