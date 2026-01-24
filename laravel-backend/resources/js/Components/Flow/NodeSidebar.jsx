@@ -1,80 +1,55 @@
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { NodeIcon } from './FlowIcons';
+import { useMouseDrag } from './MouseDragProvider';
 
 /**
  * NodeSidebar - Collapsible left sidebar with draggable node templates
- * Displays node categories: Actions, Logic, Resources
+ * Uses custom mouse-based drag instead of HTML5 Drag API for reliability
  */
 export default function NodeSidebar({
     showSidebar,
     sidebarExpanded,
     setSidebarExpanded,
     nodeTemplates,
-    onDragStart,
+    onDragStart, // Keep for compatibility but not used with mouse drag
 }) {
     const { isDark } = useTheme();
     const { t } = useTranslation();
+    const { startDrag } = useMouseDrag();
 
     if (!showSidebar) return null;
 
-    // Separate component with ref for native drag handling
-    const NodeItem = ({ template }) => {
-        const itemRef = useRef(null);
-
-        useEffect(() => {
-            const element = itemRef.current;
-            if (!element) return;
-
-            const handleNativeDragStart = (e) => {
-                // Ensure we're dragging the right element
-                e.stopPropagation();
-
-                // Set the data on dataTransfer
-                e.dataTransfer.setData('application/reactflow/type', template.type);
-                e.dataTransfer.setData('application/reactflow/label', template.label);
-                e.dataTransfer.setData('text/plain', template.type);
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.dropEffect = 'move';
-
-                // Call parent handler for visual feedback
-                if (onDragStart) {
-                    onDragStart(e, template.type, template.label, template.color);
-                }
-            };
-
-            element.addEventListener('dragstart', handleNativeDragStart);
-
-            return () => {
-                element.removeEventListener('dragstart', handleNativeDragStart);
-            };
-        }, [template]);
-
-        return (
-            <div
-                ref={itemRef}
-                draggable="true"
-                data-node-type={template.type}
-                data-node-label={template.label}
-                data-node-color={template.color}
-                className={`group relative flex items-center ${sidebarExpanded ? 'gap-2 p-2' : 'justify-center p-1.5'} rounded-lg cursor-grab active:cursor-grabbing border select-none ${isDark ? 'bg-[#1a1a1a] hover:bg-[#1e1e1e] border-[#252525] hover:border-[#333]' : 'bg-gray-50 hover:bg-white border-gray-200 hover:border-gray-300'}`}
-                title={!sidebarExpanded ? template.label : undefined}
-            >
-                <div
-                    className={`${sidebarExpanded ? 'w-7 h-7' : 'w-8 h-8'} rounded-md flex items-center justify-center flex-shrink-0 pointer-events-none`}
-                    style={{ backgroundColor: template.bgColor }}
-                >
-                    <NodeIcon icon={template.icon} color={template.color} />
-                </div>
-                {sidebarExpanded && (
-                    <div className="flex-1 min-w-0 pointer-events-none">
-                        <p className={`text-[11px] font-semibold truncate pointer-events-none ${isDark ? 'text-white' : 'text-gray-900'}`}>{template.label}</p>
-                    </div>
-                )}
-            </div>
-        );
+    // Handle mousedown to start custom drag
+    const handleMouseDown = (e, template) => {
+        e.preventDefault();
+        e.stopPropagation();
+        startDrag(template.type, template.label, template.color, template.bgColor);
     };
+
+    const NodeItem = ({ template }) => (
+        <div
+            onMouseDown={(e) => handleMouseDown(e, template)}
+            data-node-type={template.type}
+            data-node-label={template.label}
+            data-node-color={template.color}
+            className={`group relative flex items-center ${sidebarExpanded ? 'gap-2 p-2' : 'justify-center p-1.5'} rounded-lg cursor-grab active:cursor-grabbing border select-none ${isDark ? 'bg-[#1a1a1a] hover:bg-[#1e1e1e] border-[#252525] hover:border-[#333]' : 'bg-gray-50 hover:bg-white border-gray-200 hover:border-gray-300'}`}
+            title={!sidebarExpanded ? template.label : undefined}
+        >
+            <div
+                className={`${sidebarExpanded ? 'w-7 h-7' : 'w-8 h-8'} rounded-md flex items-center justify-center flex-shrink-0 pointer-events-none`}
+                style={{ backgroundColor: template.bgColor }}
+            >
+                <NodeIcon icon={template.icon} color={template.color} />
+            </div>
+            {sidebarExpanded && (
+                <div className="flex-1 min-w-0 pointer-events-none">
+                    <p className={`text-[11px] font-semibold truncate pointer-events-none ${isDark ? 'text-white' : 'text-gray-900'}`}>{template.label}</p>
+                </div>
+            )}
+        </div>
+    );
 
     const CategorySection = ({ category, label, color, templates }) => (
         <div className={`border-b ${isDark ? 'border-[#1e1e1e]' : 'border-gray-200'}`}>
@@ -108,20 +83,24 @@ export default function NodeSidebar({
                 )}
                 <button
                     onClick={() => setSidebarExpanded(!sidebarExpanded)}
-                    className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${isDark ? 'hover:bg-[#1a1a1a] text-gray-500 hover:text-white' : 'hover:bg-gray-100 text-gray-400 hover:text-gray-700'}`}
-                    title={sidebarExpanded ? 'Collapse' : 'Expand'}
+                    className={`p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-[#1e1e1e] text-gray-400 hover:text-white' : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'}`}
+                    title={sidebarExpanded ? t('flows.editor.sidebar.collapse') : t('flows.editor.sidebar.expand')}
                 >
-                    <svg className={`w-4 h-4 transition-transform duration-200 ${sidebarExpanded ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        {sidebarExpanded ? (
+                            <path d="M11 19l-7-7 7-7M18 19l-7-7 7-7" />
+                        ) : (
+                            <path d="M13 5l7 7-7 7M6 5l7 7-7 7" />
+                        )}
                     </svg>
                 </button>
             </div>
 
-            {/* Search Filter - Only show when expanded */}
+            {/* Search (only when expanded) */}
             {sidebarExpanded && (
-                <div className={`px-2 py-2 border-b ${isDark ? 'border-[#1e1e1e]' : 'border-gray-200'}`}>
+                <div className={`p-2 border-b ${isDark ? 'border-[#1e1e1e]' : 'border-gray-200'}`}>
                     <div className="relative">
-                        <svg className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className={`absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                         <input
@@ -150,26 +129,10 @@ export default function NodeSidebar({
                 <CategorySection
                     category="resource"
                     label={t('flows.editor.categories.resources')}
-                    color="bg-pink-500"
+                    color="bg-purple-500"
                     templates={nodeTemplates.filter(t => t.category === 'resource')}
                 />
             </div>
-
-            {/* Sidebar Footer - Keyboard Shortcuts */}
-            {sidebarExpanded && (
-                <div className={`p-2 border-t ${isDark ? 'border-[#1e1e1e] bg-[#0a0a0a]' : 'border-gray-200 bg-gray-50'}`}>
-                    <div className="space-y-1 text-[9px]">
-                        <div className={`flex items-center justify-between ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            <span>{t('flows.editor.sidebar.delete')}</span>
-                            <kbd className={`px-1 py-0.5 rounded font-mono border text-[8px] ${isDark ? 'bg-[#1a1a1a] text-gray-400 border-[#252525]' : 'bg-white text-gray-500 border-gray-200'}`}>Del</kbd>
-                        </div>
-                        <div className={`flex items-center justify-between ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            <span>{t('flows.editor.sidebar.save')}</span>
-                            <kbd className={`px-1 py-0.5 rounded font-mono border text-[8px] ${isDark ? 'bg-[#1a1a1a] text-gray-400 border-[#252525]' : 'bg-white text-gray-500 border-gray-200'}`}>⌘S</kbd>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

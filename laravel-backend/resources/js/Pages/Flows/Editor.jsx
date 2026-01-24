@@ -74,6 +74,7 @@ import NodePropertiesPanel from '../../Components/Flow/NodePropertiesPanel';
 import ExecutionLogPanel from '../../Components/Flow/ExecutionLogPanel';
 import EditorToolbar from '../../Components/Flow/EditorToolbar';
 import ClearConfirmModal from '../../Components/Flow/ClearConfirmModal';
+import { MouseDragProvider } from '../../Components/Flow/MouseDragProvider';
 
 const nodeTypes = {
     // Control Flow
@@ -1343,26 +1344,55 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         { type: 'ai_process', label: t('flows.editor.nodes.ai_process'), icon: 'sparkles', color: '#ec4899', bgColor: 'rgba(236, 72, 153, 0.15)', description: t('flows.editor.nodes.ai_process_desc', 'AI integration'), category: 'resource' },
     ];
 
+    // Legacy HTML5 drag handler (keep for compatibility but not actively used)
     const onDragStart = (event, nodeType, nodeLabel, color) => {
-        // Set data - use both custom and text/plain for compatibility
         event.dataTransfer.setData('application/reactflow/type', nodeType);
         event.dataTransfer.setData('application/reactflow/label', nodeLabel);
-        event.dataTransfer.setData('text/plain', nodeType); // Fallback for cross-browser
+        event.dataTransfer.setData('text/plain', nodeType);
         event.dataTransfer.effectAllowed = 'move';
         setDraggedNodeType({ type: nodeType, color });
-
-        // Create custom drag image
-        // Use a simple transparent 1x1 gif for drag image
-        // IMPORTANT: Do NOT create and remove DOM elements during drag - it cancels the drag operation!
         const img = new Image();
         img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
         event.dataTransfer.setDragImage(img, 0, 0);
     };
 
+    // New mouse-based drop handler - called when user releases mouse on canvas
+    const onMouseDropInCanvas = useCallback((dropData) => {
+        if (!dropData?.type) return;
+
+        // Convert client position to flow position
+        const position = screenToFlowPosition({
+            x: dropData.clientX,
+            y: dropData.clientY,
+        });
+
+        // Find matching template for label
+        const template = nodeTemplates.find(t => t.type === dropData.type);
+        const label = template?.label || dropData.label || dropData.type;
+
+        // Create new node
+        const newNode = {
+            id: `${dropData.type}_${Date.now()}`,
+            type: dropData.type,
+            position,
+            data: {
+                label,
+                nodeId: `${dropData.type}_${Date.now()}`,
+            },
+        };
+
+        setNodes((nds) => [...nds, newNode]);
+        setSelectedNode(newNode.id);
+
+        // Reset drag state
+        setDraggedNodeType(null);
+        setIsDraggingOver(false);
+    }, [screenToFlowPosition, nodeTemplates, setNodes, setSelectedNode]);
+
     // Note: NodeIcon and LogIcon are now imported from FlowIcons.jsx
 
     return (
-        <>
+        <MouseDragProvider onDropInCanvas={onMouseDropInCanvas} isDark={isDark}>
             <Head title={`${flowName} - Flow Editor`} />
             <div className={`h-screen flex flex-col transition-colors duration-300 ${isDark ? 'bg-[#0a0a0a]' : 'bg-gray-50'}`}>
                 {/* Top Toolbar */}
@@ -1696,7 +1726,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                 onConfirm={confirmClearAllNodes}
                 nodeCount={nodes.length}
             />
-        </>
+        </MouseDragProvider>
     );
 }
 
