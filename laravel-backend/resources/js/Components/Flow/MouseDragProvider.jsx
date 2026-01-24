@@ -64,28 +64,41 @@ export function MouseDragProvider({ children, onDropInCanvas, isDark = false }) 
             const currentDragData = dragDataRef.current;
             const currentOnDrop = onDropInCanvasRef.current;
 
+            console.log('[MouseDrag] mouseup at', e.clientX, e.clientY, 'dragData:', currentDragData);
+
             // Use elementFromPoint to reliably detect what's under the cursor
             const elementAtPoint = document.elementFromPoint(e.clientX, e.clientY);
+            console.log('[MouseDrag] elementAtPoint:', elementAtPoint?.className);
+
+            // Check if we're still in the sidebar (if so, don't drop)
+            const isInSidebar = elementAtPoint?.closest('.flow-editor-sidebar');
 
             // Check if we dropped on the canvas (react-flow area)
-            const reactFlowPane = elementAtPoint?.closest('.react-flow__pane') ||
+            let reactFlowPane = elementAtPoint?.closest('.react-flow__pane') ||
                 elementAtPoint?.closest('.react-flow__renderer') ||
                 elementAtPoint?.closest('.react-flow');
 
-            if (reactFlowPane && currentDragData && currentOnDrop) {
+            // Fallback: if not detected directly but we're not in sidebar, find any react-flow
+            if (!reactFlowPane && !isInSidebar) {
+                reactFlowPane = document.querySelector('.react-flow');
+                console.log('[MouseDrag] Using fallback react-flow detection');
+            }
+
+            console.log('[MouseDrag] reactFlowPane found:', !!reactFlowPane, 'isInSidebar:', !!isInSidebar);
+
+            if (reactFlowPane && currentDragData && currentOnDrop && !isInSidebar) {
                 // Get the position relative to the react-flow container
-                const container = reactFlowPane.closest('.react-flow');
-                if (container) {
-                    const rect = container.getBoundingClientRect();
-                    currentOnDrop({
-                        type: currentDragData.type,
-                        label: currentDragData.label,
-                        clientX: e.clientX,
-                        clientY: e.clientY,
-                        offsetX: e.clientX - rect.left,
-                        offsetY: e.clientY - rect.top,
-                    });
-                }
+                const container = reactFlowPane.closest('.react-flow') || reactFlowPane;
+                const rect = container.getBoundingClientRect();
+                console.log('[MouseDrag] Dropping node at', e.clientX - rect.left, e.clientY - rect.top);
+                currentOnDrop({
+                    type: currentDragData.type,
+                    label: currentDragData.label,
+                    clientX: e.clientX,
+                    clientY: e.clientY,
+                    offsetX: e.clientX - rect.left,
+                    offsetY: e.clientY - rect.top,
+                });
             }
 
             stopDrag();
