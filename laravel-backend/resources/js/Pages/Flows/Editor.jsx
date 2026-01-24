@@ -1378,6 +1378,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
             data: {
                 label,
                 nodeId: `${dropData.type}_${Date.now()}`,
+                actionType: dropData.type, // Required for SmartActionNode to display correct icon/color
             },
         };
 
