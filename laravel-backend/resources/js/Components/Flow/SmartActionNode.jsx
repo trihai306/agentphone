@@ -199,71 +199,73 @@ function SmartActionNode({ data, selected, id }) {
     // Execution status indicator
     // Display label - prefer custom label, fallback to action type label
     const displayLabel = label || colors.label;
-    const shortLabel = displayLabel.length > 15 ? displayLabel.substring(0, 15) + '...' : displayLabel;
+    const shortLabel = displayLabel.length > 20 ? displayLabel.substring(0, 20) + '...' : displayLabel;
 
     return (
         <div className={`flex flex-col items-center transition-all duration-200 ${isPending ? 'opacity-50' : ''}`}>
-            {/* Input Handle - Left side of card */}
+            {/* Input Handle - Left center of card */}
             <Handle
                 type="target"
                 position={Position.Left}
                 id="input"
-                className="!w-2.5 !h-2.5 !border-[1.5px] !rounded-full"
+                className="!w-3 !h-3 !border-2 !rounded-full"
                 style={{
-                    backgroundColor: isDark ? '#1e1e1e' : '#fff',
-                    borderColor: isDark ? '#404040' : '#d1d5db',
-                    left: '-5px',
-                    top: '25px',
+                    backgroundColor: isDark ? '#262626' : '#fff',
+                    borderColor: isDark ? '#525252' : '#d1d5db',
+                    left: '-6px',
+                    top: '40px',
                 }}
             />
 
-            {/* Main Card - n8n style compact square */}
+            {/* Main Card - n8n style square icon card */}
             <div
                 className={`
-                    relative w-[50px] h-[50px] rounded-lg flex items-center justify-center cursor-pointer
-                    transition-all duration-200
+                    relative w-[80px] h-[80px] rounded-xl flex items-center justify-center cursor-pointer
+                    transition-all duration-200 group
                     ${selected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}
                     ${isRunning ? 'animate-pulse' : ''}
                 `}
                 style={{
-                    backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
-                    border: `1px solid ${selected ? '#3b82f6' : isDark ? '#333' : '#e5e7eb'}`,
+                    backgroundColor: isDark ? '#262626' : '#ffffff',
+                    border: `1.5px solid ${selected ? '#3b82f6' : isDark ? '#404040' : '#e5e7eb'}`,
                     boxShadow: selected
-                        ? '0 4px 12px rgba(59, 130, 246, 0.3)'
-                        : isDark ? '0 2px 8px rgba(0,0,0,0.4)' : '0 1px 3px rgba(0,0,0,0.1)',
+                        ? '0 4px 16px rgba(59, 130, 246, 0.35)'
+                        : isDark ? '0 4px 12px rgba(0,0,0,0.5)' : '0 2px 8px rgba(0,0,0,0.08)',
                 }}
             >
-                {/* Colored Icon */}
+                {/* Colored Icon - Large and centered */}
                 <div
-                    className="w-6 h-6 flex items-center justify-center"
+                    className="w-9 h-9 flex items-center justify-center"
                     style={{ color: colors.primary }}
                 >
                     {isRunning ? (
-                        <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <svg className="w-8 h-8 animate-spin" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                         </svg>
                     ) : isSuccess ? (
-                        <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                        <svg className="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                     ) : isError ? (
-                        <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                        <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     ) : (
-                        <div className="w-5 h-5">{ActionIcon}</div>
+                        <div className="w-8 h-8 [&>svg]:w-full [&>svg]:h-full">{ActionIcon}</div>
                     )}
                 </div>
 
-                {/* REC indicator */}
+                {/* REC indicator - top right corner */}
                 {data?.isRecorded && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white" />
+                    <div className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                    </div>
                 )}
 
                 {/* Quick add button - shows on hover */}
-                <div className="absolute -right-3 top-1/2 -translate-y-1/2 opacity-0 hover:opacity-100 group-hover:opacity-100">
-                    <div className="w-4 h-4 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center cursor-pointer text-gray-500 text-xs">
+                <div className="absolute -right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-5 h-5 rounded-full bg-gray-200 hover:bg-blue-500 hover:text-white flex items-center justify-center cursor-pointer text-gray-500 text-sm font-medium transition-colors shadow-sm">
                         +
                     </div>
                 </div>
@@ -271,30 +273,30 @@ function SmartActionNode({ data, selected, id }) {
 
             {/* Label below card - n8n style */}
             <div
-                className={`mt-1.5 text-center max-w-[80px] ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+                className={`mt-2 text-center max-w-[100px] ${isDark ? 'text-gray-200' : 'text-gray-800'}`}
             >
-                <div className="text-[11px] font-medium leading-tight truncate">
+                <div className="text-xs font-medium leading-tight truncate">
                     {shortLabel}
                 </div>
                 {selector.type !== 'auto' && (
-                    <div className={`text-[9px] mt-0.5 truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        {selector.value.length > 12 ? selector.value.substring(0, 12) + '...' : selector.value}
+                    <div className={`text-[10px] mt-0.5 truncate font-mono ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                        {selector.value.length > 15 ? selector.value.substring(0, 15) + '...' : selector.value}
                     </div>
                 )}
             </div>
 
-            {/* Output Handles - Right side, small dots only (no labels) */}
+            {/* Output Handles - Right side, vertically centered */}
             {/* Success/True handle */}
             <Handle
                 type="source"
                 position={Position.Right}
                 id="true"
-                className="!w-2.5 !h-2.5 !border-[1.5px] !rounded-full"
+                className="!w-3 !h-3 !border-2 !rounded-full transition-transform hover:!scale-125"
                 style={{
                     backgroundColor: isSuccess ? '#10b981' : (isDark ? '#065f46' : '#d1fae5'),
                     borderColor: '#22c55e',
-                    right: '-5px',
-                    top: '18px',
+                    right: '-6px',
+                    top: '30px',
                 }}
             />
 
@@ -303,12 +305,12 @@ function SmartActionNode({ data, selected, id }) {
                 type="source"
                 position={Position.Right}
                 id="false"
-                className="!w-2.5 !h-2.5 !border-[1.5px] !rounded-full"
+                className="!w-3 !h-3 !border-2 !rounded-full transition-transform hover:!scale-125"
                 style={{
                     backgroundColor: isError ? '#ef4444' : (isDark ? '#7f1d1d' : '#fee2e2'),
                     borderColor: '#f87171',
-                    right: '-5px',
-                    top: '32px',
+                    right: '-6px',
+                    top: '50px',
                 }}
             />
         </div>
