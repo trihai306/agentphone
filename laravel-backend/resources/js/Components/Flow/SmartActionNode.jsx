@@ -196,67 +196,82 @@ function SmartActionNode({ data, selected, id }) {
         return icons[actionType] || icons.tap;
     }, [actionType]);
 
-    // Execution status indicator
     // Display label - prefer custom label, fallback to action type label
-    const displayLabel = label || colors.label;
-    const shortLabel = displayLabel.length > 20 ? displayLabel.substring(0, 20) + '...' : displayLabel;
+    const displayLabel = label || '';
+    const subtitle = selector.type !== 'auto' ? selector.value : '';
 
     return (
-        <div className={`flex flex-col items-center transition-all duration-200 ${isPending ? 'opacity-50' : ''}`}>
-            {/* Input Handle - Left center of card */}
+        <div className={`relative transition-all duration-200 ${isPending ? 'opacity-50' : ''}`}>
+            {/* Input Handle - Left center */}
             <Handle
                 type="target"
                 position={Position.Left}
                 id="input"
                 className="!w-3 !h-3 !border-2 !rounded-full"
                 style={{
-                    backgroundColor: isDark ? '#262626' : '#fff',
+                    backgroundColor: isDark ? '#1f1f1f' : '#fff',
                     borderColor: isDark ? '#525252' : '#d1d5db',
                     left: '-6px',
-                    top: '40px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
                 }}
             />
 
-            {/* Main Card - n8n style square icon card */}
+            {/* Main Card - n8n style horizontal card */}
             <div
                 className={`
-                    relative w-[80px] h-[80px] rounded-xl flex items-center justify-center cursor-pointer
+                    relative flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer
+                    min-w-[180px] max-w-[240px]
                     transition-all duration-200 group
                     ${selected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}
                     ${isRunning ? 'animate-pulse' : ''}
                 `}
                 style={{
-                    backgroundColor: isDark ? '#262626' : '#ffffff',
-                    border: `1.5px solid ${selected ? '#3b82f6' : isDark ? '#404040' : '#e5e7eb'}`,
+                    backgroundColor: isDark ? '#1f1f1f' : '#ffffff',
+                    border: `1.5px solid ${selected ? '#3b82f6' : isDark ? '#333' : '#e5e7eb'}`,
                     boxShadow: selected
-                        ? '0 4px 16px rgba(59, 130, 246, 0.35)'
-                        : isDark ? '0 4px 12px rgba(0,0,0,0.5)' : '0 2px 8px rgba(0,0,0,0.08)',
+                        ? '0 4px 20px rgba(59, 130, 246, 0.3)'
+                        : isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 2px 12px rgba(0,0,0,0.08)',
                 }}
             >
-                {/* Colored Icon - Large and centered */}
+                {/* Icon with colored background */}
                 <div
-                    className="w-9 h-9 flex items-center justify-center"
-                    style={{ color: colors.primary }}
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${isRunning ? 'animate-pulse' : ''}`}
+                    style={{
+                        backgroundColor: `${colors.primary}20`,
+                    }}
                 >
-                    {isRunning ? (
-                        <svg className="w-8 h-8 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                        </svg>
-                    ) : isSuccess ? (
-                        <svg className="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                    ) : isError ? (
-                        <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    ) : (
-                        <div className="w-8 h-8 [&>svg]:w-full [&>svg]:h-full">{ActionIcon}</div>
+                    <div className="w-5 h-5 [&>svg]:w-full [&>svg]:h-full" style={{ color: colors.primary }}>
+                        {isRunning ? (
+                            <svg className="w-full h-full animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            </svg>
+                        ) : isSuccess ? (
+                            <svg className="w-full h-full text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        ) : isError ? (
+                            <svg className="w-full h-full text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        ) : ActionIcon}
+                    </div>
+                </div>
+
+                {/* Text content */}
+                <div className="flex-1 min-w-0">
+                    <div className={`text-sm font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {colors.label}
+                    </div>
+                    {(displayLabel || subtitle) && (
+                        <div className={`text-xs truncate mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                            {displayLabel || subtitle}
+                        </div>
                     )}
                 </div>
 
-                {/* REC indicator - top right corner */}
+                {/* REC indicator */}
                 {data?.isRecorded && (
                     <div className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
                         <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
@@ -264,28 +279,14 @@ function SmartActionNode({ data, selected, id }) {
                 )}
 
                 {/* Quick add button - shows on hover */}
-                <div className="absolute -right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="w-5 h-5 rounded-full bg-gray-200 hover:bg-blue-500 hover:text-white flex items-center justify-center cursor-pointer text-gray-500 text-sm font-medium transition-colors shadow-sm">
+                <div className="absolute -right-5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-6 h-6 rounded-full bg-white border border-gray-200 hover:bg-blue-500 hover:border-blue-500 hover:text-white flex items-center justify-center cursor-pointer text-gray-400 text-base font-medium transition-all shadow-sm">
                         +
                     </div>
                 </div>
             </div>
 
-            {/* Label below card - n8n style */}
-            <div
-                className={`mt-2 text-center max-w-[100px] ${isDark ? 'text-gray-200' : 'text-gray-800'}`}
-            >
-                <div className="text-xs font-medium leading-tight truncate">
-                    {shortLabel}
-                </div>
-                {selector.type !== 'auto' && (
-                    <div className={`text-[10px] mt-0.5 truncate font-mono ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        {selector.value.length > 15 ? selector.value.substring(0, 15) + '...' : selector.value}
-                    </div>
-                )}
-            </div>
-
-            {/* Output Handles - Right side, vertically centered */}
+            {/* Output Handles - Right side, vertically spaced */}
             {/* Success/True handle */}
             <Handle
                 type="source"
@@ -296,7 +297,7 @@ function SmartActionNode({ data, selected, id }) {
                     backgroundColor: isSuccess ? '#10b981' : (isDark ? '#065f46' : '#d1fae5'),
                     borderColor: '#22c55e',
                     right: '-6px',
-                    top: '30px',
+                    top: '35%',
                 }}
             />
 
@@ -310,7 +311,7 @@ function SmartActionNode({ data, selected, id }) {
                     backgroundColor: isError ? '#ef4444' : (isDark ? '#7f1d1d' : '#fee2e2'),
                     borderColor: '#f87171',
                     right: '-6px',
-                    top: '50px',
+                    top: '65%',
                 }}
             />
         </div>
