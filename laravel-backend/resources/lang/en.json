@@ -252,7 +252,9 @@
                 "text_data": "Text Data",
                 "data_source": "Data Source",
                 "ai_process": "AI Process",
-                "http_request": "HTTP Request"
+                "http_request": "HTTP Request",
+                "loop_start": "Loop Start",
+                "loop_end": "Continue"
             },
             "categories": {
                 "control": "Control",

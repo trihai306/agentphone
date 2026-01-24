@@ -245,6 +245,7 @@ class JobExecutor(context: Context) {
                     ActionType.EXTRACT -> executeExtract(action.params)
                     ActionType.ELEMENT_CHECK -> executeElementCheck(action.params)
                     ActionType.WAIT_FOR_ELEMENT -> executeWaitForElement(action.params)
+                    ActionType.REPEAT_CLICK -> executeRepeatClick(action.params)
                     ActionType.CUSTOM -> executeCustom(action.params, jobParams)
                 }
 
@@ -311,6 +312,9 @@ class JobExecutor(context: Context) {
                 "wait", "delay" -> executeWait(params)
                 "screenshot" -> executeScreenshot(params)
                 "file_input", "upload_file" -> executeFileInput(params)
+                
+                // Repeat click - multiple rapid taps
+                "repeat_click" -> executeRepeatClick(params)
                 
                 else -> ActionResult(
                     actionId = "unknown",
@@ -838,6 +842,109 @@ class JobExecutor(context: Context) {
             success = result1.success && result2.success,
             message = "Double tap executed",
             data = mapOf("x" to x, "y" to y)
+        )
+    }
+
+    /**
+     * Execute repeat click - multiple rapid taps on the same element
+     * 
+     * Different from Loop:
+     * - Loop: Control flow that repeats a set of actions
+     * - Repeat Click: Single action that performs multiple rapid taps
+     * 
+     * Use cases:
+     * - Rapidly tapping like buttons
+     * - Incrementing/decrementing values
+     * - Fast clicking for games
+     * 
+     * @param params Contains:
+     *   - clickCount: Number of times to click (default: 3)
+     *   - delayType: "fixed" or "random" (default: "fixed")
+     *   - delayMs: Fixed delay between clicks in ms (default: 200)
+     *   - minDelayMs: Minimum delay for random (default: 100)
+     *   - maxDelayMs: Maximum delay for random (default: 500)
+     *   - Plus all standard tap params (x, y, resourceId, text, etc.)
+     */
+    private suspend fun executeRepeatClick(params: Map<String, Any>): ActionResult {
+        val startTime = System.currentTimeMillis()
+        
+        // Repeat click specific params
+        val clickCount = (params["clickCount"] as? Number)?.toInt() 
+            ?: (params["click_count"] as? Number)?.toInt() 
+            ?: 3
+        val delayType = params["delayType"] as? String 
+            ?: params["delay_type"] as? String 
+            ?: "fixed"
+        val delayMs = (params["delayMs"] as? Number)?.toLong() 
+            ?: (params["delay_ms"] as? Number)?.toLong() 
+            ?: 200L
+        val minDelayMs = (params["minDelayMs"] as? Number)?.toLong() 
+            ?: (params["min_delay_ms"] as? Number)?.toLong() 
+            ?: 100L
+        val maxDelayMs = (params["maxDelayMs"] as? Number)?.toLong() 
+            ?: (params["max_delay_ms"] as? Number)?.toLong() 
+            ?: 500L
+        
+        Log.i(TAG, "🔄 Repeat Click: $clickCount times, delay=$delayType (${if (delayType == "random") "${minDelayMs}-${maxDelayMs}ms" else "${delayMs}ms"})")
+        
+        var successCount = 0
+        var lastError: String? = null
+        
+        for (i in 1..clickCount) {
+            try {
+                // Execute tap using the same params (contains element identification info)
+                val tapResult = executeTap(params)
+                
+                if (tapResult.success) {
+                    successCount++
+                    Log.d(TAG, "   Click $i/$clickCount: ✓")
+                } else {
+                    Log.w(TAG, "   Click $i/$clickCount: ✗ ${tapResult.error}")
+                    lastError = tapResult.error
+                }
+                
+                // Add delay between clicks (except after the last click)
+                if (i < clickCount) {
+                    val actualDelay = when (delayType) {
+                        "random" -> {
+                            val range = maxDelayMs - minDelayMs
+                            minDelayMs + (Math.random() * range).toLong()
+                        }
+                        else -> delayMs
+                    }
+                    delay(actualDelay)
+                }
+                
+            } catch (e: Exception) {
+                Log.e(TAG, "   Click $i/$clickCount: Exception - ${e.message}")
+                lastError = e.message
+            }
+        }
+        
+        val executionTime = System.currentTimeMillis() - startTime
+        val allSuccess = successCount == clickCount
+        val partialSuccess = successCount > 0
+        
+        Log.i(TAG, "🔄 Repeat Click complete: $successCount/$clickCount succeeded in ${executionTime}ms")
+        
+        return ActionResult(
+            actionId = "repeat_click",
+            success = allSuccess || partialSuccess, // Consider partial success as success
+            message = if (allSuccess) {
+                "All $clickCount clicks executed successfully"
+            } else if (partialSuccess) {
+                "$successCount of $clickCount clicks succeeded"
+            } else {
+                "All clicks failed"
+            },
+            data = mapOf(
+                "click_count" to clickCount,
+                "success_count" to successCount,
+                "delay_type" to delayType,
+                "execution_time" to executionTime
+            ),
+            error = if (!allSuccess) lastError else null,
+            executionTime = executionTime
         )
     }
 

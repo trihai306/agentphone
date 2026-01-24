@@ -171,6 +171,9 @@ enum class ActionType(val value: String) {
     @SerializedName("wait_for_element")
     WAIT_FOR_ELEMENT("wait_for_element"),
 
+    @SerializedName("repeat_click")
+    REPEAT_CLICK("repeat_click"),
+
     @SerializedName("custom")
     CUSTOM("custom")
 }

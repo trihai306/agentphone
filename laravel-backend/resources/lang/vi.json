@@ -252,7 +252,9 @@
                 "text_data": "Dữ Liệu Text",
                 "data_source": "Nguồn Dữ Liệu",
                 "ai_process": "Xử Lý AI",
-                "http_request": "HTTP Request"
+                "http_request": "HTTP Request",
+                "loop_start": "Bắt Đầu Lặp",
+                "loop_end": "Tiếp Tục"
             },
             "categories": {
                 "control": "Điều Khiển",
