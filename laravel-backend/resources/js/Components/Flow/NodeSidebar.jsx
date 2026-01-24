@@ -100,7 +100,7 @@ export default function NodeSidebar({
     );
 
     return (
-        <div className={`${sidebarExpanded ? 'w-64' : 'w-14'} flex flex-col transition-all duration-300 border-r ${isDark ? 'bg-[#0f0f0f] border-[#1e1e1e]' : 'bg-white border-gray-200'}`}>
+        <div className={`${sidebarExpanded ? 'w-64' : 'w-14'} flex flex-col border-r ${isDark ? 'bg-[#0f0f0f] border-[#1e1e1e]' : 'bg-white border-gray-200'}`}>
             {/* Sidebar Header */}
             <div className={`h-12 px-2 flex items-center ${sidebarExpanded ? 'justify-between' : 'justify-center'} flex-shrink-0 border-b ${isDark ? 'border-[#1e1e1e]' : 'border-gray-200'}`}>
                 {sidebarExpanded && (
