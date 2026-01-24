@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { NodeIcon } from './FlowIcons';
@@ -19,43 +19,62 @@ export default function NodeSidebar({
 
     if (!showSidebar) return null;
 
-    const handleDragStart = (e, template) => {
-        // Set data directly on the native event
-        e.dataTransfer.setData('application/reactflow/type', template.type);
-        e.dataTransfer.setData('application/reactflow/label', template.label);
-        e.dataTransfer.setData('text/plain', template.type);
-        e.dataTransfer.effectAllowed = 'move';
+    // Separate component with ref for native drag handling
+    const NodeItem = ({ template }) => {
+        const itemRef = useRef(null);
 
-        // Call parent handler for visual feedback
-        if (onDragStart) {
-            onDragStart(e, template.type, template.label, template.color);
-        }
-    };
+        useEffect(() => {
+            const element = itemRef.current;
+            if (!element) return;
 
-    const NodeItem = ({ template }) => (
-        <div
-            key={template.type}
-            draggable="true"
-            onDragStart={(e) => handleDragStart(e, template)}
-            data-node-type={template.type}
-            data-node-label={template.label}
-            data-node-color={template.color}
-            className={`group relative flex items-center ${sidebarExpanded ? 'gap-2 p-2' : 'justify-center p-1.5'} rounded-lg cursor-grab active:cursor-grabbing border select-none ${isDark ? 'bg-[#1a1a1a] hover:bg-[#1e1e1e] border-[#252525] hover:border-[#333]' : 'bg-gray-50 hover:bg-white border-gray-200 hover:border-gray-300'}`}
-            title={!sidebarExpanded ? template.label : undefined}
-        >
+            const handleNativeDragStart = (e) => {
+                // Ensure we're dragging the right element
+                e.stopPropagation();
+
+                // Set the data on dataTransfer
+                e.dataTransfer.setData('application/reactflow/type', template.type);
+                e.dataTransfer.setData('application/reactflow/label', template.label);
+                e.dataTransfer.setData('text/plain', template.type);
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.dropEffect = 'move';
+
+                // Call parent handler for visual feedback
+                if (onDragStart) {
+                    onDragStart(e, template.type, template.label, template.color);
+                }
+            };
+
+            element.addEventListener('dragstart', handleNativeDragStart);
+
+            return () => {
+                element.removeEventListener('dragstart', handleNativeDragStart);
+            };
+        }, [template]);
+
+        return (
             <div
-                className={`${sidebarExpanded ? 'w-7 h-7' : 'w-8 h-8'} rounded-md flex items-center justify-center flex-shrink-0 pointer-events-none`}
-                style={{ backgroundColor: template.bgColor }}
+                ref={itemRef}
+                draggable="true"
+                data-node-type={template.type}
+                data-node-label={template.label}
+                data-node-color={template.color}
+                className={`group relative flex items-center ${sidebarExpanded ? 'gap-2 p-2' : 'justify-center p-1.5'} rounded-lg cursor-grab active:cursor-grabbing border select-none ${isDark ? 'bg-[#1a1a1a] hover:bg-[#1e1e1e] border-[#252525] hover:border-[#333]' : 'bg-gray-50 hover:bg-white border-gray-200 hover:border-gray-300'}`}
+                title={!sidebarExpanded ? template.label : undefined}
             >
-                <NodeIcon icon={template.icon} color={template.color} />
-            </div>
-            {sidebarExpanded && (
-                <div className="flex-1 min-w-0 pointer-events-none">
-                    <p className={`text-[11px] font-semibold truncate pointer-events-none ${isDark ? 'text-white' : 'text-gray-900'}`}>{template.label}</p>
+                <div
+                    className={`${sidebarExpanded ? 'w-7 h-7' : 'w-8 h-8'} rounded-md flex items-center justify-center flex-shrink-0 pointer-events-none`}
+                    style={{ backgroundColor: template.bgColor }}
+                >
+                    <NodeIcon icon={template.icon} color={template.color} />
                 </div>
-            )}
-        </div>
-    );
+                {sidebarExpanded && (
+                    <div className="flex-1 min-w-0 pointer-events-none">
+                        <p className={`text-[11px] font-semibold truncate pointer-events-none ${isDark ? 'text-white' : 'text-gray-900'}`}>{template.label}</p>
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     const CategorySection = ({ category, label, color, templates }) => (
         <div className={`border-b ${isDark ? 'border-[#1e1e1e]' : 'border-gray-200'}`}>
