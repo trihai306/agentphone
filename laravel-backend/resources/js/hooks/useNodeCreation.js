@@ -1,5 +1,6 @@
 import { useCallback, useRef } from 'react';
-import { getNodeTypeFromEvent, normalizeEventType } from '@/helpers/flow/loopDetection';
+import { normalizeEventType } from '@/helpers/flow/loopDetection';
+import { getNodeTypeFromEvent } from '@/helpers/flow/nodeTypes';
 import { generateSmartLabel } from '@/helpers/flow/nodeLabels';
 
 /**
