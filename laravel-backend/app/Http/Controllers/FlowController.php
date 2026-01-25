@@ -415,7 +415,17 @@ class FlowController extends Controller
         ];
 
         // Broadcast workflow:test event to device
+        Log::info('Test run broadcast', [
+            'flow_id' => $flow->id,
+            'device_id' => $device->device_id,
+            'device_name' => $device->name,
+            'actions_count' => count($actions),
+            'channel' => 'device.' . $device->device_id,
+        ]);
+
         broadcast(new \App\Events\DispatchJobToDevice($device, $payload, 'workflow:test'))->toOthers();
+
+        Log::info('Test run started successfully', ['flow_id' => $flow->id]);
 
         return response()->json([
             'success' => true,
