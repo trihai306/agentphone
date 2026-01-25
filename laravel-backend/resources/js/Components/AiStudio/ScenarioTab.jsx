@@ -42,6 +42,14 @@ export default function ScenarioTab({
         music_style: 'none',
     });
 
+    // Character management
+    const [characters, setCharacters] = useState([]);
+    const [showCharacterForm, setShowCharacterForm] = useState(false);
+    const [newCharacter, setNewCharacter] = useState({ name: '', description: '', gender: 'female', age: 'young' });
+
+    // Frame Chain Mode - giữ nhân vật nhất quán xuyên suốt
+    const [frameChainMode, setFrameChainMode] = useState(true);
+
     const models = outputType === 'video' ? videoModels : imageModels;
     const selectedModel = models.find(m => m.id === model);
 
@@ -329,6 +337,22 @@ export default function ScenarioTab({
         }
     };
 
+    // Character management functions
+    const handleAddCharacter = () => {
+        if (!newCharacter.name.trim()) {
+            addToast('Vui lòng nhập tên nhân vật', 'warning');
+            return;
+        }
+        setCharacters([...characters, { ...newCharacter, id: Date.now() }]);
+        setNewCharacter({ name: '', description: '', gender: 'female', age: 'young' });
+        setShowCharacterForm(false);
+        addToast(`Đã thêm nhân vật "${newCharacter.name}"`, 'success');
+    };
+
+    const handleRemoveCharacter = (id) => {
+        setCharacters(characters.filter(c => c.id !== id));
+    };
+
     return (
         <div className="p-4 md:p-6 space-y-6">
             {/* Step Indicator - Glassmorphism */}
@@ -588,6 +612,148 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                     )}
                                 </div>
                             )}
+
+                            {/* Frame Chain Mode */}
+                            <div className={`p-5 rounded-2xl backdrop-blur-xl ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white/70 border border-white/50 shadow-lg'}`}>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-lg">🔗</span>
+                                        <div>
+                                            <p className={`text-sm font-bold ${themeClasses.textPrimary}`}>Frame Chain Mode</p>
+                                            <p className={`text-xs ${themeClasses.textMuted}`}>Giữ nhân vật nhất quán</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setFrameChainMode(!frameChainMode)}
+                                        className={`relative w-12 h-7 rounded-full transition-all duration-300 ${frameChainMode
+                                            ? 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/30'
+                                            : isDark ? 'bg-white/10' : 'bg-slate-300'
+                                            }`}
+                                    >
+                                        <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${frameChainMode ? 'translate-x-5' : 'translate-x-0'
+                                            }`} />
+                                    </button>
+                                </div>
+                                {frameChainMode && (
+                                    <p className={`mt-3 text-xs ${isDark ? 'text-emerald-400/70' : 'text-emerald-600/80'}`}>
+                                        ✓ Nhân vật sẽ được giữ nhất quán xuyên suốt các cảnh
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Character Definition */}
+                            <div className={`p-5 rounded-2xl backdrop-blur-xl ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white/70 border border-white/50 shadow-lg'}`}>
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-lg">👤</span>
+                                        <div>
+                                            <p className={`text-sm font-bold ${themeClasses.textPrimary}`}>Nhân vật</p>
+                                            <p className={`text-xs ${themeClasses.textMuted}`}>{characters.length} nhân vật</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowCharacterForm(!showCharacterForm)}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${showCharacterForm
+                                            ? isDark ? 'bg-rose-500/20 text-rose-400' : 'bg-rose-100 text-rose-600'
+                                            : 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/30'
+                                            }`}
+                                    >
+                                        {showCharacterForm ? '✕ Hủy' : '+ Thêm'}
+                                    </button>
+                                </div>
+
+                                {/* Character Form */}
+                                {showCharacterForm && (
+                                    <div className={`mb-4 p-4 rounded-xl border-2 border-dashed ${isDark ? 'border-violet-500/30 bg-violet-600/5' : 'border-violet-300 bg-violet-50/50'}`}>
+                                        <div className="space-y-3">
+                                            <input
+                                                type="text"
+                                                placeholder="Tên nhân vật (VD: Minh)"
+                                                value={newCharacter.name}
+                                                onChange={(e) => setNewCharacter({ ...newCharacter, name: e.target.value })}
+                                                className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark
+                                                    ? 'bg-black/30 border-white/10 text-white placeholder-slate-500'
+                                                    : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
+                                                    }`}
+                                            />
+                                            <textarea
+                                                placeholder="Mô tả ngoại hình (VD: Cô gái 25 tuổi, tóc dài đen, mặc áo dài trắng)"
+                                                value={newCharacter.description}
+                                                onChange={(e) => setNewCharacter({ ...newCharacter, description: e.target.value })}
+                                                rows={2}
+                                                className={`w-full px-3 py-2 rounded-lg border text-sm resize-none ${isDark
+                                                    ? 'bg-black/30 border-white/10 text-white placeholder-slate-500'
+                                                    : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
+                                                    }`}
+                                            />
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <select
+                                                    value={newCharacter.gender}
+                                                    onChange={(e) => setNewCharacter({ ...newCharacter, gender: e.target.value })}
+                                                    className={`px-3 py-2 rounded-lg border text-xs ${isDark
+                                                        ? 'bg-black/30 border-white/10 text-white'
+                                                        : 'bg-white border-slate-200 text-slate-900'
+                                                        }`}
+                                                >
+                                                    <option value="female">👩 Nữ</option>
+                                                    <option value="male">👨 Nam</option>
+                                                </select>
+                                                <select
+                                                    value={newCharacter.age}
+                                                    onChange={(e) => setNewCharacter({ ...newCharacter, age: e.target.value })}
+                                                    className={`px-3 py-2 rounded-lg border text-xs ${isDark
+                                                        ? 'bg-black/30 border-white/10 text-white'
+                                                        : 'bg-white border-slate-200 text-slate-900'
+                                                        }`}
+                                                >
+                                                    <option value="child">👶 Trẻ em</option>
+                                                    <option value="young">🧑 Trẻ (18-35)</option>
+                                                    <option value="middle">👤 Trung niên</option>
+                                                    <option value="old">👴 Lớn tuổi</option>
+                                                </select>
+                                            </div>
+                                            <button
+                                                onClick={handleAddCharacter}
+                                                className="w-full py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all"
+                                            >
+                                                ✓ Thêm nhân vật
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Character List */}
+                                {characters.length > 0 && (
+                                    <div className="space-y-2">
+                                        {characters.map((char) => (
+                                            <div
+                                                key={char.id}
+                                                className={`flex items-center gap-3 p-3 rounded-xl border ${isDark ? 'bg-black/20 border-white/10' : 'bg-white/50 border-slate-200/50'}`}
+                                            >
+                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${isDark ? 'bg-violet-600/20' : 'bg-violet-100'}`}>
+                                                    {char.gender === 'female' ? '👩' : '👨'}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className={`text-sm font-semibold truncate ${themeClasses.textPrimary}`}>{char.name}</p>
+                                                    <p className={`text-xs truncate ${themeClasses.textMuted}`}>{char.description || 'Chưa có mô tả'}</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleRemoveCharacter(char.id)}
+                                                    className={`p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-rose-500/20 text-rose-400' : 'hover:bg-rose-100 text-rose-500'}`}
+                                                >
+                                                    ✕
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {characters.length === 0 && !showCharacterForm && (
+                                    <p className={`text-xs text-center py-4 ${themeClasses.textMuted}`}>
+                                        Thêm nhân vật để AI tạo video chính xác hơn
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     </div>
 
