@@ -330,26 +330,26 @@ export default function ScenarioTab({
     };
 
     return (
-        <div className="p-6 space-y-6">
-            {/* Step Indicator */}
-            <div className="flex items-center justify-center gap-4 mb-8">
+        <div className="p-4 md:p-6 space-y-6">
+            {/* Step Indicator - Glassmorphism */}
+            <div className={`flex items-center justify-center gap-2 md:gap-4 p-4 rounded-2xl backdrop-blur-xl ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white/60 border border-white/40 shadow-lg'}`}>
                 {['input', 'scenes', 'generating'].map((s, i) => (
                     <div key={s} className="flex items-center">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all shadow-lg ${step === s
-                            ? 'bg-gradient-to-br from-violet-600 to-indigo-600 text-white'
+                        <div className={`w-9 h-9 md:w-11 md:h-11 rounded-xl flex items-center justify-center text-sm font-bold transition-all duration-300 ${step === s
+                            ? 'bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/40 scale-110'
                             : i < ['input', 'scenes', 'generating'].indexOf(step)
-                                ? isDark ? 'bg-violet-500/30 text-violet-300' : 'bg-violet-100 text-violet-700'
-                                : isDark ? 'bg-[#2a2a2a] text-slate-500' : 'bg-slate-100 text-slate-400'
+                                ? isDark ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-emerald-100 text-emerald-600 border border-emerald-200'
+                                : isDark ? 'bg-white/5 text-slate-500 border border-white/10' : 'bg-slate-100 text-slate-400 border border-slate-200'
                             }`}>
                             {i < ['input', 'scenes', 'generating'].indexOf(step) ? '✓' : i + 1}
                         </div>
-                        <span className={`ml-3 text-sm font-medium hidden sm:inline ${step === s ? themeClasses.textPrimary : themeClasses.textMuted}`}>
+                        <span className={`ml-2 md:ml-3 text-xs md:text-sm font-semibold hidden sm:inline transition-colors ${step === s ? (isDark ? 'text-white' : 'text-violet-700') : themeClasses.textMuted}`}>
                             {s === 'input' ? 'Nhập kịch bản' : s === 'scenes' ? 'Chỉnh sửa cảnh' : 'Đang tạo'}
                         </span>
                         {i < 2 && (
-                            <div className={`w-12 h-0.5 mx-4 rounded-full ${i < ['input', 'scenes', 'generating'].indexOf(step)
-                                ? 'bg-gradient-to-r from-violet-500 to-indigo-500'
-                                : isDark ? 'bg-[#2a2a2a]' : 'bg-slate-200'
+                            <div className={`w-8 md:w-16 h-0.5 mx-2 md:mx-4 rounded-full transition-all duration-500 ${i < ['input', 'scenes', 'generating'].indexOf(step)
+                                ? 'bg-gradient-to-r from-emerald-500 to-violet-500'
+                                : isDark ? 'bg-white/10' : 'bg-slate-200'
                                 }`} />
                         )}
                     </div>
@@ -358,22 +358,22 @@ export default function ScenarioTab({
 
             {/* Step 1: Input */}
             {step === 'input' && (
-                <div className="max-w-4xl mx-auto">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Main Input Panel */}
-                        <div className={`lg:col-span-2 p-6 rounded-2xl ${isDark ? 'bg-[#1a1a1a] border border-[#2a2a2a]' : 'bg-white border border-slate-200 shadow-sm'}`}>
-                            {/* Header */}
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-violet-600/30 to-indigo-600/30' : 'bg-gradient-to-br from-violet-100 to-indigo-100'}`}>
-                                    <span className="text-xl">📝</span>
+                <div className="max-w-5xl mx-auto">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+                        {/* Main Input Panel - Glassmorphism */}
+                        <div className={`lg:col-span-2 p-5 md:p-6 rounded-2xl backdrop-blur-xl transition-all ${isDark ? 'bg-white/5 border border-white/10 hover:border-white/20' : 'bg-white/70 border border-white/50 shadow-xl hover:shadow-2xl'}`}>
+                            {/* Header with gradient icon */}
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/30">
+                                    <span className="text-2xl">✍️</span>
                                 </div>
                                 <div>
-                                    <h2 className={`text-lg font-bold ${themeClasses.textPrimary}`}>Nhập Kịch Bản</h2>
-                                    <p className={`text-xs ${themeClasses.textMuted}`}>AI sẽ tự động chia thành các cảnh</p>
+                                    <h2 className={`text-lg md:text-xl font-bold ${themeClasses.textPrimary}`}>Nhập Kịch Bản</h2>
+                                    <p className={`text-xs md:text-sm ${themeClasses.textMuted}`}>AI sẽ tự động chia thành các cảnh</p>
                                 </div>
                             </div>
 
-                            {/* Script Textarea */}
+                            {/* Script Textarea - Enhanced */}
                             <textarea
                                 value={script}
                                 onChange={(e) => setScript(e.target.value)}
@@ -386,17 +386,17 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
 
 💡 Mẹo: Mô tả chi tiết từng cảnh, AI sẽ tự động tạo prompt cho mỗi cảnh."
                                 rows={10}
-                                className={`w-full px-4 py-4 rounded-xl border text-sm resize-none transition-all focus:outline-none focus:ring-2 ${isDark
-                                    ? 'bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder-slate-500 focus:border-violet-500 focus:ring-violet-500/20'
-                                    : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-violet-400 focus:ring-violet-400/20'
+                                className={`w-full px-4 py-4 rounded-xl border-2 text-sm resize-none transition-all duration-300 focus:outline-none focus:ring-4 ${isDark
+                                    ? 'bg-black/30 border-white/10 text-white placeholder-slate-500 focus:border-violet-500/50 focus:ring-violet-500/10'
+                                    : 'bg-white/50 border-slate-200/50 text-slate-900 placeholder-slate-400 focus:border-violet-400 focus:ring-violet-400/10'
                                     }`}
                             />
-                            <div className="flex items-center justify-between mt-2">
-                                <p className={`text-xs ${themeClasses.textMuted}`}>
-                                    {script.length}/10,000 ký tự
+                            <div className="flex items-center justify-between mt-3">
+                                <p className={`text-xs font-medium ${themeClasses.textMuted}`}>
+                                    {script.length.toLocaleString()}/10,000 ký tự
                                 </p>
-                                <p className={`text-xs ${script.length >= 10 ? 'text-emerald-500' : themeClasses.textMuted}`}>
-                                    {script.length >= 10 ? '✓ Đủ độ dài' : 'Tối thiểu 10 ký tự'}
+                                <p className={`text-xs font-semibold flex items-center gap-1 ${script.length >= 10 ? 'text-emerald-500' : themeClasses.textMuted}`}>
+                                    {script.length >= 10 ? '✓' : '○'} {script.length >= 10 ? 'Đủ độ dài' : 'Tối thiểu 10 ký tự'}
                                 </p>
                             </div>
 
@@ -487,20 +487,20 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                             </div>
                         </div>
 
-                        {/* Settings Panel */}
+                        {/* Settings Panel - Glassmorphism */}
                         <div className="space-y-4">
                             {/* Output Type */}
-                            <div className={`p-5 rounded-2xl ${isDark ? 'bg-[#1a1a1a] border border-[#2a2a2a]' : 'bg-white border border-slate-200 shadow-sm'}`}>
-                                <label className={`block text-xs font-semibold mb-3 uppercase tracking-wide ${themeClasses.textMuted}`}>
+                            <div className={`p-5 rounded-2xl backdrop-blur-xl ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white/70 border border-white/50 shadow-lg'}`}>
+                                <label className={`block text-xs font-bold mb-3 uppercase tracking-wider ${themeClasses.textMuted}`}>
                                     Loại Output
                                 </label>
-                                <div className={`flex p-1 rounded-xl ${isDark ? 'bg-[#0a0a0a]' : 'bg-slate-100'}`}>
+                                <div className={`flex p-1.5 rounded-xl ${isDark ? 'bg-black/30' : 'bg-slate-100/80'}`}>
                                     {['video', 'image'].map((type) => (
                                         <button
                                             key={type}
                                             onClick={() => { setOutputType(type); setModel(''); }}
-                                            className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${outputType === type
-                                                ? isDark ? 'bg-[#2a2a2a] text-white shadow' : 'bg-white text-slate-900 shadow-md'
+                                            className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 ${outputType === type
+                                                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/30'
                                                 : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
                                                 }`}
                                         >
@@ -511,16 +511,16 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                             </div>
 
                             {/* Model Selection */}
-                            <div className={`p-5 rounded-2xl ${isDark ? 'bg-[#1a1a1a] border border-[#2a2a2a]' : 'bg-white border border-slate-200 shadow-sm'}`}>
-                                <label className={`block text-xs font-semibold mb-3 uppercase tracking-wide ${themeClasses.textMuted}`}>
+                            <div className={`p-5 rounded-2xl backdrop-blur-xl ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white/70 border border-white/50 shadow-lg'}`}>
+                                <label className={`block text-xs font-bold mb-3 uppercase tracking-wider ${themeClasses.textMuted}`}>
                                     Model AI
                                 </label>
                                 <select
                                     value={model}
                                     onChange={(e) => setModel(e.target.value)}
-                                    className={`w-full px-4 py-3 rounded-xl border text-sm transition-colors ${isDark
-                                        ? 'bg-[#0a0a0a] border-[#2a2a2a] text-white'
-                                        : 'bg-slate-50 border-slate-200 text-slate-900'
+                                    className={`w-full px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-300 cursor-pointer ${isDark
+                                        ? 'bg-black/30 border-white/10 text-white hover:border-violet-500/50'
+                                        : 'bg-white/50 border-slate-200/50 text-slate-900 hover:border-violet-400'
                                         }`}
                                 >
                                     {models.filter(m => m.enabled && !m.coming_soon).map((m) => (
@@ -531,36 +531,36 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                 </select>
                             </div>
 
-                            {/* Audio Settings (Video only) */}
+                            {/* Audio Settings (Video only) - Enhanced */}
                             {outputType === 'video' && (
-                                <div className={`p-5 rounded-2xl ${isDark ? 'bg-[#1a1a1a] border border-[#2a2a2a]' : 'bg-white border border-slate-200 shadow-sm'}`}>
+                                <div className={`p-5 rounded-2xl backdrop-blur-xl ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white/70 border border-white/50 shadow-lg'}`}>
                                     <div className="flex items-center justify-between mb-4">
-                                        <label className={`text-xs font-semibold uppercase tracking-wide ${themeClasses.textMuted}`}>
-                                            🔊 Audio Settings
+                                        <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${themeClasses.textMuted}`}>
+                                            <span className="text-base">🔊</span> Audio Settings
                                         </label>
                                         <button
                                             onClick={() => setSettings(s => ({ ...s, generate_audio: !s.generate_audio }))}
-                                            className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${settings.generate_audio
-                                                ? 'bg-violet-600'
-                                                : isDark ? 'bg-[#2a2a2a]' : 'bg-slate-300'
+                                            className={`relative w-12 h-7 rounded-full transition-all duration-300 ${settings.generate_audio
+                                                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/30'
+                                                : isDark ? 'bg-white/10' : 'bg-slate-300'
                                                 }`}
                                         >
-                                            <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 ${settings.generate_audio ? 'translate-x-5' : 'translate-x-0'
+                                            <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${settings.generate_audio ? 'translate-x-5' : 'translate-x-0'
                                                 }`} />
                                         </button>
                                     </div>
 
                                     {settings.generate_audio && (
-                                        <div className="space-y-3">
-                                            {/* Audio Style */}
+                                        <div className="space-y-4">
+                                            {/* Audio Style - Better Buttons */}
                                             <div className="grid grid-cols-3 gap-2">
                                                 {audioStyles.map((style) => (
                                                     <button
                                                         key={style.id}
                                                         onClick={() => setSettings(s => ({ ...s, audio_style: style.id }))}
-                                                        className={`py-2 px-2 text-xs font-medium rounded-lg transition-all border ${settings.audio_style === style.id
-                                                            ? isDark ? 'bg-violet-600/20 text-violet-300 border-violet-500/50' : 'bg-violet-100 text-violet-700 border-violet-300'
-                                                            : isDark ? 'bg-[#0a0a0a] text-slate-400 border-[#2a2a2a]' : 'bg-slate-50 text-slate-600 border-slate-200'
+                                                        className={`py-2.5 px-3 text-xs font-semibold rounded-xl transition-all duration-300 border-2 ${settings.audio_style === style.id
+                                                            ? 'bg-gradient-to-br from-violet-600/20 to-indigo-600/20 text-violet-400 border-violet-500/50 shadow-lg shadow-violet-500/10'
+                                                            : isDark ? 'bg-black/20 text-slate-400 border-white/10 hover:border-white/20' : 'bg-white/50 text-slate-600 border-slate-200/50 hover:border-violet-300'
                                                             }`}
                                                     >
                                                         {style.label}
@@ -568,15 +568,15 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                                 ))}
                                             </div>
 
-                                            {/* Background Music Toggle */}
-                                            <div className={`flex items-center justify-between py-2 px-3 rounded-lg ${isDark ? 'bg-[#0a0a0a]' : 'bg-slate-50'}`}>
-                                                <span className={`text-xs ${themeClasses.textSecondary}`}>🎵 Nhạc nền</span>
+                                            {/* Background Music - Improved */}
+                                            <div className={`flex items-center justify-between py-3 px-4 rounded-xl border ${isDark ? 'bg-black/20 border-white/10' : 'bg-white/50 border-slate-200/50'}`}>
+                                                <span className={`text-xs font-medium ${themeClasses.textSecondary}`}>🎵 Nhạc nền</span>
                                                 <select
                                                     value={settings.music_style}
                                                     onChange={(e) => setSettings(s => ({ ...s, music_style: e.target.value }))}
-                                                    className={`text-xs px-2 py-1 rounded-md border ${isDark
-                                                        ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white'
-                                                        : 'bg-white border-slate-200 text-slate-900'
+                                                    className={`text-xs font-medium px-3 py-1.5 rounded-lg border cursor-pointer transition-all ${isDark
+                                                        ? 'bg-black/30 border-white/10 text-white hover:border-violet-500/50'
+                                                        : 'bg-white border-slate-200 text-slate-900 hover:border-violet-400'
                                                         }`}
                                                 >
                                                     {musicStyles.map((m) => (
@@ -591,18 +591,18 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                         </div>
                     </div>
 
-                    {/* Parse Button */}
-                    <div className="mt-6 max-w-4xl mx-auto">
+                    {/* Parse Button - Enhanced */}
+                    <div className="mt-8 max-w-5xl mx-auto">
                         <button
                             onClick={handleParse}
                             disabled={parsing || script.length < 10}
-                            className={`w-full py-4 rounded-xl font-semibold text-base transition-all ${!parsing && script.length >= 10
-                                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-500/30 active:scale-[0.99]'
-                                : isDark ? 'bg-[#2a2a2a] text-slate-500 cursor-not-allowed' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                            className={`w-full py-4 rounded-2xl font-bold text-base transition-all duration-300 ${!parsing && script.length >= 10
+                                ? 'bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white hover:from-violet-500 hover:via-purple-500 hover:to-indigo-500 shadow-xl shadow-violet-500/40 hover:shadow-2xl hover:shadow-violet-500/50 active:scale-[0.99] hover:-translate-y-0.5'
+                                : isDark ? 'bg-white/5 text-slate-500 cursor-not-allowed border border-white/10' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                 }`}
                         >
                             {parsing ? (
-                                <span className="flex items-center justify-center gap-2">
+                                <span className="flex items-center justify-center gap-3">
                                     <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -610,7 +610,9 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                     Đang phân tích với AI...
                                 </span>
                             ) : (
-                                <>✨ Phân tích kịch bản</>
+                                <span className="flex items-center justify-center gap-2">
+                                    <span className="text-xl">✨</span> Phân tích kịch bản
+                                </span>
                             )}
                         </button>
                     </div>
