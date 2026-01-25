@@ -8,6 +8,7 @@ import android.view.accessibility.AccessibilityNodeInfo
 import com.agent.portal.accessibility.PortalAccessibilityService
 import com.agent.portal.auth.AuthService
 import com.agent.portal.vision.TemplateMatchingService
+import com.agent.portal.vision.VisualInspectionService
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -643,6 +644,60 @@ class JobExecutor(context: Context) {
                                 data = mapOf("method" to "auto", "matched_by" to matchedBy)
                             )
                         }
+                    }
+                }
+                
+                // ========================================================================
+                // OCR FALLBACK: Use ML Kit text recognition to find element by text/contentDesc
+                // This is useful when accessibility tree doesn't have the element but it's visible on screen
+                // ========================================================================
+                val ocrSearchText = contentDescription ?: text
+                if (!ocrSearchText.isNullOrBlank()) {
+                    Log.d(TAG, "   [auto] OCR Fallback: searching for '$ocrSearchText' on screen...")
+                    try {
+                        val screenshot = accessibilityService.takeScreenshotBitmap()
+                        if (screenshot != null) {
+                            val ocrResult = VisualInspectionService.detectText(screenshot)
+                            if (ocrResult.success && ocrResult.textElements.isNotEmpty()) {
+                                val matchType = if (fuzzyMatch) 
+                                    VisualInspectionService.MatchType.CONTAINS 
+                                else 
+                                    VisualInspectionService.MatchType.EXACT
+                                    
+                                val foundElement = VisualInspectionService.findTextElement(
+                                    ocrResult.textElements,
+                                    ocrSearchText,
+                                    matchType,
+                                    caseSensitive = !ignoreCase
+                                )
+                                
+                                if (foundElement != null) {
+                                    Log.d(TAG, "   [auto] OCR found: '${foundElement.text}' at (${foundElement.centerX}, ${foundElement.centerY})")
+                                    val tapSuccess = accessibilityService.performTap(foundElement.centerX, foundElement.centerY)
+                                    screenshot.recycle()
+                                    
+                                    if (tapSuccess) {
+                                        return ActionResult(
+                                            actionId = "tap_ocr",
+                                            success = true,
+                                            message = "Tap executed via OCR: ${foundElement.text} at (${foundElement.centerX}, ${foundElement.centerY})",
+                                            data = mapOf(
+                                                "method" to "ocr",
+                                                "matched_text" to foundElement.text,
+                                                "x" to foundElement.centerX,
+                                                "y" to foundElement.centerY,
+                                                "confidence" to foundElement.confidence
+                                            )
+                                        )
+                                    }
+                                } else {
+                                    Log.d(TAG, "   [auto] OCR: No matching text found for '$ocrSearchText'")
+                                }
+                            }
+                            screenshot.recycle()
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "   [auto] OCR fallback failed: ${e.message}")
                     }
                 }
                 
