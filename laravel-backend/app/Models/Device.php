@@ -125,10 +125,13 @@ class Device extends Model
             return true;
         }
 
-        // Fallback: Activity-based check
-        return $this->status === self::STATUS_ACTIVE
-            && $this->last_active_at
-            && $this->last_active_at->gte(now()->subMinutes($minutes));
+        // Fallback: Activity-based check - if heartbeat was received recently, consider online
+        // (removed strict status check as heartbeat may not update status immediately)
+        if ($this->last_active_at && $this->last_active_at->gte(now()->subMinutes($minutes))) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
