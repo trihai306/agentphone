@@ -45,7 +45,15 @@ export default function ScenarioTab({
     // Character management
     const [characters, setCharacters] = useState([]);
     const [showCharacterForm, setShowCharacterForm] = useState(false);
-    const [newCharacter, setNewCharacter] = useState({ name: '', description: '', gender: 'female', age: 'young' });
+    const [newCharacter, setNewCharacter] = useState({
+        name: '',
+        description: '',
+        gender: 'female',
+        age: 'young',
+        image: null, // { url, file, type: 'upload' | 'ai' }
+    });
+    const [characterImageMode, setCharacterImageMode] = useState('upload'); // 'upload' or 'ai'
+    const [generatingCharacterImage, setGeneratingCharacterImage] = useState(false);
 
     // Frame Chain Mode - giữ nhân vật nhất quán xuyên suốt
     const [frameChainMode, setFrameChainMode] = useState(true);
@@ -344,13 +352,75 @@ export default function ScenarioTab({
             return;
         }
         setCharacters([...characters, { ...newCharacter, id: Date.now() }]);
-        setNewCharacter({ name: '', description: '', gender: 'female', age: 'young' });
+        setNewCharacter({ name: '', description: '', gender: 'female', age: 'young', image: null });
+        setCharacterImageMode('upload');
         setShowCharacterForm(false);
         addToast(`Đã thêm nhân vật "${newCharacter.name}"`, 'success');
     };
 
     const handleRemoveCharacter = (id) => {
+        const char = characters.find(c => c.id === id);
+        if (char?.image?.url && char.image.type === 'upload') {
+            URL.revokeObjectURL(char.image.url); // Cleanup uploaded image
+        }
         setCharacters(characters.filter(c => c.id !== id));
+    };
+
+    // Handle character image upload
+    const handleCharacterImageUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            addToast('Vui lòng chọn file ảnh', 'warning');
+            return;
+        }
+
+        const url = URL.createObjectURL(file);
+        setNewCharacter({ ...newCharacter, image: { url, file, type: 'upload' } });
+    };
+
+    // Generate character image with AI
+    const handleGenerateCharacterImage = async () => {
+        if (!newCharacter.description.trim()) {
+            addToast('Vui lòng nhập mô tả để AI tạo hình ảnh', 'warning');
+            return;
+        }
+
+        setGeneratingCharacterImage(true);
+        try {
+            const prompt = `Portrait of a ${newCharacter.gender === 'female' ? 'woman' : 'man'}, ${newCharacter.age === 'child' ? 'child' :
+                newCharacter.age === 'young' ? 'young adult 25 years old' :
+                    newCharacter.age === 'middle' ? 'middle-aged 45 years old' :
+                        'elderly 65 years old'
+                }. ${newCharacter.description}. High quality, realistic, professional portrait photography.`;
+
+            const response = await axios.post('/api/ai/generate-portrait', {
+                prompt,
+                style: 'realistic'
+            });
+
+            if (response.data?.image_url) {
+                setNewCharacter({
+                    ...newCharacter,
+                    image: { url: response.data.image_url, file: null, type: 'ai' }
+                });
+                addToast('Đã tạo hình ảnh nhân vật!', 'success');
+            }
+        } catch (error) {
+            console.error('Error generating character image:', error);
+            addToast('Không thể tạo hình ảnh. Vui lòng thử lại.', 'error');
+        } finally {
+            setGeneratingCharacterImage(false);
+        }
+    };
+
+    // Remove character image
+    const handleRemoveCharacterImage = () => {
+        if (newCharacter.image?.url && newCharacter.image.type === 'upload') {
+            URL.revokeObjectURL(newCharacter.image.url);
+        }
+        setNewCharacter({ ...newCharacter, image: null });
     };
 
     return (
@@ -670,25 +740,38 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                                     }`}
                                             >
                                                 <div className="flex items-start gap-4">
-                                                    {/* Large Avatar */}
-                                                    <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 ${char.gender === 'female'
+                                                    {/* Avatar - Show image if available, otherwise emoji */}
+                                                    {char.image ? (
+                                                        <div className="relative w-14 h-14 flex-shrink-0">
+                                                            <img
+                                                                src={char.image.url}
+                                                                alt={char.name}
+                                                                className="w-14 h-14 rounded-2xl object-cover border-2 border-violet-500/30"
+                                                            />
+                                                            <span className={`absolute -bottom-1 -right-1 text-xs px-1.5 py-0.5 rounded-full font-bold ${char.image.type === 'ai' ? 'bg-violet-600 text-white' : 'bg-emerald-600 text-white'}`}>
+                                                                {char.image.type === 'ai' ? '✨' : '📤'}
+                                                            </span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 ${char.gender === 'female'
                                                             ? isDark ? 'bg-gradient-to-br from-pink-500/30 to-rose-500/30' : 'bg-gradient-to-br from-pink-100 to-rose-100'
                                                             : isDark ? 'bg-gradient-to-br from-blue-500/30 to-cyan-500/30' : 'bg-gradient-to-br from-blue-100 to-cyan-100'
-                                                        }`}>
-                                                        {char.gender === 'female' ? '👩' : '👨'}
-                                                        <span className={`absolute -bottom-1 -right-1 text-xs px-1.5 py-0.5 rounded-full font-bold ${isDark ? 'bg-violet-600 text-white' : 'bg-violet-500 text-white'}`}>
-                                                            #{index + 1}
-                                                        </span>
-                                                    </div>
+                                                            }`}>
+                                                            {char.gender === 'female' ? '👩' : '👨'}
+                                                            <span className={`absolute -bottom-1 -right-1 text-xs px-1.5 py-0.5 rounded-full font-bold ${isDark ? 'bg-violet-600 text-white' : 'bg-violet-500 text-white'}`}>
+                                                                #{index + 1}
+                                                            </span>
+                                                        </div>
+                                                    )}
 
                                                     {/* Info */}
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <h4 className={`text-sm font-bold ${themeClasses.textPrimary}`}>{char.name}</h4>
                                                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase ${char.age === 'child' ? (isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700') :
-                                                                    char.age === 'young' ? (isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-700') :
-                                                                        char.age === 'middle' ? (isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-700') :
-                                                                            (isDark ? 'bg-slate-500/20 text-slate-400' : 'bg-slate-100 text-slate-700')
+                                                                char.age === 'young' ? (isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-700') :
+                                                                    char.age === 'middle' ? (isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-700') :
+                                                                        (isDark ? 'bg-slate-500/20 text-slate-400' : 'bg-slate-100 text-slate-700')
                                                                 }`}>
                                                                 {char.age === 'child' ? 'Trẻ em' : char.age === 'young' ? '18-35' : char.age === 'middle' ? 'Trung niên' : 'Lớn tuổi'}
                                                             </span>
@@ -788,6 +871,84 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                                         </button>
                                                     ))}
                                                 </div>
+                                            </div>
+
+                                            {/* Character Image - Upload or AI Generate */}
+                                            <div>
+                                                <label className={`block text-xs font-semibold mb-2 ${themeClasses.textMuted}`}>Hình ảnh nhân vật (tùy chọn)</label>
+
+                                                {/* Mode Toggle */}
+                                                <div className={`flex p-1 rounded-xl mb-3 ${isDark ? 'bg-black/30' : 'bg-slate-100'}`}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setCharacterImageMode('upload')}
+                                                        className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${characterImageMode === 'upload'
+                                                            ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg'
+                                                            : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+                                                            }`}
+                                                    >
+                                                        📤 Tải ảnh lên
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setCharacterImageMode('ai')}
+                                                        className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${characterImageMode === 'ai'
+                                                            ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg'
+                                                            : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+                                                            }`}
+                                                    >
+                                                        ✨ AI tạo ảnh
+                                                    </button>
+                                                </div>
+
+                                                {/* Image Preview or Upload/Generate */}
+                                                {newCharacter.image ? (
+                                                    <div className="relative group">
+                                                        <img src={newCharacter.image.url} alt="Character preview" className="w-full h-40 object-cover rounded-xl border-2 border-violet-500/30" />
+                                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
+                                                            <button type="button" onClick={handleRemoveCharacterImage} className="px-3 py-2 bg-rose-500 text-white text-xs font-semibold rounded-lg hover:bg-rose-400">🗑️ Xóa ảnh</button>
+                                                        </div>
+                                                        <span className={`absolute top-2 right-2 px-2 py-1 text-[10px] font-bold rounded-full ${newCharacter.image.type === 'ai' ? 'bg-violet-600 text-white' : 'bg-emerald-600 text-white'}`}>
+                                                            {newCharacter.image.type === 'ai' ? '✨ AI' : '📤 Upload'}
+                                                        </span>
+                                                    </div>
+                                                ) : characterImageMode === 'upload' ? (
+                                                    <label className={`block w-full p-6 rounded-xl border-2 border-dashed cursor-pointer transition-all hover:scale-[1.02] ${isDark ? 'border-white/20 hover:border-violet-500/50 bg-white/5' : 'border-slate-300 hover:border-violet-400 bg-slate-50'}`}>
+                                                        <input type="file" accept="image/*" onChange={handleCharacterImageUpload} className="hidden" />
+                                                        <div className="text-center">
+                                                            <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center text-2xl mb-2 ${isDark ? 'bg-violet-600/20' : 'bg-violet-100'}`}>📷</div>
+                                                            <p className={`text-sm font-medium ${themeClasses.textSecondary}`}>Nhấn để chọn ảnh</p>
+                                                            <p className={`text-xs mt-1 ${themeClasses.textMuted}`}>PNG, JPG, WEBP (tối đa 5MB)</p>
+                                                        </div>
+                                                    </label>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleGenerateCharacterImage}
+                                                        disabled={generatingCharacterImage || !newCharacter.description.trim()}
+                                                        className={`w-full p-6 rounded-xl border-2 transition-all ${generatingCharacterImage ? 'border-violet-500/50 bg-violet-600/10 cursor-wait' : newCharacter.description.trim() ? (isDark ? 'border-violet-500/30 bg-violet-600/10 hover:border-violet-500/60' : 'border-violet-300 bg-violet-50 hover:border-violet-400') : (isDark ? 'border-white/10 bg-white/5 cursor-not-allowed' : 'border-slate-200 bg-slate-50 cursor-not-allowed')}`}
+                                                    >
+                                                        {generatingCharacterImage ? (
+                                                            <div className="text-center">
+                                                                <div className="w-12 h-12 mx-auto rounded-full bg-violet-600/20 flex items-center justify-center mb-2">
+                                                                    <svg className="animate-spin w-6 h-6 text-violet-500" fill="none" viewBox="0 0 24 24">
+                                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                                    </svg>
+                                                                </div>
+                                                                <p className={`text-sm font-medium ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>AI đang tạo hình ảnh...</p>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="text-center">
+                                                                <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center text-2xl mb-2 ${isDark ? 'bg-violet-600/20' : 'bg-violet-100'}`}>✨</div>
+                                                                <p className={`text-sm font-medium ${newCharacter.description.trim() ? (isDark ? 'text-violet-400' : 'text-violet-600') : themeClasses.textMuted}`}>
+                                                                    {newCharacter.description.trim() ? 'Tạo ảnh từ mô tả' : 'Nhập mô tả trước'}
+                                                                </p>
+                                                                <p className={`text-xs mt-1 ${themeClasses.textMuted}`}>AI sẽ tạo ảnh dựa trên mô tả ngoại hình</p>
+                                                            </div>
+                                                        )}
+                                                    </button>
+                                                )}
                                             </div>
 
                                             {/* Submit Button */}
