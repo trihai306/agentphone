@@ -47,42 +47,51 @@ export function useDeviceManager(initialDevices = [], auth = null) {
         const channel = window.Echo.private(`user.${auth.user.id}`);
         console.log('🔌 useDeviceManager: Listening for device updates...');
 
-        const handleDeviceUpdate = (data) => {
-            console.log('📱 useDeviceManager: Device update received:', data);
+        const handleDeviceUpdate = (payload) => {
+            console.log('📱 useDeviceManager: Device update received:', payload);
+
+            // Backend sends: { device: {...}, status: 'online/offline', timestamp: '...' }
+            const device = payload.device;
+            const status = payload.status;
+
+            if (!device?.device_id) {
+                console.warn('⚠️ useDeviceManager: Invalid device update payload');
+                return;
+            }
 
             // Update onlineDevices array
             setOnlineDevices(prevDevices => {
-                const existingIndex = prevDevices.findIndex(d => d.device_id === data.device_id);
+                const existingIndex = prevDevices.findIndex(d => d.device_id === device.device_id);
 
-                if (data.status === 'online') {
+                if (status === 'online') {
                     if (existingIndex >= 0) {
                         // Update existing device
                         const updated = [...prevDevices];
-                        updated[existingIndex] = { ...updated[existingIndex], ...data };
+                        updated[existingIndex] = { ...updated[existingIndex], ...device };
                         return updated;
                     } else {
                         // Add new device
-                        return [...prevDevices, data];
+                        return [...prevDevices, device];
                     }
                 } else {
                     // Remove offline device
-                    return prevDevices.filter(d => d.device_id !== data.device_id);
+                    return prevDevices.filter(d => d.device_id !== device.device_id);
                 }
             });
 
             // Update selectedDevice if it's the one that changed
             setSelectedDevice(prev => {
-                if (prev?.device_id === data.device_id) {
-                    return data.status === 'online' ? { ...prev, ...data } : null;
+                if (prev?.device_id === device.device_id) {
+                    return status === 'online' ? { ...prev, ...device } : null;
                 }
                 return prev;
             });
         };
 
-        channel.listen('.device.status', handleDeviceUpdate);
+        channel.listen('.device.status.changed', handleDeviceUpdate);
 
         return () => {
-            channel.stopListening('.device.status');
+            channel.stopListening('.device.status.changed');
         };
     }, [auth?.user?.id]);
 
