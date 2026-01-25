@@ -261,14 +261,27 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
     // Listen for real-time workflow action progress from APK via socket
     useEffect(() => {
-        if (!auth?.user?.id) return;
+        if (!auth?.user?.id) {
+            console.log('[Progress] No auth user, skipping subscription');
+            return;
+        }
 
+        console.log('[Progress] Subscribing to channel: user.' + auth.user.id);
         const channel = window.Echo?.private(`user.${auth.user.id}`);
-        if (!channel) return;
+        if (!channel) {
+            console.log('[Progress] Echo channel not available!', { Echo: !!window.Echo });
+            return;
+        }
+
+        console.log('[Progress] Channel subscribed, listening for .workflow.action.progress');
 
         const handleActionProgress = (event) => {
+            console.log('[Progress] 📥 Event received:', event);
             // Only update if this event is for the current flow
-            if (event.flow_id !== flow?.id) return;
+            if (event.flow_id !== flow?.id) {
+                console.log('[Progress] Skipping - different flow_id', { received: event.flow_id, current: flow?.id });
+                return;
+            }
 
             // action_id from APK is the node ID directly (e.g., "click_1769315062846")
             // Try regex first for legacy format, fallback to using action_id as node_id
@@ -291,6 +304,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         channel.listen('.workflow.action.progress', handleActionProgress);
 
         return () => {
+            console.log('[Progress] Unsubscribing from channel');
             channel.stopListening('.workflow.action.progress', handleActionProgress);
         };
     }, [auth?.user?.id, flow?.id, updateNodeState]);
