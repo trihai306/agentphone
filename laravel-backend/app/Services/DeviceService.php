@@ -37,16 +37,9 @@ class DeviceService
         $deviceId = $data['device_id'];
         $model = $data['model'] ?? null;
 
-        // Find existing device
+        // Find existing device by device_id only
+        // Note: Do NOT match by model - multiple physical devices can have same model
         $existingDevice = Device::where('device_id', $deviceId)->first();
-        $isModelMatch = false;
-
-        if (!$existingDevice && $model) {
-            $existingDevice = Device::where('user_id', $user->id)
-                ->where('model', $model)
-                ->first();
-            $isModelMatch = (bool) $existingDevice;
-        }
 
         // Check device limit for new devices
         if (!$existingDevice) {
@@ -60,7 +53,7 @@ class DeviceService
             }
         }
 
-        $device = DB::transaction(function () use ($existingDevice, $user, $data, $deviceId, $deviceName, $model, $isModelMatch, $ipAddress) {
+        $device = DB::transaction(function () use ($existingDevice, $user, $data, $deviceId, $deviceName, $model, $ipAddress) {
             if ($existingDevice) {
                 $existingDevice->update([
                     'device_id' => $deviceId,
@@ -85,12 +78,11 @@ class DeviceService
             }
 
             // Log the activity
-            $event = $existingDevice ? ($isModelMatch ? 'device_id_updated' : 'device_updated') : 'device_registered';
+            $event = $existingDevice ? 'device_updated' : 'device_registered';
             $device->logActivity($event, $ipAddress, [
                 'name' => $deviceName,
                 'model' => $model,
                 'android_version' => $data['android_version'] ?? null,
-                'device_id_changed' => $isModelMatch,
             ]);
 
             return $device;
@@ -100,7 +92,6 @@ class DeviceService
             'success' => true,
             'device' => $device,
             'is_new' => !$existingDevice,
-            'is_model_match' => $isModelMatch,
         ];
     }
 

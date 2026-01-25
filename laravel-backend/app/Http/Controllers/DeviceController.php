@@ -41,7 +41,6 @@ class DeviceController extends Controller
 
         $device = $result['device'];
         $isNew = $result['is_new'];
-        $isModelMatch = $result['is_model_match'];
 
         // Mark device online in Redis (APK just opened/registered)
         $this->deviceService->markDeviceOnlineAfterRegister($device);
@@ -50,7 +49,7 @@ class DeviceController extends Controller
             'success' => true,
             'message' => $isNew
                 ? 'Thiết bị đã được đăng ký thành công'
-                : ($isModelMatch ? 'Thiết bị đã được nhận diện lại' : 'Thiết bị đã được cập nhật thành công'),
+                : 'Thiết bị đã được cập nhật thành công',
             'device' => new DeviceResource($device),
         ], $isNew ? 201 : 200);
     }
