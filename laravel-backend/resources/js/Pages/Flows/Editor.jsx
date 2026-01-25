@@ -59,9 +59,11 @@ import GlassConditionNode from '../../Components/Flow/GlassConditionNode';
 import GlassTextInputNode from '../../Components/Flow/GlassTextInputNode';
 import GlassHttpNode from '../../Components/Flow/GlassHttpNode';
 import GlassAINode from '../../Components/Flow/GlassAINode';
+import GlassWaitNode from '../../Components/Flow/GlassWaitNode';
+import GlassAssertNode from '../../Components/Flow/GlassAssertNode';
+import GlassElementCheckNode from '../../Components/Flow/GlassElementCheckNode';
+import GlassWaitForElementNode from '../../Components/Flow/GlassWaitForElementNode';
 import SmartActionNode from '../../Components/Flow/SmartActionNode';
-import ElementCheckNode from '../../Components/Flow/ElementCheckNode';
-import WaitForElementNode from '../../Components/Flow/WaitForElementNode';
 import LoopSubFlowModal from '../../Components/Flow/LoopSubFlowModal';
 import LiveRecordingPanel from '../../Components/Flow/LiveRecordingPanel';
 import WorkflowPreviewModal from '../../Components/Flow/WorkflowPreviewModal';
@@ -116,10 +118,10 @@ const nodeTypes = {
     loop: GlassLoopNode,
     loopStart: SmartActionNode,  // Used in LoopSubFlowModal
     loopEnd: SmartActionNode,    // Used in LoopSubFlowModal
-    wait: WaitNode,
-    assert: AssertNode,
-    element_check: ElementCheckNode,      // Check element exists/text/visible
-    wait_for_element: WaitForElementNode, // Wait for element with timeout
+    wait: GlassWaitNode,
+    assert: GlassAssertNode,
+    element_check: GlassElementCheckNode,      // Check element exists/text/visible
+    wait_for_element: GlassWaitForElementNode, // Wait for element with timeout
 
     // Resources - Premium Glass versions
     file_input: FileInputNode,
