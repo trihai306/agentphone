@@ -220,7 +220,7 @@ export default function EditorToolbar({
                                     );
 
                                     const result = await flowApi.testRun(flow.id, {
-                                        device_id: selectedDevice.id,
+                                        device_id: selectedDevice.device_id,  // Use device_id UUID, not database id
                                     });
                                     if (result.success) {
                                         addToast(t('flows.editor.run.success', { device: selectedDevice.name, count: result.data.data?.actions_count }), 'success');

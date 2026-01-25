@@ -270,10 +270,13 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
             // Only update if this event is for the current flow
             if (event.flow_id !== flow?.id) return;
 
-            // Map action_id to node_id (action_id format: "node_<nodeId>_action_<index>")
+            // action_id from APK is the node ID directly (e.g., "click_1769315062846")
+            // Try regex first for legacy format, fallback to using action_id as node_id
             const actionId = event.action_id;
             const nodeIdMatch = actionId?.match(/^node_([^_]+)/);
-            const nodeId = nodeIdMatch ? nodeIdMatch[1] : null;
+            const nodeId = nodeIdMatch ? nodeIdMatch[1] : actionId;
+
+            console.log('[Progress] action_id:', actionId, '→ node_id:', nodeId, 'status:', event.status);
 
             if (nodeId && event.status) {
                 updateNodeState(
@@ -283,6 +286,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                 );
             }
         };
+
 
         channel.listen('.workflow.action.progress', handleActionProgress);
 
