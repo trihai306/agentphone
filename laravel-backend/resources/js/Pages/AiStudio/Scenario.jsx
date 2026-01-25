@@ -44,6 +44,10 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
     const [platform, setPlatform] = useState('general');
     const [aiMetadata, setAiMetadata] = useState(null); // Stores theme, mood, director_notes etc.
 
+    // NEW: Frame Chaining Mode for seamless video transitions
+    const [chainMode, setChainMode] = useState('none'); // 'none' or 'frame_chain'
+    const [characters, setCharacters] = useState([]); // Character consistency definitions
+
     const [settings, setSettings] = useState({
         resolution: '1080p',
         aspect_ratio: '16:9',
@@ -161,6 +165,8 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                 model,
                 scenes,
                 settings,
+                chain_mode: chainMode,
+                characters: characters.length > 0 ? characters : null,
             });
 
             if (saveResponse.data.success) {
@@ -227,6 +233,8 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
         setStyle('cinematic');
         setPlatform('general');
         setAiMetadata(null);
+        setChainMode('none');
+        setCharacters([]);
     };
 
     return (
@@ -377,6 +385,104 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                         </button>
                                     ))}
                                 </div>
+                            </div>
+
+                            {/* NEW: Frame Chaining Toggle */}
+                            {outputType === 'video' && (
+                                <div className={`mb-5 p-4 rounded-xl border-2 ${chainMode === 'frame_chain'
+                                    ? isDark ? 'border-amber-500 bg-amber-500/10' : 'border-amber-500 bg-amber-50'
+                                    : isDark ? 'border-[#2a2a2a] bg-[#0a0a0a]' : 'border-slate-200 bg-slate-50'
+                                    }`}>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-xl">🔗</span>
+                                            <div>
+                                                <h4 className={`font-semibold ${themeClasses.textPrimary}`}>Frame Chain Mode</h4>
+                                                <p className={`text-xs ${themeClasses.textMuted}`}>
+                                                    Tự động cắt frame cuối video → làm input cho cảnh tiếp theo
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setChainMode(chainMode === 'none' ? 'frame_chain' : 'none')}
+                                            className={`relative w-14 h-7 rounded-full transition-colors ${chainMode === 'frame_chain'
+                                                ? 'bg-amber-500' : isDark ? 'bg-[#3a3a3a]' : 'bg-slate-300'
+                                                }`}
+                                        >
+                                            <span className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-white transition-transform ${chainMode === 'frame_chain' ? 'translate-x-7' : ''
+                                                }`} />
+                                        </button>
+                                    </div>
+                                    {chainMode === 'frame_chain' && (
+                                        <div className={`mt-3 pt-3 border-t ${isDark ? 'border-[#2a2a2a]' : 'border-slate-200'}`}>
+                                            <p className={`text-xs ${themeClasses.textMuted}`}>
+                                                ⚠️ Video sẽ được tạo tuần tự (chậm hơn) nhưng chuyển cảnh sẽ mượt mà hơn.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* NEW: Character Consistency Section */}
+                            <div className="mb-5">
+                                <div className="flex items-center justify-between mb-3">
+                                    <label className={`text-sm font-semibold ${themeClasses.textSecondary}`}>
+                                        👤 Nhân vật xuyên suốt
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setCharacters([...characters, { name: '', description: '' }])}
+                                        className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${isDark ? 'bg-violet-600/20 text-violet-400 hover:bg-violet-600/30' : 'bg-violet-100 text-violet-700 hover:bg-violet-200'}`}
+                                    >
+                                        + Thêm nhân vật
+                                    </button>
+                                </div>
+                                {characters.length === 0 ? (
+                                    <p className={`text-xs ${themeClasses.textMuted}`}>
+                                        💡 Định nghĩa nhân vật để AI giữ ngoại hình nhất quán qua tất cả các cảnh.
+                                    </p>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {characters.map((char, idx) => (
+                                            <div key={idx} className={`p-3 rounded-xl ${isDark ? 'bg-[#0a0a0a] border border-[#2a2a2a]' : 'bg-slate-50 border border-slate-200'}`}>
+                                                <div className="flex gap-3 items-start">
+                                                    <div className="flex-1 space-y-2">
+                                                        <input
+                                                            type="text"
+                                                            value={char.name}
+                                                            onChange={(e) => {
+                                                                const updated = [...characters];
+                                                                updated[idx].name = e.target.value;
+                                                                setCharacters(updated);
+                                                            }}
+                                                            placeholder="Tên nhân vật (VD: Mai)"
+                                                            className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white' : 'bg-white border-slate-200'}`}
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            value={char.description}
+                                                            onChange={(e) => {
+                                                                const updated = [...characters];
+                                                                updated[idx].description = e.target.value;
+                                                                setCharacters(updated);
+                                                            }}
+                                                            placeholder="Mô tả chi tiết ngoại hình (VD: Cô gái trẻ, tóc dài đen, áo sơ mi trắng, khoảng 25 tuổi)"
+                                                            className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white' : 'bg-white border-slate-200'}`}
+                                                        />
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setCharacters(characters.filter((_, i) => i !== idx))}
+                                                        className={`p-2 rounded-lg ${isDark ? 'text-rose-400 hover:bg-rose-500/20' : 'text-rose-500 hover:bg-rose-50'}`}
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Script Input */}

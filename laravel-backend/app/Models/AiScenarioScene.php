@@ -14,6 +14,8 @@ class AiScenarioScene extends Model
         'prompt',
         'duration',
         'source_image_path', // Reference image for Image-to-Video
+        'reference_image_path', // Extracted frame from previous video for chaining
+        'character_refs', // Character reference data for this scene
         'ai_generation_id',
         'status',
         'error_message',
@@ -22,6 +24,7 @@ class AiScenarioScene extends Model
     protected $casts = [
         'order' => 'integer',
         'duration' => 'integer',
+        'character_refs' => 'array',
     ];
 
     // Status constants

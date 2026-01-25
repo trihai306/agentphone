@@ -18,6 +18,8 @@ class AiScenario extends Model
         'output_type',
         'model',
         'settings',
+        'chain_mode',
+        'characters',
         'status',
         'is_draft',
         'metadata',
@@ -28,6 +30,7 @@ class AiScenario extends Model
 
     protected $casts = [
         'settings' => 'array',
+        'characters' => 'array',
         'metadata' => 'array',
         'total_credits' => 'integer',
         'is_draft' => 'boolean',

@@ -144,6 +144,12 @@ class AiScenarioController extends Controller
             'scenes.*.duration' => 'nullable|integer|min:4|max:15',
             'scenes.*.source_image' => 'nullable|string', // Base64 or URL
             'settings' => 'nullable|array',
+            // Frame chaining options
+            'chain_mode' => 'nullable|in:none,frame_chain',
+            'characters' => 'nullable|array',
+            'characters.*.name' => 'required_with:characters|string|max:100',
+            'characters.*.description' => 'required_with:characters|string|max:500',
+            'characters.*.reference_image' => 'nullable|string',
         ]);
 
         $user = Auth::user();
@@ -338,6 +344,8 @@ class AiScenarioController extends Controller
             'output_type' => $scenario->output_type,
             'model' => $scenario->model,
             'settings' => $scenario->settings,
+            'chain_mode' => $scenario->chain_mode ?? 'none',
+            'characters' => $scenario->characters ?? [],
             'status' => $scenario->status,
             'status_color' => $scenario->status_color,
             'total_credits' => $scenario->total_credits,
