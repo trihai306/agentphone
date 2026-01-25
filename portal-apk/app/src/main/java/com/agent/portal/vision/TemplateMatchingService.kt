@@ -670,7 +670,13 @@ class TemplateMatchingService {
             debugPixelComparison(screenshot, template, exactX, exactY, "ExpectedPos")
         }
         
-        val result = findTemplateWithHint(screenshot, template, expectedX, expectedY)
+        // Use regional search when hint is provided (faster + more accurate)
+        val result = if (expectedX != null && expectedY != null) {
+            findTemplateNearPosition(screenshot, template, expectedX, expectedY, 150)
+        } else {
+            findTemplateWithHint(screenshot, template, null, null)
+        }
+        
         if (result != null) {
             Log.i(TAG, "✅ MATCH: (${result.x}, ${result.y}) Score=${(result.score * 100).toInt()}%")
         } else {
@@ -679,5 +685,6 @@ class TemplateMatchingService {
         Log.i(TAG, "═══════════════════════════════════════════════════")
         return result
     }
+
 }
 
