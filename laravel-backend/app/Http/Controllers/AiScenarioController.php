@@ -51,7 +51,7 @@ class AiScenarioController extends Controller
     {
         $user = Auth::user();
 
-        return Inertia::render('AIStudio/Scenario', [
+        return Inertia::render('AiStudio/Scenario', [
             'currentCredits' => $user->ai_credits,
             'videoModels' => $this->generationService->getAvailableModels('video'),
             'imageModels' => $this->generationService->getAvailableModels('image'),
