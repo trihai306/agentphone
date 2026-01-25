@@ -434,17 +434,22 @@ class JobExecutor(context: Context) {
                         // Hint (992, 1331) from recording
                         // Only search region: (842-1142, 1181-1481)
                         // Reject matches >150px away (like old match at 702px distance!)
+                        // === DEBUG MODE: Enable detailed logging ===
+                        // Analyze template first
+                        templateMatcher.analyzeTemplate(template, "Template")
+                        
                         val matchResult = if (expectedX > 0 && expectedY > 0) {
                             Log.d(TAG, "   [icon] Searching within 150px radius of hint ($expectedX, $expectedY)")
-                            templateMatcher.findTemplateNearPosition(
+                            // Use debug version for detailed analysis
+                            templateMatcher.findTemplateWithDebug(
                                 softwareScreenshot, template,
-                                expectedX, expectedY,
-                                searchRadius = 150
+                                expectedX, expectedY
                             )
                         } else {
                             Log.d(TAG, "   [icon] No hint provided, searching full screen")
-                            templateMatcher.findTemplateWithHint(softwareScreenshot, template, null, null)
+                            templateMatcher.findTemplateWithDebug(softwareScreenshot, template, null, null)
                         }
+
                         
                         val minScore = (params["minConfidence"] as? Number)?.toDouble() ?: 0.65
                         

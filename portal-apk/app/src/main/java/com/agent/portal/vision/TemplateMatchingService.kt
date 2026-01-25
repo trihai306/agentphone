@@ -604,4 +604,80 @@ class TemplateMatchingService {
         val width: Int,
         val height: Int
     )
+    
+    // ============ DEBUG FUNCTIONS FOR TEMPLATE MATCHING ANALYSIS ============
+    
+    /**
+     * DEBUG: Analyze template image properties (color distribution, brightness)
+     */
+    fun analyzeTemplate(template: Bitmap, name: String) {
+        var totalR = 0L; var totalG = 0L; var totalB = 0L
+        var pixelCount = 0; var minBrightness = 255; var maxBrightness = 0
+        
+        for (y in 0 until template.height step 2) {
+            for (x in 0 until template.width step 2) {
+                val pixel = template.getPixel(x, y)
+                if (Color.alpha(pixel) < 128) continue
+                val r = Color.red(pixel); val g = Color.green(pixel); val b = Color.blue(pixel)
+                totalR += r; totalG += g; totalB += b
+                val brightness = (r + g + b) / 3
+                minBrightness = minOf(minBrightness, brightness)
+                maxBrightness = maxOf(maxBrightness, brightness)
+                pixelCount++
+            }
+        }
+        
+        if (pixelCount > 0) {
+            Log.i(TAG, "📊 DEBUG $name: ${template.width}x${template.height}, avgRGB=(${(totalR/pixelCount).toInt()},${(totalG/pixelCount).toInt()},${(totalB/pixelCount).toInt()}), brightness=$minBrightness-$maxBrightness")
+        }
+    }
+    
+    /**
+     * DEBUG: Compare template vs screenshot pixels at specific position
+     */
+    fun debugPixelComparison(screenshot: Bitmap, template: Bitmap, offsetX: Int, offsetY: Int, label: String) {
+        val samplePoints = listOf("TL" to Pair(2, 2), "TR" to Pair(template.width - 3, 2), "C" to Pair(template.width / 2, template.height / 2))
+        val sb = StringBuilder("🔬 $label: ")
+        var totalDiff = 0
+        
+        for ((name, pos) in samplePoints) {
+            val (tx, ty) = pos
+            if (tx >= template.width || ty >= template.height || tx < 0 || ty < 0) continue
+            val tPixel = template.getPixel(tx, ty)
+            val sx = offsetX + tx; val sy = offsetY + ty
+            if (sx >= screenshot.width || sy >= screenshot.height) continue
+            val sPixel = screenshot.getPixel(sx, sy)
+            val diff = abs(Color.red(tPixel) - Color.red(sPixel)) + abs(Color.green(tPixel) - Color.green(sPixel)) + abs(Color.blue(tPixel) - Color.blue(sPixel))
+            totalDiff += diff
+            sb.append("$name=Δ$diff ")
+        }
+        Log.i(TAG, "$sb TotalΔ=$totalDiff")
+    }
+    
+    /**
+     * DEBUG: Enhanced template search with detailed logging
+     */
+    fun findTemplateWithDebug(screenshot: Bitmap, template: Bitmap, expectedX: Int?, expectedY: Int?): MatchResult? {
+        Log.i(TAG, "═══════════════════════════════════════════════════")
+        Log.i(TAG, "🔍 DEBUG TEMPLATE MATCHING - Template: ${template.width}x${template.height}, Screenshot: ${screenshot.width}x${screenshot.height}, Expected: ($expectedX, $expectedY)")
+        analyzeTemplate(template, "Template")
+        
+        if (expectedX != null && expectedY != null) {
+            val exactX = (expectedX - template.width / 2).coerceIn(0, screenshot.width - template.width)
+            val exactY = (expectedY - template.height / 2).coerceIn(0, screenshot.height - template.height)
+            val exactScore = calculateSimilarity(screenshot, template, exactX, exactY)
+            Log.i(TAG, "📍 Score at expected ($exactX,$exactY): ${(exactScore * 100).toInt()}%")
+            debugPixelComparison(screenshot, template, exactX, exactY, "ExpectedPos")
+        }
+        
+        val result = findTemplateWithHint(screenshot, template, expectedX, expectedY)
+        if (result != null) {
+            Log.i(TAG, "✅ MATCH: (${result.x}, ${result.y}) Score=${(result.score * 100).toInt()}%")
+        } else {
+            Log.w(TAG, "❌ NO MATCH above ${(MIN_MATCH_THRESHOLD * 100).toInt()}%")
+        }
+        Log.i(TAG, "═══════════════════════════════════════════════════")
+        return result
+    }
 }
+
