@@ -410,6 +410,8 @@ class FlowController extends Controller
             'actions' => $actions,
             'variables' => [],
             'timestamp' => now()->timestamp * 1000,
+            // Progress callback URL for APK to report action status
+            'progress_url' => config('app.url') . '/api/test-run/progress',
         ];
 
         // Broadcast workflow:test event to device
