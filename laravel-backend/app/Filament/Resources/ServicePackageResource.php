@@ -86,13 +86,13 @@ class ServicePackageResource extends Resource
                         Forms\Components\TextInput::make('duration_days')
                             ->label('Thời hạn (ngày)')
                             ->numeric()
-                            ->visible(fn (callable $get) => $get('type') === 'subscription')
+                            ->visible(fn(callable $get) => $get('type') === 'subscription')
                             ->helperText('Số ngày sử dụng gói'),
 
                         Forms\Components\TextInput::make('credits')
                             ->label('Số Credits')
                             ->numeric()
-                            ->visible(fn (callable $get) => $get('type') === 'credits')
+                            ->visible(fn(callable $get) => $get('type') === 'credits')
                             ->helperText('Số credits được cấp'),
 
                         Forms\Components\TextInput::make('max_devices')
@@ -174,7 +174,7 @@ class ServicePackageResource extends Resource
                         Forms\Components\TextInput::make('trial_days')
                             ->label('Số ngày dùng thử')
                             ->numeric()
-                            ->visible(fn (callable $get) => $get('is_trial')),
+                            ->visible(fn(callable $get) => $get('is_trial')),
                     ])
                     ->columns(4),
             ]);
@@ -198,7 +198,7 @@ class ServicePackageResource extends Resource
 
                 Tables\Columns\BadgeColumn::make('type')
                     ->label('Loại')
-                    ->formatStateUsing(fn (string $state): string => ServicePackage::getTypes()[$state] ?? $state)
+                    ->formatStateUsing(fn(string $state): string => ServicePackage::getTypes()[$state] ?? $state)
                     ->colors([
                         'primary' => 'subscription',
                         'success' => 'one_time',
@@ -279,14 +279,16 @@ class ServicePackageResource extends Resource
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\Action::make('toggle_active')
-                    ->label(fn (ServicePackage $record): string => $record->is_active ? 'Tắt' : 'Bật')
-                    ->icon(fn (ServicePackage $record): string => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
-                    ->color(fn (ServicePackage $record): string => $record->is_active ? 'danger' : 'success')
+                    ->label(fn(ServicePackage $record): string => $record->is_active ? 'Tắt' : 'Bật')
+                    ->icon(fn(ServicePackage $record): string => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
+                    ->color(fn(ServicePackage $record): string => $record->is_active ? 'danger' : 'success')
                     ->requiresConfirmation()
-                    ->action(fn (ServicePackage $record) => $record->update(['is_active' => !$record->is_active])),
+                    ->action(fn(ServicePackage $record) => $record->update(['is_active' => !$record->is_active])),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    \pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction::make()
+                        ->label('Xuất Excel'),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])

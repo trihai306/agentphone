@@ -132,6 +132,8 @@ class PermissionResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    \pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction::make()
+                        ->label('Xuất Excel'),
                     Tables\Actions\DeleteBulkAction::make()
                         ->before(function (\Illuminate\Database\Eloquent\Collection $records, Tables\Actions\DeleteBulkAction $action) {
                             // Check if any permission has roles assigned

@@ -121,7 +121,7 @@ class InteractionHistoryResource extends Resource
                 Tables\Columns\TextColumn::make('action_type')
                     ->label('Action')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'tap' => 'success',
                         'long_tap' => 'warning',
                         'swipe' => 'info',
@@ -129,7 +129,7 @@ class InteractionHistoryResource extends Resource
                         'scroll' => 'gray',
                         default => 'secondary',
                     })
-                    ->icon(fn (string $state): string => match ($state) {
+                    ->icon(fn(string $state): string => match ($state) {
                         'tap' => 'heroicon-o-cursor-arrow-rays',
                         'long_tap' => 'heroicon-o-finger-print',
                         'swipe' => 'heroicon-o-arrows-right-left',
@@ -142,7 +142,7 @@ class InteractionHistoryResource extends Resource
                 Tables\Columns\TextColumn::make('element_display_name')
                     ->label('Element')
                     ->limit(40)
-                    ->tooltip(fn (Model $record): string => $record->node_text ?? $record->node_resource_id ?? ''),
+                    ->tooltip(fn(Model $record): string => $record->node_text ?? $record->node_resource_id ?? ''),
 
                 Tables\Columns\TextColumn::make('short_class_name')
                     ->label('Type')
@@ -157,7 +157,7 @@ class InteractionHistoryResource extends Resource
 
                 Tables\Columns\TextColumn::make('package_name')
                     ->label('App')
-                    ->formatStateUsing(fn (?string $state): string => $state ? last(explode('.', $state)) : '-')
+                    ->formatStateUsing(fn(?string $state): string => $state ? last(explode('.', $state)) : '-')
                     ->searchable()
                     ->toggleable(),
 
@@ -198,7 +198,7 @@ class InteractionHistoryResource extends Resource
                     ->query(function (Builder $query, array $data): Builder {
                         return $query->when(
                             $data['device_serial'],
-                            fn (Builder $query, $value): Builder => $query->where('device_serial', 'like', "%{$value}%"),
+                            fn(Builder $query, $value): Builder => $query->where('device_serial', 'like', "%{$value}%"),
                         );
                     }),
 
@@ -210,7 +210,7 @@ class InteractionHistoryResource extends Resource
                     ->query(function (Builder $query, array $data): Builder {
                         return $query->when(
                             $data['package_name'],
-                            fn (Builder $query, $value): Builder => $query->where('package_name', 'like', "%{$value}%"),
+                            fn(Builder $query, $value): Builder => $query->where('package_name', 'like', "%{$value}%"),
                         );
                     }),
 
@@ -225,11 +225,11 @@ class InteractionHistoryResource extends Resource
                         return $query
                             ->when(
                                 $data['created_from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
                             )
                             ->when(
                                 $data['created_until'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
                             );
                     }),
             ])
@@ -239,6 +239,8 @@ class InteractionHistoryResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    \pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction::make()
+                        ->label('Xuất Excel'),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
@@ -253,7 +255,7 @@ class InteractionHistoryResource extends Resource
                         Infolists\Components\TextEntry::make('action_type')
                             ->label('Action Type')
                             ->badge()
-                            ->color(fn (string $state): string => match ($state) {
+                            ->color(fn(string $state): string => match ($state) {
                                 'tap' => 'success',
                                 'long_tap' => 'warning',
                                 'swipe' => 'info',

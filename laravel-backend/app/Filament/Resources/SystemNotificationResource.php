@@ -270,6 +270,8 @@ class SystemNotificationResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    \pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction::make()
+                        ->label('Xuất Excel'),
                     Tables\Actions\BulkAction::make('broadcast_selected')
                         ->label('Broadcast Selected')
                         ->icon('heroicon-o-paper-airplane')

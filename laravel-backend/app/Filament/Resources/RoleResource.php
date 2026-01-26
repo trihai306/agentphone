@@ -71,7 +71,7 @@ class RoleResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'admin' => 'danger',
                         'editor' => 'warning',
                         'viewer' => 'info',
@@ -138,6 +138,8 @@ class RoleResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    \pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction::make()
+                        ->label('Xuất Excel'),
                     Tables\Actions\DeleteBulkAction::make()
                         ->before(function (\Illuminate\Database\Eloquent\Collection $records, Tables\Actions\DeleteBulkAction $action) {
                             // Prevent bulk deletion if admin role is included and has users
