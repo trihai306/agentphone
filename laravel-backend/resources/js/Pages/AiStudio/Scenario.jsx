@@ -10,7 +10,7 @@ import { useTheme } from '@/Contexts/ThemeContext';
  * AI Scenario Page - Professional Redesign
  * 2-Panel Layout with Glassmorphism Design
  */
-export default function Scenario({ currentCredits = 0, videoModels = [], imageModels = [] }) {
+export default function Scenario({ currentCredits = 0, videoModels = [], imageModels = [], activeScenarios: initialActiveScenarios = [] }) {
     const { t } = useTranslation();
     const { addToast } = useToast();
     const { theme } = useTheme();
@@ -33,6 +33,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
     const [characters, setCharacters] = useState([]);
     const [activeTab, setActiveTab] = useState('script'); // script, settings, characters
     const [editingSceneIndex, setEditingSceneIndex] = useState(null);
+    const [activeScenarios, setActiveScenarios] = useState(initialActiveScenarios);
 
     const [settings, setSettings] = useState({
         resolution: '1080p',
@@ -66,6 +67,31 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
             setModel(defaultModel?.id || '');
         }
     }, [models, outputType]);
+
+    // Poll active scenarios status
+    useEffect(() => {
+        if (activeScenarios.length === 0) return;
+
+        const pollInterval = setInterval(async () => {
+            try {
+                const updates = await Promise.all(
+                    activeScenarios.map(s => axios.get(`/ai-studio/scenarios/${s.id}/status`))
+                );
+                const updated = updates.map(r => r.data.scenario);
+                const stillActive = updated.filter(s => ['queued', 'generating'].includes(s.status));
+                setActiveScenarios(stillActive);
+
+                // Refresh page if all done
+                if (stillActive.length === 0 && updated.length > 0) {
+                    router.reload({ only: ['currentCredits', 'activeScenarios'] });
+                }
+            } catch (e) {
+                console.error('Polling error:', e);
+            }
+        }, 5000);
+
+        return () => clearInterval(pollInterval);
+    }, [activeScenarios]);
 
     // Handlers
     const handleParse = async () => {
@@ -235,6 +261,59 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                             </div>
                         </div>
                     </header>
+
+                    {/* Active Scenarios Section */}
+                    {activeScenarios.length > 0 && (
+                        <div className={`mb-6 p-4 rounded-2xl ${glassCard}`}>
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                                <h3 className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                                    Đang xử lý ({activeScenarios.length})
+                                </h3>
+                            </div>
+                            <div className="space-y-3">
+                                {activeScenarios.map((s) => (
+                                    <div
+                                        key={s.id}
+                                        className={`p-4 rounded-xl ${isDark ? 'bg-black/30 border border-white/5' : 'bg-slate-50 border border-slate-200'}`}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${s.status === 'queued'
+                                                        ? isDark ? 'bg-purple-500/20' : 'bg-purple-100'
+                                                        : isDark ? 'bg-amber-500/20' : 'bg-amber-100'
+                                                    }`}>
+                                                    {s.status === 'queued' ? '🕐' : '⏳'}
+                                                </div>
+                                                <div>
+                                                    <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                                                        {s.title || 'Kịch bản không tiêu đề'}
+                                                    </p>
+                                                    <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                                        {s.total_scenes} cảnh • {s.status === 'queued' ? 'Đang chờ' : `Đang tạo ${s.completed_scenes}/${s.total_scenes}`}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-24 h-2 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
+                                                    <div
+                                                        className={`h-full transition-all duration-500 ${s.status === 'queued'
+                                                                ? 'bg-purple-500'
+                                                                : 'bg-gradient-to-r from-amber-500 to-amber-400'
+                                                            }`}
+                                                        style={{ width: `${s.progress}%` }}
+                                                    />
+                                                </div>
+                                                <span className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                                                    {s.progress}%
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Main Content - 2 Panel Layout */}
                     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">

@@ -51,10 +51,23 @@ class AiScenarioController extends Controller
     {
         $user = Auth::user();
 
+        // Get active scenarios (queued or generating)
+        $activeScenarios = AiScenario::forUser($user->id)
+            ->whereIn('status', [AiScenario::STATUS_QUEUED, AiScenario::STATUS_GENERATING])
+            ->with([
+                'scenes' => function ($q) {
+                    $q->orderBy('order');
+                }
+            ])
+            ->latest()
+            ->get()
+            ->map(fn($s) => $this->formatScenario($s));
+
         return Inertia::render('AiStudio/Scenario', [
             'currentCredits' => $user->ai_credits,
             'videoModels' => $this->generationService->getAvailableModels('video'),
             'imageModels' => $this->generationService->getAvailableModels('image'),
+            'activeScenarios' => $activeScenarios,
         ]);
     }
 
