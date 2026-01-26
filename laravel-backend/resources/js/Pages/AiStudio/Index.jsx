@@ -358,7 +358,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
 
                     {/* Scenario Tab with Jobs Queue on Right */}
                     {type === 'scenario' && (
-                        <div className="flex gap-6">
+                        <div className="flex">
                             <div className="flex-1">
                                 <ScenarioTab
                                     isDark={isDark}
@@ -372,12 +372,13 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                 />
                             </div>
                             {/* Jobs Queue Panel - Right Side */}
-                            <div className="w-[320px] flex-shrink-0">
-                                <div className="sticky top-6">
+                            <div className={`w-[320px] flex-shrink-0 border-l transition-colors ${themeClasses.border}`}>
+                                <div className="sticky top-0 h-screen overflow-y-auto p-4">
                                     <JobsQueuePanel
                                         activeGenerations={activeGenerations}
                                         activeScenarios={activeScenarios}
                                         isDark={isDark}
+                                        recentGenerations={history.slice(0, 5)}
                                     />
                                 </div>
                             </div>
