@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { usePage } from '@inertiajs/react';
 import Sidebar from '../Components/Layout/Sidebar';
 import Header from '../Components/Layout/Header';
+import TabHistory from '../Components/Layout/TabHistory';
 import CommandPalette from '../Components/Layout/CommandPalette';
 import { useTheme } from '@/Contexts/ThemeContext';
 
@@ -75,6 +76,9 @@ export default function AppLayout({ children, title, breadcrumbs }) {
                     userName={auth.user?.name?.split(' ')[0]}
                     setSidebarOpen={setSidebarOpen}
                 />
+
+                {/* Tab History - Browser-like tabs */}
+                <TabHistory />
 
                 {/* Flash Messages - Floating */}
                 <div className="fixed top-16 right-4 z-50 space-y-2 w-80">
