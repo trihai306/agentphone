@@ -197,6 +197,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/generations/{generation}', [AiGenerationController::class, 'show'])->name('generations.show');
         Route::get('/generations/{generation}/status', [AiGenerationController::class, 'checkStatus'])->name('generations.status');
         Route::delete('/generations/{generation}', [AiGenerationController::class, 'delete'])->name('generations.delete');
+        Route::get('/active-jobs', [AiGenerationController::class, 'activeJobs'])->name('active-jobs');
 
         // AI Scenarios (Script to Scenes)
         Route::get('/scenarios', [\App\Http\Controllers\AiScenarioController::class, 'index'])->name('scenarios.index');

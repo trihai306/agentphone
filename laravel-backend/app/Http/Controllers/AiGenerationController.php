@@ -246,6 +246,32 @@ class AiGenerationController extends Controller
     }
 
     /**
+     * Get active jobs (polling endpoint for Jobs Queue Panel)
+     */
+    public function activeJobs()
+    {
+        $user = Auth::user();
+
+        $activeGenerations = $user->aiGenerations()
+            ->whereIn('status', ['pending', 'processing'])
+            ->latest()
+            ->get()
+            ->map(fn($gen) => $this->formatGeneration($gen));
+
+        $activeScenarios = \App\Models\AiScenario::forUser($user->id)
+            ->whereIn('status', ['queued', 'generating'])
+            ->with(['scenes' => fn($q) => $q->orderBy('order')])
+            ->latest()
+            ->get()
+            ->map(fn($s) => app(\App\Http\Controllers\AiScenarioController::class)->formatScenario($s));
+
+        return response()->json([
+            'activeGenerations' => $activeGenerations,
+            'activeScenarios' => $activeScenarios,
+        ]);
+    }
+
+    /**
      * Delete a generation
      */
     public function delete(AiGeneration $generation)

@@ -17,40 +17,31 @@ export default function JobsQueuePanel({
 
     const totalJobs = generations.length + scenarios.length;
 
-    // Poll for updates
+    // Always poll for active jobs (to detect new jobs created after page load)
     useEffect(() => {
-        if (totalJobs === 0) return;
-
-        const poll = setInterval(async () => {
+        const fetchActiveJobs = async () => {
             try {
-                if (generations.length > 0) {
-                    const genUpdates = await Promise.all(
-                        generations.map(g => axios.get(`/ai-studio/generations/${g.id}/status`).catch(() => null))
-                    );
-                    const updatedGens = genUpdates
-                        .filter(r => r?.data?.generation)
-                        .map(r => r.data.generation);
-                    const stillActiveGens = updatedGens.filter(g => ['pending', 'processing'].includes(g.status));
-                    setGenerations(stillActiveGens);
-                }
-
-                if (scenarios.length > 0) {
-                    const scenarioUpdates = await Promise.all(
-                        scenarios.map(s => axios.get(`/ai-studio/scenarios/${s.id}/status`).catch(() => null))
-                    );
-                    const updatedScenarios = scenarioUpdates
-                        .filter(r => r?.data?.scenario)
-                        .map(r => r.data.scenario);
-                    const stillActiveScenarios = updatedScenarios.filter(s => ['queued', 'generating'].includes(s.status));
-                    setScenarios(stillActiveScenarios);
+                const response = await axios.get('/ai-studio/active-jobs');
+                if (response.data) {
+                    setGenerations(response.data.activeGenerations || []);
+                    setScenarios(response.data.activeScenarios || []);
                 }
             } catch (e) {
-                console.error('Jobs polling error:', e);
+                console.error('Failed to fetch active jobs:', e);
             }
-        }, 5000);
+        };
 
-        return () => clearInterval(poll);
-    }, [generations.length, scenarios.length]);
+        // Initial fetch after 2 seconds (give time for job to be created)
+        const initialTimeout = setTimeout(fetchActiveJobs, 2000);
+
+        // Then poll every 5 seconds
+        const poll = setInterval(fetchActiveJobs, 5000);
+
+        return () => {
+            clearTimeout(initialTimeout);
+            clearInterval(poll);
+        };
+    }, []);
 
     const glassCard = isDark
         ? 'bg-white/[0.02] border border-white/[0.05]'
@@ -178,10 +169,10 @@ export default function JobsQueuePanel({
                                         </p>
                                         <div className="flex items-center gap-2 mt-1">
                                             <span className={`text-xs px-2 py-0.5 rounded ${g.status === 'completed'
-                                                    ? isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-700'
-                                                    : g.status === 'failed'
-                                                        ? isDark ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-700'
-                                                        : isDark ? 'bg-slate-500/20 text-slate-400' : 'bg-slate-100 text-slate-500'
+                                                ? isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-700'
+                                                : g.status === 'failed'
+                                                    ? isDark ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-700'
+                                                    : isDark ? 'bg-slate-500/20 text-slate-400' : 'bg-slate-100 text-slate-500'
                                                 }`}>
                                                 {g.status === 'completed' ? '✓' : g.status === 'failed' ? '✗' : g.status}
                                             </span>
