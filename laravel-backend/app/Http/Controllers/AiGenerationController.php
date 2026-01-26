@@ -40,12 +40,28 @@ class AiGenerationController extends Controller
         $mediaService = app(\App\Services\MediaService::class);
         $folders = $mediaService->getUserFolders($user)->values()->toArray();
 
+        // Get active jobs (pending/processing generations and scenarios)
+        $activeGenerations = $user->aiGenerations()
+            ->whereIn('status', ['pending', 'processing'])
+            ->latest()
+            ->get()
+            ->map(fn($gen) => $this->formatGeneration($gen));
+
+        $activeScenarios = \App\Models\AiScenario::forUser($user->id)
+            ->whereIn('status', ['queued', 'generating'])
+            ->with(['scenes' => fn($q) => $q->orderBy('order')])
+            ->latest()
+            ->get()
+            ->map(fn($s) => app(\App\Http\Controllers\AiScenarioController::class)->formatScenario($s));
+
         return Inertia::render('AiStudio/Index', [
             'currentCredits' => $user->ai_credits,
             'imageModels' => $imageModels,
             'videoModels' => $videoModels,
             'recentGenerations' => $recentGenerations,
             'folders' => $folders,
+            'activeGenerations' => $activeGenerations,
+            'activeScenarios' => $activeScenarios,
         ]);
     }
 

@@ -7,6 +7,7 @@ import { useToast } from '@/Components/Layout/ToastProvider';
 import { useTheme } from '@/Contexts/ThemeContext';
 import FolderSelectModal from '@/Components/Media/FolderSelectModal';
 import ScenarioTab from '@/Components/AiStudio/ScenarioTab';
+import JobsQueuePanel from '@/Components/AiStudio/JobsQueuePanel';
 
 // Provider badge colors - professional palette
 const providerColors = {
@@ -55,7 +56,7 @@ const badgeStyles = {
     },
 };
 
-export default function AiStudioIndex({ currentCredits = 0, imageModels = [], videoModels = [], recentGenerations = [], folders = [] }) {
+export default function AiStudioIndex({ currentCredits = 0, imageModels = [], videoModels = [], recentGenerations = [], folders = [], activeGenerations = [], activeScenarios = [] }) {
     const { t } = useTranslation();
     const { auth } = usePage().props;
     const { addToast } = useToast();
@@ -355,17 +356,32 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                         </div>
                     </div>
 
-                    {/* Scenario Tab - Full Width */}
+                    {/* Scenario Tab with Jobs Queue on Right */}
                     {type === 'scenario' && (
-                        <ScenarioTab
-                            isDark={isDark}
-                            themeClasses={themeClasses}
-                            videoModels={videoModels}
-                            imageModels={imageModels}
-                            currentCredits={currentCredits}
-                            onCreditsUpdate={() => router.reload({ only: ['currentCredits'] })}
-                            addToast={addToast}
-                        />
+                        <div className="flex gap-6">
+                            <div className="flex-1">
+                                <ScenarioTab
+                                    isDark={isDark}
+                                    themeClasses={themeClasses}
+                                    videoModels={videoModels}
+                                    imageModels={imageModels}
+                                    currentCredits={currentCredits}
+                                    onCreditsUpdate={() => router.reload({ only: ['currentCredits'] })}
+                                    addToast={addToast}
+                                    activeScenarios={activeScenarios}
+                                />
+                            </div>
+                            {/* Jobs Queue Panel - Right Side */}
+                            <div className="w-[320px] flex-shrink-0">
+                                <div className="sticky top-6">
+                                    <JobsQueuePanel
+                                        activeGenerations={activeGenerations}
+                                        activeScenarios={activeScenarios}
+                                        isDark={isDark}
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     )}
 
                     {/* Video/Image Generation */}

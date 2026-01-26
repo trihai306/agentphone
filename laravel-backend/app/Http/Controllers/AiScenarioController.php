@@ -361,7 +361,7 @@ class AiScenarioController extends Controller
     /**
      * Format scenario for frontend
      */
-    protected function formatScenario(AiScenario $scenario): array
+    public function formatScenario(AiScenario $scenario): array
     {
         return [
             'id' => $scenario->id,
