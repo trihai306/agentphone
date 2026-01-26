@@ -31,6 +31,20 @@ class AppServiceProvider extends ServiceProvider
         \Illuminate\Support\Facades\Gate::policy(\App\Models\MarketplaceListing::class, \App\Policies\MarketplaceListingPolicy::class);
         \Illuminate\Support\Facades\Gate::policy(\App\Models\AiScenario::class, \App\Policies\AiScenarioPolicy::class);
 
+        // Register remaining policies for Filament resources
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\ActivityLog::class, \App\Policies\ActivityLogPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\AiCreditPackage::class, \App\Policies\AiCreditPackagePolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\ApiLog::class, \App\Policies\ApiLogPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\DeviceActivityLog::class, \App\Policies\DeviceActivityLogPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\InteractionHistory::class, \App\Policies\InteractionHistoryPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\JobLog::class, \App\Policies\JobLogPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\JobTask::class, \App\Policies\JobTaskPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\MediaStoragePlan::class, \App\Policies\MediaStoragePlanPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\ScenarioTemplate::class, \App\Policies\ScenarioTemplatePolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\ServicePackage::class, \App\Policies\ServicePackagePolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\SystemNotification::class, \App\Policies\SystemNotificationPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\DataRecord::class, \App\Policies\DataRecordPolicy::class);
+
         \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
             return $user->hasRole('admin') ? true : null;
         });
