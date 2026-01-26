@@ -150,7 +150,8 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
             return;
         }
 
-        setStep('generating');
+        // Show loading state but don't switch to generating view
+        setParsing(true);
         try {
             const saveResponse = await axios.post('/ai-studio/scenarios', {
                 script, title, output_type: outputType, model, scenes, settings,
@@ -160,39 +161,32 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
 
             if (saveResponse.data.success) {
                 const savedScenario = saveResponse.data.scenario;
-                setScenario(savedScenario);
                 const genResponse = await axios.post(`/ai-studio/scenarios/${savedScenario.id}/generate`);
+
                 if (genResponse.data.success) {
-                    setScenario(genResponse.data.scenario);
-                    addToast('Đã bắt đầu tạo video!', 'success');
-                    startPolling(savedScenario.id);
+                    // Add to active scenarios list
+                    const newScenario = genResponse.data.scenario;
+                    setActiveScenarios(prev => [newScenario, ...prev]);
+
+                    // Reset form for new scenario
+                    setScript('');
+                    setScenes([]);
+                    setTitle('');
+                    setTotalCredits(0);
+                    setStep('input');
+                    setAiMetadata(null);
+
+                    addToast('🎬 Đã bắt đầu tạo video! Theo dõi tiến độ bên dưới.', 'success');
                 }
             }
         } catch (error) {
             addToast(error.response?.data?.error || 'Không thể tạo kịch bản', 'error');
-            setStep('scenes');
+        } finally {
+            setParsing(false);
         }
     };
 
-    const startPolling = (scenarioId) => {
-        const pollInterval = setInterval(async () => {
-            try {
-                const response = await axios.get(`/ai-studio/scenarios/${scenarioId}/status`);
-                if (response.data.success) {
-                    const updated = response.data.scenario;
-                    setScenario(updated);
-                    setScenes(updated.scenes);
-                    if (['completed', 'failed', 'partial'].includes(updated.status)) {
-                        clearInterval(pollInterval);
-                        if (updated.status === 'completed') addToast('Hoàn thành!', 'success');
-                        router.reload({ only: ['currentCredits'] });
-                    }
-                }
-            } catch (error) {
-                console.error('Polling error:', error);
-            }
-        }, 3000);
-    };
+    // Remove old startPolling - now using activeScenarios polling effect
 
     const handleUpdateScene = (index, field, value) => {
         const updated = [...scenes];
@@ -262,52 +256,97 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                         </div>
                     </header>
 
-                    {/* Active Scenarios Section */}
+                    {/* Active Scenarios Section - Enhanced Table View */}
                     {activeScenarios.length > 0 && (
-                        <div className={`mb-6 p-4 rounded-2xl ${glassCard}`}>
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                                <h3 className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                    Đang xử lý ({activeScenarios.length})
-                                </h3>
+                        <div className={`mb-6 rounded-2xl ${glassCard} overflow-hidden`}>
+                            {/* Header */}
+                            <div className={`px-5 py-4 border-b ${isDark ? 'border-white/5' : 'border-slate-200'}`}>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-3 h-3 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 animate-pulse" />
+                                        <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                                            🎬 Kịch bản đang tạo ({activeScenarios.length})
+                                        </h3>
+                                    </div>
+                                    <span className={`text-xs px-3 py-1 rounded-full ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'}`}>
+                                        Auto-refresh 5s
+                                    </span>
+                                </div>
                             </div>
-                            <div className="space-y-3">
+
+                            {/* Scenarios List */}
+                            <div className="divide-y divide-white/5">
                                 {activeScenarios.map((s) => (
-                                    <div
-                                        key={s.id}
-                                        className={`p-4 rounded-xl ${isDark ? 'bg-black/30 border border-white/5' : 'bg-slate-50 border border-slate-200'}`}
-                                    >
-                                        <div className="flex items-center justify-between">
+                                    <div key={s.id} className={`p-4 ${isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-slate-50'} transition-colors`}>
+                                        {/* Scenario Header */}
+                                        <div className="flex items-center justify-between mb-3">
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${s.status === 'queued'
-                                                        ? isDark ? 'bg-purple-500/20' : 'bg-purple-100'
-                                                        : isDark ? 'bg-amber-500/20' : 'bg-amber-100'
+                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${s.status === 'queued'
+                                                        ? 'bg-gradient-to-br from-purple-500/20 to-purple-600/20 border border-purple-500/30'
+                                                        : 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30'
                                                     }`}>
-                                                    {s.status === 'queued' ? '🕐' : '⏳'}
+                                                    {s.status === 'queued' ? '🕐' : '⚡'}
                                                 </div>
                                                 <div>
-                                                    <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                                        {s.title || 'Kịch bản không tiêu đề'}
+                                                    <p className={`font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                                                        {s.title || 'Kịch bản mới'}
                                                     </p>
-                                                    <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                                        {s.total_scenes} cảnh • {s.status === 'queued' ? 'Đang chờ' : `Đang tạo ${s.completed_scenes}/${s.total_scenes}`}
-                                                    </p>
+                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                        <span className={`text-xs px-2 py-0.5 rounded ${s.status === 'queued'
+                                                                ? isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-700'
+                                                                : isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'
+                                                            }`}>
+                                                            {s.status === 'queued' ? 'Đang chờ' : 'Đang tạo'}
+                                                        </span>
+                                                        <span className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                                            {s.output_type === 'video' ? '🎥' : '🖼️'} {s.total_scenes} cảnh
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-24 h-2 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
+
+                                            {/* Progress */}
+                                            <div className="flex items-center gap-4">
+                                                <div className="text-right">
+                                                    <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                                                        {s.progress}%
+                                                    </p>
+                                                    <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                                        {s.completed_scenes}/{s.total_scenes} xong
+                                                    </p>
+                                                </div>
+                                                <div className={`w-32 h-3 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
                                                     <div
-                                                        className={`h-full transition-all duration-500 ${s.status === 'queued'
-                                                                ? 'bg-purple-500'
-                                                                : 'bg-gradient-to-r from-amber-500 to-amber-400'
+                                                        className={`h-full transition-all duration-700 ${s.status === 'queued'
+                                                                ? 'bg-gradient-to-r from-purple-500 to-purple-400'
+                                                                : 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-400'
                                                             }`}
                                                         style={{ width: `${s.progress}%` }}
                                                     />
                                                 </div>
-                                                <span className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                                                    {s.progress}%
-                                                </span>
                                             </div>
+                                        </div>
+
+                                        {/* Scenes Progress */}
+                                        <div className="flex gap-1.5 flex-wrap">
+                                            {s.scenes?.map((scene) => (
+                                                <div
+                                                    key={scene.id}
+                                                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs ${scene.status === 'completed'
+                                                            ? isDark ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-emerald-100 text-emerald-700'
+                                                            : scene.status === 'generating'
+                                                                ? isDark ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse' : 'bg-amber-100 text-amber-700'
+                                                                : scene.status === 'failed'
+                                                                    ? isDark ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-red-100 text-red-700'
+                                                                    : isDark ? 'bg-white/5 text-slate-500 border border-white/10' : 'bg-slate-100 text-slate-500'
+                                                        }`}
+                                                >
+                                                    <span>
+                                                        {scene.status === 'completed' ? '✓' : scene.status === 'generating' ? '⏳' : scene.status === 'failed' ? '✗' : '○'}
+                                                    </span>
+                                                    <span>Cảnh {scene.order}</span>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 ))}
