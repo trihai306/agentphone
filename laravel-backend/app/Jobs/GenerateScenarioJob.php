@@ -77,6 +77,7 @@ class GenerateScenarioJob implements ShouldQueue
 
     /**
      * Generate scenes sequentially with frame chaining
+     * Auto-retries failed scenes up to 2 times before moving to next
      */
     protected function generateWithFrameChaining(
         AiScenarioService $scenarioService,
@@ -85,93 +86,128 @@ class GenerateScenarioJob implements ShouldQueue
         array $characters = []
     ): void {
         $previousFramePath = null;
+        $maxRetries = 2; // Max retries per scene
 
         foreach ($scenes as $scene) {
-            try {
-                // Apply character consistency
-                if (!empty($characters)) {
-                    $this->applyCharacterConsistency($scenarioService, $scene, $characters);
-                }
+            $retryCount = 0;
+            $sceneCompleted = false;
 
-                // If we have a previous frame and this isn't the first scene, use it as reference
-                if ($previousFramePath && $scene->order > 1) {
-                    $scene->update(['reference_image_path' => $previousFramePath]);
-
-                    // For Image-to-Video, also set source_image_path if not already set
-                    if (empty($scene->source_image_path)) {
-                        $scene->update(['source_image_path' => $previousFramePath]);
+            while (!$sceneCompleted && $retryCount <= $maxRetries) {
+                try {
+                    // Mark as retrying if this is a retry attempt
+                    if ($retryCount > 0) {
+                        Log::info('Retrying scene generation', [
+                            'scenario_id' => $scenario->id,
+                            'scene_order' => $scene->order,
+                            'retry_attempt' => $retryCount,
+                        ]);
+                        $scene->update(['status' => AiScenarioScene::STATUS_PENDING]);
                     }
 
-                    Log::info('Using previous frame for scene', [
-                        'scenario_id' => $scenario->id,
-                        'scene_order' => $scene->order,
-                        'frame_path' => $previousFramePath,
-                    ]);
-                }
-
-                // Generate the scene
-                $generation = $scenarioService->generateScene($scene);
-
-                // Wait for generation to complete (polling)
-                $maxWaitTime = 300; // 5 minutes max per scene
-                $startTime = time();
-                $completed = false;
-
-                while (time() - $startTime < $maxWaitTime) {
-                    $generation->refresh();
-
-                    if ($generation->isCompleted()) {
-                        $completed = true;
-                        break;
-                    } elseif ($generation->isFailed()) {
-                        throw new \Exception("Scene generation failed: " . $generation->error_message);
+                    // Apply character consistency
+                    if (!empty($characters)) {
+                        $this->applyCharacterConsistency($scenarioService, $scene, $characters);
                     }
 
-                    // Check status with provider
-                    app(\App\Services\AiGenerationService::class)->checkGenerationStatus($generation);
+                    // If we have a previous frame and this isn't the first scene, use it as reference
+                    if ($previousFramePath && $scene->order > 1) {
+                        $scene->update(['reference_image_path' => $previousFramePath]);
 
-                    sleep(5); // Wait 5 seconds between checks
-                }
+                        // For Image-to-Video, also set source_image_path if not already set
+                        if (empty($scene->source_image_path)) {
+                            $scene->update(['source_image_path' => $previousFramePath]);
+                        }
 
-                if (!$completed) {
-                    throw new \Exception("Scene generation timed out after {$maxWaitTime} seconds");
-                }
-
-                // Update scene status
-                $scene->update(['status' => AiScenarioScene::STATUS_COMPLETED]);
-
-                Log::info('Scene completed', [
-                    'scenario_id' => $scenario->id,
-                    'scene_order' => $scene->order,
-                ]);
-
-                // Extract last frame for the next scene (only for video output)
-                if ($scenario->output_type === 'video' && $generation->result_path) {
-                    $extractedFrame = $this->extractLastFrame($generation->result_path);
-                    if ($extractedFrame) {
-                        $previousFramePath = $extractedFrame;
-                        Log::info('Frame extracted for chaining', [
-                            'from_scene' => $scene->order,
-                            'frame_path' => $extractedFrame,
+                        Log::info('Using previous frame for scene', [
+                            'scenario_id' => $scenario->id,
+                            'scene_order' => $scene->order,
+                            'frame_path' => $previousFramePath,
                         ]);
                     }
+
+                    // Generate the scene
+                    $generation = $scenarioService->generateScene($scene);
+
+                    // Wait for generation to complete (polling)
+                    $maxWaitTime = 300; // 5 minutes max per scene
+                    $startTime = time();
+                    $completed = false;
+
+                    while (time() - $startTime < $maxWaitTime) {
+                        $generation->refresh();
+
+                        if ($generation->isCompleted()) {
+                            $completed = true;
+                            break;
+                        } elseif ($generation->isFailed()) {
+                            throw new \Exception("Scene generation failed: " . $generation->error_message);
+                        }
+
+                        // Check status with provider
+                        app(\App\Services\AiGenerationService::class)->checkGenerationStatus($generation);
+
+                        sleep(5); // Wait 5 seconds between checks
+                    }
+
+                    if (!$completed) {
+                        throw new \Exception("Scene generation timed out after {$maxWaitTime} seconds");
+                    }
+
+                    // Update scene status
+                    $scene->update(['status' => AiScenarioScene::STATUS_COMPLETED]);
+                    $sceneCompleted = true;
+
+                    Log::info('Scene completed', [
+                        'scenario_id' => $scenario->id,
+                        'scene_order' => $scene->order,
+                        'retries_used' => $retryCount,
+                    ]);
+
+                    // Extract last frame for the next scene (only for video output)
+                    if ($scenario->output_type === 'video' && $generation->result_path) {
+                        $extractedFrame = $this->extractLastFrame($generation->result_path);
+                        if ($extractedFrame) {
+                            $previousFramePath = $extractedFrame;
+                            Log::info('Frame extracted for chaining', [
+                                'from_scene' => $scene->order,
+                                'frame_path' => $extractedFrame,
+                            ]);
+                        }
+                    }
+
+                } catch (\Exception $e) {
+                    $retryCount++;
+
+                    Log::warning('Scene generation attempt failed', [
+                        'scenario_id' => $scenario->id,
+                        'scene_id' => $scene->id,
+                        'scene_order' => $scene->order,
+                        'attempt' => $retryCount,
+                        'max_retries' => $maxRetries,
+                        'error' => $e->getMessage(),
+                    ]);
+
+                    // If we've exhausted retries, mark as failed but continue to next scene
+                    if ($retryCount > $maxRetries) {
+                        $scene->update([
+                            'status' => AiScenarioScene::STATUS_FAILED,
+                            'error_message' => "Failed after {$maxRetries} retries: " . $e->getMessage(),
+                        ]);
+
+                        Log::error('Scene permanently failed after retries', [
+                            'scenario_id' => $scenario->id,
+                            'scene_id' => $scene->id,
+                            'scene_order' => $scene->order,
+                        ]);
+
+                        // Break frame chain since this scene failed
+                        // Next scene won't use frame chaining from this failed scene
+                        $previousFramePath = null;
+                    } else {
+                        // Wait before retry
+                        sleep(10);
+                    }
                 }
-
-            } catch (\Exception $e) {
-                Log::error('Scene generation failed in chain mode', [
-                    'scenario_id' => $scenario->id,
-                    'scene_id' => $scene->id,
-                    'scene_order' => $scene->order,
-                    'error' => $e->getMessage(),
-                ]);
-
-                $scene->update([
-                    'status' => AiScenarioScene::STATUS_FAILED,
-                    'error_message' => $e->getMessage(),
-                ]);
-
-                // In chain mode, stop on first failure to maintain consistency
-                break;
             }
         }
     }

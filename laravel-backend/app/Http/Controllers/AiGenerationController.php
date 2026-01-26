@@ -252,8 +252,18 @@ class AiGenerationController extends Controller
     {
         $user = Auth::user();
 
+        // Get generation IDs that belong to scenarios (scene videos)
+        $scenarioGenerationIds = \App\Models\AiScenarioScene::whereHas('scenario', function ($q) use ($user) {
+            $q->where('user_id', $user->id);
+        })
+            ->whereNotNull('ai_generation_id')
+            ->pluck('ai_generation_id')
+            ->toArray();
+
+        // Get standalone generations only (exclude scene-related ones)
         $activeGenerations = $user->aiGenerations()
             ->whereIn('status', ['pending', 'processing'])
+            ->whereNotIn('id', $scenarioGenerationIds)
             ->latest()
             ->get()
             ->map(fn($gen) => $this->formatGeneration($gen));
