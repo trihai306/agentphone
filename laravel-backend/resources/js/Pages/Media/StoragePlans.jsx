@@ -1,9 +1,18 @@
 import { useState } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '../../Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useToast } from '@/Components/Layout/ToastProvider';
+import {
+    PageHeader,
+    SectionHeader,
+    GlassCard,
+    GlassCardStat,
+    Badge,
+    Button,
+    DataList,
+} from '@/Components/UI';
 
 export default function StoragePlans({ currentPlan, plans, usage }) {
     const { t } = useTranslation();
@@ -44,34 +53,25 @@ export default function StoragePlans({ currentPlan, plans, usage }) {
         });
     };
 
+    const stats = [
+        { label: 'Số file', value: usage?.file_count || 0, suffix: `/ ${currentPlan?.max_files || '∞'}` },
+        { label: 'File tối đa', value: formatBytes(currentPlan?.max_file_size_bytes || 0) },
+        { label: 'Giá/tháng', value: formatPrice(currentPlan?.price || 0) },
+    ];
+
     return (
         <AppLayout title="Gói lưu trữ">
             <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
                 <div className="max-w-[1200px] mx-auto px-6 py-8">
                     {/* Header */}
-                    <div className="flex items-center justify-between mb-8">
-                        <div>
-                            <div className="flex items-center gap-3 mb-2">
-                                <Link
-                                    href="/media"
-                                    className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-[#1a1a1a] text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                </Link>
-                                <h1 className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    Gói lưu trữ Media
-                                </h1>
-                            </div>
-                            <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Quản lý dung lượng và nâng cấp gói của bạn
-                            </p>
-                        </div>
-                    </div>
+                    <PageHeader
+                        title="Gói lưu trữ Media"
+                        subtitle="Quản lý dung lượng và nâng cấp gói của bạn"
+                        backHref="/media"
+                    />
 
                     {/* Current Usage Card */}
-                    <div className={`p-6 rounded-xl mb-8 ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
+                    <GlassCard gradient="gray" hover={false} className="mb-8">
                         <div className="flex items-center justify-between mb-4">
                             <div>
                                 <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -81,9 +81,7 @@ export default function StoragePlans({ currentPlan, plans, usage }) {
                                     {currentPlan?.description || 'Gói miễn phí cơ bản'}
                                 </p>
                             </div>
-                            <div className={`px-4 py-2 rounded-lg ${isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}>
-                                <span className="text-sm font-medium">Đang sử dụng</span>
-                            </div>
+                            <Badge variant="success" size="md">Đang sử dụng</Badge>
                         </div>
 
                         {/* Usage Progress */}
@@ -99,10 +97,10 @@ export default function StoragePlans({ currentPlan, plans, usage }) {
                             <div className={`h-3 rounded-full overflow-hidden ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-100'}`}>
                                 <div
                                     className={`h-full rounded-full transition-all ${usagePercent > 90
-                                            ? 'bg-red-500'
-                                            : usagePercent > 70
-                                                ? 'bg-amber-500'
-                                                : isDark ? 'bg-emerald-500' : 'bg-emerald-600'
+                                        ? 'bg-red-500'
+                                        : usagePercent > 70
+                                            ? 'bg-amber-500'
+                                            : isDark ? 'bg-emerald-500' : 'bg-emerald-600'
                                         }`}
                                     style={{ width: `${usagePercent}%` }}
                                 />
@@ -118,61 +116,38 @@ export default function StoragePlans({ currentPlan, plans, usage }) {
 
                         {/* Stats Grid */}
                         <div className="grid grid-cols-3 gap-4">
-                            <div className={`p-4 rounded-lg ${isDark ? 'bg-[#222]' : 'bg-gray-50'}`}>
-                                <p className={`text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    Số file
-                                </p>
-                                <p className={`text-2xl font-semibold mt-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    {usage?.file_count || 0} <span className="text-sm font-normal text-gray-500">/ {currentPlan?.max_files || '∞'}</span>
-                                </p>
-                            </div>
-                            <div className={`p-4 rounded-lg ${isDark ? 'bg-[#222]' : 'bg-gray-50'}`}>
-                                <p className={`text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    File tối đa
-                                </p>
-                                <p className={`text-2xl font-semibold mt-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    {formatBytes(currentPlan?.max_file_size_bytes || 0)}
-                                </p>
-                            </div>
-                            <div className={`p-4 rounded-lg ${isDark ? 'bg-[#222]' : 'bg-gray-50'}`}>
-                                <p className={`text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    Giá/tháng
-                                </p>
-                                <p className={`text-2xl font-semibold mt-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    {formatPrice(currentPlan?.price || 0)}
-                                </p>
-                            </div>
+                            {stats.map((stat, i) => (
+                                <div key={i} className={`p-4 rounded-lg ${isDark ? 'bg-[#222]' : 'bg-gray-50'}`}>
+                                    <p className={`text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                        {stat.label}
+                                    </p>
+                                    <p className={`text-2xl font-semibold mt-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                        {stat.value}
+                                        {stat.suffix && <span className="text-sm font-normal text-gray-500"> {stat.suffix}</span>}
+                                    </p>
+                                </div>
+                            ))}
                         </div>
-                    </div>
+                    </GlassCard>
 
                     {/* Plans Grid */}
-                    <h2 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        Các gói có sẵn
-                    </h2>
+                    <SectionHeader title="Các gói có sẵn" />
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {plans?.map((plan) => {
                             const isCurrentPlan = currentPlan?.id === plan.id;
                             const isUpgrade = (plan.price || 0) > (currentPlan?.price || 0);
 
                             return (
-                                <div
+                                <GlassCard
                                     key={plan.id}
-                                    className={`relative p-6 rounded-xl transition-all ${isCurrentPlan
-                                            ? isDark
-                                                ? 'bg-[#1a1a1a] ring-2 ring-emerald-500'
-                                                : 'bg-white border-2 border-emerald-500'
-                                            : isDark
-                                                ? 'bg-[#1a1a1a] hover:bg-[#222]'
-                                                : 'bg-white border border-gray-200 hover:border-gray-300'
-                                        }`}
+                                    gradient={isCurrentPlan ? 'purple' : 'gray'}
+                                    hover={!isCurrentPlan}
+                                    className={isCurrentPlan ? (isDark ? 'ring-2 ring-emerald-500' : 'border-2 border-emerald-500') : ''}
                                 >
                                     {/* Popular Badge */}
                                     {plan.slug === 'pro' && (
                                         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                            <span className={`px-3 py-1 text-xs font-medium rounded-full ${isDark ? 'bg-amber-500 text-black' : 'bg-amber-500 text-white'
-                                                }`}>
-                                                Phổ biến
-                                            </span>
+                                            <Badge variant="warning" size="sm">Phổ biến</Badge>
                                         </div>
                                     )}
 
@@ -196,9 +171,7 @@ export default function StoragePlans({ currentPlan, plans, usage }) {
                                     <ul className="space-y-2 mb-6">
                                         {plan.features?.map((feature, i) => (
                                             <li key={i} className="flex items-start gap-2">
-                                                <svg className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isDark ? 'text-emerald-400' : 'text-emerald-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                </svg>
+                                                <span className={`${isDark ? 'text-emerald-400' : 'text-emerald-500'}`}>✓</span>
                                                 <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                                                     {feature}
                                                 </span>
@@ -208,37 +181,19 @@ export default function StoragePlans({ currentPlan, plans, usage }) {
 
                                     {/* Action Button */}
                                     {isCurrentPlan ? (
-                                        <button
-                                            disabled
-                                            className={`w-full py-2.5 rounded-lg text-sm font-medium ${isDark
-                                                    ? 'bg-emerald-900/30 text-emerald-400'
-                                                    : 'bg-emerald-50 text-emerald-600'
-                                                }`}
-                                        >
+                                        <Button disabled variant="success" className="w-full">
                                             Gói hiện tại
-                                        </button>
+                                        </Button>
                                     ) : isUpgrade ? (
-                                        <button
-                                            onClick={() => setSelectedPlan(plan)}
-                                            className={`w-full py-2.5 rounded-lg text-sm font-medium transition-all ${isDark
-                                                    ? 'bg-white text-black hover:bg-gray-100'
-                                                    : 'bg-gray-900 text-white hover:bg-gray-800'
-                                                }`}
-                                        >
+                                        <Button onClick={() => setSelectedPlan(plan)} className="w-full">
                                             Nâng cấp
-                                        </button>
+                                        </Button>
                                     ) : (
-                                        <button
-                                            disabled
-                                            className={`w-full py-2.5 rounded-lg text-sm font-medium ${isDark
-                                                    ? 'bg-[#222] text-gray-500'
-                                                    : 'bg-gray-100 text-gray-400'
-                                                }`}
-                                        >
+                                        <Button disabled variant="ghost" className="w-full">
                                             Gói thấp hơn
-                                        </button>
+                                        </Button>
                                     )}
-                                </div>
+                                </GlassCard>
                             );
                         })}
                     </div>
@@ -251,8 +206,10 @@ export default function StoragePlans({ currentPlan, plans, usage }) {
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
                     onClick={() => !isUpgrading && setSelectedPlan(null)}
                 >
-                    <div
-                        className={`w-full max-w-md p-6 rounded-2xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white'}`}
+                    <GlassCard
+                        gradient="gray"
+                        hover={false}
+                        className="w-full max-w-md"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <h3 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -262,50 +219,33 @@ export default function StoragePlans({ currentPlan, plans, usage }) {
                             Bạn muốn nâng cấp lên gói <strong className={isDark ? 'text-white' : 'text-gray-900'}>{selectedPlan.name}</strong>?
                         </p>
 
-                        <div className={`mt-4 p-4 rounded-lg ${isDark ? 'bg-[#222]' : 'bg-gray-50'}`}>
-                            <div className="flex items-center justify-between mb-2">
-                                <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Dung lượng</span>
-                                <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    {formatBytes(selectedPlan.max_storage_bytes)}
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between mb-2">
-                                <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Số file tối đa</span>
-                                <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    {selectedPlan.max_files || 'Không giới hạn'}
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Giá</span>
-                                <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    {formatPrice(selectedPlan.price)}/tháng
-                                </span>
-                            </div>
-                        </div>
+                        <DataList
+                            items={[
+                                { label: 'Dung lượng', value: formatBytes(selectedPlan.max_storage_bytes) },
+                                { label: 'Số file tối đa', value: selectedPlan.max_files || 'Không giới hạn' },
+                                { label: 'Giá', value: `${formatPrice(selectedPlan.price)}/tháng` },
+                            ]}
+                            className="mt-4"
+                        />
 
                         <div className="flex gap-3 mt-6">
-                            <button
+                            <Button
                                 onClick={() => setSelectedPlan(null)}
                                 disabled={isUpgrading}
-                                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${isDark
-                                        ? 'bg-[#222] text-gray-300 hover:bg-[#2a2a2a]'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                    }`}
+                                variant="ghost"
+                                className="flex-1"
                             >
                                 Hủy
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 onClick={() => handleUpgrade(selectedPlan)}
                                 disabled={isUpgrading}
-                                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${isDark
-                                        ? 'bg-white text-black hover:bg-gray-100'
-                                        : 'bg-gray-900 text-white hover:bg-gray-800'
-                                    } disabled:opacity-50`}
+                                className="flex-1"
                             >
                                 {isUpgrading ? 'Đang xử lý...' : 'Xác nhận nâng cấp'}
-                            </button>
+                            </Button>
                         </div>
-                    </div>
+                    </GlassCard>
                 </div>
             )}
         </AppLayout>
