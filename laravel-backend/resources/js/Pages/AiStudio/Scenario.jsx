@@ -243,15 +243,24 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                             </div>
                         </div>
 
-                        <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl ${glassCard}`}>
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
-                                <span className="text-white text-sm">✨</span>
-                            </div>
-                            <div>
-                                <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Credits</p>
-                                <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                    {currentCredits.toLocaleString()}
-                                </p>
+                        <div className="flex items-center gap-3">
+                            <Link
+                                href="/ai-studio/scenarios"
+                                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${glassCard} ${glassCardHover}`}
+                            >
+                                <span>📋</span>
+                                <span className={isDark ? 'text-slate-300' : 'text-slate-700'}>Quản lý</span>
+                            </Link>
+                            <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl ${glassCard}`}>
+                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
+                                    <span className="text-white text-sm">✨</span>
+                                </div>
+                                <div>
+                                    <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Credits</p>
+                                    <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                                        {currentCredits.toLocaleString()}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </header>
@@ -282,8 +291,8 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                         <div className="flex items-center justify-between mb-3">
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${s.status === 'queued'
-                                                        ? 'bg-gradient-to-br from-purple-500/20 to-purple-600/20 border border-purple-500/30'
-                                                        : 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30'
+                                                    ? 'bg-gradient-to-br from-purple-500/20 to-purple-600/20 border border-purple-500/30'
+                                                    : 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30'
                                                     }`}>
                                                     {s.status === 'queued' ? '🕐' : '⚡'}
                                                 </div>
@@ -293,8 +302,8 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                     </p>
                                                     <div className="flex items-center gap-2 mt-0.5">
                                                         <span className={`text-xs px-2 py-0.5 rounded ${s.status === 'queued'
-                                                                ? isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-700'
-                                                                : isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'
+                                                            ? isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-700'
+                                                            : isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'
                                                             }`}>
                                                             {s.status === 'queued' ? 'Đang chờ' : 'Đang tạo'}
                                                         </span>
@@ -318,8 +327,8 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                 <div className={`w-32 h-3 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
                                                     <div
                                                         className={`h-full transition-all duration-700 ${s.status === 'queued'
-                                                                ? 'bg-gradient-to-r from-purple-500 to-purple-400'
-                                                                : 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-400'
+                                                            ? 'bg-gradient-to-r from-purple-500 to-purple-400'
+                                                            : 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-400'
                                                             }`}
                                                         style={{ width: `${s.progress}%` }}
                                                     />
@@ -333,12 +342,12 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                 <div
                                                     key={scene.id}
                                                     className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs ${scene.status === 'completed'
-                                                            ? isDark ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-emerald-100 text-emerald-700'
-                                                            : scene.status === 'generating'
-                                                                ? isDark ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse' : 'bg-amber-100 text-amber-700'
-                                                                : scene.status === 'failed'
-                                                                    ? isDark ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-red-100 text-red-700'
-                                                                    : isDark ? 'bg-white/5 text-slate-500 border border-white/10' : 'bg-slate-100 text-slate-500'
+                                                        ? isDark ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-emerald-100 text-emerald-700'
+                                                        : scene.status === 'generating'
+                                                            ? isDark ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse' : 'bg-amber-100 text-amber-700'
+                                                            : scene.status === 'failed'
+                                                                ? isDark ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-red-100 text-red-700'
+                                                                : isDark ? 'bg-white/5 text-slate-500 border border-white/10' : 'bg-slate-100 text-slate-500'
                                                         }`}
                                                 >
                                                     <span>
