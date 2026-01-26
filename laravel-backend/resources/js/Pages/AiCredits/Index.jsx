@@ -1,10 +1,18 @@
 import { useState } from 'react';
-import { Link, router, usePage } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '../../Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useToast } from '@/Components/Layout/ToastProvider';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
+import {
+    PageHeader,
+    SectionHeader,
+    GlassCard,
+    GlassCardStat,
+    Badge,
+    Button,
+} from '@/Components/UI';
 
 export default function AiCreditsIndex({ packages = [], currentCredits = 0, walletBalance = 0 }) {
     const { t } = useTranslation();
@@ -46,62 +54,58 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
         maximumFractionDigits: 0,
     }).format(amount);
 
+    const usageInfo = [
+        { icon: '🖼️', title: t('ai_studio.image_generation'), desc: t('ai_credits.cost_per_image') },
+        { icon: '🎬', title: t('ai_studio.video_generation'), desc: t('ai_credits.cost_per_video') },
+    ];
+
     return (
         <AppLayout title={t('ai_credits.title')}>
             <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
                 <div className="max-w-[1000px] mx-auto px-6 py-6">
                     {/* Header */}
-                    <div className="mb-8">
-                        <h1 className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            {t('ai_credits.title')}
-                        </h1>
-                        <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                            {t('ai_credits.description')}
-                        </p>
-                    </div>
+                    <PageHeader
+                        title={t('ai_credits.title')}
+                        subtitle={t('ai_credits.description')}
+                    />
 
                     {/* Balance Cards */}
                     <div className="grid grid-cols-2 gap-4 mb-8">
-                        <div className={`p-5 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
-                            <p className={`text-xs font-medium ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('ai_credits.title')}</p>
-                            <p className={`text-3xl font-semibold mt-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                {formatNumber(currentCredits)}
-                            </p>
-                        </div>
-                        <div className={`p-5 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
-                            <p className={`text-xs font-medium ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('dashboard.stats.wallet_balance')}</p>
-                            <p className={`text-3xl font-semibold mt-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                {formatCurrency(walletBalance)}
-                            </p>
-                            <Link
-                                href="/topup"
-                                className={`text-sm mt-2 inline-block ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
-                            >
+                        <GlassCard gradient="purple" hover={false}>
+                            <GlassCardStat
+                                value={formatNumber(currentCredits)}
+                                label={t('ai_credits.title')}
+                            />
+                        </GlassCard>
+                        <GlassCard gradient="blue" hover={false}>
+                            <GlassCardStat
+                                value={formatCurrency(walletBalance)}
+                                label={t('dashboard.stats.wallet_balance')}
+                            />
+                            <Button href="/topup" variant="ghost" size="sm" className="mt-2">
                                 {t('topup.title')} →
-                            </Link>
-                        </div>
+                            </Button>
+                        </GlassCard>
                     </div>
 
                     {/* Packages */}
-                    <h2 className={`text-sm font-medium uppercase tracking-wider mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        {t('ai_credits.packages')}
-                    </h2>
+                    <SectionHeader title={t('ai_credits.packages')} />
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                         {packages.map((pkg) => (
-                            <div
+                            <GlassCard
                                 key={pkg.id}
-                                className={`p-5 rounded-xl transition-all ${pkg.is_featured
-                                    ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
-                                    : isDark ? 'bg-[#1a1a1a] hover:bg-[#222]' : 'bg-white border border-gray-200 hover:border-gray-300'
-                                    }`}
+                                gradient={pkg.is_featured ? 'purple' : 'gray'}
+                                hover
+                                className={pkg.is_featured ? (isDark ? 'bg-white text-black' : 'bg-gray-900 text-white') : ''}
                             >
                                 {pkg.badge && (
-                                    <span className={`text-xs font-medium px-2 py-0.5 rounded mb-2 inline-block ${pkg.is_featured
-                                        ? isDark ? 'bg-black/10' : 'bg-white/20'
-                                        : isDark ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-50 text-purple-600'
-                                        }`}>
+                                    <Badge
+                                        variant={pkg.is_featured ? 'default' : 'purple'}
+                                        size="sm"
+                                        className="mb-2"
+                                    >
                                         {pkg.badge}
-                                    </span>
+                                    </Badge>
                                 )}
 
                                 <h3 className={`text-lg font-semibold ${pkg.is_featured ? '' : isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -112,7 +116,7 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
                                     <span className={`text-3xl font-semibold ${pkg.is_featured ? '' : isDark ? 'text-white' : 'text-gray-900'}`}>
                                         {formatNumber(pkg.credits)}
                                     </span>
-                                    <span className={`text-sm ml-1 ${pkg.is_featured ? (isDark ? 'text-black/60' : 'text-white/60') : isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                    <span className={`text-sm ml-1 opacity-60`}>
                                         credits
                                     </span>
                                 </div>
@@ -122,62 +126,47 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
                                         {pkg.formatted_price}
                                     </span>
                                     {pkg.original_price && (
-                                        <span className={`text-sm line-through ${pkg.is_featured ? (isDark ? 'text-black/40' : 'text-white/40') : isDark ? 'text-gray-600' : 'text-gray-300'}`}>
+                                        <span className="text-sm line-through opacity-40">
                                             {pkg.formatted_original_price}
                                         </span>
                                     )}
                                 </div>
 
                                 {pkg.discount_percent && (
-                                    <p className={`text-sm mb-3 ${pkg.is_featured ? (isDark ? 'text-black/60' : 'text-white/60') : isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                                    <p className={`text-sm mb-3 ${pkg.is_featured ? 'opacity-60' : 'text-emerald-500'}`}>
                                         {t('packages.save_percent', { percent: pkg.discount_percent })}
                                     </p>
                                 )}
 
-                                <button
+                                <Button
                                     onClick={() => handlePurchase(pkg)}
                                     disabled={processing}
-                                    className={`w-full py-2.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 ${pkg.is_featured
-                                        ? isDark ? 'bg-black text-white hover:bg-gray-900' : 'bg-white text-gray-900 hover:bg-gray-100'
-                                        : isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'
-                                        }`}
+                                    variant={pkg.is_featured ? (isDark ? 'secondary' : 'primary') : (isDark ? 'primary' : 'secondary')}
+                                    className="w-full"
                                 >
                                     {processing ? t('packages.processing') : t('ai_credits.buy_now')}
-                                </button>
-                            </div>
+                                </Button>
+                            </GlassCard>
                         ))}
                     </div>
 
                     {/* Usage Info */}
-                    <div className={`p-5 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
-                        <h3 className={`text-sm font-medium uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {t('ai_credits.credit_usage')}
-                        </h3>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-100'}`}>
-                                    <svg className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
+                    <GlassCard gradient="gray" hover={false}>
+                        <SectionHeader title={t('ai_credits.credit_usage')} className="mb-0" />
+                        <div className="grid grid-cols-2 gap-4 mt-3">
+                            {usageInfo.map((item, i) => (
+                                <div key={i} className="flex items-center gap-3">
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-100'}`}>
+                                        <span>{item.icon}</span>
+                                    </div>
+                                    <div>
+                                        <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.title}</p>
+                                        <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{item.desc}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('ai_studio.image_generation')}</p>
-                                    <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('ai_credits.cost_per_image')}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-100'}`}>
-                                    <svg className={`w-4 h-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('ai_studio.video_generation')}</p>
-                                    <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('ai_credits.cost_per_video')}</p>
-                                </div>
-                            </div>
+                            ))}
                         </div>
-                    </div>
+                    </GlassCard>
                 </div>
             </div>
         </AppLayout>
