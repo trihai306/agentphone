@@ -336,11 +336,15 @@ Chia thành 3-8 cảnh (tối đa 10). Mỗi cảnh PHẢI có:
 - Music mood suggestion
 
 ### 3. PROMPT ENGINEERING CHO AI VIDEO
-Prompt tiếng Anh PHẢI:
-- Bắt đầu bằng style keyword: "Cinematic 4K footage of..."
-- Mô tả camera movement cụ thể
-- Chỉ định lighting và mood
-- Kết thúc bằng: "shot on ARRI Alexa, 24fps, shallow depth of field"
+Prompt tiếng Anh PHẢI PHÙ HỢP với phong cách và nền tảng đã chọn:
+
+- **Với Cinematic/Commercial**: "Cinematic footage of...", camera movements elaborate, "shot on professional camera"
+- **Với TikTok/Social**: Ngắn gọn, punchy, KHÔNG cần "4K", "ARRI Alexa". Focus on action và visual hook
+- **Với Documentary**: "Documentary-style footage", natural lighting, handheld feel
+- **Với Minimal**: Simple descriptions, clean backgrounds, minimal movement
+- **Với Storytelling**: Emotional descriptions, focus on character expressions
+
+KHÔNG phải lúc nào cũng dùng "4K", "ARRI Alexa", "anamorphic lens" - chỉ dùng khi phù hợp với phong cách.
 
 ### 4. CHARACTER CONSISTENCY
 Nếu có nhân vật xuất hiện nhiều cảnh:
@@ -358,11 +362,11 @@ Nếu có nhân vật xuất hiện nhiều cảnh:
     {
       "order": 1,
       "description": "Mô tả ngắn gọn bằng tiếng Việt (1-2 câu)",
-      "prompt": "Cinematic 4K footage of [detailed scene description]. Camera [specific movement]. Lighting: [type]. Color grade: [style]. Shot on ARRI Alexa Mini, 24fps, anamorphic lens, shallow depth of field.",
+      "prompt": "[Prompt phù hợp với style đã chọn - KHÔNG hardcode 4K/ARRI cho mọi style]",
       {$durationNote},
-      "camera_movement": "dolly in slowly",
+      "camera_movement": "movement phù hợp với style",
       "transition_to_next": "dissolve",
-      "audio_cue": "soft piano begins"
+      "audio_cue": "ambient sound or music"
     }
   ],
   "total_duration": 25,
@@ -370,7 +374,7 @@ Nếu có nhân vật xuất hiện nhiều cảnh:
 }
 
 ## QUY TẮC BẮT BUỘC
-1. Prompt PHẢI bằng tiếng Anh, professional terminology
+1. Prompt PHẢI bằng tiếng Anh, terminology PHÙ HỢP với style đã chọn
 2. Mỗi cảnh 4-15 giây, tổng video không quá 2 phút
 3. Consistent character descriptions
 4. Smooth visual transitions
