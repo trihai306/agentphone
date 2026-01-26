@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { usePage, router } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+import { router } from '@inertiajs/react';
 
 /**
  * PageTransition - Provides smooth page transition animations
@@ -8,8 +8,6 @@ import { usePage, router } from '@inertiajs/react';
 export default function PageTransition({ children }) {
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [displayChildren, setDisplayChildren] = useState(children);
-    const previousPathRef = useRef('');
-    const { url } = usePage();
 
     // Listen for Inertia navigation events
     useEffect(() => {
@@ -26,12 +24,12 @@ export default function PageTransition({ children }) {
         };
 
         // Register Inertia event listeners
-        router.on('start', handleStart);
-        router.on('finish', handleFinish);
+        const removeStart = router.on('start', handleStart);
+        const removeFinish = router.on('finish', handleFinish);
 
         return () => {
-            router.off('start', handleStart);
-            router.off('finish', handleFinish);
+            removeStart();
+            removeFinish();
         };
     }, [children]);
 
@@ -97,3 +95,4 @@ export default function PageTransition({ children }) {
         </>
     );
 }
+
