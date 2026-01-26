@@ -88,21 +88,21 @@ export default function TabHistory() {
 
             let newTabs;
             if (existingIndex !== -1) {
-                // Move existing tab to end (most recent)
-                newTabs = [
-                    ...prevTabs.slice(0, existingIndex),
-                    ...prevTabs.slice(existingIndex + 1),
-                    { ...pageInfo, lastVisited: Date.now() }
-                ];
+                // Tab exists - keep it in same position, just update lastVisited
+                newTabs = prevTabs.map((tab, index) =>
+                    index === existingIndex
+                        ? { ...tab, lastVisited: Date.now() }
+                        : tab
+                );
             } else {
-                // Add new tab
+                // Add new tab at the end
                 newTabs = [
                     ...prevTabs,
                     { ...pageInfo, lastVisited: Date.now() }
                 ];
             }
 
-            // Limit to max tabs
+            // Limit to max tabs (remove oldest from beginning)
             if (newTabs.length > MAX_TABS) {
                 newTabs = newTabs.slice(-MAX_TABS);
             }
@@ -149,12 +149,12 @@ export default function TabHistory() {
                                 key={tab.path}
                                 href={tab.path}
                                 className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all max-w-[180px] ${isActive
-                                        ? isDark
-                                            ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
-                                            : 'bg-violet-50 text-violet-700 border border-violet-200'
-                                        : isDark
-                                            ? 'text-slate-400 hover:text-white hover:bg-white/5'
-                                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                                    ? isDark
+                                        ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
+                                        : 'bg-violet-50 text-violet-700 border border-violet-200'
+                                    : isDark
+                                        ? 'text-slate-400 hover:text-white hover:bg-white/5'
+                                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                                     }`}
                             >
                                 <span className="text-sm flex-shrink-0">{tab.icon}</span>
@@ -164,8 +164,8 @@ export default function TabHistory() {
                                 <button
                                     onClick={(e) => closeTab(e, tab.path)}
                                     className={`ml-1 p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity ${isDark
-                                            ? 'hover:bg-white/10 text-slate-500 hover:text-white'
-                                            : 'hover:bg-slate-200 text-slate-400 hover:text-slate-700'
+                                        ? 'hover:bg-white/10 text-slate-500 hover:text-white'
+                                        : 'hover:bg-slate-200 text-slate-400 hover:text-slate-700'
                                         }`}
                                 >
                                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -182,8 +182,8 @@ export default function TabHistory() {
                     <button
                         onClick={clearAllTabs}
                         className={`flex-shrink-0 p-1.5 rounded-lg text-xs transition-colors ${isDark
-                                ? 'text-slate-500 hover:text-white hover:bg-white/5'
-                                : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
+                            ? 'text-slate-500 hover:text-white hover:bg-white/5'
+                            : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
                             }`}
                         title="Đóng tất cả tabs"
                     >
