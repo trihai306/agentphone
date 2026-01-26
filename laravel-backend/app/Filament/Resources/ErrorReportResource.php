@@ -107,7 +107,9 @@ class ErrorReportResource extends Resource
 
                                 Forms\Components\Select::make('assigned_to')
                                     ->label('Phân công cho')
-                                    ->options(fn() => User::role(['super_admin', 'admin'])->pluck('name', 'id'))
+                                    ->options(fn() => User::whereHas('roles', function ($q) {
+                                        $q->whereIn('name', ['super_admin', 'admin']);
+                                    })->pluck('name', 'id'))
                                     ->searchable()
                                     ->nullable(),
                             ]),
@@ -195,7 +197,9 @@ class ErrorReportResource extends Resource
 
                 Tables\Filters\SelectFilter::make('assigned_to')
                     ->label('Phân công')
-                    ->options(fn() => User::role(['super_admin', 'admin'])->pluck('name', 'id'))
+                    ->options(fn() => User::whereHas('roles', function ($q) {
+                        $q->whereIn('name', ['super_admin', 'admin']);
+                    })->pluck('name', 'id'))
                     ->searchable(),
             ])
             ->actions([
