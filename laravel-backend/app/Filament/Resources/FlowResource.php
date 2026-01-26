@@ -66,19 +66,19 @@ class FlowResource extends Resource
                     ->schema([
                         Forms\Components\Placeholder::make('nodes_count')
                             ->label('Số lượng Nodes')
-                            ->content(fn (?Flow $record): string => $record ? $record->nodes()->count() . ' nodes' : '0 nodes'),
+                            ->content(fn(?Flow $record): string => $record ? $record->nodes()->count() . ' nodes' : '0 nodes'),
 
                         Forms\Components\Placeholder::make('edges_count')
                             ->label('Số lượng Edges')
-                            ->content(fn (?Flow $record): string => $record ? $record->edges()->count() . ' edges' : '0 edges'),
+                            ->content(fn(?Flow $record): string => $record ? $record->edges()->count() . ' edges' : '0 edges'),
 
                         Forms\Components\Placeholder::make('created_at')
                             ->label('Ngày tạo')
-                            ->content(fn (?Flow $record): string => $record?->created_at?->format('d/m/Y H:i') ?? '-'),
+                            ->content(fn(?Flow $record): string => $record?->created_at?->format('d/m/Y H:i') ?? '-'),
 
                         Forms\Components\Placeholder::make('updated_at')
                             ->label('Cập nhật lần cuối')
-                            ->content(fn (?Flow $record): string => $record?->updated_at?->format('d/m/Y H:i') ?? '-'),
+                            ->content(fn(?Flow $record): string => $record?->updated_at?->format('d/m/Y H:i') ?? '-'),
                     ])
                     ->columns(4)
                     ->hiddenOn('create'),
@@ -111,7 +111,7 @@ class FlowResource extends Resource
                         'success' => 'active',
                         'warning' => 'archived',
                     ])
-                    ->formatStateUsing(fn (string $state): string => match($state) {
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
                         'draft' => 'Nháp',
                         'active' => 'Hoạt động',
                         'archived' => 'Lưu trữ',
@@ -149,7 +149,7 @@ class FlowResource extends Resource
 
                 Tables\Filters\Filter::make('is_template')
                     ->label('Chỉ hiện Template')
-                    ->query(fn (Builder $query): Builder => $query->where('is_template', true)),
+                    ->query(fn(Builder $query): Builder => $query->where('is_template', true)),
 
                 Tables\Filters\SelectFilter::make('user_id')
                     ->label('Người tạo')
@@ -162,7 +162,7 @@ class FlowResource extends Resource
                     ->label('Mở Editor')
                     ->icon('heroicon-o-pencil-square')
                     ->color('primary')
-                    ->url(fn (Flow $record): string => route('flows.edit', $record->id))
+                    ->url(fn(Flow $record): string => route('flows.edit', $record->id))
                     ->openUrlInNewTab(),
 
                 Tables\Actions\EditAction::make(),
@@ -170,6 +170,8 @@ class FlowResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    \pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction::make()
+                        ->label('Xuất Excel'),
                     Tables\Actions\DeleteBulkAction::make(),
 
                     Tables\Actions\BulkAction::make('update_status')
@@ -186,7 +188,7 @@ class FlowResource extends Resource
                                 ->required(),
                         ])
                         ->action(function (array $data, $records): void {
-                            $records->each(fn ($record) => $record->update(['status' => $data['status']]));
+                            $records->each(fn($record) => $record->update(['status' => $data['status']]));
                         }),
                 ]),
             ]);
