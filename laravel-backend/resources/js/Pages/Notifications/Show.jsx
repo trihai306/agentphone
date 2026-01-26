@@ -1,6 +1,12 @@
-import { Link, router } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
+import {
+    PageHeader,
+    GlassCard,
+    Button,
+    Badge,
+} from '@/Components/UI';
 
 export default function Show({ notification }) {
     const { theme } = useTheme();
@@ -12,14 +18,14 @@ export default function Show({ notification }) {
         });
     };
 
-    const getTypeStyle = () => {
-        const styles = {
-            success: isDark ? 'text-emerald-400' : 'text-emerald-600',
-            warning: isDark ? 'text-amber-400' : 'text-amber-600',
-            error: isDark ? 'text-red-400' : 'text-red-600',
-            info: isDark ? 'text-blue-400' : 'text-blue-600',
+    const getTypeVariant = () => {
+        const variants = {
+            success: 'success',
+            warning: 'warning',
+            error: 'danger',
+            info: 'primary',
         };
-        return styles[notification.type] || styles.info;
+        return variants[notification.type] || 'primary';
     };
 
     return (
@@ -27,26 +33,17 @@ export default function Show({ notification }) {
             <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
                 <div className="max-w-[600px] mx-auto px-6 py-6">
                     {/* Header */}
-                    <div className="flex items-center gap-4 mb-6">
-                        <Link
-                            href="/notifications"
-                            className={`p-2 rounded-lg ${isDark ? 'hover:bg-[#1a1a1a]' : 'hover:bg-gray-100'}`}
-                        >
-                            <svg className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </Link>
-                        <h1 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            Notification
-                        </h1>
-                    </div>
+                    <PageHeader
+                        title="Notification"
+                        backHref="/notifications"
+                    />
 
                     {/* Content */}
-                    <div className={`p-6 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
+                    <GlassCard gradient="gray" hover={false}>
                         <div className="mb-4">
-                            <span className={`text-xs font-medium uppercase ${getTypeStyle()}`}>
+                            <Badge variant={getTypeVariant()} size="sm">
                                 {notification.type}
-                            </span>
+                            </Badge>
                         </div>
 
                         <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -58,27 +55,22 @@ export default function Show({ notification }) {
                         </p>
 
                         {notification.action_url && (
-                            <a
-                                href={notification.action_url}
-                                className={`inline-block mt-6 px-4 py-2 text-sm font-medium rounded-lg ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'
-                                    }`}
-                            >
-                                {notification.action_text || 'View Details'} →
-                            </a>
+                            <div className="mt-6">
+                                <Button href={notification.action_url}>
+                                    {notification.action_text || 'View Details'} →
+                                </Button>
+                            </div>
                         )}
 
                         <div className={`flex items-center justify-between mt-6 pt-6 border-t ${isDark ? 'border-[#2a2a2a]' : 'border-gray-100'}`}>
                             <span className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
                                 {new Date(notification.created_at).toLocaleString()}
                             </span>
-                            <button
-                                onClick={handleDelete}
-                                className={`text-sm ${isDark ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-700'}`}
-                            >
+                            <Button variant="danger" size="sm" onClick={handleDelete}>
                                 Delete
-                            </button>
+                            </Button>
                         </div>
-                    </div>
+                    </GlassCard>
                 </div>
             </div>
         </AppLayout>
