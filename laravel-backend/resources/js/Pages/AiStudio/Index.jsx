@@ -866,6 +866,17 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                     )}
                                 </div>
                             </div>
+
+                            {/* Right Panel - Jobs Queue */}
+                            <div className="w-[280px] flex-shrink-0 p-4">
+                                <div className="sticky top-6">
+                                    <JobsQueuePanel
+                                        activeGenerations={activeGenerations}
+                                        activeScenarios={activeScenarios}
+                                        isDark={isDark}
+                                    />
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
