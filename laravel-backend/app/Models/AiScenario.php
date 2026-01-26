@@ -40,6 +40,7 @@ class AiScenario extends Model
     // Status constants
     const STATUS_DRAFT = 'draft';
     const STATUS_PARSED = 'parsed';
+    const STATUS_QUEUED = 'queued';
     const STATUS_GENERATING = 'generating';
     const STATUS_COMPLETED = 'completed';
     const STATUS_FAILED = 'failed';
@@ -208,6 +209,7 @@ class AiScenario extends Model
         return match ($this->status) {
             self::STATUS_DRAFT => 'gray',
             self::STATUS_PARSED => 'blue',
+            self::STATUS_QUEUED => 'purple',
             self::STATUS_GENERATING => 'yellow',
             self::STATUS_COMPLETED => 'green',
             self::STATUS_FAILED => 'red',

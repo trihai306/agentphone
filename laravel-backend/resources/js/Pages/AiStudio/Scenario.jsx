@@ -252,8 +252,8 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                             key={tab.id}
                                             onClick={() => setActiveTab(tab.id)}
                                             className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id
-                                                    ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25'
-                                                    : isDark ? 'text-slate-400 hover:text-white hover:bg-white/5' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                                                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25'
+                                                : isDark ? 'text-slate-400 hover:text-white hover:bg-white/5' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
                                                 }`}
                                         >
                                             {tab.label}
@@ -274,8 +274,8 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                         placeholder="Ví dụ: Cảnh 1: Ánh bình minh chiếu rọi thành phố. Cảnh 2: Một cô gái trẻ đang chạy bộ trong công viên..."
                                         rows={12}
                                         className={`w-full px-4 py-4 rounded-xl border text-sm resize-none transition-all focus:ring-2 focus:ring-violet-500/50 ${isDark
-                                                ? 'bg-black/30 border-white/10 text-white placeholder-slate-600 focus:border-violet-500/50'
-                                                : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-violet-500'
+                                            ? 'bg-black/30 border-white/10 text-white placeholder-slate-600 focus:border-violet-500/50'
+                                            : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-violet-500'
                                             }`}
                                     />
                                     <div className="flex items-center justify-between mt-3">
@@ -303,8 +303,8 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                     key={type}
                                                     onClick={() => { setOutputType(type); setModel(''); }}
                                                     className={`flex-1 py-3 text-sm font-medium rounded-lg transition-all ${outputType === type
-                                                            ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg'
-                                                            : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+                                                        ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg'
+                                                        : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
                                                         }`}
                                                 >
                                                     {type === 'video' ? '🎬 Video' : '🖼️ Ảnh'}
@@ -322,8 +322,8 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                             value={model}
                                             onChange={(e) => setModel(e.target.value)}
                                             className={`w-full px-4 py-3 rounded-xl border text-sm transition-all ${isDark
-                                                    ? 'bg-black/30 border-white/10 text-white'
-                                                    : 'bg-white border-slate-200 text-slate-900'
+                                                ? 'bg-black/30 border-white/10 text-white'
+                                                : 'bg-white border-slate-200 text-slate-900'
                                                 }`}
                                         >
                                             {models.filter(m => m.enabled && !m.coming_soon).map((m) => (
@@ -345,8 +345,8 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                     key={s.id}
                                                     onClick={() => setStyle(s.id)}
                                                     className={`p-3 rounded-xl text-center transition-all ${style === s.id
-                                                            ? 'bg-gradient-to-br from-violet-600/20 to-indigo-600/20 border-2 border-violet-500'
-                                                            : isDark ? 'bg-black/20 border border-white/5 hover:border-white/20' : 'bg-slate-50 border border-slate-200 hover:border-slate-300'
+                                                        ? 'bg-gradient-to-br from-violet-600/20 to-indigo-600/20 border-2 border-violet-500'
+                                                        : isDark ? 'bg-black/20 border border-white/5 hover:border-white/20' : 'bg-slate-50 border border-slate-200 hover:border-slate-300'
                                                         }`}
                                                 >
                                                     <span className="text-xl">{s.icon}</span>
@@ -367,8 +367,8 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                     key={p.id}
                                                     onClick={() => setPlatform(p.id)}
                                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${platform === p.id
-                                                            ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white'
-                                                            : isDark ? 'bg-white/5 text-slate-400 hover:bg-white/10' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                                        ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white'
+                                                        : isDark ? 'bg-white/5 text-slate-400 hover:bg-white/10' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                                         }`}
                                                 >
                                                     {p.icon} {p.name}
@@ -474,8 +474,8 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                     onClick={handleParse}
                                     disabled={parsing || script.length < 10}
                                     className={`w-full py-4 rounded-2xl font-semibold text-base transition-all ${!parsing && script.length >= 10
-                                            ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-xl shadow-violet-500/30 hover:shadow-violet-500/50 hover:scale-[1.02]'
-                                            : isDark ? 'bg-white/5 text-slate-600 cursor-not-allowed' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                        ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-xl shadow-violet-500/30 hover:shadow-violet-500/50 hover:scale-[1.02]'
+                                        : isDark ? 'bg-white/5 text-slate-600 cursor-not-allowed' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                         }`}
                                 >
                                     {parsing ? (
@@ -557,9 +557,9 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                 <div key={scene.id || index} className="relative pl-14">
                                                     {/* Timeline Dot */}
                                                     <div className={`absolute left-4 top-6 w-5 h-5 rounded-full border-4 ${scene.status === 'completed' ? 'bg-emerald-500 border-emerald-500/30' :
-                                                            scene.status === 'generating' ? 'bg-amber-500 border-amber-500/30 animate-pulse' :
-                                                                scene.status === 'failed' ? 'bg-rose-500 border-rose-500/30' :
-                                                                    isDark ? 'bg-slate-700 border-slate-600' : 'bg-slate-300 border-slate-200'
+                                                        scene.status === 'generating' ? 'bg-amber-500 border-amber-500/30 animate-pulse' :
+                                                            scene.status === 'failed' ? 'bg-rose-500 border-rose-500/30' :
+                                                                isDark ? 'bg-slate-700 border-slate-600' : 'bg-slate-300 border-slate-200'
                                                         }`} />
 
                                                     {/* Card */}
@@ -569,8 +569,8 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                     >
                                                         <div className="flex items-start gap-4">
                                                             <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold ${scene.status === 'completed' ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white' :
-                                                                    scene.status === 'generating' ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white' :
-                                                                        isDark ? 'bg-gradient-to-br from-violet-600/30 to-indigo-600/30 text-violet-300' : 'bg-gradient-to-br from-violet-100 to-indigo-100 text-violet-700'
+                                                                scene.status === 'generating' ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white' :
+                                                                    isDark ? 'bg-gradient-to-br from-violet-600/30 to-indigo-600/30 text-violet-300' : 'bg-gradient-to-br from-violet-100 to-indigo-100 text-violet-700'
                                                                 }`}>
                                                                 {scene.status === 'completed' ? '✓' : scene.status === 'generating' ? '⏳' : scene.order}
                                                             </div>
@@ -662,8 +662,8 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                             onClick={handleGenerate}
                                             disabled={currentCredits < totalCredits}
                                             className={`px-8 py-3 rounded-xl font-semibold transition-all ${currentCredits >= totalCredits
-                                                    ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-xl shadow-violet-500/30 hover:shadow-violet-500/50 hover:scale-[1.02]'
-                                                    : isDark ? 'bg-white/5 text-slate-600 cursor-not-allowed' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-xl shadow-violet-500/30 hover:shadow-violet-500/50 hover:scale-[1.02]'
+                                                : isDark ? 'bg-white/5 text-slate-600 cursor-not-allowed' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                                 }`}
                                         >
                                             🚀 Tạo {scenes.length} Video
@@ -686,14 +686,14 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                             </div>
                                             <div>
                                                 <p className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                                    {scenario.status === 'generating' ? 'Đang tạo video...' : scenario.status === 'completed' ? '✅ Hoàn thành!' : '⚠️ Hoàn thành một phần'}
+                                                    {scenario.status === 'queued' ? '🕐 Đang chờ trong hàng đợi...' : scenario.status === 'generating' ? 'Đang tạo video...' : scenario.status === 'completed' ? '✅ Hoàn thành!' : '⚠️ Hoàn thành một phần'}
                                                 </p>
                                                 <p className={`text-sm ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
-                                                    {scenario.completed_scenes} / {scenario.total_scenes} scenes
+                                                    {scenario.status === 'queued' ? 'Các cảnh sẽ được tạo tuần tự' : `${scenario.completed_scenes} / ${scenario.total_scenes} scenes`}
                                                 </p>
                                             </div>
                                         </div>
-                                        {scenario.status !== 'generating' && (
+                                        {!['generating', 'queued'].includes(scenario.status) && (
                                             <button
                                                 onClick={handleReset}
                                                 className="px-6 py-2.5 rounded-xl font-medium bg-gradient-to-r from-violet-600 to-indigo-600 text-white"

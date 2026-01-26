@@ -185,18 +185,31 @@ class AiScenarioController extends Controller
     }
 
     /**
-     * Generate all scenes
+     * Generate all scenes - dispatches job for sequential processing with frame chaining
      */
     public function generateAll(AiScenario $scenario)
     {
         $this->authorize('update', $scenario);
 
         try {
-            $scenario = $this->scenarioService->generateAll($scenario);
+            // Validate credits before dispatching
+            $user = $scenario->user;
+            if (!$user->hasEnoughCredits($scenario->total_credits)) {
+                return response()->json([
+                    'success' => false,
+                    'error' => "Insufficient credits. Required: {$scenario->total_credits}, Available: {$user->ai_credits}",
+                ], 422);
+            }
+
+            // Set status to queued and dispatch job
+            $scenario->update(['status' => AiScenario::STATUS_QUEUED]);
+
+            \App\Jobs\GenerateScenarioJob::dispatch($scenario);
 
             return response()->json([
                 'success' => true,
-                'scenario' => $this->formatScenario($scenario),
+                'scenario' => $this->formatScenario($scenario->fresh()),
+                'message' => 'Video generation queued. Scenes will be processed sequentially.',
             ]);
         } catch (\Exception $e) {
             return response()->json([
