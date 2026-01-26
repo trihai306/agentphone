@@ -30,78 +30,118 @@ export default function Index() {
                 structuredData={structuredData}
             />
 
-            {/* Hero Section - Professional Minimal */}
-            <section className="relative min-h-[95vh] flex items-center overflow-hidden bg-white dark:bg-black">
-                {/* Subtle Grid Pattern */}
-                <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" style={{
-                    backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
-                    backgroundSize: '40px 40px'
-                }}></div>
+            {/* Hero Section - Enterprise AI SaaS 2026 */}
+            <section className="relative min-h-[95vh] flex items-center overflow-hidden bg-white dark:bg-[#030308]">
+                {/* Animated Neural Network Grid */}
+                <div className="absolute inset-0 overflow-hidden">
+                    <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.08]" style={{
+                        backgroundImage: `
+                            linear-gradient(rgba(99, 102, 241, 0.3) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(99, 102, 241, 0.3) 1px, transparent 1px)
+                        `,
+                        backgroundSize: '60px 60px'
+                    }}></div>
+                </div>
 
-                {/* Minimal Ambient Glow - Only in Dark Mode */}
+                {/* Floating Particles - AI Aesthetic */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    {[...Array(40)].map((_, i) => (
+                        <div
+                            key={i}
+                            className="absolute rounded-full animate-float-slow"
+                            style={{
+                                width: `${2 + Math.random() * 4}px`,
+                                height: `${2 + Math.random() * 4}px`,
+                                left: `${Math.random() * 100}%`,
+                                top: `${Math.random() * 100}%`,
+                                background: `radial-gradient(circle, ${['#8B5CF6', '#3B82F6', '#06B6D4', '#EC4899'][Math.floor(Math.random() * 4)]}40, transparent)`,
+                                animationDelay: `${Math.random() * 8}s`,
+                                animationDuration: `${6 + Math.random() * 8}s`
+                            }}
+                        />
+                    ))}
+                </div>
+
+                {/* Gradient Mesh - Premium Ambient */}
                 <div className="absolute inset-0 overflow-hidden opacity-0 dark:opacity-100">
-                    <div className="absolute top-1/4 -left-32 w-[500px] h-[500px] bg-indigo-500/20 rounded-full blur-[120px]"></div>
-                    <div className="absolute bottom-1/4 -right-32 w-[500px] h-[500px] bg-slate-500/10 rounded-full blur-[120px]"></div>
+                    <div className="absolute top-0 left-1/4 w-[800px] h-[800px] bg-gradient-to-br from-purple-600/20 via-indigo-600/10 to-transparent rounded-full blur-[150px] animate-pulse-slow"></div>
+                    <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-gradient-to-tl from-cyan-500/15 via-blue-500/10 to-transparent rounded-full blur-[120px] animate-pulse-slow animation-delay-2000"></div>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-radial from-violet-500/10 to-transparent rounded-full blur-[100px]"></div>
+                </div>
+
+                {/* Light Mode Subtle Gradient */}
+                <div className="absolute inset-0 overflow-hidden opacity-100 dark:opacity-0">
+                    <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-indigo-100/50 via-purple-50/30 to-transparent rounded-full blur-[80px]"></div>
+                    <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-cyan-100/40 to-transparent rounded-full blur-[60px]"></div>
                 </div>
 
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
                     <div className="grid lg:grid-cols-2 gap-20 items-center">
                         {/* Left: Enhanced Content */}
                         <div className="text-center lg:text-left space-y-8">
-                            {/* Simple Badge */}
-                            <div className="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-full px-4 py-2">
-                                <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Startup 2026</span>
+                            {/* AI-Powered Badge with Glow */}
+                            <div className="inline-flex items-center gap-3 bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-900/80 dark:to-gray-800/50 border border-gray-200/80 dark:border-purple-500/30 rounded-full px-5 py-2.5 shadow-lg shadow-purple-500/0 dark:shadow-purple-500/20 backdrop-blur-xl">
+                                <span className="relative flex h-2.5 w-2.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-500 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-gradient-to-r from-purple-500 to-indigo-500"></span>
+                                </span>
+                                <span className="text-xs font-bold text-gray-700 dark:text-gray-200 tracking-wide">AI-POWERED AUTOMATION • 2026</span>
                             </div>
 
-                            {/* Hero Title - Clean Typography */}
-                            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 dark:text-white leading-[1.1] tracking-tight">
+                            {/* Hero Title with Gradient */}
+                            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-gray-900 dark:text-white leading-[1.05] tracking-tight">
                                 <span className="block">Tự Động Hoá</span>
-                                <span className="block mt-2 text-gray-900 dark:text-white">
+                                <span className="block mt-2 bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 dark:from-purple-400 dark:via-indigo-400 dark:to-cyan-400 bg-clip-text text-transparent">
                                     Phone Farm
                                 </span>
-                                <span className="block text-4xl sm:text-5xl lg:text-6xl mt-3 text-gray-600 dark:text-gray-400 font-bold">
-                                    Như Người Thật
+                                <span className="block text-4xl sm:text-5xl lg:text-5xl mt-4 text-gray-500 dark:text-gray-400 font-bold">
+                                    Thông Minh Như AI
                                 </span>
                             </h1>
 
                             {/* Hero Description */}
                             <div className="max-w-2xl mx-auto lg:mx-0">
                                 <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 leading-relaxed">
-                                    Nền tảng kéo thả workflow chuyên nghiệp cho nuôi nick, test key, chăm sóc tài nguyên. Hoạt động 24/7 không cần giám sát.
+                                    Nền tảng <span className="font-semibold text-gray-900 dark:text-white">No-Code</span> kéo thả workflow chuyên nghiệp.
+                                    <span className="text-purple-600 dark:text-purple-400 font-medium"> Vision AI </span>
+                                    nhận diện UI, thao tác như người thật 24/7.
                                 </p>
                             </div>
 
-                            {/* Professional CTA Buttons */}
+                            {/* Premium CTA Buttons */}
                             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                                 <Link
                                     href="/register"
-                                    className="group inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-gray-900 dark:bg-white dark:text-gray-900 rounded-xl hover:bg-gray-800 dark:hover:bg-gray-100 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                                    className="group relative inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 rounded-2xl overflow-hidden transition-all duration-300 shadow-xl shadow-purple-500/25 hover:shadow-purple-500/40 hover:-translate-y-1"
                                 >
-                                    Dùng Thử Miễn Phí
-                                    <svg className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                    </svg>
+                                    <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-indigo-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                    <span className="relative flex items-center gap-2">
+                                        Dùng Thử Miễn Phí
+                                        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                        </svg>
+                                    </span>
                                 </Link>
                                 <Link
                                     href="/features"
-                                    className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-800 transition-all duration-200"
+                                    className="group inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-gray-900 dark:text-white bg-white/80 dark:bg-white/5 hover:bg-gray-50 dark:hover:bg-white/10 rounded-2xl border border-gray-200 dark:border-white/10 backdrop-blur-xl transition-all duration-300"
                                 >
+                                    <svg className="w-5 h-5 mr-2 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                                    </svg>
                                     Xem Demo
                                 </Link>
                             </div>
 
-                            {/* Trust Indicators */}
-                            <div className="flex flex-wrap items-center gap-6 justify-center lg:justify-start">
+                            {/* Trust Indicators with Icons */}
+                            <div className="flex flex-wrap items-center gap-6 justify-center lg:justify-start pt-4">
                                 {[
-                                    { text: "Không cần code" },
-                                    { text: "Setup 5 phút" },
-                                    { text: "Miễn phí 14 ngày" }
+                                    { icon: "⚡", text: "Setup 5 phút" },
+                                    { icon: "🎯", text: "Không cần code" },
+                                    { icon: "🎁", text: "Miễn phí 14 ngày" }
                                 ].map((item, i) => (
-                                    <div key={i} className="flex items-center gap-2">
-                                        <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                        </svg>
+                                    <div key={i} className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-white/5 rounded-full border border-gray-200/50 dark:border-white/10">
+                                        <span className="text-lg">{item.icon}</span>
                                         <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{item.text}</span>
                                     </div>
                                 ))}
@@ -114,31 +154,56 @@ export default function Index() {
                         </div>
                     </div>
                 </div>
+
+                {/* Bottom Gradient Fade */}
+                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-gray-50 dark:from-gray-950 to-transparent"></div>
             </section>
 
-            {/* Stats Section - Clean */}
-            <section className="py-16 bg-gray-50 dark:bg-gray-950 border-y border-gray-200 dark:border-gray-900">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Stats Section - Premium AI Dashboard */}
+            <section className="py-20 relative overflow-hidden">
+                {/* Gradient Background */}
+                <div className="absolute inset-0 bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-[#030308] dark:via-[#0a0a12] dark:to-[#030308]"></div>
+
+                {/* Subtle Pattern */}
+                <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.05]" style={{
+                    backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
+                    backgroundSize: '32px 32px'
+                }}></div>
+
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    {/* Section Header */}
+                    <div className="text-center mb-12">
+                        <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold bg-indigo-100 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-500/20 mb-4">
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                            LIVE METRICS
+                        </span>
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Hệ Thống Hoạt Động 24/7</h2>
+                    </div>
+
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                         <PremiumStatCard
                             number={activeDevices.toLocaleString()}
                             label="Thiết bị đang chạy"
                             icon="devices"
+                            gradient="from-purple-500 to-indigo-600"
                         />
                         <PremiumStatCard
                             number="99.9%"
                             label="Độ ổn định hệ thống"
                             icon="shield"
+                            gradient="from-green-500 to-emerald-600"
                         />
                         <PremiumStatCard
                             number={dailyActions.toLocaleString()}
                             label="Thao tác mỗi ngày"
                             icon="zap"
+                            gradient="from-amber-500 to-orange-600"
                         />
                         <PremiumStatCard
                             number="98%"
                             label="Tỷ lệ sống nick"
                             icon="heart"
+                            gradient="from-rose-500 to-pink-600"
                         />
                     </div>
                 </div>
@@ -454,8 +519,8 @@ function EnhancedPhoneFarmGrid() {
     );
 }
 
-// Simple Stat Card Component
-function PremiumStatCard({ number, label, icon }) {
+// Premium Stat Card Component with Gradient Support
+function PremiumStatCard({ number, label, icon, gradient = "from-purple-500 to-indigo-600" }) {
     const icons = {
         devices: "M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z",
         shield: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
@@ -464,22 +529,28 @@ function PremiumStatCard({ number, label, icon }) {
     };
 
     return (
-        <div className="text-center p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800">
-            {/* Icon */}
-            <div className="w-12 h-12 mx-auto bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={icons[icon]} />
-                </svg>
-            </div>
+        <div className="group relative card-shine">
+            {/* Glow Effect on Hover */}
+            <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-500`}></div>
 
-            {/* Number */}
-            <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1 tabular-nums">
-                {number}
-            </div>
+            {/* Card */}
+            <div className="relative text-center p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-800/50 shadow-lg shadow-gray-500/5 dark:shadow-black/20 group-hover:border-gray-300 dark:group-hover:border-gray-700 transition-all duration-300 group-hover:-translate-y-1">
+                {/* Icon with Gradient Background */}
+                <div className={`w-14 h-14 mx-auto bg-gradient-to-br ${gradient} rounded-xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={icons[icon]} />
+                    </svg>
+                </div>
 
-            {/* Label */}
-            <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                {label}
+                {/* Number with Gradient Text */}
+                <div className={`text-3xl sm:text-4xl font-black bg-gradient-to-r ${gradient} bg-clip-text text-transparent mb-1 tabular-nums`}>
+                    {number}
+                </div>
+
+                {/* Label */}
+                <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    {label}
+                </div>
             </div>
         </div>
     );
