@@ -9,6 +9,7 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n';
 import { ToastProvider } from './Components/Layout/ToastProvider';
 import { ConfirmProvider } from './Components/UI/ConfirmModal';
+import PageTransition from './Components/Layout/PageTransition';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -29,7 +30,9 @@ createInertiaApp({
                 <ThemeProvider>
                     <ToastProvider>
                         <ConfirmProvider>
-                            <App {...props} />
+                            <PageTransition>
+                                <App {...props} />
+                            </PageTransition>
                         </ConfirmProvider>
                     </ToastProvider>
                 </ThemeProvider>
@@ -37,8 +40,7 @@ createInertiaApp({
         );
     },
     progress: {
-        color: '#3B82F6',
+        color: '#8B5CF6',
         showSpinner: true,
     },
 });
-
