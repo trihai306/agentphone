@@ -868,12 +868,13 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                             </div>
 
                             {/* Right Panel - Jobs Queue */}
-                            <div className="w-[280px] flex-shrink-0 p-4">
-                                <div className="sticky top-6">
+                            <div className={`w-[320px] flex-shrink-0 border-l transition-colors ${themeClasses.border}`}>
+                                <div className="sticky top-0 h-screen overflow-y-auto p-4">
                                     <JobsQueuePanel
                                         activeGenerations={activeGenerations}
                                         activeScenarios={activeScenarios}
                                         isDark={isDark}
+                                        recentGenerations={history.slice(0, 5)}
                                     />
                                 </div>
                             </div>
