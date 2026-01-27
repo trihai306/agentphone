@@ -19,7 +19,7 @@ class GenerateVideoJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $timeout = 600; // 10 minutes max for video
+    public int $timeout = 180; // 3 minutes max for video
     public int $tries = 2; // Retry once on failure
 
     public function __construct(
@@ -49,7 +49,7 @@ class GenerateVideoJob implements ShouldQueue
             }
 
             // Poll for completion
-            $maxWaitTime = 540; // 9 minutes
+            $maxWaitTime = 170; // 2 minutes 50 seconds
             $startTime = time();
             $completed = false;
 

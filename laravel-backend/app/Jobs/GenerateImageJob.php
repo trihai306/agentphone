@@ -19,7 +19,7 @@ class GenerateImageJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $timeout = 300; // 5 minutes max
+    public int $timeout = 60; // 1 minute max
     public int $tries = 2; // Retry once on failure
 
     public function __construct(
@@ -42,7 +42,7 @@ class GenerateImageJob implements ShouldQueue
             $aiService->startImageGeneration($generation);
 
             // Poll for completion
-            $maxWaitTime = 240; // 4 minutes
+            $maxWaitTime = 50; // 50 seconds
             $startTime = time();
             $completed = false;
 
