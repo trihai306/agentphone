@@ -166,15 +166,6 @@ export default function NodeConfigPanel({
                     />
                 )}
 
-                {['ai_process', 'ai_call'].includes(nodeType) && (
-                    <AIConfig
-                        data={nodeData}
-                        updateData={updateData}
-                        isDark={isDark}
-                        upstreamVariables={upstreamVariables}
-                        loopContext={loopContext}
-                    />
-                )}
 
                 {nodeType === 'data_source' && (
                     <DataSourceConfig

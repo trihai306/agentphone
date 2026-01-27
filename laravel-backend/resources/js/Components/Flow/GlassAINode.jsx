@@ -64,7 +64,7 @@ function GlassAINode({ id, data, selected }) {
         <>
             <div
                 className={`group transition-all duration-300 ${selected ? 'scale-[1.02]' : ''} ${isRunning ? 'animate-pulse' : ''}`}
-                onDoubleClick={() => setIsModalOpen(true)}
+                onClick={() => setIsModalOpen(true)}
             >
                 {/* Input Handle - Left */}
                 <Handle
@@ -208,31 +208,18 @@ function GlassAINode({ id, data, selected }) {
                     )}
                 </div>
 
-                {/* Success Handle - Right Top */}
+                {/* Output Handle - Right */}
                 <Handle
                     type="source"
                     position={Position.Right}
-                    id="true"
+                    id="output"
                     className="!w-3 !h-3 !border-2 !rounded-full transition-transform hover:!scale-125"
                     style={{
-                        backgroundColor: isSuccess ? '#10b981' : (isDark ? '#065f46' : '#d1fae5'),
-                        borderColor: '#22c55e',
+                        backgroundColor: isSuccess ? '#10b981' : isError ? '#ef4444' : (isDark ? color : `${color}20`),
+                        borderColor: color,
                         right: '-6px',
-                        top: '35%',
-                    }}
-                />
-
-                {/* Error Handle - Right Bottom */}
-                <Handle
-                    type="source"
-                    position={Position.Right}
-                    id="false"
-                    className="!w-3 !h-3 !border-2 !rounded-full transition-transform hover:!scale-125"
-                    style={{
-                        backgroundColor: isError ? '#ef4444' : (isDark ? '#7f1d1d' : '#fee2e2'),
-                        borderColor: '#f87171',
-                        right: '-6px',
-                        top: '65%',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
                     }}
                 />
 
