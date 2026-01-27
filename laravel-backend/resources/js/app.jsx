@@ -25,6 +25,13 @@ createInertiaApp({
             i18n.changeLanguage(locale);
         }
 
+        // Initialize Echo if user is authenticated
+        const { auth } = props.initialPage.props;
+        if (auth?.user && typeof window.initializeEcho === 'function') {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]');
+            window.initializeEcho(csrfToken?.getAttribute('content'));
+        }
+
         root.render(
             <I18nextProvider i18n={i18n}>
                 <ThemeProvider>

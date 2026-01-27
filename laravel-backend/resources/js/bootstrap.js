@@ -23,48 +23,61 @@ const useTLS = pusherScheme === 'https';
 const pusherHost = import.meta.env.VITE_PUSHER_HOST || 'laravel-backend.test';
 const pusherPort = parseInt(import.meta.env.VITE_PUSHER_PORT || '6001');
 
-// Initialize Laravel Echo with Soketi configuration
-// CRITICAL: Override ALL hosts to prevent fallback to Pusher infrastructure
-window.Echo = new Echo({
-    broadcaster: 'pusher',
-    key: import.meta.env.VITE_PUSHER_APP_KEY || 'app-key',
+// Global Echo instance (null until initialized)
+window.Echo = null;
 
-    // WebSocket hosts - primary connection
-    wsHost: pusherHost,
-    wsPort: pusherPort,
-    wssPort: pusherPort,
+// Lazy initialization function - only call when user is authenticated
+window.initializeEcho = function (csrfToken) {
+    // Already initialized, return existing instance
+    if (window.Echo) {
+        return window.Echo;
+    }
 
-    // HTTP hosts - MUST be set for self-hosted Soketi to prevent fallback to Pusher
-    httpHost: pusherHost,
-    httpPort: pusherPort,
-    httpsPort: pusherPort,
+    // Initialize Laravel Echo with Soketi configuration
+    // CRITICAL: Override ALL hosts to prevent fallback to Pusher infrastructure
+    window.Echo = new Echo({
+        broadcaster: 'pusher',
+        key: import.meta.env.VITE_PUSHER_APP_KEY || 'app-key',
 
-    // Force TLS and transport settings
-    forceTLS: useTLS,
-    cluster: 'mt1', // Required but ignored when wsHost is set
+        // WebSocket hosts - primary connection
+        wsHost: pusherHost,
+        wsPort: pusherPort,
+        wssPort: pusherPort,
 
-    // Disable Pusher infrastructure features
-    enableStats: false,
-    enabledTransports: ['ws', 'wss'],
-    disabledTransports: ['sockjs'],
+        // HTTP hosts - MUST be set for self-hosted Soketi to prevent fallback to Pusher
+        httpHost: pusherHost,
+        httpPort: pusherPort,
+        httpsPort: pusherPort,
 
-    // Auth configuration
-    authEndpoint: '/broadcasting/auth',
-    auth: {
-        headers: {
-            'X-CSRF-TOKEN': csrfToken ? csrfToken.getAttribute('content') : '',
+        // Force TLS and transport settings
+        forceTLS: useTLS,
+        cluster: 'mt1', // Required but ignored when wsHost is set
+
+        // Disable Pusher infrastructure features
+        enableStats: false,
+        enabledTransports: ['ws', 'wss'],
+        disabledTransports: ['sockjs'],
+
+        // Auth configuration
+        authEndpoint: '/broadcasting/auth',
+        auth: {
+            headers: {
+                'X-CSRF-TOKEN': csrfToken || '',
+            },
         },
-    },
-});
+    });
 
-// Connection status handlers
-window.Echo.connector.pusher.connection.bind('connected', () => {
-    // Connected successfully
-});
-window.Echo.connector.pusher.connection.bind('error', (err) => {
-    console.error('❌ Soketi error:', err);
-});
-window.Echo.connector.pusher.connection.bind('disconnected', () => {
-    console.warn('⚠️ Soketi disconnected');
-});
+    // Connection status handlers
+    window.Echo.connector.pusher.connection.bind('connected', () => {
+        console.log('✅ WebSocket connected');
+    });
+    window.Echo.connector.pusher.connection.bind('error', (err) => {
+        console.error('❌ Soketi error:', err);
+    });
+    window.Echo.connector.pusher.connection.bind('disconnected', () => {
+        console.warn('⚠️ Soketi disconnected');
+    });
+
+    return window.Echo;
+};
 
