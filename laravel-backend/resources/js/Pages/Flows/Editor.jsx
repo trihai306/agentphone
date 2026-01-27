@@ -1022,6 +1022,8 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     }, [nodes, edges, debouncedSave]);
 
     const onNodeClick = useCallback((event, node) => {
+        // Don't set selectedNode for AI nodes - they handle their own modal
+        if (node.type?.toLowerCase() === 'ai_call') return;
         setSelectedNode(node);
     }, []);
 
