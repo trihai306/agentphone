@@ -3,6 +3,7 @@ import { router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '../../Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
+import WorkflowConfigPanel from '@/Components/Campaigns/WorkflowConfigPanel';
 
 // Quick Start Templates
 const TEMPLATES = [
@@ -57,6 +58,11 @@ export default function Create({ dataCollections = [], workflows = [], devices =
     const [selectedDevices, setSelectedDevices] = useState([]);
     const [repeatPerRecord, setRepeatPerRecord] = useState(1);
     const [searchWF, setSearchWF] = useState('');
+
+    // NEW: Per-workflow configuration
+    const [workflowConfigs, setWorkflowConfigs] = useState([]);
+    // Structure: [{ flow_id, sequence, repeat_count, execution_mode, delay_between_repeats }]
+    const [configPanelWorkflow, setConfigPanelWorkflow] = useState(null);
 
     // Data selection state
     const [selectedCollection, setSelectedCollection] = useState(null);
@@ -150,12 +156,30 @@ export default function Create({ dataCollections = [], workflows = [], devices =
     }, [workflows, selectedWorkflows, searchWF]);
 
     const addWorkflow = (wf) => {
-        setSelectedWorkflows([...selectedWorkflows, wf]);
+        const newWorkflows = [...selectedWorkflows, wf];
+        setSelectedWorkflows(newWorkflows);
+
+        // Initialize config for new workflow
+        const newConfig = {
+            flow_id: wf.id,
+            sequence: newWorkflows.length - 1,
+            repeat_count: 1,
+            execution_mode: 'once',
+            delay_between_repeats: null,
+        };
+        setWorkflowConfigs([...workflowConfigs, newConfig]);
         setSearchWF('');
     };
 
     const removeWorkflow = (id) => {
-        setSelectedWorkflows(selectedWorkflows.filter(w => w.id !== id));
+        const newWorkflows = selectedWorkflows.filter(w => w.id !== id);
+        setSelectedWorkflows(newWorkflows);
+
+        // Remove config for removed workflow
+        const newConfigs = workflowConfigs.filter(c => c.flow_id !== id);
+        // Update sequences
+        const updatedConfigs = newConfigs.map((c, index) => ({ ...c, sequence: index }));
+        setWorkflowConfigs(updatedConfigs);
     };
 
     const moveWorkflow = (index, direction) => {
@@ -164,6 +188,41 @@ export default function Create({ dataCollections = [], workflows = [], devices =
         if (newIndex < 0 || newIndex >= newList.length) return;
         [newList[index], newList[newIndex]] = [newList[newIndex], newList[index]];
         setSelectedWorkflows(newList);
+
+        // Update sequences in configs
+        const updatedConfigs = workflowConfigs.map(config => {
+            const wfIndex = newList.findIndex(w => w.id === config.flow_id);
+            return { ...config, sequence: wfIndex };
+        });
+        setWorkflowConfigs(updatedConfigs);
+    };
+
+    // NEW: Workflow config helpers
+    const getWorkflowConfig = (flowId) => {
+        return workflowConfigs.find(c => c.flow_id === flowId) || {
+            flow_id: flowId,
+            sequence: 0,
+            repeat_count: 1,
+            execution_mode: 'once',
+            delay_between_repeats: null,
+        };
+    };
+
+    const updateWorkflowConfig = (flowId, updates) => {
+        const configIndex = workflowConfigs.findIndex(c => c.flow_id === flowId);
+        if (configIndex >= 0) {
+            const newConfigs = [...workflowConfigs];
+            newConfigs[configIndex] = { ...newConfigs[configIndex], ...updates };
+            setWorkflowConfigs(newConfigs);
+        }
+    };
+
+    const openConfigPanel = (workflow) => {
+        setConfigPanelWorkflow(workflow);
+    };
+
+    const closeConfigPanel = () => {
+        setConfigPanelWorkflow(null);
     };
 
     const toggleDevice = (device) => {
@@ -286,7 +345,14 @@ export default function Create({ dataCollections = [], workflows = [], devices =
             name,
             description,
             data_collection_id: selectedCollection?.id || null,
-            workflow_ids: selectedWorkflows.map(w => w.id),
+            // NEW: Send workflow configs instead of plain IDs
+            workflow_configs: workflowConfigs.map(config => ({
+                flow_id: config.flow_id,
+                sequence: config.sequence,
+                repeat_count: config.repeat_count,
+                execution_mode: config.execution_mode,
+                delay_between_repeats: config.delay_between_repeats,
+            })),
             device_ids: selectedDevices.map(d => d.id),
             repeat_per_record: repeatPerRecord,
             record_filter: recordFilter,
@@ -474,15 +540,42 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                             ⚡ Thứ Tự Chạy ({selectedWorkflows.length})
                                         </label>
                                         <div className="space-y-2 min-h-40">
-                                            {selectedWorkflows.length > 0 ? selectedWorkflows.map((wf, index) => (
-                                                <div key={wf.id} className={`flex items-center gap-2 p-3 rounded-xl ${isDark ? 'bg-violet-500/10 border border-violet-500/30' : 'bg-violet-50 border border-violet-200'}`}>
-                                                    <span className="w-6 h-6 rounded-full bg-violet-500 text-white text-xs flex items-center justify-center font-bold">{index + 1}</span>
-                                                    <span className={`flex-1 truncate text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{wf.name}</span>
-                                                    <button onClick={() => moveWorkflow(index, -1)} disabled={index === 0} className={`w-6 h-6 rounded text-xs ${index === 0 ? 'opacity-30' : 'hover:bg-white/20'}`}>↑</button>
-                                                    <button onClick={() => moveWorkflow(index, 1)} disabled={index === selectedWorkflows.length - 1} className={`w-6 h-6 rounded text-xs ${index === selectedWorkflows.length - 1 ? 'opacity-30' : 'hover:bg-white/20'}`}>↓</button>
-                                                    <button onClick={() => removeWorkflow(wf.id)} className="w-6 h-6 rounded text-xs text-red-400 hover:bg-red-500/20">✕</button>
-                                                </div>
-                                            )) : (
+                                            {selectedWorkflows.length > 0 ? selectedWorkflows.map((wf, index) => {
+                                                const config = getWorkflowConfig(wf.id);
+                                                const modeBadge = config.execution_mode === 'repeat'
+                                                    ? { icon: '🔵', text: `${config.repeat_count}×`, color: 'blue' }
+                                                    : config.execution_mode === 'conditional'
+                                                        ? { icon: '🟣', text: 'If', color: 'purple' }
+                                                        : { icon: '🟢', text: '1×', color: 'emerald' };
+
+                                                return (
+                                                    <div key={wf.id} className={`flex items-center gap-2 p-3 rounded-xl ${isDark ? 'bg-violet-500/10 border border-violet-500/30' : 'bg-violet-50 border border-violet-200'}`}>
+                                                        <span className="w-6 h-6 rounded-full bg-violet-500 text-white text-xs flex items-center justify-center font-bold">{index + 1}</span>
+                                                        <div className="flex-1 flex items-center gap-2">
+                                                            <span className={`truncate text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{wf.name}</span>
+                                                            <span
+                                                                className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${isDark ? `bg-${modeBadge.color}-500/20 text-${modeBadge.color}-300` : `bg-${modeBadge.color}-100 text-${modeBadge.color}-700`
+                                                                    }`}
+                                                                title={`Execution mode: ${config.execution_mode}`}
+                                                            >
+                                                                <span>{modeBadge.icon}</span>
+                                                                <span className="font-medium">{modeBadge.text}</span>
+                                                            </span>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => openConfigPanel(wf)}
+                                                            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${isDark ? 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                                                }`}
+                                                            title="Cấu hình workflow"
+                                                        >
+                                                            ⚙️
+                                                        </button>
+                                                        <button onClick={() => moveWorkflow(index, -1)} disabled={index === 0} className={`w-6 h-6 rounded text-xs ${index === 0 ? 'opacity-30' : 'hover:bg-white/20'}`}>↑</button>
+                                                        <button onClick={() => moveWorkflow(index, 1)} disabled={index === selectedWorkflows.length - 1} className={`w-6 h-6 rounded text-xs ${index === selectedWorkflows.length - 1 ? 'opacity-30' : 'hover:bg-white/20'}`}>↓</button>
+                                                        <button onClick={() => removeWorkflow(wf.id)} className="w-6 h-6 rounded text-xs text-red-400 hover:bg-red-500/20">✕</button>
+                                                    </div>
+                                                );
+                                            }) : (
                                                 <div className={`flex items-center justify-center h-40 border-2 border-dashed rounded-xl ${isDark ? 'border-white/10 text-gray-500' : 'border-gray-200 text-gray-400'}`}>
                                                     Chọn kịch bản →
                                                 </div>
@@ -1197,6 +1290,16 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Workflow Config Panel Modal */}
+            {configPanelWorkflow && (
+                <WorkflowConfigPanel
+                    workflow={configPanelWorkflow}
+                    config={getWorkflowConfig(configPanelWorkflow.id)}
+                    onChange={(updatedConfig) => updateWorkflowConfig(configPanelWorkflow.id, updatedConfig)}
+                    onClose={closeConfigPanel}
+                />
             )}
         </AppLayout>
     );
