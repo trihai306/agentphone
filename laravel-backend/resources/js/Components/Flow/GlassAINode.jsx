@@ -50,8 +50,14 @@ function GlassAINode({ id, data, selected }) {
     const estimatedTokens = Math.ceil(prompt.length / 4);
 
     const handleSaveConfig = (newConfig) => {
-        // TODO: Update node data through ReactFlow API
-        console.log('Save config:', newConfig);
+        // Update node data via callback from Editor
+        if (data?.onUpdateConfig) {
+            data.onUpdateConfig(id, newConfig);
+        } else {
+            console.warn('onUpdateConfig callback not provided - config not saved');
+        }
+
+        setIsModalOpen(false);
     };
 
     return (
@@ -230,7 +236,7 @@ function GlassAINode({ id, data, selected }) {
                     }}
                 />
 
-            <style jsx>{`
+                <style jsx>{`
                 @keyframes progress {
                     0% { transform: translateX(-100%); }
                     100% { transform: translateX(100%); }
@@ -239,15 +245,15 @@ function GlassAINode({ id, data, selected }) {
                     animation: progress 1s ease-in-out infinite;
                 }
             `}</style>
-        </div>
-        
-        {/* Configuration Modal */}
-        <AINodeConfigModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            nodeData={data}
-            onSave={handleSaveConfig}
-        />
+            </div>
+
+            {/* Configuration Modal */}
+            <AINodeConfigModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                nodeData={data}
+                onSave={handleSaveConfig}
+            />
         </>
     );
 }

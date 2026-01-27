@@ -199,4 +199,58 @@ export const recordingApi = {
     },
 };
 
+/**
+ * AI Orchestration API - AI Agent node execution
+ */
+export const aiApi = {
+    /**
+     * Execute AI with tools and reasoning loop
+     */
+    execute: async ({ provider, model, apiToken, prompt, variables = {}, tools = [], memory = {}, temperature = 0.7, maxTokens = 2000, topP = 0.9 }) => {
+        return apiService.post('/api/ai/execute', {
+            provider,
+            model,
+            api_token: apiToken,
+            prompt,
+            variables,
+            tools,
+            memory,
+            temperature,
+            max_tokens: maxTokens,
+            top_p: topP,
+        });
+    },
+
+    /**
+     * Test prompt (lightweight, no tools/memory)
+     */
+    testPrompt: async ({ provider, model, apiToken, prompt, temperature = 0.7 }) => {
+        return apiService.post('/api/ai/test-prompt', {
+            provider,
+            model,
+            api_token: apiToken,
+            prompt,
+            temperature,
+        });
+    },
+
+    /**
+     * Get available models for a provider (public endpoint)
+     */
+    getModels: async (provider) => {
+        return apiService.get(`/api/ai/models/${provider}`);
+    },
+
+    /**
+     * Estimate token count and cost
+     */
+    estimateTokens: async ({ text, model, provider }) => {
+        return apiService.post('/api/ai/estimate-tokens', {
+            text,
+            model,
+            provider,
+        });
+    },
+};
+
 export default apiService;

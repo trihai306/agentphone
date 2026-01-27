@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { aiApi } from '@/services/api';
 
 /**
  * AINodeConfigModal - Full-screen configuration modal for AI Agent node
@@ -38,6 +39,9 @@ export default function AINodeConfigModal({ isOpen, onClose, nodeData, onSave })
     const [estimatedTokens, setEstimatedTokens] = useState(0);
     const [estimatedCost, setEstimatedCost] = useState(0);
     const [isTesting, setIsTesting] = useState(false);
+    const [testResult, setTestResult] = useState(null);
+    const [isLoadingModels, setIsLoadingModels] = useState(false);
+    const [availableModels, setAvailableModels] = useState([]);
 
     // Tabs configuration
     const tabs = [
@@ -64,28 +68,93 @@ export default function AINodeConfigModal({ isOpen, onClose, nodeData, onSave })
         setConfig(prev => ({ ...prev, [key]: value }));
     };
 
-    // Estimate tokens on prompt change
+    // Load models when provider changes
     useEffect(() => {
-        if (config.prompt) {
-            const tokens = Math.ceil(config.prompt.length / 4); // Rough estimate
-            setEstimatedTokens(tokens);
-            // Cost estimation (example: $0.01 per 1K tokens)
-            setEstimatedCost((tokens / 1000) * 0.01);
-        } else {
-            setEstimatedTokens(0);
-            setEstimatedCost(0);
-        }
-    }, [config.prompt]);
+        const loadModels = async () => {
+            if (!config.provider) return;
+
+            setIsLoadingModels(true);
+            try {
+                const response = await aiApi.getModels(config.provider);
+                if (response.success && response.data.models) {
+                    setAvailableModels(response.data.models);
+                    // Auto-select first model if current model not in list
+                    if (response.data.models.length > 0 && !response.data.models.find(m => m.id === config.model)) {
+                        updateConfig('model', response.data.models[0].id);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load models:', error);
+            } finally {
+                setIsLoadingModels(false);
+            }
+        };
+
+        loadModels();
+    }, [config.provider]);
+
+    // Estimate tokens on prompt change (with debounce)
+    useEffect(() => {
+        const timeoutId = setTimeout(async () => {
+            if (config.prompt && config.model) {
+                try {
+                    const response = await aiApi.estimateTokens({
+                        text: config.prompt,
+                        model: config.model,
+                        provider: config.provider,
+                    });
+
+                    if (response.success && response.data) {
+                        setEstimatedTokens(response.data.tokens);
+                        setEstimatedCost(response.data.cost);
+                    }
+                } catch (error) {
+                    // Fallback to rough estimate
+                    const tokens = Math.ceil(config.prompt.length / 4);
+                    setEstimatedTokens(tokens);
+                    setEstimatedCost((tokens / 1000) * 0.01);
+                }
+            } else {
+                setEstimatedTokens(0);
+                setEstimatedCost(0);
+            }
+        }, 500); // 500ms debounce
+
+        return () => clearTimeout(timeoutId);
+    }, [config.prompt, config.model, config.provider]);
 
     // Test prompt
     const handleTestPrompt = async () => {
         setIsTesting(true);
+        setTestResult(null);
+
         try {
-            // TODO: Call backend API to test
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            alert('Test successful! (Implementation pending)');
+            const response = await aiApi.testPrompt({
+                provider: config.provider,
+                model: config.model,
+                apiToken: config.apiToken,
+                prompt: config.prompt,
+                temperature: config.temperature,
+            });
+
+            if (response.success && response.data) {
+                setTestResult({
+                    success: true,
+                    content: response.data.result,
+                    tokens: response.data.tokens_used,
+                    cost: response.data.cost,
+                    responseTime: response.data.debug?.response_time_ms,
+                });
+                alert(`✅ Test successful!\n\nResponse: ${response.data.result.substring(0, 200)}...\n\nTokens: ${response.data.tokens_used}\nCost: $${response.data.cost}`);
+            } else {
+                throw new Error(response.error || 'Test failed');
+            }
         } catch (error) {
-            alert('Test failed: ' + error.message);
+            setTestResult({
+                success: false,
+                error: error.message || 'Unknown error',
+            });
+            alert('❌ Test failed: ' + (error.message || 'Unknown error'));
         } finally {
             setIsTesting(false);
         }
@@ -177,6 +246,8 @@ export default function AINodeConfigModal({ isOpen, onClose, nodeData, onSave })
                             updateConfig={updateConfig}
                             providers={providers}
                             currentProvider={currentProvider}
+                            availableModels={availableModels}
+                            isLoadingModels={isLoadingModels}
                             isDark={isDark}
                             t={t}
                         />
@@ -271,7 +342,7 @@ export default function AINodeConfigModal({ isOpen, onClose, nodeData, onSave })
 }
 
 // Tab Components (will be extracted to separate files later)
-function LLMTab({ config, updateConfig, providers, currentProvider, isDark, t }) {
+function LLMTab({ config, updateConfig, providers, currentProvider, availableModels, isLoadingModels, isDark, t }) {
     return (
         <div className="space-y-6">
             <h3 className="text-xl font-bold" style={{ color: currentProvider.color }}>
@@ -315,20 +386,25 @@ function LLMTab({ config, updateConfig, providers, currentProvider, isDark, t })
             <div>
                 <label className={`block text-sm font-semibold mb-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                     {t('flow.ai.llm.model')}
+                    {isLoadingModels && <span className="ml-2 text-xs">⏳ Loading...</span>}
                 </label>
                 <select
                     value={config.model}
                     onChange={(e) => updateConfig('model', e.target.value)}
+                    disabled={isLoadingModels}
                     className={`w-full px-4 py-3 rounded-xl font-medium ${isDark
                         ? 'bg-white/10 text-white border-white/20'
                         : 'bg-gray-50 border-gray-200'
-                        } border`}
+                        } border ${isLoadingModels ? 'opacity-50 cursor-wait' : ''}`}
                 >
-                    {currentProvider.models.map(model => (
-                        <option key={model} value={model}>{model}</option>
-                    ))}
-                    {currentProvider.models.length === 0 && (
-                        <option value="">Custom Model...</option>
+                    {availableModels.length > 0 ? (
+                        availableModels.map(model => (
+                            <option key={model.id} value={model.id}>
+                                {model.name} ({Math.floor(model.max_tokens / 1000)}K tokens)
+                            </option>
+                        ))
+                    ) : (
+                        <option value="">{isLoadingModels ? 'Loading models...' : 'No models available'}</option>
                     )}
                 </select>
             </div>

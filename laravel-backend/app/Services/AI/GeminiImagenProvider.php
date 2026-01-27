@@ -69,14 +69,20 @@ class GeminiImagenProvider implements AiProviderInterface
         }
 
         $payload = [
-            'prompt' => $fullPrompt,
-            'aspectRatio' => $aspectRatio,
-            'numberOfImages' => min($numImages, 4), // Max 4 images per request
+            'instances' => [
+                [
+                    'prompt' => $fullPrompt,
+                ]
+            ],
+            'parameters' => [
+                'sampleCount' => min($numImages, 4), // Max 4 images per request
+                'aspectRatio' => $aspectRatio,
+            ]
         ];
 
         // Add additional parameters if provided (for Imagen 4)
         if (isset($options['parameters']) && is_array($options['parameters'])) {
-            $payload = array_merge($payload, $options['parameters']);
+            $payload['parameters'] = array_merge($payload['parameters'], $options['parameters']);
         }
 
         try {
