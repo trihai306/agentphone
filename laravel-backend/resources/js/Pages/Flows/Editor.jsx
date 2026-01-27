@@ -1677,7 +1677,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
             />
 
             {/* Node Configuration Panel */}
-            {selectedNode && selectedNode.type !== 'ai_call' && (
+            {selectedNode && selectedNode.type?.toLowerCase() !== 'ai_call' && (
                 <NodeConfigPanel
                     node={selectedNode}
                     onUpdateNode={handleUpdateNode}
