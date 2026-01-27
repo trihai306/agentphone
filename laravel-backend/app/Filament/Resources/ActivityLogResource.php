@@ -191,7 +191,12 @@ class ActivityLogResource extends Resource
                         }
                     }),
             ])
-            ->bulkActions([])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    \pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction::make()
+                        ->label('Xuất Excel'),
+                ]),
+            ])
             ->defaultSort('created_at', 'desc')
             ->poll('30s');
     }
