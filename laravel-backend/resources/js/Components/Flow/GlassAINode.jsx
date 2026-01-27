@@ -1,8 +1,7 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useMemo } from 'react';
 import { Handle, Position } from 'reactflow';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { NodeStatus } from '@/hooks/useExecutionState';
-import AINodeConfigModal from './AINodeConfigModal';
 
 /**
  * GlassAINode - Premium glassmorphic AI Call API node
@@ -17,7 +16,6 @@ import AINodeConfigModal from './AINodeConfigModal';
 function GlassAINode({ id, data, selected }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
-    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const executionState = data?.executionState || NodeStatus.IDLE;
     const isRunning = executionState === NodeStatus.RUNNING;
@@ -49,22 +47,12 @@ function GlassAINode({ id, data, selected }) {
     // Estimate token count (rough: ~4 chars per token)
     const estimatedTokens = Math.ceil(prompt.length / 4);
 
-    const handleSaveConfig = (newConfig) => {
-        // Update node data via callback from Editor
-        if (data?.onUpdateConfig) {
-            data.onUpdateConfig(id, newConfig);
-        } else {
-            console.warn('onUpdateConfig callback not provided - config not saved');
-        }
 
-        setIsModalOpen(false);
-    };
 
     return (
         <>
             <div
                 className={`group transition-all duration-300 ${selected ? 'scale-[1.02]' : ''} ${isRunning ? 'animate-pulse' : ''}`}
-                onClick={() => setIsModalOpen(true)}
             >
                 {/* Input Handle - Left */}
                 <Handle
@@ -233,14 +221,6 @@ function GlassAINode({ id, data, selected }) {
                 }
             `}</style>
             </div>
-
-            {/* Configuration Modal */}
-            <AINodeConfigModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                nodeData={data}
-                onSave={handleSaveConfig}
-            />
         </>
     );
 }

@@ -39,8 +39,11 @@ class GenerateVideoJob implements ShouldQueue
         ]);
 
         try {
+            // Get parameters safely
+            $params = $generation->parameters ?? [];
+
             // Determine generation type and start accordingly
-            if ($generation->type === 'video' && $generation->parameters['source_image'] ?? null) {
+            if ($generation->type === 'video' && isset($params['source_image']) && $params['source_image']) {
                 // Image-to-video
                 $aiService->startImageToVideoGeneration($generation);
             } else {

@@ -4,6 +4,22 @@ import { useTheme } from '@/Contexts/ThemeContext';
 import { aiApi } from '@/services/api';
 
 /**
+ * @deprecated AINodeConfigModal - DEPRECATED as of Jan 27, 2026
+ * 
+ * This modal is NO LONGER USED. AI nodes now use the standard NodeConfigPanel
+ * sidebar pattern via AIConfig.jsx component (NodeConfig/basic/AIConfig.jsx).
+ * 
+ * Reason for deprecation: Custom modal caused modal-in-modal conflicts when
+ * AI nodes were used inside Loop sub-flows. Migration to sidebar pattern
+ * provides consistency with other node types and resolves nesting issues.
+ * 
+ * This file is kept for reference only and will be removed in future cleanup.
+ * 
+ * Migration: Jan 27, 2026
+ * See: implementation_plan.md for migration details
+ */
+
+/**
  * AINodeConfigModal - Full-screen configuration modal for AI Agent node
  * 
  * Features:
