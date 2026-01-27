@@ -153,7 +153,86 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
         return () => clearInterval(timer);
     }, [currentGeneration?.id, currentGeneration?.status]);
 
-    // Poll for status updates
+    // WebSocket listeners for real-time AI generation updates
+    useEffect(() => {
+        if (!window.Echo || !auth?.user?.id) return;
+
+        const channel = window.Echo.channel(`user.${auth.user.id}`);
+
+        // Listen for generation completion
+        const completedHandler = (event) => {
+            console.log('AI Generation completed:', event);
+
+            // Update history
+            setHistory(prev => {
+                const index = prev.findIndex(g => g.id === event.generation_id);
+                if (index >= 0) {
+                    const updated = [...prev];
+                    updated[index] = {
+                        ...updated[index],
+                        status: 'completed',
+                        result_url: event.result_url,
+                        result_path: event.result_path,
+                    };
+                    return updated;
+                }
+                return prev;
+            });
+
+            // Update current generation if it matches
+            if (currentGeneration?.id === event.generation_id) {
+                setCurrentGeneration(prev => ({
+                    ...prev,
+                    status: 'completed',
+                    result_url: event.result_url,
+                    result_path: event.result_path,
+                }));
+                setGenerating(false);
+                addToast(t('ai_studio.generation_completed', { defaultValue: 'Generation completed successfully!' }), 'success');
+            }
+        };
+
+        // Listen for generation failure
+        const failedHandler = (event) => {
+            console.log('AI Generation failed:', event);
+
+            // Update history
+            setHistory(prev => {
+                const index = prev.findIndex(g => g.id === event.generation_id);
+                if (index >= 0) {
+                    const updated = [...prev];
+                    updated[index] = {
+                        ...updated[index],
+                        status: 'failed',
+                        error_message: event.error_message,
+                    };
+                    return updated;
+                }
+                return prev;
+            });
+
+            // Update current generation if it matches
+            if (currentGeneration?.id === event.generation_id) {
+                setCurrentGeneration(prev => ({
+                    ...prev,
+                    status: 'failed',
+                    error_message: event.error_message,
+                }));
+                setGenerating(false);
+                addToast(`Generation failed: ${event.error_message}`, 'error');
+            }
+        };
+
+        channel.listen('.ai-generation.completed', completedHandler);
+        channel.listen('.ai-generation.failed', failedHandler);
+
+        return () => {
+            channel.stopListening('.ai-generation.completed', completedHandler);
+            channel.stopListening('.ai-generation.failed', failedHandler);
+        };
+    }, [auth?.user?.id, currentGeneration?.id]);
+
+    // Fallback polling for status updates (in case WebSocket fails)
     useEffect(() => {
         if (!currentGeneration || !currentGeneration.id) return;
         if (currentGeneration.status === 'completed' || currentGeneration.status === 'failed') {
@@ -161,6 +240,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
             return;
         }
 
+        // Poll less frequently since WebSocket handles real-time updates
         const interval = setInterval(async () => {
             try {
                 const response = await axios.get(`/ai-studio/generations/${currentGeneration.id}/status`);
@@ -172,7 +252,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
             } catch (error) {
                 console.error('Failed to check status:', error);
             }
-        }, 3000);
+        }, 10000); // Poll every 10 seconds as fallback
 
         return () => clearInterval(interval);
     }, [currentGeneration]);

@@ -28,6 +28,7 @@ import {
     ConditionConfig,
     LoopConfig,
     DataSourceConfig,
+    ProbabilityConfig,
 } from './NodeConfig/logic';
 
 import {
@@ -184,6 +185,15 @@ export default function NodeConfigPanel({
 
                 {nodeType === 'wait' && (
                     <WaitConfig
+                        data={nodeData}
+                        updateData={updateData}
+                        isDark={isDark}
+                    />
+                )}
+
+                {/* Probability config */}
+                {nodeType === 'probability' && (
+                    <ProbabilityConfig
                         data={nodeData}
                         updateData={updateData}
                         isDark={isDark}

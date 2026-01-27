@@ -263,6 +263,14 @@ class AiGenerationService
     }
 
     /**
+     * Process image generation (public method for GenerateImageJob)
+     */
+    public function processImageGeneration(AiGeneration $generation): void
+    {
+        $this->startImageGeneration($generation);
+    }
+
+    /**
      * Start async image generation using provider
      */
     protected function startImageGeneration(AiGeneration $generation): void
