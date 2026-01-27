@@ -103,6 +103,54 @@ return [
                 'enabled' => true,
             ],
 
+            // ============ GOOGLE IMAGEN 3 (NEW) ============
+            'imagen-3-fast' => [
+                'name' => 'Gemini Imagen 3 Fast',
+                'description' => 'Google\'s latest image model, ultra-fast generation',
+                'provider' => 'gemini-imagen',
+                'version' => 'imagen-3.0-generate-001',
+                'credits_per_image' => 4,
+                'max_width' => 2048,
+                'max_height' => 2048,
+                'default_width' => 1024,
+                'default_height' => 1024,
+                'aspect_ratios' => ['1:1', '16:9', '9:16', '4:3', '3:4'],
+                'parameters' => [
+                    'num_images' => 1,
+                ],
+                'features' => [
+                    'text-to-image',
+                    'photorealistic',
+                    'fast-generation',
+                ],
+                'badge' => 'New',
+                'badge_color' => 'green',
+                'enabled' => true,
+            ],
+            'imagen-3-quality' => [
+                'name' => 'Gemini Imagen 3 Quality',
+                'description' => 'Highest quality photorealistic images from Google',
+                'provider' => 'gemini-imagen',
+                'version' => 'imagen-3.0-quality-001',
+                'credits_per_image' => 7,
+                'max_width' => 2048,
+                'max_height' => 2048,
+                'default_width' => 1024,
+                'default_height' => 1024,
+                'aspect_ratios' => ['1:1', '16:9', '9:16', '4:3', '3:4'],
+                'parameters' => [
+                    'num_images' => 1,
+                ],
+                'features' => [
+                    'text-to-image',
+                    'photorealistic',
+                    'ultra-quality',
+                ],
+                'badge' => 'Recommended',
+                'badge_color' => 'purple',
+                'enabled' => true,
+            ],
+
             // ============ KLING AI IMAGE (Coming Soon) ============
             'kling-image' => [
                 'name' => 'Kling AI Image',

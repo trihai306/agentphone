@@ -21,6 +21,7 @@ class AiProviderFactory
         return match ($provider) {
             'replicate' => new ReplicateProvider(),
             'gemini', 'gemini-veo', 'veo' => new GeminiVeoProvider(),
+            'gemini-imagen', 'imagen' => new GeminiImagenProvider(),
             'kling' => new KlingAiProvider(),
             default => throw new InvalidArgumentException("Unknown AI provider: {$provider}")
         };
@@ -49,6 +50,7 @@ class AiProviderFactory
         return [
             'replicate' => 'Replicate',
             'gemini-veo' => 'Google Veo',
+            'gemini-imagen' => 'Google Imagen 3',
             'kling' => 'Kling AI',
         ];
     }
