@@ -92,10 +92,6 @@ class AdminPanelProvider extends PanelProvider
             ->topNavigation() // Menu hiển thị ở header thay vì sidebar
             ->maxContentWidth('full')
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
-            ->plugin(
-                \TomatoPHP\FilamentMediaManager\FilamentMediaManagerPlugin::make()
-                    ->allowSubFolders()
-            )
             ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn() => Blade::render('@include("filament.scripts.echo")')
