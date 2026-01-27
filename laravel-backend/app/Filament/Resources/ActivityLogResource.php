@@ -122,6 +122,8 @@ class ActivityLogResource extends Resource
                     }),
             ])
             ->headerActions([
+                \pxlrbt\FilamentExcel\Actions\Tables\ExportAction::make()
+                    ->label('Xuất Excel'),
                 Tables\Actions\Action::make('clearOldLogs')
                     ->label('Dọn dẹp logs cũ')
                     ->icon('heroicon-o-trash')

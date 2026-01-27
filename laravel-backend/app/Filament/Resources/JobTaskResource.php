@@ -107,6 +107,10 @@ class JobTaskResource extends Resource
                         'skipped' => 'Bỏ qua',
                     ]),
             ])
+            ->headerActions([
+                \pxlrbt\FilamentExcel\Actions\Tables\ExportAction::make()
+                    ->label('Xuất Excel'),
+            ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
             ])

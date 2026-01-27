@@ -109,6 +109,10 @@ class MarketplacePurchaseResource extends Resource
                     ->searchable()
                     ->preload(),
             ])
+            ->headerActions([
+                \pxlrbt\FilamentExcel\Actions\Tables\ExportAction::make()
+                    ->label('Xuất Excel'),
+            ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
             ])
