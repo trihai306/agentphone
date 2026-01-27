@@ -59,6 +59,9 @@ class GeminiImagenProvider implements AiProviderInterface
         $numImages = $options['num_images'] ?? 1;
         $negativePrompt = $options['negative_prompt'] ?? '';
 
+        // Get model version from options (e.g., 'imagen-4.0-fast-generate-001')
+        $modelVersion = $options['version'] ?? $options['model'] ?? 'imagen-4.0-generate-001';
+
         // Build full prompt with safety guidance
         $fullPrompt = $prompt;
         if (!empty($negativePrompt)) {
@@ -71,14 +74,19 @@ class GeminiImagenProvider implements AiProviderInterface
             'numberOfImages' => min($numImages, 4), // Max 4 images per request
         ];
 
+        // Add additional parameters if provided (for Imagen 4)
+        if (isset($options['parameters']) && is_array($options['parameters'])) {
+            $payload = array_merge($payload, $options['parameters']);
+        }
+
         try {
             $response = Http::timeout($this->timeout)
                 ->withHeaders([
                     'Content-Type' => 'application/json',
                 ])
                 ->post(
-                    "{$this->apiUrl}/models/imagen-3.0-generate-001:predict",
-                    array_merge(['key' => $this->apiKey], $payload)
+                    "{$this->apiUrl}/models/{$modelVersion}:predict?key={$this->apiKey}",
+                    $payload
                 );
 
             if (!$response->successful()) {
@@ -89,16 +97,18 @@ class GeminiImagenProvider implements AiProviderInterface
             $data = $response->json();
 
             Log::info('GeminiImagenProvider: Image generation started', [
+                'model' => $modelVersion,
                 'prompt' => substr($prompt, 0, 100),
                 'aspect_ratio' => $aspectRatio,
                 'response' => $data,
             ]);
 
-            // Imagen 3 returns images directly (synchronous)
+            // Imagen returns images directly (synchronous)
             return $this->parseImagenResponse($data);
 
         } catch (\Exception $e) {
             Log::error('GeminiImagenProvider: Image generation failed', [
+                'model' => $modelVersion,
                 'error' => $e->getMessage(),
                 'prompt' => $prompt,
             ]);
