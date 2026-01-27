@@ -527,6 +527,29 @@ class AiGenerationService
     {
         $models = config("ai-generation.models.{$type}", []);
 
+        // For image models, merge with Gemini discovered models
+        if ($type === 'image' && config('ai-generation.providers.gemini.enable_model_discovery', false)) {
+            try {
+                $geminiService = new \App\Services\AI\GeminiModelsService();
+                $discoveredModels = $geminiService->getMergedImageModels();
+
+                // Replace Gemini config models with merged models
+                foreach ($models as $key => $model) {
+                    if (($model['provider'] ?? '') === 'gemini-imagen') {
+                        unset($models[$key]);
+                    }
+                }
+
+                // Add merged models
+                $models = array_merge($models, $discoveredModels);
+            } catch (\Exception $e) {
+                // Fallback to config models if discovery fails
+                Log::error('AiGenerationService: Failed to discover Gemini models', [
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         $result = [];
         foreach ($models as $key => $config) {
             // Include all models but mark disabled ones

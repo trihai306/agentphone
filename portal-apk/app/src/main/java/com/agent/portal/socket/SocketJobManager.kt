@@ -190,25 +190,9 @@ object SocketJobManager {
 
                 val options = PusherOptions().apply {
                     setCluster("") // Empty for self-hosted
-                    
-                    // CRITICAL FIX: Pusher Java Client doesn't use OkHttp DNS resolver
-                    // We must resolve the domain to IP manually using CustomDns before passing to Pusher
-                    val resolvedHost = if (host == "clickai.lionsoftware.cloud") {
-                        try {
-                            // Use CustomDns to resolve domain to IP for emulator
-                            val addresses = com.agent.portal.utils.CustomDns.lookup(host!!)
-                            val ip = addresses.firstOrNull()?.hostAddress ?: host
-                            Log.i(TAG, "🌐 Resolved $host → $ip for Pusher client")
-                            ip
-                        } catch (e: Exception) {
-                            Log.e(TAG, "⚠️ DNS resolution failed, using domain: ${e.message}")
-                            host
-                        }
-                    } else {
-                        host
-                    }
-                    
-                    setHost(resolvedHost)
+                    // Use domain name for SSL certificate validation
+                    // DNS resolution will be handled at network layer via emulator configuration
+                    setHost(host)
                     setWsPort(port)
                     setWssPort(port)
                     isEncrypted = this@SocketJobManager.encrypted

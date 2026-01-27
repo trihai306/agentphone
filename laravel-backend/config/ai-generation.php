@@ -103,12 +103,12 @@ return [
                 'enabled' => true,
             ],
 
-            // ============ GOOGLE IMAGEN 3 (NEW) ============
-            'imagen-3-fast' => [
-                'name' => 'Gemini Imagen 3 Fast',
-                'description' => 'Google\'s latest image model, ultra-fast generation',
+            // ============ GOOGLE IMAGEN 4 (CURRENT) ============
+            'imagen-4-fast' => [
+                'name' => 'Imagen 4 Fast',
+                'description' => 'Fastest text-to-image generation from Google',
                 'provider' => 'gemini-imagen',
-                'version' => 'imagen-3.0-generate-001',
+                'version' => 'imagen-4.0-fast-generate-001',
                 'credits_per_image' => 4,
                 'max_width' => 2048,
                 'max_height' => 2048,
@@ -116,7 +116,8 @@ return [
                 'default_height' => 1024,
                 'aspect_ratios' => ['1:1', '16:9', '9:16', '4:3', '3:4'],
                 'parameters' => [
-                    'num_images' => 1,
+                    'numberOfImages' => 1,
+                    'imageSize' => '1K',
                 ],
                 'features' => [
                     'text-to-image',
@@ -127,11 +128,11 @@ return [
                 'badge_color' => 'green',
                 'enabled' => true,
             ],
-            'imagen-3-quality' => [
-                'name' => 'Gemini Imagen 3 Quality',
-                'description' => 'Highest quality photorealistic images from Google',
+            'imagen-4-standard' => [
+                'name' => 'Imagen 4',
+                'description' => 'High-quality balanced text-to-image generation',
                 'provider' => 'gemini-imagen',
-                'version' => 'imagen-3.0-quality-001',
+                'version' => 'imagen-4.0-generate-001',
                 'credits_per_image' => 7,
                 'max_width' => 2048,
                 'max_height' => 2048,
@@ -139,15 +140,42 @@ return [
                 'default_height' => 1024,
                 'aspect_ratios' => ['1:1', '16:9', '9:16', '4:3', '3:4'],
                 'parameters' => [
-                    'num_images' => 1,
+                    'numberOfImages' => 1,
+                    'imageSize' => '2K',
+                ],
+                'features' => [
+                    'text-to-image',
+                    'photorealistic',
+                    'synthid-watermark',
+                ],
+                'badge' => 'Recommended',
+                'badge_color' => 'purple',
+                'enabled' => true,
+            ],
+
+            'imagen-4-ultra' => [
+                'name' => 'Imagen 4 Ultra',
+                'description' => 'Ultra-high quality photorealistic images',
+                'provider' => 'gemini-imagen',
+                'version' => 'imagen-4.0-ultra-generate-001',
+                'credits_per_image' => 10,
+                'max_width' => 2048,
+                'max_height' => 2048,
+                'default_width' => 1024,
+                'default_height' => 1024,
+                'aspect_ratios' => ['1:1', '16:9', '9:16', '4:3', '3:4'],
+                'parameters' => [
+                    'numberOfImages' => 1,
+                    'imageSize' => '2K',
                 ],
                 'features' => [
                     'text-to-image',
                     'photorealistic',
                     'ultra-quality',
+                    'synthid-watermark',
                 ],
-                'badge' => 'Recommended',
-                'badge_color' => 'purple',
+                'badge' => 'Best Quality',
+                'badge_color' => 'amber',
                 'enabled' => true,
             ],
 

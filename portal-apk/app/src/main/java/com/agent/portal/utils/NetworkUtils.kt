@@ -21,9 +21,10 @@ object NetworkUtils {
     private const val API_PORT = 8000
     private const val SOCKET_PORT = 6001
     
-    // API uses production, Socket uses production
-    private const val USE_PRODUCTION_API = true       // API → Production
-    private const val USE_PRODUCTION_SOCKET = true    // Socket → Production
+    // Production configuration with network security config for SSL trust
+    // network_security_config.xml allows emulator to trust production SSL cert
+    private const val USE_PRODUCTION_API = true       // API → Production (CustomDns resolves clickai.lionsoftware.cloud)
+    private const val USE_PRODUCTION_SOCKET = true    // Socket → Production (network_security_config trusts SSL)
     
     // Cached emulator detection result (computed once)
     private val isEmulatorCached: Boolean by lazy {
