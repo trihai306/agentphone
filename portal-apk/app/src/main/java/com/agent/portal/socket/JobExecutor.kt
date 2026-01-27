@@ -58,8 +58,29 @@ class JobExecutor(context: Context) {
         try {
             Log.i(TAG, "Executing job: ${job.id} with ${config.actions.size} actions")
 
-            // Execute each action sequentially
+            // ⭐ DATA ITERATION FEATURE - Fetch and merge variable data
+            val primaryData = job.params ?: emptyMap()
+            
+            // Fetch variable data from secondary collection (if configured)
+            val variableData = JobActionAPI.fetchVariableData(
+                context,
+                job.variableSourceCollectionId,
+                job.iterationIndex
+            )
+            
+            // Merge contexts: variable data overrides primary data
+            val mergedData = if (variableData.isNotEmpty()) {
+                Log.i(TAG, "⭐ Data Iteration: Merging variable data into job context")
+                JobActionAPI.mergeDataContexts(primaryData, variableData)
+            } else {
+                primaryData // No variable data, use primary only
+            }
+            
+            Log.d(TAG, "Final data context has ${mergedData.size} keys: ${mergedData.keys}")
+
+            // Execute each action sequentially with MERGED data
             for ((index, action) in config.actions.withIndex()) {
+
                 Log.d(TAG, "Action ${index + 1}/${config.actions.size}: ${action.type}")
 
                 // Wait before action if specified
@@ -77,6 +98,32 @@ class JobExecutor(context: Context) {
                     continue
                 }
 
+                // Check probability (NEW: Probability System)
+                // If probability < 100%, randomly decide whether to execute or skip
+                if (action.probability < 100) {
+                    val randomRoll = (0..100).random()
+                    if (randomRoll > action.probability) {
+                        Log.d(TAG, "🎲 Skipping action ${action.id} - probability check failed (rolled $randomRoll, needed ≤ ${action.probability})")
+                        
+                        // Report skipped status with probability info
+                        job.flowId?.let { flowId ->
+                            reportProgress(
+                                flowId, 
+                                action.id, 
+                                "skipped", 
+                                index + 1, 
+                                config.actions.size,
+                                "Probability check failed: rolled $randomRoll%, needed ≤ ${action.probability}%"
+                            )
+                        }
+                        
+                        continue  // Skip to next action
+                    } else {
+                        Log.d(TAG, "🎲 Action ${action.id} passed probability check (rolled $randomRoll, needed ≤ ${action.probability})")
+                    }
+                }
+    
+
                 // Report running status BEFORE executing action
                 job.flowId?.let { flowId ->
                     reportProgress(flowId, action.id, "running", index + 1, config.actions.size)
@@ -90,8 +137,8 @@ class JobExecutor(context: Context) {
                     actionName = "${action.type}"
                 )
 
-                // Execute action
-                val result = executeAction(action, job.params)
+                // Execute action with MERGED data context (primary + variable)
+                val result = executeAction(action, mergedData)
                 actionResults.add(result)
 
                 // Handle action result

@@ -99,17 +99,17 @@ export default function NodePropertiesPanel({
                     <div className="flex items-center gap-2">
                         <div
                             className={`w-8 h-8 rounded-lg flex items-center justify-center ${selectedNode.data?.eventType === 'click' ? 'bg-blue-500/20' :
-                                    selectedNode.data?.eventType === 'text_input' ? 'bg-purple-500/20' :
-                                        selectedNode.data?.eventType?.includes('scroll') ? 'bg-amber-500/20' :
-                                            selectedNode.data?.eventType?.includes('swipe') ? 'bg-cyan-500/20' :
-                                                'bg-indigo-500/20'
+                                selectedNode.data?.eventType === 'text_input' ? 'bg-purple-500/20' :
+                                    selectedNode.data?.eventType?.includes('scroll') ? 'bg-amber-500/20' :
+                                        selectedNode.data?.eventType?.includes('swipe') ? 'bg-cyan-500/20' :
+                                            'bg-indigo-500/20'
                                 }`}
                         >
                             <svg className={`w-4 h-4 ${selectedNode.data?.eventType === 'click' ? 'text-blue-400' :
-                                    selectedNode.data?.eventType === 'text_input' ? 'text-purple-400' :
-                                        selectedNode.data?.eventType?.includes('scroll') ? 'text-amber-400' :
-                                            selectedNode.data?.eventType?.includes('swipe') ? 'text-cyan-400' :
-                                                'text-indigo-400'
+                                selectedNode.data?.eventType === 'text_input' ? 'text-purple-400' :
+                                    selectedNode.data?.eventType?.includes('scroll') ? 'text-amber-400' :
+                                        selectedNode.data?.eventType?.includes('swipe') ? 'text-cyan-400' :
+                                            'text-indigo-400'
                                 }`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
@@ -130,6 +130,55 @@ export default function NodePropertiesPanel({
                         className={`w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-indigo-500 transition-colors ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
                     />
                 </div>
+
+                {/* Probability Control - for action nodes */}
+                {['click', 'tap', 'long_tap', 'long_press', 'double_tap', 'text_input', 'set_text', 'scroll', 'scroll_up', 'scroll_down', 'scroll_left', 'scroll_right', 'swipe', 'swipe_left', 'swipe_right', 'swipe_up', 'swipe_down', 'open_app', 'repeat_click'].includes(selectedNode.data?.eventType || selectedNode.type) && (
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <label className={`block text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                Execution Probability
+                            </label>
+                            <span className={`text-sm font-mono font-bold ${(selectedNode.data?.probability || 100) < 50 ? 'text-amber-500' : (selectedNode.data?.probability || 100) < 100 ? 'text-blue-500' : isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                {selectedNode.data?.probability ?? 100}%
+                            </span>
+                        </div>
+                        <div className="space-y-2">
+                            <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                step="5"
+                                value={selectedNode.data?.probability ?? 100}
+                                onChange={(e) => {
+                                    const probability = parseInt(e.target.value);
+                                    setNodes((nds) =>
+                                        nds.map((n) =>
+                                            n.id === selectedNode.id
+                                                ? { ...n, data: { ...n.data, probability } }
+                                                : n
+                                        )
+                                    );
+                                }}
+                                className={`w-full h-2 rounded-lg appearance-none cursor-pointer ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-200'}`}
+                                style={{
+                                    accentColor: (selectedNode.data?.probability || 100) < 50 ? '#f59e0b' : '#3b82f6'
+                                }}
+                            />
+                            <div className="flex justify-between text-[10px] font-medium text-gray-500">
+                                <span>0%</span>
+                                <span>50%</span>
+                                <span>100%</span>
+                            </div>
+                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                {(selectedNode.data?.probability ?? 100) === 100
+                                    ? 'Always execute this action'
+                                    : (selectedNode.data?.probability ?? 100) === 0
+                                        ? 'Never execute this action'
+                                        : `${selectedNode.data?.probability}% chance to execute, ${100 - (selectedNode.data?.probability ?? 100)}% chance to skip`}
+                            </p>
+                        </div>
+                    </div>
+                )}
 
                 {/* Element Details Section */}
                 {selectedNode.data?.isRecorded && (

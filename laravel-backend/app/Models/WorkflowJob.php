@@ -38,6 +38,8 @@ class WorkflowJob extends Model
         'data_collection_id',
         'data_record_ids',
         'data_record_id',
+        'variable_source_collection_id',
+        'iteration_index',
         'workflow_chain',
         'chain_context',
         'execution_mode',
@@ -67,6 +69,8 @@ class WorkflowJob extends Model
         'result' => 'array',
         'data_record_ids' => 'array',
         'data_record_id' => 'integer',
+        'variable_source_collection_id' => 'integer',
+        'iteration_index' => 'integer',
         'workflow_chain' => 'array',
         'chain_context' => 'array',
         'scheduled_at' => 'datetime',
@@ -155,6 +159,11 @@ class WorkflowJob extends Model
     public function campaign(): BelongsTo
     {
         return $this->belongsTo(Campaign::class);
+    }
+
+    public function variableSourceCollection(): BelongsTo
+    {
+        return $this->belongsTo(DataCollection::class, 'variable_source_collection_id');
     }
 
     public function tasks(): HasMany

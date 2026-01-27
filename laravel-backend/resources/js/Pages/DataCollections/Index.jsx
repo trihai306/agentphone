@@ -117,6 +117,27 @@ export default function Index({ collections, stats }) {
         }
     };
 
+    const handleDuplicate = async (collection, e) => {
+        e?.preventDefault();
+        e?.stopPropagation();
+        router.post('/data-collections', {
+            name: `${collection.name} (Copy)`,
+            description: collection.description,
+            icon: collection.icon,
+            color: collection.color,
+            schema: collection.schema,
+        }, {
+            onSuccess: () => addToast(t('data_collections.duplicated'), 'success'),
+        });
+    };
+
+    const handleExport = (id, e) => {
+        e?.preventDefault();
+        e?.stopPropagation();
+        window.location.href = `/data-collections/${id}/export`;
+        addToast(t('data_collections.exporting'), 'info');
+    };
+
     const handleCreateNew = () => {
         setSelectedTemplate(null);
         setShowCreateModal(true);
@@ -129,6 +150,24 @@ export default function Index({ collections, stats }) {
 
     const handleImportCSV = () => {
         setShowImportCSVModal(true);
+    };
+
+    // Get collection status
+    const getCollectionStatus = (collection) => {
+        const hasWorkflows = (collection.workflows_count || 0) > 0;
+        const hasData = (collection.total_records || 0) > 0;
+
+        if (hasWorkflows && hasData) return 'active'; // In use
+        if (hasData) return 'data_only'; // Has data but no workflows
+        return 'idle'; // Empty
+    };
+
+    // Get usage percentage (for progress indicator)
+    const getUsagePercentage = (collection) => {
+        // Assume 1000 records = 100% for visual purposes
+        const maxRecords = 1000;
+        const percentage = Math.min(Math.round(((collection.total_records || 0) / maxRecords) * 100), 100);
+        return percentage;
     };
 
     // Format date safely - backend returns diffForHumans() string
@@ -403,6 +442,8 @@ export default function Index({ collections, stats }) {
                                 {processedCollections.map((collection, index) => {
                                     const color = getColor(index);
                                     const schemaPreview = getSchemaPreview(collection);
+                                    const status = getCollectionStatus(collection);
+                                    const usagePercentage = getUsagePercentage(collection);
                                     return (
                                         <Link
                                             key={collection.id}
@@ -422,12 +463,38 @@ export default function Index({ collections, stats }) {
                                                     <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-black/10 blur-2xl transform -translate-x-1/2 translate-y-1/2" />
                                                 </div>
 
-                                                {/* Icon */}
+                                                {/* Status Badge - top left */}
+                                                <div className="absolute top-3 left-3">
+                                                    {status === 'active' ? (
+                                                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/90 text-white shadow-lg">
+                                                            <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 8 8">
+                                                                <circle cx="4" cy="4" r="3" />
+                                                            </svg>
+                                                            {t('data_collections.status.in_use')}
+                                                        </span>
+                                                    ) : status === 'data_only' ? (
+                                                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-500/90 text-white shadow-lg">
+                                                            <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 8 8">
+                                                                <circle cx="4" cy="4" r="3" />
+                                                            </svg>
+                                                            {t('data_collections.status.has_data')}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-gray-500/90 text-white shadow-lg">
+                                                            <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 8 8">
+                                                                <circle cx="4" cy="4" r="3" />
+                                                            </svg>
+                                                            {t('data_collections.status.idle')}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {/* Icon - top right */}
                                                 <div className="absolute top-3 right-3 w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
                                                     <span className="text-xl">{collection.icon || '📊'}</span>
                                                 </div>
 
-                                                {/* Stats badges - enhanced styling */}
+                                                {/* Stats badges */}
                                                 <div className="absolute bottom-3 left-3 flex gap-2">
                                                     <span className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-white/90 text-gray-700 shadow-sm">
                                                         <svg className="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -474,6 +541,22 @@ export default function Index({ collections, stats }) {
                                                     </div>
                                                 )}
 
+                                                {/* Usage Progress Indicator */}
+                                                {usagePercentage > 0 && (
+                                                    <div className="mt-3">
+                                                        <div className={`flex items-center justify-between text-[10px] mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                            <span>{t('data_collections.usage')}</span>
+                                                            <span className="font-semibold">{usagePercentage}%</span>
+                                                        </div>
+                                                        <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
+                                                            <div
+                                                                className={`h-full rounded-full bg-gradient-to-r ${color.from} ${color.to} transition-all duration-500`}
+                                                                style={{ width: `${usagePercentage}%` }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+
                                                 {/* Footer */}
                                                 <div className={`flex items-center justify-between mt-5 pt-4 border-t ${isDark ? 'border-white/10' : 'border-gray-100'}`}>
                                                     <div className="flex items-center gap-2">
@@ -485,7 +568,26 @@ export default function Index({ collections, stats }) {
                                                         </span>
                                                     </div>
 
+                                                    {/* Quick Actions - appears on hover */}
                                                     <div className={`flex items-center gap-1 transition-opacity ${hoveredCard === collection.id ? 'opacity-100' : 'opacity-0'}`}>
+                                                        <button
+                                                            onClick={(e) => handleExport(collection.id, e)}
+                                                            className={`p-2 rounded-lg transition-all ${isDark ? 'hover:bg-blue-500/20 text-gray-400 hover:text-blue-400' : 'hover:bg-blue-50 text-gray-400 hover:text-blue-500'}`}
+                                                            title={t('data_collections.export')}
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                            </svg>
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => handleDuplicate(collection, e)}
+                                                            className={`p-2 rounded-lg transition-all ${isDark ? 'hover:bg-emerald-500/20 text-gray-400 hover:text-emerald-400' : 'hover:bg-emerald-50 text-gray-400 hover:text-emerald-500'}`}
+                                                            title={t('data_collections.duplicate')}
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                            </svg>
+                                                        </button>
                                                         <button
                                                             onClick={(e) => handleDelete(collection.id, e)}
                                                             className={`p-2 rounded-lg transition-all ${isDark ? 'hover:bg-red-500/20 text-gray-400 hover:text-red-400' : 'hover:bg-red-50 text-gray-400 hover:text-red-500'}`}

@@ -8,7 +8,7 @@ const EXECUTION_MODES = [
     { value: 'conditional', icon: '🟣', label: 'Điều kiện', color: 'purple', disabled: true },
 ];
 
-export default function WorkflowConfigPanel({ workflow, config, onChange, onClose }) {
+export default function WorkflowConfigPanel({ workflow, config, onChange, onClose, availableCollections = [], campaignDataCollectionId = null }) {
     const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
@@ -21,6 +21,9 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
         onChange(newConfig);
     };
 
+    // Filter collections: exclude campaign's primary collection
+    const variableSourceOptions = availableCollections.filter(c => c.id !== campaignDataCollectionId);
+
     const handleSave = () => {
         onClose();
     };
@@ -29,8 +32,8 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
         <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4`}>
             <div
                 className={`w-full max-w-md rounded-2xl shadow-2xl border ${isDark
-                        ? 'bg-gray-900/95 border-gray-700'
-                        : 'bg-white/95 border-gray-200'
+                    ? 'bg-gray-900/95 border-gray-700'
+                    : 'bg-white/95 border-gray-200'
                     }`}
             >
                 {/* Header */}
@@ -47,8 +50,8 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                         <button
                             onClick={onClose}
                             className={`p-2 rounded-lg transition-colors ${isDark
-                                    ? 'hover:bg-gray-800 text-gray-400'
-                                    : 'hover:bg-gray-100 text-gray-600'
+                                ? 'hover:bg-gray-800 text-gray-400'
+                                : 'hover:bg-gray-100 text-gray-600'
                                 }`}
                         >
                             ✕
@@ -125,8 +128,8 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                                         value={localConfig.repeat_count || 1}
                                         onChange={(e) => updateConfig('repeat_count', parseInt(e.target.value) || 1)}
                                         className={`flex-1 px-4 py-2.5 rounded-xl border focus:ring-2 focus:ring-blue-500 transition-all ${isDark
-                                                ? 'bg-gray-800 border-gray-700 text-white'
-                                                : 'bg-white border-gray-300 text-gray-900'
+                                            ? 'bg-gray-800 border-gray-700 text-white'
+                                            : 'bg-white border-gray-300 text-gray-900'
                                             }`}
                                     />
                                     <span className={`text-sm whitespace-nowrap ${isDark ? 'text-gray-400' : 'text-gray-600'
@@ -135,6 +138,72 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                                     </span>
                                 </div>
                             </div>
+
+                            {/* Variable Source Collection (NEW) */}
+                            <div>
+                                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    🎲 Nguồn dữ liệu biến (tuỳ chọn)
+                                </label>
+                                <select
+                                    value={localConfig.variable_source_collection_id || ''}
+                                    onChange={(e) => updateConfig('variable_source_collection_id', e.target.value ? parseInt(e.target.value) : null)}
+                                    className={`w-full px-4 py-2.5 rounded-xl border focus:ring-2 focus:ring-blue-500 transition-all ${isDark
+                                        ? 'bg-gray-800 border-gray-700 text-white'
+                                        : 'bg-white border-gray-300 text-gray-900'
+                                        }`}
+                                >
+                                    <option value="">Không chọn (dùng dữ liệu chính)</option>
+                                    {variableSourceOptions.map(collection => (
+                                        <option key={collection.id} value={collection.id}>
+                                            {collection.name} ({collection.records_count || 0} records)
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className={`text-xs mt-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                    Nếu chọn, mỗi lần lặp sẽ lấy dữ liệu từ record khác nhau
+                                </p>
+                            </div>
+
+                            {/* Iteration Strategy (visible only when variable source selected) */}
+                            {localConfig.variable_source_collection_id && (
+                                <div>
+                                    <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                        🔄 Chiến lược lặp
+                                    </label>
+                                    <div className="flex gap-3">
+                                        <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${localConfig.iteration_strategy === 'sequential'
+                                            ? 'border-blue-500 bg-blue-500/10'
+                                            : `border-transparent ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`
+                                            }`}>
+                                            <input
+                                                type="radio"
+                                                value="sequential"
+                                                checked={localConfig.iteration_strategy === 'sequential' || !localConfig.iteration_strategy}
+                                                onChange={(e) => updateConfig('iteration_strategy', e.target.value)}
+                                                className="text-blue-500"
+                                            />
+                                            <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                Tuần tự (1→2→3)
+                                            </span>
+                                        </label>
+                                        <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${localConfig.iteration_strategy === 'random'
+                                            ? 'border-blue-500 bg-blue-500/10'
+                                            : `border-transparent ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`
+                                            }`}>
+                                            <input
+                                                type="radio"
+                                                value="random"
+                                                checked={localConfig.iteration_strategy === 'random'}
+                                                onChange={(e) => updateConfig('iteration_strategy', e.target.value)}
+                                                className="text-blue-500"
+                                            />
+                                            <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                Ngẫu nhiên
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Delay Between Repeats */}
                             <div>
@@ -151,8 +220,8 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                                         value={localConfig.delay_between_repeats || ''}
                                         onChange={(e) => updateConfig('delay_between_repeats', parseInt(e.target.value) || null)}
                                         className={`flex-1 px-4 py-2.5 rounded-xl border focus:ring-2 focus:ring-blue-500 transition-all ${isDark
-                                                ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500'
-                                                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                                            ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500'
+                                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
                                             }`}
                                     />
                                     <span className={`text-sm whitespace-nowrap ${isDark ? 'text-gray-400' : 'text-gray-600'
@@ -174,8 +243,8 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                     <button
                         onClick={onClose}
                         className={`px-5 py-2.5 rounded-xl font-medium transition-colors ${isDark
-                                ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                             }`}
                     >
                         Hủy

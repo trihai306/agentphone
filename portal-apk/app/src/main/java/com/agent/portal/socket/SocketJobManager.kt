@@ -151,9 +151,8 @@ object SocketJobManager {
                     try {
                         val testUrl = "https://$host/"
                         Log.i(TAG, "Testing HTTPS connectivity to: $testUrl")
-                        val client = okhttp3.OkHttpClient.Builder()
-                            .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
-                            .build()
+                        // Use HttpClientFactory with CustomDns for emulator DNS resolution
+                        val client = com.agent.portal.utils.HttpClientFactory.create()
                         val request = okhttp3.Request.Builder().url(testUrl).head().build()
                         val response = client.newCall(request).execute()
                         Log.i(TAG, "✅ HTTPS test successful: ${response.code}")
@@ -3165,6 +3164,13 @@ data class Job(
 
     @SerializedName("created_at")
     val createdAt: Long = System.currentTimeMillis(),
+
+    // ⭐ Data Iteration Feature - NEW FIELDS
+    @SerializedName("variable_source_collection_id")
+    val variableSourceCollectionId: Int? = null,
+
+    @SerializedName("iteration_index")
+    val iterationIndex: Int? = null,
 
     var status: JobStatus = JobStatus.QUEUED,
     var result: JobResult? = null

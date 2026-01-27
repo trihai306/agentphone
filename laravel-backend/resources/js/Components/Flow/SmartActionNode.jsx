@@ -277,6 +277,20 @@ function SmartActionNode({ data, selected, id }) {
                         <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                     </div>
                 )}
+
+                {/* Probability indicator - show when < 100% */}
+                {data?.probability !== undefined && data.probability < 100 && (
+                    <div
+                        className={`absolute -top-2 ${data?.isRecorded ? '-right-8' : '-right-2'} px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 border-2 ${data.probability < 50
+                                ? 'bg-amber-500 text-white border-amber-600'
+                                : 'bg-blue-500 text-white border-blue-600'
+                            }`}
+                        title={`${data.probability}% chance to execute`}
+                    >
+                        <span>🎲</span>
+                        <span>{data.probability}%</span>
+                    </div>
+                )}
             </div>
 
             {/* Output Handles - Right side, vertically spaced */}

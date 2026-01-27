@@ -352,6 +352,8 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                 repeat_count: config.repeat_count,
                 execution_mode: config.execution_mode,
                 delay_between_repeats: config.delay_between_repeats,
+                variable_source_collection_id: config.variable_source_collection_id,
+                iteration_strategy: config.iteration_strategy,
             })),
             device_ids: selectedDevices.map(d => d.id),
             repeat_per_record: repeatPerRecord,
@@ -1299,6 +1301,8 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                     config={getWorkflowConfig(configPanelWorkflow.id)}
                     onChange={(updatedConfig) => updateWorkflowConfig(configPanelWorkflow.id, updatedConfig)}
                     onClose={closeConfigPanel}
+                    availableCollections={dataCollections}
+                    campaignDataCollectionId={selectedCollection?.id}
                 />
             )}
         </AppLayout>

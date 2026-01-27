@@ -63,6 +63,7 @@ import GlassWaitNode from '../../Components/Flow/GlassWaitNode';
 import GlassAssertNode from '../../Components/Flow/GlassAssertNode';
 import GlassElementCheckNode from '../../Components/Flow/GlassElementCheckNode';
 import GlassWaitForElementNode from '../../Components/Flow/GlassWaitForElementNode';
+import GlassProbabilityNode from '../../Components/Flow/GlassProbabilityNode';
 import SmartActionNode from '../../Components/Flow/SmartActionNode';
 import LoopSubFlowModal from '../../Components/Flow/LoopSubFlowModal';
 import LiveRecordingPanel from '../../Components/Flow/LiveRecordingPanel';
@@ -115,6 +116,7 @@ const nodeTypes = {
 
     // Logic/Conditions - Premium Glass versions
     condition: GlassConditionNode,
+    probability: GlassProbabilityNode,
     loop: GlassLoopNode,
     loopStart: SmartActionNode,  // Used in LoopSubFlowModal
     loopEnd: SmartActionNode,    // Used in LoopSubFlowModal
@@ -1356,6 +1358,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
         // Logic/Conditions
         { type: 'condition', label: t('flows.editor.nodes.condition'), icon: 'branch', color: '#f97316', bgColor: 'rgba(249, 115, 22, 0.15)', description: t('flows.editor.nodes.condition_desc', 'If/Else branch'), category: 'logic' },
+        { type: 'probability', label: t('flows.editor.nodes.probability', 'Probability'), icon: 'dice', color: '#f97316', bgColor: 'rgba(249, 115, 22, 0.15)', description: t('flows.editor.nodes.probability_desc', 'Random weighted branch'), category: 'logic' },
         { type: 'wait', label: t('flows.editor.nodes.wait'), icon: 'clock', color: '#6b7280', bgColor: 'rgba(107, 114, 128, 0.15)', description: t('flows.editor.nodes.wait_desc', 'Delay execution'), category: 'logic' },
         { type: 'loop', label: t('flows.editor.nodes.loop'), icon: 'loop', color: '#14b8a6', bgColor: 'rgba(20, 184, 166, 0.15)', description: t('flows.editor.nodes.loop_desc', 'Repeat actions'), category: 'logic' },
         { type: 'assert', label: t('flows.editor.nodes.assert'), icon: 'check', color: '#22c55e', bgColor: 'rgba(34, 197, 94, 0.15)', description: t('flows.editor.nodes.assert_desc', 'Verify element'), category: 'logic' },

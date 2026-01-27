@@ -75,9 +75,22 @@ class CampaignController extends Controller
             'description' => 'nullable|string',
             'icon' => 'nullable|string|max:10',
             'color' => 'nullable|string|max:20',
-            'data_collection_id' => 'nullable|exists:data_collections,id', // Optional - data linked in workflow's DataSource node
-            'workflow_ids' => 'required|array|min:1',
+            'data_collection_id' => 'nullable|exists:data_collections,id',
+
+            // NEW: Per-workflow configuration
+            'workflow_configs' => 'nullable|array|min:1',
+            'workflow_configs.*.flow_id' => 'required|exists:flows,id',
+            'workflow_configs.*.sequence' => 'required|integer|min:0',
+            'workflow_configs.*.repeat_count' => 'required|integer|min:1|max:1000',
+            'workflow_configs.*.execution_mode' => 'required|in:once,repeat,conditional',
+            'workflow_configs.*.delay_between_repeats' => 'nullable|integer|min:0|max:3600',
+            'workflow_configs.*.variable_source_collection_id' => 'nullable|exists:data_collections,id',
+            'workflow_configs.*.iteration_strategy' => 'nullable|in:sequential,random',
+
+            // FALLBACK: Legacy workflow_ids for backward compatibility
+            'workflow_ids' => 'required_without:workflow_configs|array|min:1',
             'workflow_ids.*' => 'exists:flows,id',
+
             'device_ids' => 'required|array|min:1',
             'device_ids.*' => 'exists:devices,id',
             'execution_mode' => 'nullable|in:sequential,parallel',
@@ -110,9 +123,28 @@ class CampaignController extends Controller
             'status' => Campaign::STATUS_DRAFT,
         ]);
 
-        // Attach workflows with sequence
-        foreach ($validated['workflow_ids'] as $index => $workflowId) {
-            $campaign->workflows()->attach($workflowId, ['sequence' => $index]);
+        // NEW LOGIC: Attach workflows with per-workflow execution config
+        if (isset($validated['workflow_configs'])) {
+            foreach ($validated['workflow_configs'] as $config) {
+                $campaign->workflows()->attach($config['flow_id'], [
+                    'sequence' => $config['sequence'],
+                    'repeat_count' => $config['repeat_count'],
+                    'execution_mode' => $config['execution_mode'],
+                    'delay_between_repeats' => $config['delay_between_repeats'] ?? null,
+                    'variable_source_collection_id' => $config['variable_source_collection_id'] ?? null,
+                    'iteration_strategy' => $config['iteration_strategy'] ?? 'sequential',
+                ]);
+            }
+        } else {
+            // FALLBACK: Legacy mode - attach workflows with default config
+            foreach ($validated['workflow_ids'] as $index => $workflowId) {
+                $campaign->workflows()->attach($workflowId, [
+                    'sequence' => $index,
+                    'repeat_count' => 1, // Default
+                    'execution_mode' => 'once', // Default
+                    'delay_between_repeats' => null,
+                ]);
+            }
         }
 
         // Attach devices
@@ -181,8 +213,8 @@ class CampaignController extends Controller
     }
 
     /**
-     * Run campaign - create chain jobs for records
-     * Each job = 1 record + workflow chain executed on 1 device
+     * Run campaign - create jobs based on per-workflow execution config
+     * NEW LOGIC: Each job = 1 workflow execution (not chained)
      */
     public function run(Request $request, Campaign $campaign)
     {
@@ -206,65 +238,73 @@ class CampaignController extends Controller
             return back()->with('error', 'Campaign chưa có workflow nào!');
         }
 
-        // Build workflow chain (array of workflow IDs)
-        $workflowChain = $workflows->pluck('id')->toArray();
-
         // Get record IDs to process
         $recordIds = $this->getFilteredRecordIds($campaign);
         $totalRecords = count($recordIds);
-        $deviceCount = $devices->count();
 
-        // If no data collection, create 1 job per device with workflow chain
+        // Handle campaigns without data collection (workflows run once per device)
         if ($totalRecords === 0 && !$campaign->data_collection_id) {
             foreach ($devices as $device) {
-                WorkflowJob::create([
-                    'user_id' => $campaign->user_id,
-                    'flow_id' => $workflows->first()->id, // Primary workflow for display
-                    'device_id' => $device->id,
-                    'campaign_id' => $campaign->id,
-                    'workflow_chain' => $workflowChain,
-                    'current_workflow_index' => 0,
-                    'name' => "{$campaign->name}",
-                    'status' => WorkflowJob::STATUS_PENDING,
-                    'priority' => 5,
-                    'max_retries' => 3,
-                ]);
+                foreach ($workflows as $workflow) {
+                    $config = $campaign->getWorkflowConfig($workflow->id);
+
+                    WorkflowJob::create([
+                        'user_id' => $campaign->user_id,
+                        'flow_id' => $workflow->id,
+                        'device_id' => $device->id,
+                        'campaign_id' => $campaign->id,
+                        'workflow_chain' => [$workflow->id],
+                        'current_workflow_index' => 0,
+                        'name' => "{$campaign->name} - {$workflow->name}",
+                        'status' => WorkflowJob::STATUS_PENDING,
+                        'priority' => 5,
+                        'max_retries' => 3,
+                    ]);
+                }
             }
         } else {
-            $repeatCount = $campaign->repeat_per_record ?: 1;
+            // NEW LOGIC: Per-workflow job generation
             $assignments = $campaign->device_record_assignments;
+            $deviceCount = $devices->count();
 
-            // Check if manual device assignments exist
             if ($assignments && !empty($assignments)) {
-                // MANUAL ASSIGNMENT MODE: Use specific records for each device
+                // MANUAL ASSIGNMENT MODE
                 foreach ($assignments as $deviceId => $assignedRecordIds) {
                     $device = $devices->firstWhere('id', (int) $deviceId);
-                    if (!$device) {
-                        continue; // Skip if device not online
-                    }
+                    if (!$device)
+                        continue;
 
-                    // Filter to only valid record IDs
                     $validRecordIds = array_intersect($assignedRecordIds, $recordIds);
 
                     foreach ($validRecordIds as $recordId) {
-                        for ($r = 0; $r < $repeatCount; $r++) {
-                            $poolContext = $this->buildJobContext($campaign);
+                        foreach ($workflows as $workflow) {
+                            $config = $campaign->getWorkflowConfig($workflow->id);
+                            $repeatCount = $config['repeat_count'];
+                            $delay = $config['delay_between_repeats'] ?? 0;
 
-                            WorkflowJob::create([
-                                'user_id' => $campaign->user_id,
-                                'flow_id' => $workflows->first()->id,
-                                'device_id' => $device->id,
-                                'campaign_id' => $campaign->id,
-                                'data_collection_id' => $campaign->data_collection_id,
-                                'data_record_id' => $recordId,
-                                'workflow_chain' => $workflowChain,
-                                'current_workflow_index' => 0,
-                                'chain_context' => $poolContext,
-                                'name' => "{$campaign->name} - Record #{$recordId}" . ($repeatCount > 1 ? " (Run " . ($r + 1) . ")" : ""),
-                                'status' => WorkflowJob::STATUS_PENDING,
-                                'priority' => 5,
-                                'max_retries' => 3,
-                            ]);
+                            for ($i = 0; $i < $repeatCount; $i++) {
+                                $poolContext = $this->buildJobContext($campaign);
+
+                                WorkflowJob::create([
+                                    'user_id' => $campaign->user_id,
+                                    'flow_id' => $workflow->id,
+                                    'device_id' => $device->id,
+                                    'campaign_id' => $campaign->id,
+                                    'data_collection_id' => $campaign->data_collection_id,
+                                    'data_record_id' => $recordId,
+                                    'variable_source_collection_id' => $config['variable_source_collection_id'],
+                                    'iteration_index' => $i,
+                                    'workflow_chain' => [$workflow->id],
+                                    'current_workflow_index' => 0,
+                                    'chain_context' => $poolContext,
+                                    'name' => "{$campaign->name} - {$workflow->name} #{$recordId}"
+                                        . ($repeatCount > 1 ? " (Run " . ($i + 1) . ")" : ""),
+                                    'scheduled_at' => now()->addSeconds($i * $delay),
+                                    'status' => WorkflowJob::STATUS_PENDING,
+                                    'priority' => 5,
+                                    'max_retries' => 3,
+                                ]);
+                            }
                         }
                     }
                 }
@@ -279,24 +319,35 @@ class CampaignController extends Controller
                 foreach ($recordIds as $recordId) {
                     $device = $devices[$deviceIndex % $deviceCount];
 
-                    for ($r = 0; $r < $repeatCount; $r++) {
-                        $poolContext = $this->buildJobContext($campaign);
+                    // Generate jobs for each workflow
+                    foreach ($workflows as $workflow) {
+                        $config = $campaign->getWorkflowConfig($workflow->id);
+                        $repeatCount = $config['repeat_count'];
+                        $delay = $config['delay_between_repeats'] ?? 0;
 
-                        WorkflowJob::create([
-                            'user_id' => $campaign->user_id,
-                            'flow_id' => $workflows->first()->id,
-                            'device_id' => $device->id,
-                            'campaign_id' => $campaign->id,
-                            'data_collection_id' => $campaign->data_collection_id,
-                            'data_record_id' => $recordId,
-                            'workflow_chain' => $workflowChain,
-                            'current_workflow_index' => 0,
-                            'chain_context' => $poolContext,
-                            'name' => "{$campaign->name} - Record #{$recordId}" . ($repeatCount > 1 ? " (Run " . ($r + 1) . ")" : ""),
-                            'status' => WorkflowJob::STATUS_PENDING,
-                            'priority' => 5,
-                            'max_retries' => 3,
-                        ]);
+                        for ($i = 0; $i < $repeatCount; $i++) {
+                            $poolContext = $this->buildJobContext($campaign);
+
+                            WorkflowJob::create([
+                                'user_id' => $campaign->user_id,
+                                'flow_id' => $workflow->id,
+                                'device_id' => $device->id,
+                                'campaign_id' => $campaign->id,
+                                'data_collection_id' => $campaign->data_collection_id,
+                                'data_record_id' => $recordId,
+                                'variable_source_collection_id' => $config['variable_source_collection_id'],
+                                'iteration_index' => $i,
+                                'workflow_chain' => [$workflow->id],
+                                'current_workflow_index' => 0,
+                                'chain_context' => $poolContext,
+                                'name' => "{$campaign->name} - {$workflow->name} #{$recordId}"
+                                    . ($repeatCount > 1 ? " (Run " . ($i + 1) . ")" : ""),
+                                'scheduled_at' => now()->addSeconds($i * $delay),
+                                'status' => WorkflowJob::STATUS_PENDING,
+                                'priority' => 5,
+                                'max_retries' => 3,
+                            ]);
+                        }
                     }
 
                     $recordsAssignedToDevice++;

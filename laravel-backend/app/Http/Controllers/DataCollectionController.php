@@ -276,12 +276,25 @@ class DataCollectionController extends Controller
 
     /**
      * Export collection to CSV
+     * Supports bulk export by passing ?ids=1,2,3 query parameter
      */
-    public function export(DataCollection $dataCollection)
+    public function export(Request $request, DataCollection $dataCollection)
     {
         $this->authorize('view', $dataCollection);
 
-        $records = $dataCollection->records()->where('status', 'active')->get();
+        // Get specific record IDs if provided (for bulk export)
+        $ids = $request->input('ids');
+        $recordIds = $ids ? explode(',', $ids) : null;
+
+        // Build query
+        $query = $dataCollection->records()->where('status', 'active');
+
+        // Filter by specific IDs if provided
+        if ($recordIds) {
+            $query->whereIn('id', $recordIds);
+        }
+
+        $records = $query->get();
         $schema = $dataCollection->schema;
 
         $filename = str_slug($dataCollection->name) . '-' . now()->format('Y-m-d') . '.csv';

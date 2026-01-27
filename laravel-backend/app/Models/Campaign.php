@@ -98,7 +98,15 @@ class Campaign extends Model
     public function workflows(): BelongsToMany
     {
         return $this->belongsToMany(Flow::class, 'campaign_workflows')
-            ->withPivot('sequence')
+            ->withPivot([
+                'sequence',
+                'repeat_count',
+                'execution_mode',
+                'delay_between_repeats',
+                'conditions',
+                'variable_source_collection_id',
+                'iteration_strategy',
+            ])
             ->orderByPivot('sequence')
             ->withTimestamps();
     }
@@ -168,6 +176,27 @@ class Campaign extends Model
         if ($this->records_processed === 0)
             return 0;
         return (int) round(($this->records_success / $this->records_processed) * 100);
+    }
+
+    /**
+     * Get workflow-specific execution configuration from pivot table
+     */
+    public function getWorkflowConfig(int $flowId): array
+    {
+        $pivot = $this->workflows()
+            ->where('flows.id', $flowId)
+            ->first()
+                ?->pivot;
+
+        return [
+            'sequence' => $pivot?->sequence ?? 0,
+            'repeat_count' => $pivot?->repeat_count ?? 1,
+            'execution_mode' => $pivot?->execution_mode ?? 'once',
+            'delay_between_repeats' => $pivot?->delay_between_repeats,
+            'conditions' => $pivot?->conditions,
+            'variable_source_collection_id' => $pivot?->variable_source_collection_id,
+            'iteration_strategy' => $pivot?->iteration_strategy ?? 'sequential',
+        ];
     }
 
     /**
