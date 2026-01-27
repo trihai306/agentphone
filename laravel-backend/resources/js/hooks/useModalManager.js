@@ -14,6 +14,7 @@ export const MODAL_TYPES = {
     LANG_DROPDOWN: 'langDropdown',
     DEVICE_SELECTOR: 'deviceSelector',
     CLEAR_CONFIRM: 'clearConfirm',
+    AI_CONFIG: 'aiConfig', // NEW: AI node configuration modal
 };
 
 const initialState = {
@@ -25,6 +26,7 @@ const initialState = {
     langDropdown: { isOpen: false },
     deviceSelector: { isOpen: false },
     clearConfirm: { isOpen: false },
+    aiConfig: { isOpen: false, nodeId: null }, // NEW: AI config modal state
 };
 
 function modalReducer(state, action) {
@@ -90,6 +92,11 @@ export function useModalManager() {
         openModal(MODAL_TYPES.EDGE_DELAY, { edge, position });
     }, [openModal]);
 
+    const openAIConfig = useCallback((nodeId) => {
+        openModal(MODAL_TYPES.AI_CONFIG, { nodeId });
+    }, [openModal]);
+
+
     return {
         // State
         modals,
@@ -104,6 +111,7 @@ export function useModalManager() {
         openCollectionPicker,
         openLoopSubFlow,
         openEdgeDelay,
+        openAIConfig, // NEW
 
         // Modal type constants
         MODAL_TYPES,

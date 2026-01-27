@@ -66,6 +66,7 @@ import GlassWaitForElementNode from '../../Components/Flow/GlassWaitForElementNo
 import GlassProbabilityNode from '../../Components/Flow/GlassProbabilityNode';
 import SmartActionNode from '../../Components/Flow/SmartActionNode';
 import LoopSubFlowModal from '../../Components/Flow/LoopSubFlowModal';
+import AINodeConfigModal from '../../Components/Flow/AINodeConfigModal';
 import LiveRecordingPanel from '../../Components/Flow/LiveRecordingPanel';
 import WorkflowPreviewModal from '../../Components/Flow/WorkflowPreviewModal';
 import EdgeDelayPopover from '../../Components/Flow/EdgeDelayPopover';
@@ -170,7 +171,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
     // Modal management
     const modalManager = useModalManager();
-    const { modals, openModal, closeModal, openMediaPicker, openCollectionPicker, openLoopSubFlow, openEdgeDelay, MODAL_TYPES } = modalManager;
+    const { modals, openModal, closeModal, openMediaPicker, openCollectionPicker, openLoopSubFlow, openEdgeDelay, openAIConfig, MODAL_TYPES } = modalManager;
 
     // Debug panel
     const { debugEvents, showDebugPanel, setShowDebugPanel, addDebugEvent, toggleDebugPanel } = useDebugPanel();
@@ -1190,6 +1191,13 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 : node
                         ));
                     }
+                }),
+                // Add AI config modal callback for AINode
+                ...(type === 'ai_call' && {
+                    onConfigureAI: (nodeId) => {
+                        setSelectedNode(null); // Close config panel/sidebar
+                        openAIConfig(nodeId); // Open AI modal at Editor level
+                    }
                 })
             },
         };
@@ -1742,6 +1750,23 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                 }}
                 selectedDevice={selectedDevice}
                 userId={props.auth?.user?.id}
+            />
+
+            {/* AI Config Modal */}
+            <AINodeConfigModal
+                isOpen={modals.aiConfig.isOpen}
+                onClose={() => closeModal(MODAL_TYPES.AI_CONFIG)}
+                nodeData={nodes.find(n => n.id === modals.aiConfig.nodeId)?.data || {}}
+                onSave={(newConfig) => {
+                    const nodeId = modals.aiConfig.nodeId;
+                    setNodes(prev => prev.map(node =>
+                        node.id === nodeId
+                            ? { ...node, data: { ...node.data, ...newConfig } }
+                            : node
+                    ));
+                    closeModal(MODAL_TYPES.AI_CONFIG);
+                    debouncedSave(nodes, edges, viewport);
+                }}
             />
 
             {/* Workflow Preview Modal */}

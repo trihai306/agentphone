@@ -53,6 +53,12 @@ function GlassAINode({ id, data, selected }) {
         <>
             <div
                 className={`group transition-all duration-300 ${selected ? 'scale-[1.02]' : ''} ${isRunning ? 'animate-pulse' : ''}`}
+                onClick={() => {
+                    if (data?.onConfigureAI) {
+                        data.onConfigureAI(id);
+                    }
+                }}
+                style={{ cursor: 'pointer' }}
             >
                 {/* Input Handle - Left */}
                 <Handle

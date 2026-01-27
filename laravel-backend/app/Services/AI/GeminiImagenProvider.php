@@ -102,11 +102,18 @@ class GeminiImagenProvider implements AiProviderInterface
 
             $data = $response->json();
 
+            // Log success WITHOUT base64 data (too large, causes memory exhaustion)
+            $safeData = $data;
+            if (isset($safeData['predictions'][0]['bytesBase64Encoded'])) {
+                $base64Length = strlen($safeData['predictions'][0]['bytesBase64Encoded']);
+                $safeData['predictions'][0]['bytesBase64Encoded'] = "[BASE64_DATA_{$base64Length}_BYTES]";
+            }
+
             Log::info('GeminiImagenProvider: Image generation started', [
                 'model' => $modelVersion,
                 'prompt' => substr($prompt, 0, 100),
                 'aspect_ratio' => $aspectRatio,
-                'response' => $data,
+                'response' => $safeData,  // Safe to log without base64
             ]);
 
             // Imagen returns images directly (synchronous)
