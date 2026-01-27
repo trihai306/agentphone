@@ -123,7 +123,15 @@ class ActivityLogResource extends Resource
             ])
             ->headerActions([
                 \pxlrbt\FilamentExcel\Actions\Tables\ExportAction::make()
-                    ->label('Xuất Excel'),
+                    ->label('Xuất Excel')
+                    ->exports([
+                        \pxlrbt\FilamentExcel\Exports\ExcelExport::make()
+                            ->fromTable()
+                            ->askForFilename(
+                                default: 'activity_logs_' . now()->format('Y-m-d'),
+                                label: 'Tên file'
+                            )
+                    ]),
                 Tables\Actions\Action::make('clearOldLogs')
                     ->label('Dọn dẹp logs cũ')
                     ->icon('heroicon-o-trash')

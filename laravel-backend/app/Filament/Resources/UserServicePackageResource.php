@@ -298,7 +298,15 @@ class UserServicePackageResource extends Resource
             ])
             ->headerActions([
                 \pxlrbt\FilamentExcel\Actions\Tables\ExportAction::make()
-                    ->label('Xuất Excel'),
+                    ->label('Xuất Excel')
+                    ->exports([
+                        \pxlrbt\FilamentExcel\Exports\ExcelExport::make()
+                            ->fromTable()
+                            ->askForFilename(
+                                default: 'user_service_packages_' . now()->format('Y-m-d'),
+                                label: 'Tên file'
+                            )
+                    ]),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
