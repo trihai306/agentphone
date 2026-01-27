@@ -335,6 +335,18 @@ export default function NodeConfigPanel({
                     />
                 )}
 
+                {/* AI Call config */}
+                {nodeType === 'ai_call' && (
+                    <AIConfig
+                        data={nodeData}
+                        updateData={updateData}
+                        isDark={isDark}
+                        upstreamVariables={upstreamVariables}
+                        loopContext={loopContext}
+                    />
+                )}
+
+
                 {/* Universal: Error Handling Options */}
                 {!['input', 'output', 'start', 'end', 'condition', 'loop', 'data_source'].includes(nodeType) && (
                     <ConfigSection title={t('flows.editor.config.error_handling', { defaultValue: 'Error Handling' })} isDark={isDark}>

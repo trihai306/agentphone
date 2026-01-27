@@ -271,6 +271,22 @@ class AiGenerationService
     }
 
     /**
+     * Process video generation (public method for GenerateVideoJob)
+     */
+    public function processVideoGeneration(AiGeneration $generation): void
+    {
+        $this->startVideoGeneration($generation);
+    }
+
+    /**
+     * Process image-to-video generation (public method for GenerateVideoJob)
+     */
+    public function processImageToVideoGeneration(AiGeneration $generation): void
+    {
+        $this->startImageToVideoGeneration($generation);
+    }
+
+    /**
      * Start async image generation using provider
      */
     protected function startImageGeneration(AiGeneration $generation): void

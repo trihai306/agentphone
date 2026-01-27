@@ -45,10 +45,10 @@ class GenerateVideoJob implements ShouldQueue
             // Determine generation type and start accordingly
             if ($generation->type === 'video' && isset($params['source_image']) && $params['source_image']) {
                 // Image-to-video
-                $aiService->startImageToVideoGeneration($generation);
+                $aiService->processImageToVideoGeneration($generation);
             } else {
                 // Text-to-video
-                $aiService->startVideoGeneration($generation);
+                $aiService->processVideoGeneration($generation);
             }
 
             // Poll for completion
