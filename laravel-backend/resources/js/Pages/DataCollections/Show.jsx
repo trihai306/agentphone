@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/Layouts/AppLayout';
@@ -24,6 +24,23 @@ export default function Show({ collection, records, filters }) {
     const [perPage, setPerPage] = useState(records?.per_page || 50);
     const [showSortDropdown, setShowSortDropdown] = useState(false);
     const [showPerPageDropdown, setShowPerPageDropdown] = useState(false);
+
+    // Table density state (compact | standard | comfortable)
+    const [tableDensity, setTableDensity] = useState(() => {
+        return localStorage.getItem('table_density') || 'standard';
+    });
+
+    // Persist density preference
+    useEffect(() => {
+        localStorage.setItem('table_density', tableDensity);
+    }, [tableDensity]);
+
+    // Density CSS classes
+    const densityStyles = useMemo(() => ({
+        compact: 'text-xs py-1 px-2',
+        standard: 'text-sm py-2.5 px-3',
+        comfortable: 'text-sm py-4 px-4'
+    }), []);
 
     const { data, setData, post, processing, reset } = useForm({
         data: (collection.schema || []).reduce((acc, field) => {
@@ -181,6 +198,38 @@ export default function Show({ collection, records, filters }) {
     };
 
     const handleExport = () => window.location.href = `/data-collections/${collection.id}/export`;
+
+    const handleBulkExport = () => {
+        if (selectedRecords.length === 0) return;
+        const ids = selectedRecords.join(',');
+        window.location.href = `/data-collections/${collection.id}/export?ids=${ids}`;
+        addToast(t('data_collections.exporting_selected', { count: selectedRecords.length }), 'info');
+    };
+
+    // Keyboard shortcuts
+    useEffect(() => {
+        const handleKeyboard = (e) => {
+            // Ctrl/Cmd + A = Select all (prevent default browser behavior)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'a' && !e.target.matches('input, textarea, [contenteditable]')) {
+                e.preventDefault();
+                toggleSelectAll();
+            }
+
+            // Delete key = Bulk delete if selection > 0
+            if (e.key === 'Delete' && selectedRecords.length > 0 && !e.target.matches('input, textarea, [contenteditable]')) {
+                handleBulkDelete();
+            }
+
+            // Escape = Clear selection
+            if (e.key === 'Escape') {
+                setSelectedRecords([]);
+                setEditingCell(null);
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyboard);
+        return () => document.removeEventListener('keydown', handleKeyboard);
+    }, [selectedRecords, toggleSelectAll, handleBulkDelete]);
 
     return (
         <AppLayout title={collection.name}>
@@ -350,21 +399,73 @@ export default function Show({ collection, records, filters }) {
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Table Density Toggle */}
+                                <div className={`flex items-center border rounded-xl overflow-hidden ${isDark
+                                    ? 'border-white/10 bg-white/5'
+                                    : 'border-gray-200 bg-gray-50'
+                                    }`}>
+                                    {/* Compact */}
+                                    <button
+                                        onClick={() => setTableDensity('compact')}
+                                        className={`px-3 py-2.5 text-sm font-medium transition-all ${tableDensity === 'compact'
+                                            ? isDark
+                                                ? 'bg-blue-500/20 text-blue-400'
+                                                : 'bg-blue-50 text-blue-600'
+                                            : isDark
+                                                ? 'text-gray-400 hover:text-gray-300 hover:bg-white/5'
+                                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                                            }`}
+                                        title={t('data_collections.density.compact')}
+                                    >
+                                        {/* Compact icon: 3 thin horizontal lines */}
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                        </svg>
+                                    </button>
+
+                                    {/* Standard */}
+                                    <button
+                                        onClick={() => setTableDensity('standard')}
+                                        className={`px-3 py-2.5 text-sm font-medium transition-all border-x ${tableDensity === 'standard'
+                                            ? isDark
+                                                ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                                                : 'bg-blue-50 text-blue-600 border-blue-200'
+                                            : isDark
+                                                ? 'text-gray-400 hover:text-gray-300 hover:bg-white/5 border-white/5'
+                                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100 border-gray-200'
+                                            }`}
+                                        title={t('data_collections.density.standard')}
+                                    >
+                                        {/* Standard icon: 3 medium lines */}
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
+                                        </svg>
+                                    </button>
+
+                                    {/* Comfortable */}
+                                    <button
+                                        onClick={() => setTableDensity('comfortable')}
+                                        className={`px-3 py-2.5 text-sm font-medium transition-all ${tableDensity === 'comfortable'
+                                            ? isDark
+                                                ? 'bg-blue-500/20 text-blue-400'
+                                                : 'bg-blue-50 text-blue-600'
+                                            : isDark
+                                                ? 'text-gray-400 hover:text-gray-300 hover:bg-white/5'
+                                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                                            }`}
+                                        title={t('data_collections.density.comfortable')}
+                                    >
+                                        {/* Comfortable icon: 3 thick lines with more spacing */}
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 5h16M4 12h16M4 19h16" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Actions */}
                             <div className="flex items-center gap-2">
-                                {selectedRecords.length > 0 && (
-                                    <button
-                                        onClick={handleBulkDelete}
-                                        className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl text-red-500 bg-red-500/10 hover:bg-red-500/20 transition-all"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                        {t('common.delete')} ({selectedRecords.length})
-                                    </button>
-                                )}
                                 <button
                                     onClick={handleExport}
                                     className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl transition-all ${isDark
@@ -514,7 +615,7 @@ export default function Show({ collection, records, filters }) {
                                                 : rowIndex % 2 === 0 ? 'bg-white hover:bg-gray-50' : 'bg-gray-50/50 hover:bg-gray-100/50'
                                                 }`}
                                         >
-                                            <td className="px-4 py-4">
+                                            <td className={densityStyles[tableDensity]}>
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedRecords.includes(record.id)}
@@ -529,7 +630,7 @@ export default function Show({ collection, records, filters }) {
                                                 />
                                             </td>
                                             {(collection.schema || []).map((field) => (
-                                                <td key={field.name} className="px-4 py-3">
+                                                <td key={field.name} className={densityStyles[tableDensity]}>
                                                     <EditableCell
                                                         value={record.data[field.name]}
                                                         field={field}
@@ -542,10 +643,10 @@ export default function Show({ collection, records, filters }) {
                                                 </td>
                                             ))}
                                             {/* Created At Column */}
-                                            <td className={`px-4 py-3 text-sm whitespace-nowrap ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                            <td className={`${densityStyles[tableDensity]} whitespace-nowrap ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                                 {record.created_at || '—'}
                                             </td>
-                                            <td className="px-4 py-3">
+                                            <td className={densityStyles[tableDensity]}>
                                                 <button
                                                     onClick={() => handleDeleteRecord(record.id)}
                                                     className={`p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all ${isDark
@@ -633,6 +734,68 @@ export default function Show({ collection, records, filters }) {
                             </div>
                         </div>
                     </div>
+
+                    {/* Floating Selection Toolbar */}
+                    {selectedRecords.length > 0 && (
+                        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4">
+                            <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-xl ${isDark
+                                ? 'bg-[#1a1a1a]/95 border-white/10'
+                                : 'bg-white/95 border-gray-200'
+                                }`}>
+                                {/* Selection count */}
+                                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${isDark ? 'bg-blue-500/20' : 'bg-blue-50'}`}>
+                                    <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                    <span className={`text-sm font-semibold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                                        {selectedRecords.length} {t('data_collections.selected')}
+                                    </span>
+                                </div>
+
+                                {/* Divider */}
+                                <div className={`w-px h-6 ${isDark ? 'bg-white/10' : 'bg-gray-200'}`} />
+
+                                {/* Bulk Export */}
+                                <button
+                                    onClick={handleBulkExport}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${isDark
+                                        ? 'text-gray-300 hover:bg-white/5'
+                                        : 'text-gray-700 hover:bg-gray-100'
+                                        }`}
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                    {t('data_collections.export_selected')}
+                                </button>
+
+                                {/* Bulk Delete */}
+                                <button
+                                    onClick={handleBulkDelete}
+                                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-all"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    {t('common.delete')}
+                                </button>
+
+                                {/* Clear selection */}
+                                <button
+                                    onClick={() => setSelectedRecords([])}
+                                    className={`p-2 rounded-lg transition-all ${isDark
+                                        ? 'text-gray-500 hover:bg-white/5'
+                                        : 'text-gray-400 hover:bg-gray-100'
+                                        }`}
+                                    title={t('data_collections.clear_selection')}
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </AppLayout>
