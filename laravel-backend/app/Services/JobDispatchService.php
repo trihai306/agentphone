@@ -21,10 +21,14 @@ class JobDispatchService
     public function dispatch(WorkflowJob $job): bool
     {
         try {
-            // Validate device is online
             $device = $job->device;
-            if (!$device->isOnline()) {
-                JobLog::warning($job, 'Device is offline, cannot dispatch job');
+
+            // CRITICAL: Final Redis check right before socket broadcast
+            // This catches race conditions where device disconnects between
+            // controller check and actual dispatch
+            $presenceService = app(\App\Services\DevicePresenceService::class);
+            if (!$presenceService->isOnline($device->user_id, $device->device_id)) {
+                JobLog::warning($job, 'Device went offline before dispatch (Redis verification failed)');
                 return false;
             }
 

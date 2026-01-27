@@ -107,10 +107,12 @@ class Device extends Model
     /**
      * Check if device is currently online via Redis (preferred)
      * Falls back to DB-based check if Redis unavailable
+     * 
+     * @param int $minutes DEPRECATED - now uses fixed 90s window (60s Redis TTL + 30s grace)
      */
-    public function isOnline(int $minutes = 5): bool
+    public function isOnline(?int $minutes = null): bool
     {
-        // Try Redis first (O(1) operation)
+        // Try Redis first (O(1) operation) - primary source of truth
         try {
             $key = sprintf('device:online:%d', $this->user_id);
             if (Redis::sismember($key, $this->device_id)) {
@@ -118,16 +120,17 @@ class Device extends Model
             }
         } catch (\Exception $e) {
             // Redis unavailable, fall back to DB check
+            \Log::warning("Redis unavailable for device presence check: {$e->getMessage()}");
         }
 
-        // Fallback: Socket connected flag
+        // Fallback: Socket connected flag (synced from Redis every 30s)
         if ($this->socket_connected) {
             return true;
         }
 
-        // Fallback: Activity-based check - if heartbeat was received recently, consider online
-        // (removed strict status check as heartbeat may not update status immediately)
-        if ($this->last_active_at && $this->last_active_at->gte(now()->subMinutes($minutes))) {
+        // Fallback: Activity-based check with TIGHT 90-second tolerance
+        // 90s = 60s Redis TTL + 30s grace period for heartbeat delays
+        if ($this->last_active_at && $this->last_active_at->gte(now()->subSeconds(90))) {
             return true;
         }
 

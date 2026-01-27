@@ -22,7 +22,7 @@ $trackRun = function ($command) {
 // =============================================
 
 Schedule::command('devices:sync-presence')
-    ->everyMinute()
+    ->everyThirtySeconds()  // Increased from everyMinute to reduce race condition window (TTL is 60s)
     ->onSuccess(fn() => Cache::put('schedule_last_run:devices:sync-presence', ['time' => now()->format('d/m H:i:s'), 'status' => 'success'], now()->addHours(24)));
 
 Schedule::command('jobs:dispatch-scheduled')

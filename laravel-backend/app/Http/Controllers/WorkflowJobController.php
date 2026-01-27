@@ -258,12 +258,19 @@ class WorkflowJobController extends Controller
         $workflowCount = $isMultiWorkflow ? count($flowIds) : 1;
         JobLog::info($job, "Job created with {$job->total_tasks} tasks across {$workflowCount} workflow(s)");
 
-        // Dispatch if no scheduled_at
-        if (!$job->scheduled_at && $device->isOnline()) {
-            $dispatchService = app(JobDispatchService::class);
-            $dispatchService->dispatch($job);
-        } elseif (!$device->isOnline()) {
-            JobLog::warning($job, 'Device is offline, job queued for later');
+        // Dispatch if no scheduled_at AND device is actually online (verified via Redis)
+        if (!$job->scheduled_at) {
+            // Critical: Use DevicePresenceService for real-time Redis check
+            // This prevents race conditions where device disconnects between job creation and dispatch
+            $presenceService = app(\App\Services\DevicePresenceService::class);
+            $isDeviceOnline = $presenceService->isOnline($device->user_id, $device->device_id);
+
+            if ($isDeviceOnline) {
+                $dispatchService = app(JobDispatchService::class);
+                $dispatchService->dispatch($job);
+            } else {
+                JobLog::warning($job, 'Device offline at dispatch time (Redis check failed)');
+            }
         }
 
         return redirect()->route('jobs.show', $job)
@@ -354,10 +361,13 @@ class WorkflowJobController extends Controller
             $job->update(['total_tasks' => $sequence - 1]);
             JobLog::info($job, "Batch job created with {$job->total_tasks} tasks");
 
-            // Dispatch if device online
-            if ($device->isOnline()) {
+            // Dispatch if device online (verified via Redis)
+            $presenceService = app(\App\Services\DevicePresenceService::class);
+            if ($presenceService->isOnline($device->user_id, $device->device_id)) {
                 $dispatchService = app(JobDispatchService::class);
                 $dispatchService->dispatch($job);
+            } else {
+                JobLog::warning($job, 'Device offline at batch dispatch time (Redis check failed)');
             }
 
             $jobs[] = $job;
