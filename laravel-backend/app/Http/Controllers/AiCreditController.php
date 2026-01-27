@@ -114,6 +114,60 @@ class AiCreditController extends Controller
     }
 
     /**
+     * Purchase credits with custom amount
+     */
+    public function purchaseCustom(Request $request)
+    {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:10000',
+            'credits' => 'required|integer|min:1',
+        ]);
+
+        $user = Auth::user();
+        $amount = $validated['amount'];
+        $credits = $validated['credits'];
+
+        // Verify conversion rate (500 VND = 1 credit)
+        $expectedCredits = floor($amount / 500);
+        if ($credits !== $expectedCredits) {
+            return back()->withErrors([
+                'message' => 'Tỷ lệ chuyển đổi không hợp lệ.',
+            ]);
+        }
+
+        // Check wallet balance
+        $wallet = $user->wallets()->where('currency', 'VND')->first();
+        if (!$wallet || $wallet->balance < $amount) {
+            return back()->withErrors([
+                'message' => 'Số dư ví không đủ. Vui lòng nạp thêm tiền.',
+            ]);
+        }
+
+        // Deduct from wallet
+        $wallet->balance -= $amount;
+        $wallet->save();
+
+        // Create transaction record
+        Transaction::create([
+            'user_id' => $user->id,
+            'wallet_id' => $wallet->id,
+            'type' => Transaction::TYPE_WITHDRAWAL,
+            'amount' => $amount,
+            'final_amount' => $amount,
+            'status' => Transaction::STATUS_COMPLETED,
+            'payment_method' => 'wallet',
+            'user_note' => "Mua {$credits} AI Credits (tùy chỉnh)",
+            'completed_at' => now(),
+        ]);
+
+        // Add AI credits
+        $user->addAiCredits($credits);
+
+        return redirect()->route('ai-credits.index')
+            ->with('success', "Đã mua {$credits} credits thành công!");
+    }
+
+    /**
      * Get credit purchase history
      */
     public function history()

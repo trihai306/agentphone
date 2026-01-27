@@ -182,6 +182,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [AiCreditController::class, 'index'])->name('index');
         Route::get('/packages', [AiCreditController::class, 'packages'])->name('packages');
         Route::post('/purchase', [AiCreditController::class, 'purchase'])->name('purchase');
+        Route::post('/purchase-custom', [AiCreditController::class, 'purchaseCustom'])->name('purchase-custom');
         Route::get('/history', [AiCreditController::class, 'history'])->name('history');
     });
 
