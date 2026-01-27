@@ -228,7 +228,7 @@ class UserMediaResource extends Resource
 
                 Tables\Filters\SelectFilter::make('user_id')
                     ->label('Người sở hữu')
-                    ->relationships('user', 'name')
+                    ->relationship('user', 'name')
                     ->searchable()
                     ->preload(),
 
