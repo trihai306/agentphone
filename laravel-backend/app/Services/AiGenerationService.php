@@ -281,11 +281,22 @@ class AiGenerationService
                 'parameters' => $modelConfig['parameters'] ?? [],
             ]);
 
-            $generation->update([
-                'provider_id' => $result['id'],
-                'status' => AiGeneration::STATUS_PROCESSING,
-                'provider_metadata' => $result['raw'] ?? $result,
-            ]);
+            // Handle synchronous response (e.g., Imagen returns completed result immediately)
+            if (isset($result['status']) && $result['status'] === 'completed') {
+                $this->handleSynchronousGeneration($generation, $result);
+            }
+            // Handle async response (e.g., Replicate returns job ID)
+            else if (isset($result['id'])) {
+                $generation->update([
+                    'provider_id' => $result['id'],
+                    'status' => AiGeneration::STATUS_PROCESSING,
+                    'provider_metadata' => $result['raw'] ?? $result,
+                ]);
+            }
+            // Unexpected format
+            else {
+                throw new \Exception('Invalid provider response format - missing both id and completed status');
+            }
 
         } catch (\Exception $e) {
             Log::error('Failed to start image generation', [
@@ -296,6 +307,82 @@ class AiGenerationService
             $generation->update([
                 'status' => AiGeneration::STATUS_FAILED,
                 'error_message' => $e->getMessage(),
+            ]);
+
+            $generation->user->addAiCredits($generation->credits_used);
+        }
+    }
+
+    /**
+     * Handle synchronous generation (e.g., Imagen base64 response)
+     */
+    protected function handleSynchronousGeneration(AiGeneration $generation, array $result): void
+    {
+        try {
+            // For base64 data URLs (Imagen)
+            if (isset($result['format']) && $result['format'] === 'base64') {
+                $dataUrl = $result['result_url'];
+
+                // Extract base64 content from data URL
+                if (preg_match('/^data:([^;]+);base64,(.+)$/', $dataUrl, $matches)) {
+                    $mimeType = $matches[1];
+                    $base64Data = $matches[2];
+                    $fileContent = base64_decode($base64Data);
+
+                    // Determine file extension from mime type
+                    $extension = $generation->type === AiGeneration::TYPE_IMAGE ? 'png' : 'mp4';
+                    $pathPrefix = $generation->type === AiGeneration::TYPE_IMAGE
+                        ? config('ai-generation.storage.image_path')
+                        : config('ai-generation.storage.video_path');
+
+                    // Generate filename
+                    $filename = $generation->id . '_' . time() . '.' . $extension;
+                    $path = $pathPrefix . '/' . $filename;
+
+                    // Store file
+                    $disk = config('ai-generation.storage.disk');
+                    Storage::disk($disk)->put($path, $fileContent);
+
+                    // Create UserMedia record
+                    $this->createMediaRecord($generation, $path, $disk, strlen($fileContent));
+
+                    // Update generation as completed
+                    $generation->update([
+                        'status' => AiGeneration::STATUS_COMPLETED,
+                        'result_path' => $path,
+                        'provider_id' => $result['task_id'] ?? 'sync_' . time(),
+                        'provider_metadata' => $result,
+                    ]);
+
+                    Log::info('Synchronous generation completed', [
+                        'generation_id' => $generation->id,
+                        'path' => $path,
+                    ]);
+                } else {
+                    throw new \Exception('Invalid data URL format');
+                }
+            }
+            // For external URLs
+            else if (isset($result['result_url'])) {
+                $generation->update([
+                    'provider_id' => $result['task_id'] ?? 'sync_' . time(),
+                    'status' => AiGeneration::STATUS_PROCESSING,
+                    'provider_metadata' => $result,
+                ]);
+                // Download will be handled by status check later
+            } else {
+                throw new \Exception('No result URL in synchronous response');
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Failed to handle synchronous generation', [
+                'generation_id' => $generation->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            $generation->update([
+                'status' => AiGeneration::STATUS_FAILED,
+                'error_message' => 'Failed to save result: ' . $e->getMessage(),
             ]);
 
             $generation->user->addAiCredits($generation->credits_used);

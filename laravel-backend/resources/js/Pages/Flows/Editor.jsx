@@ -370,6 +370,23 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                     }
                 };
             }
+            // Inject callbacks for ai_call nodes
+            if (node.type === 'ai_call' && !node.data?.onUpdateConfig) {
+                needsUpdate = true;
+                return {
+                    ...node,
+                    data: {
+                        ...node.data,
+                        onUpdateConfig: (nodeId, newConfig) => {
+                            setNodes((nds) => nds.map(n =>
+                                n.id === nodeId
+                                    ? { ...n, data: { ...n.data, ...newConfig } }
+                                    : n
+                            ));
+                        }
+                    }
+                };
+            }
             return node;
         });
 
