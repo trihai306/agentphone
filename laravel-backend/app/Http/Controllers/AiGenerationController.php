@@ -79,7 +79,7 @@ class AiGenerationController extends Controller
     }
 
     /**
-     * Generate an image
+     * Generate an image (queued)
      */
     public function generateImage(Request $request)
     {
@@ -96,10 +96,13 @@ class AiGenerationController extends Controller
             $user = Auth::user();
             $generation = $this->aiService->generateImage($user, $request->all());
 
+            // Dispatch job to queue instead of immediate execution
+            \App\Jobs\GenerateImageJob::dispatch($generation);
+
             return response()->json([
                 'success' => true,
                 'generation' => $this->formatGeneration($generation),
-                'message' => 'Image generation started successfully',
+                'message' => 'Image generation queued successfully',
             ]);
 
         } catch (\Exception $e) {
@@ -111,7 +114,7 @@ class AiGenerationController extends Controller
     }
 
     /**
-     * Generate a video
+     * Generate a video (queued)
      */
     public function generateVideo(Request $request)
     {
@@ -129,10 +132,13 @@ class AiGenerationController extends Controller
             $user = Auth::user();
             $generation = $this->aiService->generateVideo($user, $request->all());
 
+            // Dispatch job to queue instead of immediate execution
+            \App\Jobs\GenerateVideoJob::dispatch($generation);
+
             return response()->json([
                 'success' => true,
                 'generation' => $this->formatGeneration($generation),
-                'message' => 'Video generation started successfully',
+                'message' => 'Video generation queued successfully',
             ]);
 
         } catch (\Exception $e) {
@@ -144,7 +150,7 @@ class AiGenerationController extends Controller
     }
 
     /**
-     * Generate video from image (image-to-video)
+     * Generate video from image (image-to-video, queued)
      */
     public function generateVideoFromImage(Request $request)
     {
@@ -161,10 +167,13 @@ class AiGenerationController extends Controller
             $user = Auth::user();
             $generation = $this->aiService->generateVideoFromImage($user, $request->all());
 
+            // Dispatch job to queue instead of immediate execution
+            \App\Jobs\GenerateVideoJob::dispatch($generation);
+
             return response()->json([
                 'success' => true,
                 'generation' => $this->formatGeneration($generation),
-                'message' => 'Image-to-video generation started successfully',
+                'message' => 'Image-to-video generation queued successfully',
             ]);
 
         } catch (\Exception $e) {
