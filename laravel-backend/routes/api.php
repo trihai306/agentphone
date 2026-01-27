@@ -5,6 +5,7 @@ use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\Api\ServicePackageController;
 use App\Http\Controllers\Api\InteractionController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\API\AIOrchestrationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -142,7 +143,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/register', [\App\Http\Controllers\Api\RecordingEventController::class, 'registerListener']);
         Route::post('/unregister', [\App\Http\Controllers\Api\RecordingEventController::class, 'unregisterListener']);
     });
+
+    // AI Orchestration API (for AI Agent node)
+    Route::prefix('ai')->group(function () {
+        Route::post('/execute', [AIOrchestrationController::class, 'execute']);
+        Route::post('/test-prompt', [AIOrchestrationController::class, 'testPrompt']);
+        Route::get('/models/{provider}', [AIOrchestrationController::class, 'getModels']);
+        Route::post('/estimate-tokens', [AIOrchestrationController::class, 'estimateTokens']);
+    });
 });
+
+// AI model listing (public - no auth required for browsing models)
+Route::get('/ai/models/{provider}', [AIOrchestrationController::class, 'getModels']);
 
 // Pusher/Soketi auth endpoint for presence channels (requires auth)
 Route::middleware('auth:sanctum')->post('/pusher/auth', [\App\Http\Controllers\Api\SocketAuthController::class, 'auth']);

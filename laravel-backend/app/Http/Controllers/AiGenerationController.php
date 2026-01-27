@@ -311,6 +311,41 @@ class AiGenerationController extends Controller
     }
 
     /**
+     * Retry a failed generation
+     */
+    public function retry(AiGeneration $generation)
+    {
+        // Verify ownership
+        if ($generation->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Only allow retry for failed generations
+        if ($generation->status !== AiGeneration::STATUS_FAILED) {
+            return back()->withErrors([
+                'message' => 'Only failed generations can be retried.'
+            ]);
+        }
+
+        // Reset status to pending
+        $generation->update([
+            'status' => AiGeneration::STATUS_PENDING,
+            'error_message' => null,
+            'provider_id' => null,
+            'provider_metadata' => null,
+        ]);
+
+        // Dispatch appropriate job based on generation type
+        if ($generation->type === AiGeneration::TYPE_IMAGE) {
+            \App\Jobs\GenerateImageJob::dispatch($generation);
+        } elseif ($generation->type === AiGeneration::TYPE_VIDEO) {
+            \App\Jobs\GenerateVideoJob::dispatch($generation);
+        }
+
+        return redirect()->back()->with('success', 'Generation retry started!');
+    }
+
+    /**
      * Calculate cost estimate before generation
      */
     public function estimateCost(Request $request)

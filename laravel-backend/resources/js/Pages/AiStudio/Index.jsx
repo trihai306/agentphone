@@ -241,6 +241,22 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
         }
     };
 
+    const handleRetry = (generationId) => {
+        if (!confirm(t('ai_studio.confirm_retry', { defaultValue: 'Retry this generation? Credits will be used again.' }))) {
+            return;
+        }
+
+        router.post(`/ai-studio/generations/${generationId}/retry`, {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                addToast(t('ai_studio.retry_started', { defaultValue: 'Generation retry started!' }), 'success');
+            },
+            onError: (errors) => {
+                addToast(errors.message || t('common.error', { defaultValue: 'An error occurred' }), 'error');
+            },
+        });
+    };
+
     const calculateEstimatedCost = () => {
         if (!selectedModel) return 0;
         if (type === 'image') {
@@ -845,6 +861,18 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                             <p className={`mt-2 text-sm max-w-md text-center ${themeClasses.textMuted}`}>
                                                 {currentGeneration.error_message || 'Something went wrong. Please try again.'}
                                             </p>
+                                            <button
+                                                onClick={() => handleRetry(currentGeneration.id)}
+                                                className={`mt-4 px-4 py-2 rounded-lg font-medium text-sm transition-colors inline-flex items-center gap-2 ${isDark
+                                                    ? 'bg-violet-500/10 text-violet-400 hover:bg-violet-500/20 border border-violet-500/30'
+                                                    : 'bg-violet-50 text-violet-700 hover:bg-violet-100 border border-violet-200'
+                                                    }`}
+                                            >
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                </svg>
+                                                {t('ai_studio.retry', { defaultValue: 'Thử lại' })}
+                                            </button>
                                             <p className={`mt-3 text-sm font-medium ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
                                                 ✓ Credits have been refunded
                                             </p>
