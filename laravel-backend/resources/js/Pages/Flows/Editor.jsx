@@ -19,6 +19,7 @@ import 'reactflow/dist/style.css';
 
 // Theme support
 import { useTheme } from '@/Contexts/ThemeContext';
+import { getEditorClasses, getReactFlowTheme } from '@/constants/editorTheme';
 
 import MediaPickerModal from '@/Components/MediaPickerModal';
 import CollectionPickerModal from '@/Components/CollectionPickerModal';
@@ -161,6 +162,10 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     const isDark = theme === 'dark';
     const { addToast } = useToast();
     const { t } = useTranslation();
+
+    // Theme utilities
+    const themeClasses = getEditorClasses(isDark);
+    const reactFlowTheme = getReactFlowTheme(isDark);
 
     // ===== Phase 2 Custom Hooks =====
     // Device management
@@ -1446,7 +1451,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     return (
         <MouseDragProvider onDropInCanvas={onMouseDropInCanvas} isDark={isDark}>
             <Head title={`${flowName} - Flow Editor`} />
-            <div className={`h-screen flex flex-col transition-colors duration-300 ${isDark ? 'bg-[#0a0a0a]' : 'bg-gray-50'}`}>
+            <div className={`h-screen flex flex-col transition-colors duration-300 ${themeClasses.bgPrimary}`}>
                 {/* Top Toolbar */}
                 <EditorToolbar
                     // Flow metadata
@@ -1515,7 +1520,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                             {!showSidebar && (
                                 <button
                                     onClick={() => setShowSidebar(true)}
-                                    className={`absolute left-4 top-4 z-10 w-10 h-10 border rounded-xl flex items-center justify-center transition-all shadow-lg ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a] text-gray-400 hover:text-white hover:bg-[#252525]' : 'bg-white border-gray-200 text-gray-400 hover:text-gray-700 hover:bg-gray-50'}`}
+                                    className={`absolute left-4 top-4 z-10 w-10 h-10 border rounded-xl flex items-center justify-center transition-all shadow-lg ${themeClasses.panel} ${themeClasses.textTertiary} ${isDark ? 'hover:text-white' : 'hover:text-gray-700'} ${themeClasses.panelHover}`}
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
@@ -1526,7 +1531,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                             {/* Drop indicator */}
                             {isDraggingOver && (
                                 <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center bg-indigo-500/5">
-                                    <div className={`px-6 py-4 border-2 border-dashed border-indigo-500 rounded-2xl text-indigo-500 font-semibold text-sm shadow-2xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white'}`}>
+                                    <div className={`px-6 py-4 border-2 border-dashed border-indigo-500 rounded-2xl text-indigo-500 font-semibold text-sm shadow-2xl ${themeClasses.bgSecondary}`}>
                                         Drop to add node
                                     </div>
                                 </div>
@@ -1572,13 +1577,14 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 multiSelectionKeyCode="Shift"
                                 deleteKeyCode={null} /* Disable default delete - handled manually to avoid deleting nodes when typing in inputs */
                                 proOptions={{ hideAttribution: true }}
-                                className={`transition-colors duration-300 ${isDark ? '!bg-[#0a0a0a]' : '!bg-gray-50'}`}
+                                className="transition-colors duration-300"
+                                style={{ background: reactFlowTheme.background }}
                             >
                                 <Background
                                     variant={BackgroundVariant.Dots}
                                     gap={20}
                                     size={1}
-                                    color={isDark ? '#1a1a1a' : '#d1d5db'}
+                                    color={reactFlowTheme.backgroundDots}
                                 />
 
                                 {/* Custom Controls */}
@@ -1603,7 +1609,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 />
                                 {/* Mini Map */}
                                 <Panel position="bottom-right" className="!m-4">
-                                    <div className={`rounded-xl overflow-hidden shadow-xl border ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a]' : 'bg-white border-gray-200'}`}>
+                                    <div className={`rounded-xl overflow-hidden shadow-xl border ${themeClasses.panel}`}>
                                         <MiniMap
                                             nodeColor={(node) => {
                                                 const state = nodeStates[node.id]?.status;
@@ -1613,9 +1619,9 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                                 const colors = { input: '#10b981', output: '#ef4444', process: '#3b82f6', custom: '#8b5cf6' };
                                                 return colors[node.type] || '#6366f1';
                                             }}
-                                            maskColor={isDark ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.85)'}
-                                            style={{ width: 180, height: 120, background: isDark ? '#0a0a0a' : '#f9fafb' }}
-                                            className={`!border-none ${isDark ? '!bg-[#0a0a0a]' : '!bg-gray-50'}`}
+                                            maskColor={reactFlowTheme.miniMapMask}
+                                            style={{ width: 180, height: 120, background: reactFlowTheme.miniMapBg }}
+                                            className={`!border-none ${themeClasses.bgMuted}`}
                                         />
                                     </div>
                                 </Panel>
@@ -1624,13 +1630,13 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 {nodes.length === 0 && (
                                     <Panel position="top-center" className="!m-0 !top-1/2 !-translate-y-1/2">
                                         <div className="text-center">
-                                            <div className={`w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center ${isDark ? 'bg-[#1a1a1a] border border-[#2a2a2a]' : 'bg-gray-100 border border-gray-200'}`}>
-                                                <svg className={`w-10 h-10 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div className={`w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center border ${themeClasses.panel}`}>
+                                                <svg className={`w-10 h-10 ${themeClasses.textTertiary}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                                 </svg>
                                             </div>
-                                            <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('flows.editor.sidebar.start_building')}</h3>
-                                            <p className={`text-sm max-w-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                            <h3 className={`text-xl font-bold mb-2 ${themeClasses.textPrimary}`}>{t('flows.editor.sidebar.start_building')}</h3>
+                                            <p className={`text-sm max-w-xs ${themeClasses.textTertiary}`}>
                                                 {t('flows.editor.sidebar.start_building_desc')}
                                             </p>
                                         </div>

@@ -103,6 +103,8 @@ class CampaignController extends Controller
             'data_config.pools' => 'nullable|array',
             'records_per_device' => 'nullable|integer|min:1',
             'device_record_assignments' => 'nullable|array',
+            'device_collection_assignments' => 'nullable|array', // NEW: Per-device collection mapping
+            'device_collection_assignments.*' => 'nullable|exists:data_collections,id',
         ]);
 
         $campaign = Campaign::create([
@@ -147,8 +149,14 @@ class CampaignController extends Controller
             }
         }
 
-        // Attach devices
-        $campaign->devices()->attach($validated['device_ids']);
+        // Attach devices with per-device collection mapping
+        $deviceCollectionAssignments = $validated['device_collection_assignments'] ?? [];
+
+        foreach ($validated['device_ids'] as $deviceId) {
+            $campaign->devices()->attach($deviceId, [
+                'data_collection_id' => $deviceCollectionAssignments[$deviceId] ?? null,
+            ]);
+        }
 
         // Sync record count
         $campaign->syncTotalRecords();

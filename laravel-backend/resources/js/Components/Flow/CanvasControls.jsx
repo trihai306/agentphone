@@ -1,6 +1,7 @@
 import React from 'react';
 import { Panel } from 'reactflow';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 /**
  * CanvasControls - Bottom-left panel with undo/redo and zoom controls
@@ -14,7 +15,9 @@ export default function CanvasControls({
     zoomOut,
     fitView,
 }) {
-    const { isDark } = useTheme();
+    const { t } = useTranslation();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
 
     const buttonClass = (enabled = true) => `w-10 h-10 flex items-center justify-center transition-all ${enabled
         ? isDark ? 'text-gray-400 hover:text-white hover:bg-[#252525]' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'

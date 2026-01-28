@@ -56,7 +56,8 @@ export default function EditorToolbar({
     addToast,
 }) {
     const { t } = useTranslation();
-    const { isDark } = useTheme();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
 
     return (
         <div className={`h-14 flex items-center justify-between px-4 flex-shrink-0 border-b transition-colors duration-300 ${isDark ? 'bg-[#0a0a0a] border-[#1e1e1e]' : 'bg-white border-gray-200 shadow-sm'}`}>

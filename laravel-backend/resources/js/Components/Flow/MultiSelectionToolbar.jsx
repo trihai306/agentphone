@@ -1,6 +1,7 @@
 import React from 'react';
 import { Panel } from 'reactflow';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 /**
  * MultiSelectionToolbar - Floating toolbar when multiple nodes are selected
@@ -12,7 +13,9 @@ export default function MultiSelectionToolbar({
     deleteSelectedNodes,
     clearSelection,
 }) {
-    const { isDark } = useTheme();
+    const { t } = useTranslation();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
 
     if (selectedNodes.length <= 1) return null;
 

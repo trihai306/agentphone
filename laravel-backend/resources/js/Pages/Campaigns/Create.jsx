@@ -83,6 +83,9 @@ export default function Create({ dataCollections = [], workflows = [], devices =
     const [deviceRecordAssignments, setDeviceRecordAssignments] = useState({}); // { deviceId: [recordId, ...] }
     const [activeDeviceForPicker, setActiveDeviceForPicker] = useState(null);
 
+    // NEW: Per-device data collection assignment
+    const [deviceCollectionAssignments, setDeviceCollectionAssignments] = useState({}); // { deviceId: collectionId }
+
     // UX Improvements: Simplified mode
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [quickPreset, setQuickPreset] = useState('auto'); // 'auto' | 'all_devices' | 'custom'
@@ -361,6 +364,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
             data_config: dataConfig,
             records_per_device: assignmentMode === 'auto' && recordsPerDevice ? parseInt(recordsPerDevice) : null,
             device_record_assignments: assignmentMode === 'manual' ? deviceRecordAssignments : null,
+            device_collection_assignments: deviceCollectionAssignments, // NEW: Per-device collection mapping
         }, {
             onFinish: () => setIsSubmitting(false),
         });
@@ -647,27 +651,68 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                     {devices.map(device => {
                                         const isSelected = selectedDevices.find(d => d.id === device.id);
                                         const isOnline = device.socket_connected || device.status === 'online';
+                                        const assignedCollection = deviceCollectionAssignments[device.id];
+                                        const collectionName = assignedCollection
+                                            ? dataCollections.find(dc => dc.id === assignedCollection)?.name
+                                            : null;
+
                                         return (
-                                            <button
-                                                key={device.id}
-                                                onClick={() => toggleDevice(device)}
-                                                className={`flex items-center gap-3 p-4 rounded-xl border text-left transition-all
-                                                    ${isSelected
-                                                        ? 'bg-emerald-500/10 border-emerald-500'
-                                                        : isDark ? 'bg-white/5 border-white/10 hover:border-white/20' : 'bg-gray-50 border-gray-200 hover:border-gray-300'}`}
-                                            >
-                                                <div className="relative">
-                                                    <span className="text-2xl">📱</span>
-                                                    <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className={`font-medium text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{device.name}</p>
-                                                    <p className={`text-xs truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                        {device.model} • {isOnline ? <span className="text-green-500">Online</span> : <span className="text-gray-400">Offline</span>}
-                                                    </p>
-                                                </div>
-                                                {isSelected && <span className="text-emerald-500">✓</span>}
-                                            </button>
+                                            <div key={device.id} className="space-y-2">
+                                                <button
+                                                    onClick={() => toggleDevice(device)}
+                                                    className={`w-full flex items-center gap-3 p-4 rounded-xl border text-left transition-all
+                                                        ${isSelected
+                                                            ? 'bg-emerald-500/10 border-emerald-500'
+                                                            : isDark ? 'bg-white/5 border-white/10 hover:border-white/20' : 'bg-gray-50 border-gray-200 hover:border-gray-300'}`}
+                                                >
+                                                    <div className="relative">
+                                                        <span className="text-2xl">📱</span>
+                                                        <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className={`font-medium text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{device.name}</p>
+                                                        <p className={`text-xs truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                            {device.model} • {isOnline ? <span className="text-green-500">Online</span> : <span className="text-gray-400">Offline</span>}
+                                                        </p>
+                                                    </div>
+                                                    {isSelected && <span className="text-emerald-500">✓</span>}
+                                                </button>
+
+                                                {/* Per-Device Collection Selector (visible only when device selected) */}
+                                                {isSelected && (
+                                                    <div className={`px-4 py-3 rounded-xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-gray-50 border-gray-200'}`}>
+                                                        <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                                            📊 Data collection (tuỳ chọn):
+                                                        </label>
+                                                        <select
+                                                            value={deviceCollectionAssignments[device.id] || ''}
+                                                            onChange={(e) => {
+                                                                e.stopPropagation();
+                                                                setDeviceCollectionAssignments({
+                                                                    ...deviceCollectionAssignments,
+                                                                    [device.id]: e.target.value ? parseInt(e.target.value) : null
+                                                                });
+                                                            }}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark
+                                                                ? 'bg-white/10 border-white/20 text-white'
+                                                                : 'bg-white border-gray-300 text-gray-900'} focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+                                                        >
+                                                            <option value="">Dùng collection chính</option>
+                                                            {dataCollections.map(col => (
+                                                                <option key={col.id} value={col.id}>
+                                                                    {col.name} ({col.records_count || 0} records)
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                        {collectionName && (
+                                                            <p className={`text-xs mt-1.5 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                                                                ✓ Sử dụng: {collectionName}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
                                         );
                                     })}
                                 </div>

@@ -234,6 +234,11 @@
                 "nodes_title": "Nodes",
                 "preview": "Preview",
                 "save": "Save",
+                "saved": "Saved",
+                "saving": "Saving...",
+                "stop": "Stop",
+                "resume": "Resume",
+                "reset": "Reset",
                 "deploy": "Deploy"
             },
             "nodes": {

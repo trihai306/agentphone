@@ -15,7 +15,8 @@ export default function NodeSidebar({
     nodeTemplates,
     onDragStart, // Keep for compatibility but not used with mouse drag
 }) {
-    const { isDark } = useTheme();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     const { t } = useTranslation();
     const { startDrag } = useMouseDrag();
 

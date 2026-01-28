@@ -17,11 +17,11 @@ class ProfileController extends Controller
 
         // Load relationships for stats
         $storagePlan = $user->getOrCreateStoragePlan();
-        $usedStorage = $user->mediaFiles()->sum('size');
+        $usedStorage = $user->mediaFiles()->sum('file_size');
         $maxStorage = $storagePlan?->max_storage_bytes ?? 0;
 
-        // Get main wallet balance
-        $mainWallet = $user->wallets()->where('type', 'main')->first();
+        // Get primary wallet balance (VND currency)
+        $mainWallet = $user->wallets()->where('currency', 'VND')->first();
 
         return Inertia::render('Profile/Edit', [
             'user' => $user->load(['customFields.values']),

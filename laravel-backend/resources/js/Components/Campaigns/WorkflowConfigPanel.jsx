@@ -5,7 +5,7 @@ import { useTheme } from '@/Contexts/ThemeContext';
 const EXECUTION_MODES = [
     { value: 'once', icon: '🟢', label: 'Chạy 1 lần', color: 'emerald' },
     { value: 'repeat', icon: '🔵', label: 'Lặp lại', color: 'blue' },
-    { value: 'conditional', icon: '🟣', label: 'Điều kiện', color: 'purple', disabled: true },
+    { value: 'conditional', icon: '🟣', label: 'Điều kiện', color: 'purple' }, // ENABLED: Conditional Loop with stop conditions
 ];
 
 export default function WorkflowConfigPanel({ workflow, config, onChange, onClose, availableCollections = [], campaignDataCollectionId = null }) {
@@ -231,6 +231,172 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                                 </div>
                                 <p className={`text-xs mt-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                                     Thời gian chờ giữa các lần lặp (để giống người thật)
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Conditional Configuration (visible only when mode = conditional) */}
+                    {localConfig.execution_mode === 'conditional' && (
+                        <div className="space-y-4 animate-fadeIn">
+                            {/* Max Iterations */}
+                            <div>
+                                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    🔢 Số lần thử tối đa
+                                </label>
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="100"
+                                        value={localConfig.conditional_max_attempts || 5}
+                                        onChange={(e) => updateConfig('conditional_max_attempts', parseInt(e.target.value) || 1)}
+                                        className={`flex-1 px-4 py-2.5 rounded-xl border focus:ring-2 focus:ring-purple-500 transition-all ${isDark
+                                            ? 'bg-gray-800 border-gray-700 text-white'
+                                            : 'bg-white border-gray-300 text-gray-900'
+                                            }`}
+                                    />
+                                    <span className={`text-sm whitespace-nowrap ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        lần
+                                    </span>
+                                </div>
+                                <p className={`text-xs mt-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                    Workflow sẽ chạy tối đa số lần này nếu điều kiện dừng chưa được đáp ứng
+                                </p>
+                            </div>
+
+                            {/* Variable Source Collection (for data-driven workflows) */}
+                            <div>
+                                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    🎲 Nguồn dữ liệu biến (tuỳ chọn)
+                                </label>
+                                <select
+                                    value={localConfig.variable_source_collection_id || ''}
+                                    onChange={(e) => updateConfig('variable_source_collection_id', e.target.value ? parseInt(e.target.value) : null)}
+                                    className={`w-full px-4 py-2.5 rounded-xl border focus:ring-2 focus:ring-purple-500 transition-all ${isDark
+                                        ? 'bg-gray-800 border-gray-700 text-white'
+                                        : 'bg-white border-gray-300 text-gray-900'
+                                        }`}
+                                >
+                                    <option value="">Không chọn (dùng dữ liệu chính)</option>
+                                    {variableSourceOptions.map(collection => (
+                                        <option key={collection.id} value={collection.id}>
+                                            {collection.name} ({collection.records_count || 0} records)
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className={`text-xs mt-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                    Nếu chọn, mỗi lần thử sẽ lấy dữ liệu từ record khác nhau
+                                </p>
+                            </div>
+
+                            {/* Iteration Strategy (visible only when variable source selected) */}
+                            {localConfig.variable_source_collection_id && (
+                                <div>
+                                    <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                        🔄 Chiến lược lặp
+                                    </label>
+                                    <div className="flex gap-3">
+                                        <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${localConfig.iteration_strategy === 'sequential'
+                                            ? 'border-purple-500 bg-purple-500/10'
+                                            : `border-transparent ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`
+                                            }`}>
+                                            <input
+                                                type="radio"
+                                                value="sequential"
+                                                checked={localConfig.iteration_strategy === 'sequential' || !localConfig.iteration_strategy}
+                                                onChange={(e) => updateConfig('iteration_strategy', e.target.value)}
+                                                className="text-purple-500"
+                                            />
+                                            <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                Tuần tự (1→2→3)
+                                            </span>
+                                        </label>
+                                        <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${localConfig.iteration_strategy === 'random'
+                                            ? 'border-purple-500 bg-purple-500/10'
+                                            : `border-transparent ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`
+                                            }`}>
+                                            <input
+                                                type="radio"
+                                                value="random"
+                                                checked={localConfig.iteration_strategy === 'random'}
+                                                onChange={(e) => updateConfig('iteration_strategy', e.target.value)}
+                                                className="text-purple-500"
+                                            />
+                                            <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                Ngẫu nhiên
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Stop Conditions */}
+                            <div>
+                                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    ⛔ Điều kiện dừng
+                                </label>
+                                <div className="space-y-2">
+                                    <label className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}>
+                                        <input
+                                            type="checkbox"
+                                            checked={localConfig.conditional_stop_on_success !== false}
+                                            onChange={(e) => updateConfig('conditional_stop_on_success', e.target.checked)}
+                                            className="mt-0.5 text-purple-500 rounded"
+                                        />
+                                        <div className="flex-1">
+                                            <div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                                Dừng khi workflow thành công
+                                            </div>
+                                            <div className={`text-xs mt-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                Ngừng thực thi ngay khi workflow hoàn thành không lỗi
+                                            </div>
+                                        </div>
+                                    </label>
+
+                                    <label className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}>
+                                        <input
+                                            type="checkbox"
+                                            checked={localConfig.conditional_stop_on_error || false}
+                                            onChange={(e) => updateConfig('conditional_stop_on_error', e.target.checked)}
+                                            className="mt-0.5 text-purple-500 rounded"
+                                        />
+                                        <div className="flex-1">
+                                            <div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                                Dừng khi có lỗi nghiêm trọng
+                                            </div>
+                                            <div className={`text-xs mt-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                Ngừng retry nếu gặp lỗi không thể khắc phục
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {/* Delay Between Attempts */}
+                            <div>
+                                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    ⏱️ Thời gian chờ giữa các lần thử
+                                </label>
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="3600"
+                                        placeholder="0"
+                                        value={localConfig.conditional_delay_between_attempts || ''}
+                                        onChange={(e) => updateConfig('conditional_delay_between_attempts', parseInt(e.target.value) || null)}
+                                        className={`flex-1 px-4 py-2.5 rounded-xl border focus:ring-2 focus:ring-purple-500 transition-all ${isDark
+                                            ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500'
+                                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
+                                            }`}
+                                    />
+                                    <span className={`text-sm whitespace-nowrap ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        giây
+                                    </span>
+                                </div>
+                                <p className={`text-xs mt-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                    Thời gian nghỉ trước khi thử lại (để tránh spam)
                                 </p>
                             </div>
                         </div>

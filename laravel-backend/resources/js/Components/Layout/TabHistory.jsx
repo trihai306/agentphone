@@ -69,7 +69,25 @@ export default function TabHistory() {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
             try {
-                setTabs(JSON.parse(saved));
+                const loadedTabs = JSON.parse(saved);
+
+                // DEDUPLICATION: Remove any duplicate tabs that might exist in localStorage
+                const uniqueTabs = [];
+                const seenPaths = new Set();
+
+                for (const tab of loadedTabs) {
+                    if (!seenPaths.has(tab.path)) {
+                        uniqueTabs.push(tab);
+                        seenPaths.add(tab.path);
+                    }
+                }
+
+                setTabs(uniqueTabs);
+
+                // Save deduplicated tabs back to localStorage
+                if (uniqueTabs.length !== loadedTabs.length) {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(uniqueTabs));
+                }
             } catch (e) {
                 setTabs([]);
             }

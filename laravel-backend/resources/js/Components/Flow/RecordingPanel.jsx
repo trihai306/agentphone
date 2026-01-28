@@ -1,10 +1,19 @@
 import React from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 /**
  * RecordingPanel - Floating overlay that shows during recording mode
  * Displays recording status, timer, captured actions, and controls
  */
+
+// Helper: Format duration from seconds to MM:SS
+function formatDuration(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
 export default function RecordingPanel({
     isRecording,
     showRecordingPanel,
@@ -17,9 +26,10 @@ export default function RecordingPanel({
     togglePauseRecording,
     undoLastAction,
     stopRecording,
-    formatDuration,
 }) {
-    const { isDark } = useTheme();
+    const { t } = useTranslation();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
 
     if (!isRecording) return null;
 

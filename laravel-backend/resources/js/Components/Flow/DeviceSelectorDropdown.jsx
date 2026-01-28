@@ -24,7 +24,8 @@ export default function DeviceSelectorDropdown({
     addToast,
 }) {
     const { t } = useTranslation();
-    const { isDark } = useTheme();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
 
     if (!isOpen) return null;
 

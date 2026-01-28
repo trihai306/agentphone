@@ -4,7 +4,9 @@
  * Extracted from Editor.jsx Phase 15 refactor.
  * Displays a warning modal before clearing all workflow nodes.
  */
+import React from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 export default function ClearConfirmModal({
     isOpen,
@@ -12,7 +14,9 @@ export default function ClearConfirmModal({
     onConfirm,
     nodeCount,
 }) {
-    const { isDark } = useTheme();
+    const { t } = useTranslation();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
 
     if (!isOpen) return null;
 

@@ -234,6 +234,11 @@
                 "nodes_title": "Nodes",
                 "preview": "Xem trước",
                 "save": "Lưu",
+                "saved": "Đã lưu",
+                "saving": "Đang lưu...",
+                "stop": "Dừng",
+                "resume": "Tiếp tục",
+                "reset": "Đặt lại",
                 "deploy": "Triển khai"
             },
             "nodes": {
