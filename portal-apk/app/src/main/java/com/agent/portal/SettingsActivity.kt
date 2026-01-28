@@ -34,18 +34,14 @@ class SettingsActivity : AppCompatActivity() {
         const val KEY_SCREENSHOT_QUALITY = "screenshot_quality"
         const val KEY_MAX_EVENTS = "max_events"
         const val KEY_VOLUME_SHORTCUTS = "volume_shortcuts"
-        const val KEY_AUTO_UPLOAD = "auto_upload"
         const val KEY_DARK_MODE = "dark_mode"
-        const val KEY_PYTHON_BACKEND_URL = "python_backend_url"
 
         // Default values
         const val DEFAULT_AUTO_SCREENSHOT = true
         const val DEFAULT_SCREENSHOT_QUALITY = 80
         const val DEFAULT_MAX_EVENTS = 1000
         const val DEFAULT_VOLUME_SHORTCUTS = true
-        const val DEFAULT_AUTO_UPLOAD = false
         const val DEFAULT_DARK_MODE = true
-        const val DEFAULT_PYTHON_BACKEND_URL = "http://localhost:5000"
 
         /**
          * Get shared preferences instance
@@ -89,14 +85,6 @@ class SettingsActivity : AppCompatActivity() {
         binding.sliderMaxEvents.value = maxEvents.toFloat()
         binding.tvMaxEventsValue.text = maxEvents.toString()
 
-        // Load Auto Upload
-        val autoUpload = prefs.getBoolean(KEY_AUTO_UPLOAD, DEFAULT_AUTO_UPLOAD)
-        binding.switchAutoUpload.isChecked = autoUpload
-
-        // Load Backend URL
-        val backendUrl = prefs.getString(KEY_PYTHON_BACKEND_URL, DEFAULT_PYTHON_BACKEND_URL)
-        binding.etBackendUrl.setText(backendUrl)
-
         // Load Volume Shortcuts
         val volumeShortcuts = prefs.getBoolean(KEY_VOLUME_SHORTCUTS, DEFAULT_VOLUME_SHORTCUTS)
         binding.switchVolumeShortcuts.isChecked = volumeShortcuts
@@ -135,44 +123,6 @@ class SettingsActivity : AppCompatActivity() {
                 binding.tvMaxEventsValue.text = maxEvents.toString()
                 prefs.edit().putInt(KEY_MAX_EVENTS, maxEvents).apply()
             }
-        }
-
-        // Auto Upload Toggle
-        binding.switchAutoUpload.setOnCheckedChangeListener { view, isChecked ->
-            if (view.isPressed) {
-                prefs.edit().putBoolean(KEY_AUTO_UPLOAD, isChecked).apply()
-                animateToggle(view)
-
-                // Apply to RecordingManager
-                val backendUrl = binding.etBackendUrl.text.toString().trim()
-                if (isChecked && backendUrl.isNotEmpty()) {
-                    RecordingManager.setAutoUploadEnabled(true, backendUrl)
-                    val message = "Auto-upload enabled"
-                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-                } else {
-                    RecordingManager.setAutoUploadEnabled(false)
-                    val message = "Auto-upload disabled"
-                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-
-        // Backend URL Input - Save on focus loss
-        binding.etBackendUrl.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus) {
-                val url = binding.etBackendUrl.text.toString().trim()
-                prefs.edit().putString(KEY_PYTHON_BACKEND_URL, url).apply()
-
-                // Update RecordingManager if auto-upload is enabled
-                if (binding.switchAutoUpload.isChecked && url.isNotEmpty()) {
-                    RecordingManager.setAutoUploadEnabled(true, url)
-                }
-            }
-        }
-
-        // Test Connection Button
-        binding.btnTestConnection.setOnClickListener {
-            testPythonConnection()
         }
 
         // Volume Shortcuts Toggle
@@ -327,59 +277,14 @@ class SettingsActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun testPythonConnection() {
-        val url = binding.etBackendUrl.text.toString().trim()
 
-        if (url.isEmpty()) {
-            Toast.makeText(this, "Please enter backend URL first", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        binding.btnTestConnection.isEnabled = false
-        binding.btnTestConnection.text = "Testing..."
-
-        // Test connection in background thread
-        Thread {
-            try {
-                val client = okhttp3.OkHttpClient.Builder()
-                    .connectTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
-                    .build()
-
-                val request = okhttp3.Request.Builder()
-                    .url("$url/api/ping")
-                    .get()
-                    .build()
-
-                val response = client.newCall(request).execute()
-
-                runOnUiThread {
-                    binding.btnTestConnection.isEnabled = true
-                    binding.btnTestConnection.text = "Test Connection"
-
-                    if (response.isSuccessful) {
-                        Toast.makeText(this, "✓ Connection successful!", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(this, "✗ Connection failed: ${response.code}", Toast.LENGTH_LONG).show()
-                    }
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    binding.btnTestConnection.isEnabled = true
-                    binding.btnTestConnection.text = "Test Connection"
-                    Toast.makeText(this, "✗ Connection error: ${e.message}", Toast.LENGTH_LONG).show()
-                }
-            }
-        }.start()
-    }
 
     private fun exportSettings() {
         val settings = mapOf(
             KEY_AUTO_SCREENSHOT to prefs.getBoolean(KEY_AUTO_SCREENSHOT, DEFAULT_AUTO_SCREENSHOT),
             KEY_SCREENSHOT_QUALITY to prefs.getInt(KEY_SCREENSHOT_QUALITY, DEFAULT_SCREENSHOT_QUALITY),
             KEY_MAX_EVENTS to prefs.getInt(KEY_MAX_EVENTS, DEFAULT_MAX_EVENTS),
-            KEY_VOLUME_SHORTCUTS to prefs.getBoolean(KEY_VOLUME_SHORTCUTS, DEFAULT_VOLUME_SHORTCUTS),
-            KEY_AUTO_UPLOAD to prefs.getBoolean(KEY_AUTO_UPLOAD, DEFAULT_AUTO_UPLOAD),
-            KEY_PYTHON_BACKEND_URL to prefs.getString(KEY_PYTHON_BACKEND_URL, DEFAULT_PYTHON_BACKEND_URL)
+            KEY_VOLUME_SHORTCUTS to prefs.getBoolean(KEY_VOLUME_SHORTCUTS, DEFAULT_VOLUME_SHORTCUTS)
         )
 
         val json = com.google.gson.Gson().toJson(settings)

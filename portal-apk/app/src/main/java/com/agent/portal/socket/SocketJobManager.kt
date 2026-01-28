@@ -649,7 +649,7 @@ object SocketJobManager {
 
     /**
      * Publish individual action event during recording for real-time Flow Editor sync
-     * Now includes screenshot capture for better visual debugging
+     * Screenshot is captured separately by ScreenshotManager and provided via event.screenshotPath
      * 
      * @param sessionId Recording session ID
      * @param event The recorded event with all details
@@ -675,48 +675,8 @@ object SocketJobManager {
                 // Use production API URL from NetworkUtils
                 val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
 
-                // Capture screenshot asynchronously
-                val accessibilityService = com.agent.portal.accessibility.PortalAccessibilityService.instance
-                
-                // Create a suspend function to await screenshot
-                val screenshotBase64 = kotlinx.coroutines.suspendCancellableCoroutine<String?> { continuation ->
-                    if (accessibilityService != null) {
-                        accessibilityService.takeScreenshot { bitmap ->
-                            if (bitmap != null) {
-                                try {
-                                    val outputStream = java.io.ByteArrayOutputStream()
-                                    // Scale down for smaller payload (25% of original)
-                                    val scaledBitmap = android.graphics.Bitmap.createScaledBitmap(
-                                        bitmap,
-                                        (bitmap.width * 0.25).toInt(),
-                                        (bitmap.height * 0.25).toInt(),
-                                        true
-                                    )
-                                    scaledBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 60, outputStream)
-                                    val byteArray = outputStream.toByteArray()
-                                    val base64 = android.util.Base64.encodeToString(byteArray, android.util.Base64.NO_WRAP)
-                                    
-                                    // Clean up
-                                    if (scaledBitmap != bitmap) {
-                                        scaledBitmap.recycle()
-                                    }
-                                    bitmap.recycle()
-                                    
-                                    continuation.resume(base64, null)
-                                } catch (e: Exception) {
-                                    Log.e(TAG, "Failed to encode screenshot", e)
-                                    continuation.resume(null, null)
-                                }
-                            } else {
-                                continuation.resume(null, null)
-                            }
-                        }
-                    } else {
-                        continuation.resume(null, null)
-                    }
-                }
-
-                // Build action event data with ALL element details + screenshot
+                // Build action event data with ALL element details
+                // Screenshot is optional - it may be captured asynchronously later
                 val actionData = mutableMapOf<String, Any?>(
                     "device_id" to (deviceId ?: "unknown"),
                     "session_id" to sessionId,
@@ -738,8 +698,8 @@ object SocketJobManager {
                     "app_name" to event.appName,
                     "relative_timestamp" to event.relativeTimestamp,
                     "screenshot_path" to event.screenshotPath,
-                    // Screenshot base64 data
-                    "screenshot" to screenshotBase64,
+                    // NOTE: No inline screenshot base64 - reduces payload size
+                    // Frontend uses screenshot_path to fetch image later if needed
                     // Action-specific data (scroll direction, deltas, text input, etc.)
                     "action_data" to event.actionData
                 )
@@ -763,7 +723,7 @@ object SocketJobManager {
                 val response = client.newCall(request).execute()
 
                 if (response.isSuccessful) {
-                    val hasScreenshot = screenshotBase64 != null
+                    val hasScreenshot = event.screenshotPath != null
                     Log.d(TAG, "📤 Published action: ${event.eventType} #${event.sequenceNumber} (screenshot: $hasScreenshot)")
                 } else {
                     Log.w(TAG, "Failed to publish action: ${response.code}")
@@ -775,6 +735,7 @@ object SocketJobManager {
             }
         }
     }
+
 
     // ================================================================================
     // Event Handlers

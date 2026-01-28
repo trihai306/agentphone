@@ -19,6 +19,9 @@ class TokenRefreshInterceptor(private val context: Context) : Interceptor {
     companion object {
         private const val TAG = "TokenRefreshInterceptor"
         private const val MAX_RETRY_COUNT = 1
+        
+        // Broadcast action for token expiration
+        const val ACTION_TOKEN_EXPIRED = "com.agent.portal.TOKEN_EXPIRED"
     }
     
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -68,8 +71,12 @@ class TokenRefreshInterceptor(private val context: Context) : Interceptor {
                 return chain.proceed(newRequest)
             } else {
                 Log.e(TAG, "❌ Token refresh failed, user needs to re-login")
-                // Clear session and return 401
+                // Clear session
                 sessionManager.clearSession()
+                
+                // Send broadcast to notify MainActivity to show message and logout
+                val intent = android.content.Intent(ACTION_TOKEN_EXPIRED)
+                context.sendBroadcast(intent)
             }
         }
         

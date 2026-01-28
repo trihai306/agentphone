@@ -65,6 +65,26 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread { updateRecordingUI() }
         }
     }
+    
+    // Token expiration broadcast receiver
+    private val tokenExpirationReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == com.agent.portal.auth.TokenRefreshInterceptor.ACTION_TOKEN_EXPIRED) {
+                runOnUiThread {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "⚠️ Session expired. Please login again.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    
+                    // Force logout after a short delay to let user see the message
+                    handler.postDelayed({
+                        performLogout(showToast = false)
+                    }, 1500)
+                }
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -109,6 +129,15 @@ class MainActivity : AppCompatActivity() {
         // Register recording listener to sync UI when recording stops from floating bubble
         RecordingManager.addListener(recordingListener)
         Log.i(TAG, "Recording listener registered")
+        
+        // Register token expiration receiver
+        val filter = IntentFilter(com.agent.portal.auth.TokenRefreshInterceptor.ACTION_TOKEN_EXPIRED)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(tokenExpirationReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(tokenExpirationReceiver, filter)
+        }
+        Log.i(TAG, "Token expiration receiver registered")
     }
 
     private fun initializeSocket() {
@@ -152,10 +181,31 @@ class MainActivity : AppCompatActivity() {
                     deviceService.registerDevice(session.token)
                 }
 
-                if (result.success) {
-                    Log.i("MainActivity", "✅ Device info updated on backend: ${result.device?.name}")
-                } else {
-                    Log.w("MainActivity", "⚠️ Device update failed: ${result.message}")
+                runOnUiThread {
+                    if (result.success) {
+                        Log.i("MainActivity", "✅ Device info updated on backend: ${result.device?.name}")
+                    } else {
+                        // Check if it's an auth error (401)
+                        if (result.message?.contains("Unauthorized", ignoreCase = true) == true ||
+                            result.message?.contains("401", ignoreCase = true) == true) {
+                            
+                            Log.w("MainActivity", "⚠️ Device registration failed due to auth error: ${result.message}")
+                            
+                            Toast.makeText(
+                                this@MainActivity,
+                                "⚠️ Session expired. Please login again.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            
+                            // Force logout after a short delay
+                            handler.postDelayed({
+                                performLogout(showToast = false)
+                            }, 1500)
+                        } else {
+                            Log.w("MainActivity", "⚠️ Device update failed: ${result.message}")
+                            // Don't show error to user for non-critical failures
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("MainActivity", "❌ Error updating device: ${e.message}", e)
@@ -744,7 +794,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun performLogout() {
+    private fun performLogout(showToast: Boolean = true) {
         Log.i("MainActivity", "User logging out")
 
         try {
@@ -763,7 +813,9 @@ class MainActivity : AppCompatActivity() {
         val sessionManager = com.agent.portal.auth.SessionManager(this)
         sessionManager.clearSession()
 
-        Toast.makeText(this, "Logged out", Toast.LENGTH_SHORT).show()
+        if (showToast) {
+            Toast.makeText(this, "Logged out", Toast.LENGTH_SHORT).show()
+        }
 
         val intent = Intent(this, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -777,6 +829,14 @@ class MainActivity : AppCompatActivity() {
         // Unregister recording listener to prevent memory leaks
         RecordingManager.removeListener(recordingListener)
         Log.i(TAG, "Recording listener unregistered")
+        // Unregister token expiration receiver
+        try {
+            unregisterReceiver(tokenExpirationReceiver)
+            Log.i(TAG, "Token expiration receiver unregistered")
+        } catch (e: Exception) {
+            // Receiver might not be registered if activity was destroyed before onCreate completed
+            Log.w(TAG, "Could not unregister token expiration receiver: ${e.message}")
+        }
     }
 
     private fun updateStatus() {

@@ -3,16 +3,23 @@ package com.agent.portal
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.app.ActivityManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.os.StatFs
+import android.os.SystemClock
 import android.provider.Settings
 import android.util.DisplayMetrics
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.agent.portal.accessibility.PortalAccessibilityService
 import com.agent.portal.auth.DeviceRegistrationService
 import com.agent.portal.databinding.ActivityDeviceInfoBinding
 import com.google.android.material.snackbar.Snackbar
+import kotlin.math.pow
 
 /**
  * Activity to display device information and hardware details
@@ -31,6 +38,8 @@ class DeviceInfoActivity : AppCompatActivity() {
 
         setupToolbar()
         loadDeviceInfo()
+        loadSystemResources()
+        loadActivityStats()
         setupCopyButtons()
     }
 
@@ -198,5 +207,121 @@ class DeviceInfoActivity : AppCompatActivity() {
                     .start()
             }
             .start()
+    }
+
+private fun loadSystemResources() {
+        // RAM
+        val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val memoryInfo = ActivityManager.MemoryInfo()
+        activityManager.getMemoryInfo(memoryInfo)
+        
+        val totalRam = memoryInfo.totalMem / (1024.0 * 1024.0 * 1024.0) // Convert to GB
+        val availableRam = memoryInfo.availMem / (1024.0 * 1024.0 * 1024.0)
+        val usedRam = totalRam - availableRam
+        
+        binding.tvRamValue.text = String.format("%.1f GB / %.1f GB (%.0f%% used)", 
+            usedRam, totalRam, (usedRam / totalRam) * 100)
+        
+        // Internal Storage
+        val statFs = StatFs(Environment.getDataDirectory().path)
+        val blockSize = statFs.blockSizeLong
+        val totalBlocks = statFs.blockCountLong
+        val availableBlocks = statFs.availableBlocksLong
+        
+        val totalStorage = (totalBlocks * blockSize) / (1024.0.pow(3)) // GB
+        val usedStorage = ((totalBlocks - availableBlocks) * blockSize) / (1024.0.pow(3))
+        
+        binding.tvStorageValue.text = String.format("%.1f GB / %.1f GB (%.0f%% used)", 
+            usedStorage, totalStorage, (usedStorage / totalStorage) * 100)
+    }
+    
+    private fun loadActivityStats() {
+        // Accessibility Service Status
+        val isAccessibilityRunning = PortalAccessibilityService.isRunning()
+        binding.tvAccessibilityStatusValue.text = if (isAccessibilityRunning) "Enabled" else "Disabled"
+        binding.tvAccessibilityStatusValue.setTextColor(
+            ContextCompat.getColor(this, if (isAccessibilityRunning) R.color.status_on else R.color.status_off)
+        )
+        binding.indicatorAccessibilityStatus.setBackgroundResource(
+            if (isAccessibilityRunning) R.drawable.status_indicator_on else R.drawable.status_indicator_off
+        )
+        
+        // Job Stats (fetch from backend)
+        fetchJobStats()
+        
+        // Device Uptime
+        val uptimeMillis = SystemClock.elapsedRealtime()
+        binding.tvUptimeValue.text = formatUptime(uptimeMillis)
+    }
+    
+    private fun fetchJobStats() {
+        val sessionManager = com.agent.portal.auth.SessionManager(this)
+        val session = sessionManager.getSession()
+        
+        if (session == null) {
+            binding.tvJobsCompletedValue.text = "Not logged in"
+            return
+        }
+        
+        val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
+        
+        Thread {
+            try {
+                val client = okhttp3.OkHttpClient.Builder()
+                    .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+                    .readTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+                    .build()
+                
+                val request = okhttp3.Request.Builder()
+                    .url("$apiUrl/jobs/stats/total")
+                    .addHeader("Authorization", "Bearer ${session.token}")
+                    .addHeader("Accept", "application/json")
+                    .build()
+                
+                val response = client.newCall(request).execute()
+                val responseBody = response.body?.string()
+                
+                if (response.isSuccessful && responseBody != null) {
+                    val json = org.json.JSONObject(responseBody)
+                    val data = json.optJSONObject("data")
+                    
+                    if (data != null) {
+                        val totalCompleted = data.optInt("completed", 0)
+                        
+                        runOnUiThread {
+                            binding.tvJobsCompletedValue.text = "$totalCompleted jobs"
+                        }
+                    } else {
+                        runOnUiThread {
+                            binding.tvJobsCompletedValue.text = "0 jobs"
+                        }
+                    }
+                } else {
+                    runOnUiThread {
+                        binding.tvJobsCompletedValue.text = "Failed to load"
+                    }
+                }
+                response.close()
+            } catch (e: Exception) {
+                Log.e("DeviceInfoActivity", "Error fetching job stats", e)
+                runOnUiThread {
+                    binding.tvJobsCompletedValue.text = "Error loading"
+                }
+            }
+        }.start()
+    }
+    
+    private fun formatUptime(uptimeMillis: Long): String {
+        val seconds = uptimeMillis / 1000
+        val minutes = seconds / 60
+        val hours = minutes / 60
+        val days = hours / 24
+        
+        return when {
+            days > 0 -> String.format("%dd %dh %dm", days, hours % 24, minutes % 60)
+            hours > 0 -> String.format("%dh %dm", hours, minutes % 60)
+            minutes > 0 -> String.format("%dm %ds", minutes, seconds % 60)
+            else -> String.format("%ds", seconds)
+        }
     }
 }
