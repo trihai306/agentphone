@@ -14,6 +14,7 @@ export default function JobsQueuePanel({
 }) {
     const [generations, setGenerations] = useState(initialGenerations);
     const [scenarios, setScenarios] = useState(initialScenarios);
+    const [selectedMedia, setSelectedMedia] = useState(null);
 
     const totalJobs = generations.length + scenarios.length;
 
@@ -46,6 +47,12 @@ export default function JobsQueuePanel({
     const glassCard = isDark
         ? 'bg-white/[0.02] border border-white/[0.05]'
         : 'bg-white border border-slate-200';
+
+    const handleMediaClick = (generation) => {
+        if (generation.result_url && generation.status === 'completed') {
+            setSelectedMedia(generation);
+        }
+    };
 
     return (
         <div className="space-y-4">
@@ -147,7 +154,9 @@ export default function JobsQueuePanel({
                         {recentGenerations.map(g => (
                             <div
                                 key={g.id}
-                                className={`px-4 py-3 border-b last:border-b-0 transition-colors cursor-pointer ${isDark ? 'border-white/5 hover:bg-white/[0.02]' : 'border-slate-50 hover:bg-slate-50'}`}
+                                onClick={() => handleMediaClick(g)}
+                                className={`px-4 py-3 border-b last:border-b-0 transition-colors ${g.result_url && g.status === 'completed' ? 'cursor-pointer' : 'cursor-default'
+                                    } ${isDark ? 'border-white/5 hover:bg-white/[0.02]' : 'border-slate-50 hover:bg-slate-50'}`}
                             >
                                 <div className="flex items-start gap-3">
                                     {g.result_url ? (
@@ -191,6 +200,52 @@ export default function JobsQueuePanel({
                     >
                         Xem tất cả →
                     </Link>
+                </div>
+            )}
+
+            {/* Media Preview Modal */}
+            {selectedMedia && (
+                <div
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm"
+                    onClick={() => setSelectedMedia(null)}
+                >
+                    <div className="relative max-w-7xl max-h-[90vh] p-4">
+                        {/* Close Button */}
+                        <button
+                            onClick={() => setSelectedMedia(null)}
+                            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-xl flex items-center justify-center text-white transition-colors"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+
+                        {/* Media Content */}
+                        <div className="max-h-[85vh] rounded-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                            {selectedMedia.type === 'video' ? (
+                                <video
+                                    src={selectedMedia.result_url}
+                                    controls
+                                    autoPlay
+                                    className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl"
+                                />
+                            ) : (
+                                <img
+                                    src={selectedMedia.result_url}
+                                    alt={selectedMedia.prompt}
+                                    className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl"
+                                />
+                            )}
+                        </div>
+
+                        {/* Prompt Info */}
+                        <div className="mt-4 text-center">
+                            <p className="text-white text-sm font-medium">{selectedMedia.prompt}</p>
+                            <p className="text-white/60 text-xs mt-1">
+                                {selectedMedia.type === 'video' ? '🎥 Video' : '🖼️ Image'} • {selectedMedia.model_name || 'AI Generated'}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
