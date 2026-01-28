@@ -13,7 +13,7 @@ const PAGE_CONFIG = {
     '/devices': { name: 'Thiết Bị', icon: '📱' },
     '/workflows': { name: 'Workflows', icon: '⚡' },
     '/campaigns': { name: 'Campaigns', icon: '📢' },
-    '/jobs': { name: 'Jobs', icon: '📋' },
+    '/jobs': { name: 'Jobs', icon: '▶️' },
     '/data-collections': { name: 'Dữ Liệu', icon: '📊' },
     '/ai-studio': { name: 'AI Studio', icon: '✨' },
     '/ai-credits': { name: 'AI Credits', icon: '💎' },
