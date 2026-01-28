@@ -16,7 +16,8 @@ export default function Header({ title, userName, setSidebarOpen }) {
     const { theme, toggleTheme } = useTheme();
     const { t, i18n } = useTranslation();
     const isDark = theme === 'dark';
-    const { notifications: notificationData, auth, url } = usePage().props;
+    const { props, url } = usePage();
+    const { notifications: notificationData, auth } = props;
     const [showNotifications, setShowNotifications] = useState(false);
 
     const notifications = notificationData?.items || [];
@@ -26,6 +27,7 @@ export default function Header({ title, userName, setSidebarOpen }) {
 
     // Get page metadata
     const pageMetadata = getPageMetadata(url, i18n.language);
+
 
     const handleMarkAsRead = (id) => {
         router.post(`/notifications/${id}/read`, {}, { preserveScroll: true, preserveState: true });
