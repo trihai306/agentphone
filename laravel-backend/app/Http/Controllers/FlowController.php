@@ -370,13 +370,13 @@ class FlowController extends Controller
         $this->authorize('run', $flow);
 
         $request->validate([
-            'device_id' => 'required|integer|exists:devices,id',
+            'device_id' => 'required|string|exists:devices,device_id',  // ✅ UUID string, not database id
         ]);
 
         $user = Auth::user();
 
-        // Get device and verify ownership
-        $device = $user->devices()->find($request->device_id);
+        // Get device by device_id UUID and verify ownership
+        $device = $user->devices()->where('device_id', $request->device_id)->first();
         if (!$device) {
             return response()->json([
                 'success' => false,
