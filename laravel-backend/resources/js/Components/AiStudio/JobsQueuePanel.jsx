@@ -206,44 +206,83 @@ export default function JobsQueuePanel({
             {/* Media Preview Modal */}
             {selectedMedia && (
                 <div
-                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm"
+                    className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
                     onClick={() => setSelectedMedia(null)}
                 >
-                    <div className="relative max-w-7xl max-h-[90vh] p-4">
+                    <div
+                        className={`relative max-w-4xl w-full rounded-2xl overflow-hidden border ${isDark
+                            ? 'bg-[#1a1a1a] border-[#2a2a2a]'
+                            : 'bg-white border-slate-200'}`}
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         {/* Close Button */}
                         <button
                             onClick={() => setSelectedMedia(null)}
-                            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-xl flex items-center justify-center text-white transition-colors"
+                            className={`absolute top-4 right-4 z-10 p-2 rounded-xl transition-all ${isDark
+                                ? 'bg-black/50 text-white hover:bg-black/70'
+                                : 'bg-white/90 text-slate-600 hover:bg-white shadow-lg'}`}
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
 
-                        {/* Media Content */}
-                        <div className="max-h-[85vh] rounded-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        {/* Media */}
+                        <div className={`flex items-center justify-center min-h-[400px] max-h-[60vh] ${isDark ? 'bg-[#0a0a0a]' : 'bg-slate-50'}`}>
                             {selectedMedia.type === 'video' ? (
                                 <video
                                     src={selectedMedia.result_url}
+                                    className="max-h-[60vh] w-auto"
                                     controls
                                     autoPlay
-                                    className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl"
                                 />
                             ) : (
                                 <img
                                     src={selectedMedia.result_url}
                                     alt={selectedMedia.prompt}
-                                    className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl"
+                                    className="max-h-[60vh] w-auto"
                                 />
                             )}
                         </div>
 
-                        {/* Prompt Info */}
-                        <div className="mt-4 text-center">
-                            <p className="text-white text-sm font-medium">{selectedMedia.prompt}</p>
-                            <p className="text-white/60 text-xs mt-1">
-                                {selectedMedia.type === 'video' ? '🎥 Video' : '🖼️ Image'} • {selectedMedia.model_name || 'AI Generated'}
+                        {/* Info Panel */}
+                        <div className="p-6">
+                            <p className={`text-base mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                                {selectedMedia.prompt}
                             </p>
+
+                            <div className="flex flex-wrap items-center gap-3">
+                                <span className={`px-2.5 py-1 text-xs font-semibold rounded-lg border ${selectedMedia.type === 'video'
+                                    ? isDark
+                                        ? 'bg-violet-500/20 text-violet-300 border-violet-500/30'
+                                        : 'bg-violet-50 text-violet-600 border-violet-200'
+                                    : isDark
+                                        ? 'bg-sky-500/20 text-sky-300 border-sky-500/30'
+                                        : 'bg-sky-50 text-sky-600 border-sky-200'
+                                    }`}>
+                                    {selectedMedia.type === 'video' ? '🎬 Video' : '🖼️ Hình ảnh'}
+                                </span>
+
+                                <span className={`px-2.5 py-1 text-xs font-semibold rounded-lg border ${isDark
+                                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                    : 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                                    }`}>
+                                    ✓ Hoàn thành
+                                </span>
+
+                                {selectedMedia.model_name && (
+                                    <span className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                        {selectedMedia.model_name}
+                                    </span>
+                                )}
+
+                                <span className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                    {new Date(selectedMedia.created_at).toLocaleDateString('vi-VN', {
+                                        day: '2-digit', month: '2-digit', year: 'numeric',
+                                        hour: '2-digit', minute: '2-digit'
+                                    })}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
