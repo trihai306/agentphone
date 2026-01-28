@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from '@inertiajs/react';
 import axios from 'axios';
 
@@ -203,8 +204,8 @@ export default function JobsQueuePanel({
                 </div>
             )}
 
-            {/* Media Preview Modal */}
-            {selectedMedia && (
+            {/* Media Preview Modal - Portal to escape z-index stacking context */}
+            {selectedMedia && createPortal(
                 <div
                     className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
                     onClick={() => setSelectedMedia(null)}
@@ -285,7 +286,8 @@ export default function JobsQueuePanel({
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
