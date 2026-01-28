@@ -293,12 +293,15 @@ class CampaignController extends Controller
                             for ($i = 0; $i < $repeatCount; $i++) {
                                 $poolContext = $this->buildJobContext($campaign);
 
+                                // Use device-specific collection or fallback to campaign collection
+                                $dataCollectionId = $device->pivot->data_collection_id ?? $campaign->data_collection_id;
+
                                 WorkflowJob::create([
                                     'user_id' => $campaign->user_id,
                                     'flow_id' => $workflow->id,
                                     'device_id' => $device->id,
                                     'campaign_id' => $campaign->id,
-                                    'data_collection_id' => $campaign->data_collection_id,
+                                    'data_collection_id' => $dataCollectionId,
                                     'data_record_id' => $recordId,
                                     'variable_source_collection_id' => $config['variable_source_collection_id'],
                                     'iteration_index' => $i,
@@ -336,12 +339,15 @@ class CampaignController extends Controller
                         for ($i = 0; $i < $repeatCount; $i++) {
                             $poolContext = $this->buildJobContext($campaign);
 
+                            // Use device-specific collection or fallback to campaign collection
+                            $dataCollectionId = $device->pivot->data_collection_id ?? $campaign->data_collection_id;
+
                             WorkflowJob::create([
                                 'user_id' => $campaign->user_id,
                                 'flow_id' => $workflow->id,
                                 'device_id' => $device->id,
                                 'campaign_id' => $campaign->id,
-                                'data_collection_id' => $campaign->data_collection_id,
+                                'data_collection_id' => $dataCollectionId,
                                 'data_record_id' => $recordId,
                                 'variable_source_collection_id' => $config['variable_source_collection_id'],
                                 'iteration_index' => $i,

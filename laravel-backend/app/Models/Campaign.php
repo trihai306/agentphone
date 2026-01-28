@@ -114,6 +114,7 @@ class Campaign extends Model
     public function devices(): BelongsToMany
     {
         return $this->belongsToMany(Device::class, 'campaign_devices')
+            ->withPivot('data_collection_id')
             ->withTimestamps();
     }
 
