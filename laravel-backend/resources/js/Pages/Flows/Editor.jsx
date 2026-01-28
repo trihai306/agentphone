@@ -638,46 +638,56 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     // - .event.captured (creates nodes via createNodeFromEvent)
     // No separate useEffect needed here - it was causing duplicate subscriptions and race conditions
 
-
-    // Listen for recording events from selected device via Echo
-    // Use a ref to track registered device to prevent spam registration
-    const registeredDeviceRef = useRef(null);
-
+    // Use ref to store createNodeFromEvent to avoid stale closure issues
+    const createNodeFromEventRef = useRef(createNodeFromEvent);
     useEffect(() => {
-        // Only listen when a device is selected
-        if (!selectedDevice) return;
+        createNodeFromEventRef.current = createNodeFromEvent;
+    }, [createNodeFromEvent]);
 
-        // Helper function to register listener on backend
+    // SEPARATE useEffect for registerListener/unregisterListener - only runs when device changes
+    // This prevents spam caused by other dependencies changing frequently
+    useEffect(() => {
+        if (!selectedDevice?.device_id) return;
+
+        let mounted = true;
+
         const registerListener = async () => {
-            // Skip if already registered for this device
-            if (registeredDeviceRef.current === selectedDevice.device_id) {
-                return;
-            }
-
             try {
                 await recordingApi.registerListener({
                     deviceId: selectedDevice.device_id,
                     flowId: flow.id,
                     userId: props.auth?.user?.id,
                 });
-                registeredDeviceRef.current = selectedDevice.device_id;
+                if (mounted) {
+                    console.log('[Recording] ✅ Registered listener for device:', selectedDevice.device_id);
+                }
             } catch (error) {
                 console.warn('Failed to register workflow listener:', error);
             }
         };
 
-        // Helper function to unregister listener on backend
         const unregisterListener = async () => {
-            // Skip if not registered
-            if (!registeredDeviceRef.current) return;
-
             try {
-                await recordingApi.unregisterListener(registeredDeviceRef.current);
-                registeredDeviceRef.current = null;
+                await recordingApi.unregisterListener(selectedDevice.device_id);
+                console.log('[Recording] 🔌 Unregistered listener for device:', selectedDevice.device_id);
             } catch (error) {
                 console.warn('Failed to unregister workflow listener:', error);
             }
         };
+
+        registerListener();
+
+        return () => {
+            mounted = false;
+            unregisterListener();
+        };
+    }, [selectedDevice?.device_id, flow.id, props.auth?.user?.id]); // ONLY device_id, flow.id, user.id - not createNodeFromEvent!
+
+    // Listen for recording events from selected device via Echo
+    // NO registerListener here - it's handled by the useEffect above
+    useEffect(() => {
+        // Only listen when a device is selected
+        if (!selectedDevice) return;
 
         try {
             if (typeof window !== 'undefined' && window.Echo && props.auth?.user?.id) {
@@ -685,9 +695,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                 const channelName = `device.${selectedDevice.device_id}`;
                 const channel = window.Echo.private(channelName);
 
-                // Register listener on backend so APK knows Editor is listening
-                // Only register once per device, not on every re-render
-                registerListener();
+                console.log('[Recording] 🎯 Subscribed to device channel:', selectedDevice.device_id);
 
                 // APK started recording
                 channel.listen('.recording.started', (e) => {
@@ -722,7 +730,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                         }
                     };
 
-                    createNodeFromEvent(openAppEvent, openAppSuggestion);
+                    createNodeFromEventRef.current(openAppEvent, openAppSuggestion);
 
                     // Start timer
                     recordingTimerRef.current = setInterval(() => {
@@ -743,6 +751,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
                 // APK captured an event (action)
                 channel.listen('.event.captured', (e) => {
+                    console.log('[Recording] 📥 Received event.captured:', e);
 
                     // Store raw event for debug panel (limit to last 20 events)
                     setDebugEvents(prev => [...prev.slice(-19), {
@@ -752,18 +761,18 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                         suggestion: e.node_suggestion
                     }]);
 
-                    createNodeFromEvent(e.event, e.node_suggestion);
+                    // Use ref to always get latest createNodeFromEvent
+                    createNodeFromEventRef.current(e.event, e.node_suggestion);
                 });
 
                 return () => {
                     try {
-                        // Unregister listener on backend when leaving
-                        unregisterListener();
-
+                        // NO unregisterListener here - it's handled by the dedicated useEffect above
                         channel.stopListening('.recording.started');
                         channel.stopListening('.recording.stopped');
                         channel.stopListening('.event.captured');
                         window.Echo.leave(channelName);
+                        console.log('[Recording] 🔌 Left device channel:', selectedDevice.device_id);
                     } catch (err) {
                         console.warn('Error cleaning up channel:', err);
                     }
@@ -772,7 +781,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         } catch (error) {
             console.warn('Echo not available for recording events:', error);
         }
-    }, [selectedDevice, props.auth, createNodeFromEvent, flow.id]);
+    }, [selectedDevice?.device_id, props.auth?.user?.id]); // Removed createNodeFromEvent - use ref instead
 
     // Listen for device status changes (accessibility, etc.) via user channel
     useEffect(() => {
