@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { usePage, router, Link } from '@inertiajs/react';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { getPageMetadata } from '@/Config/pageMetadata';
 import LanguageSwitcher from '../LanguageSwitcher';
 
 const notificationStyles = {
@@ -13,15 +14,18 @@ const notificationStyles = {
 
 export default function Header({ title, userName, setSidebarOpen }) {
     const { theme, toggleTheme } = useTheme();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const isDark = theme === 'dark';
-    const { notifications: notificationData, auth } = usePage().props;
+    const { notifications: notificationData, auth, url } = usePage().props;
     const [showNotifications, setShowNotifications] = useState(false);
 
     const notifications = notificationData?.items || [];
     const unreadCount = notificationData?.unread_count || 0;
     const wallet = auth?.wallet;
     const aiCredits = auth?.ai_credits || 0;
+
+    // Get page metadata
+    const pageMetadata = getPageMetadata(url, i18n.language);
 
     const handleMarkAsRead = (id) => {
         router.post(`/notifications/${id}/read`, {}, { preserveScroll: true, preserveState: true });
@@ -36,13 +40,13 @@ export default function Header({ title, userName, setSidebarOpen }) {
     };
 
     return (
-        <header className={`sticky top-0 z-30 h-14 backdrop-blur-xl border-b transition-colors ${isDark
-                ? 'bg-[#0a0a0a]/95 border-[#1a1a1a]'
-                : 'bg-white/95 border-gray-200'
+        <header className={`sticky top-0 z-30 backdrop-blur-xl border-b transition-colors ${isDark
+            ? 'bg-[#0a0a0a]/95 border-[#1a1a1a]'
+            : 'bg-white/95 border-gray-200'
             }`}>
-            <div className="flex items-center justify-between h-full px-4 sm:px-6">
+            <div className="flex items-center justify-between h-14 px-4 sm:px-6">
                 {/* Left Section */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 flex-1 min-w-0">
                     {/* Mobile Menu Button */}
                     <button
                         onClick={() => setSidebarOpen(true)}
@@ -54,14 +58,70 @@ export default function Header({ title, userName, setSidebarOpen }) {
                         </svg>
                     </button>
 
-                    {/* Page Title */}
-                    <div className="hidden lg:block">
-                        <h1 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            {title || 'Dashboard'}
+                    {/* Page Metadata */}
+                    <div className="hidden lg:flex items-center gap-3 flex-1 min-w-0">
+                        {/* Icon */}
+                        <div className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-lg ${isDark
+                            ? 'bg-gradient-to-br from-violet-500/20 to-purple-600/20 border border-violet-500/30'
+                            : 'bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-200'
+                            }`}>
+                            {pageMetadata.icon}
+                        </div>
+
+                        {/* Title & Breadcrumb */}
+                        <div className="flex-1 min-w-0">
+                            {/* Breadcrumb */}
+                            {pageMetadata.breadcrumb && pageMetadata.breadcrumb.length > 1 && (
+                                <div className="flex items-center gap-1 mb-0.5">
+                                    {pageMetadata.breadcrumb.map((item, index) => (
+                                        <div key={index} className="flex items-center gap-1">
+                                            {index > 0 && (
+                                                <svg className={`w-3 h-3 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            )}
+                                            {index < pageMetadata.breadcrumb.length - 1 ? (
+                                                <Link
+                                                    href={item.url}
+                                                    className={`text-xs font-medium transition-colors ${isDark
+                                                        ? 'text-gray-500 hover:text-gray-300'
+                                                        : 'text-gray-400 hover:text-gray-600'
+                                                        }`}
+                                                >
+                                                    {item.label}
+                                                </Link>
+                                            ) : (
+                                                <span className={`text-xs font-medium ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                                                    {item.label}
+                                                </span>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Title & Description */}
+                            <div className="flex items-center gap-2">
+                                <h1 className={`text-base font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                    {title || pageMetadata.title}
+                                </h1>
+                                {pageMetadata.description && (
+                                    <>
+                                        <span className={`hidden xl:inline ${isDark ? 'text-gray-700' : 'text-gray-300'}`}>•</span>
+                                        <p className={`hidden xl:block text-xs truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                            {pageMetadata.description}
+                                        </p>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Mobile: Simple Title */}
+                    <div className="lg:hidden flex-1 min-w-0">
+                        <h1 className={`text-sm font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            {pageMetadata.icon} {title || pageMetadata.title}
                         </h1>
-                        <p className={`text-xs -mt-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {t('header.welcome_back', { defaultValue: 'Welcome back' })}, {userName}
-                        </p>
                     </div>
                 </div>
 
@@ -71,8 +131,8 @@ export default function Header({ title, userName, setSidebarOpen }) {
                     <Link
                         href="/ai-credits"
                         className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${isDark
-                                ? 'bg-purple-900/30 text-purple-400 hover:bg-purple-900/50'
-                                : 'bg-purple-50 text-purple-600 hover:bg-purple-100'
+                            ? 'bg-purple-900/30 text-purple-400 hover:bg-purple-900/50'
+                            : 'bg-purple-50 text-purple-600 hover:bg-purple-100'
                             }`}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,8 +145,8 @@ export default function Header({ title, userName, setSidebarOpen }) {
                     <Link
                         href="/topup"
                         className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all ${isDark
-                                ? 'bg-[#1a1a1a] text-white hover:bg-[#222]'
-                                : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                            ? 'bg-[#1a1a1a] text-white hover:bg-[#222]'
+                            : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                             }`}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,8 +159,8 @@ export default function Header({ title, userName, setSidebarOpen }) {
                     <button
                         onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
                         className={`hidden md:flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${isDark
-                                ? 'text-gray-500 hover:bg-[#1a1a1a] hover:text-white'
-                                : 'text-gray-400 hover:bg-gray-100 hover:text-gray-900'
+                            ? 'text-gray-500 hover:bg-[#1a1a1a] hover:text-white'
+                            : 'text-gray-400 hover:bg-gray-100 hover:text-gray-900'
                             }`}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,8 +182,8 @@ export default function Header({ title, userName, setSidebarOpen }) {
                     <button
                         onClick={toggleTheme}
                         className={`p-2 rounded-lg transition-all ${isDark
-                                ? 'text-gray-400 hover:bg-[#1a1a1a] hover:text-white'
-                                : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+                            ? 'text-gray-400 hover:bg-[#1a1a1a] hover:text-white'
+                            : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
                             }`}
                         aria-label="Toggle theme"
                     >
@@ -143,8 +203,8 @@ export default function Header({ title, userName, setSidebarOpen }) {
                         <button
                             onClick={() => setShowNotifications(!showNotifications)}
                             className={`relative p-2 rounded-lg transition-all ${isDark
-                                    ? 'text-gray-400 hover:bg-[#1a1a1a] hover:text-white'
-                                    : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+                                ? 'text-gray-400 hover:bg-[#1a1a1a] hover:text-white'
+                                : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
                                 }`}
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,8 +272,8 @@ export default function Header({ title, userName, setSidebarOpen }) {
                                                         <div
                                                             key={notification.id}
                                                             className={`px-4 py-3 transition-colors cursor-pointer ${isDark
-                                                                    ? `hover:bg-[#1a1a1a] ${!isRead ? 'bg-blue-900/10' : ''}`
-                                                                    : `hover:bg-gray-50 ${!isRead ? 'bg-blue-50/50' : ''}`
+                                                                ? `hover:bg-[#1a1a1a] ${!isRead ? 'bg-blue-900/10' : ''}`
+                                                                : `hover:bg-gray-50 ${!isRead ? 'bg-blue-50/50' : ''}`
                                                                 }`}
                                                             onClick={() => !isRead && handleMarkAsRead(notification.id)}
                                                         >
@@ -223,8 +283,8 @@ export default function Header({ title, userName, setSidebarOpen }) {
                                                                 </svg>
                                                                 <div className="flex-1 min-w-0">
                                                                     <p className={`text-sm font-medium ${!isRead
-                                                                            ? isDark ? 'text-white' : 'text-gray-900'
-                                                                            : isDark ? 'text-gray-400' : 'text-gray-600'
+                                                                        ? isDark ? 'text-white' : 'text-gray-900'
+                                                                        : isDark ? 'text-gray-400' : 'text-gray-600'
                                                                         }`}>
                                                                         {notification.title}
                                                                     </p>
