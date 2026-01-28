@@ -231,10 +231,8 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/data-collections/{data_collection}/records/{record}', [\App\Http\Controllers\DataRecordController::class, 'destroy'])->name('data-records.destroy');
     Route::post('/data-collections/{data_collection}/records/bulk-delete', [\App\Http\Controllers\DataRecordController::class, 'bulkDelete'])->name('data-records.bulk-delete');
 
-    // Workflow Jobs Management
+    // Workflow Jobs Management (Device-initiated only, no manual creation)
     Route::get('/jobs', [WorkflowJobController::class, 'index'])->name('jobs.index');
-    Route::get('/jobs/create', [WorkflowJobController::class, 'create'])->name('jobs.create');
-    Route::post('/jobs', [WorkflowJobController::class, 'store'])->name('jobs.store');
     Route::get('/jobs/{job}', [WorkflowJobController::class, 'show'])->name('jobs.show');
     Route::post('/jobs/{job}/cancel', [WorkflowJobController::class, 'cancel'])->name('jobs.cancel');
     Route::post('/jobs/{job}/retry', [WorkflowJobController::class, 'retry'])->name('jobs.retry');

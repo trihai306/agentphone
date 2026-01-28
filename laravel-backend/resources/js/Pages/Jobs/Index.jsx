@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '../../Layouts/AppLayout';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
 import { useTheme } from '@/Contexts/ThemeContext';
-import CreateJobModal from '@/Components/Job/CreateJobModal';
 
 // Simple debounce implementation
 function useDebounce(callback, delay) {
@@ -39,7 +38,6 @@ export default function Index({ jobs, stats, deviceStats = [], devices = [], flo
 
     const [search, setSearch] = useState(filters.search || '');
     const [showDevicePanel, setShowDevicePanel] = useState(true);
-    const [showCreateModal, setShowCreateModal] = useState(false);
 
     // Debounced search
     const debouncedSearch = useDebounce((value) => {
@@ -106,15 +104,6 @@ export default function Index({ jobs, stats, deviceStats = [], devices = [], flo
                                 </p>
                             </div>
                         </div>
-                        <button
-                            onClick={() => setShowCreateModal(true)}
-                            className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-[1.02] transition-all"
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                            {t('jobs.create_job')}
-                        </button>
                     </div>
 
                     {/* Stats Cards */}
@@ -409,20 +398,11 @@ export default function Index({ jobs, stats, deviceStats = [], devices = [], flo
                                         <h3 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                             {filters.search || filters.status || filters.device_id ? t('jobs.empty.no_results') : t('jobs.no_jobs')}
                                         </h3>
-                                        <p className={`text-sm mb-8 max-w-md mx-auto ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                                        <p className={`text-sm max-w-md mx-auto ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
                                             {filters.search || filters.status || filters.device_id
                                                 ? t('jobs.empty.try_different_filter')
-                                                : t('jobs.no_jobs_description')}
+                                                : t('jobs.jobs_created_from_devices')}
                                         </p>
-                                        <button
-                                            onClick={() => setShowCreateModal(true)}
-                                            className="inline-flex items-center gap-2.5 px-6 py-3 text-sm font-semibold rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/40 hover:scale-[1.02] transition-all"
-                                        >
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                            </svg>
-                                            {t('jobs.create_first_job')}
-                                        </button>
                                     </div>
                                 </div>
                             )}
@@ -512,14 +492,6 @@ export default function Index({ jobs, stats, deviceStats = [], devices = [], flo
                     </div>
                 </div>
             </div>
-
-            {/* Create Job Modal */}
-            <CreateJobModal
-                isOpen={showCreateModal}
-                onClose={() => setShowCreateModal(false)}
-                devices={deviceStats}
-                flows={flows}
-            />
         </AppLayout>
     );
 }

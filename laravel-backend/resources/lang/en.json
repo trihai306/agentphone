@@ -1191,6 +1191,7 @@
         "create_first_job": "Create Your First Job",
         "no_jobs": "No jobs found",
         "no_jobs_description": "Create your first job to start running workflows on devices",
+        "jobs_created_from_devices": "Jobs will be automatically created when you run workflows from your devices",
         "cancel_job": "Cancel Job",
         "confirm_cancel": "Are you sure you want to cancel this job?",
         "delete_job": "Delete Job",

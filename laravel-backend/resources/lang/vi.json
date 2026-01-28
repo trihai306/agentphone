@@ -1197,6 +1197,7 @@
         "create_first_job": "Tạo Job Đầu Tiên",
         "no_jobs": "Chưa có job nào",
         "no_jobs_description": "Tạo job đầu tiên để bắt đầu chạy workflow trên thiết bị",
+        "jobs_created_from_devices": "Jobs sẽ được tự động tạo khi bạn chạy workflow từ thiết bị",
         "cancel_job": "Huỷ Job",
         "confirm_cancel": "Bạn có chắc muốn huỷ job này?",
         "delete_job": "Xoá Job",
