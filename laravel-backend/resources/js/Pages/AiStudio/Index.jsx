@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import AppLayout from '../../Layouts/AppLayout';
 import { useToast } from '@/Components/Layout/ToastProvider';
+import { useConfirm } from '@/Components/UI/ConfirmModal';
 import { useTheme } from '@/Contexts/ThemeContext';
 import FolderSelectModal from '@/Components/Media/FolderSelectModal';
 import ScenarioTab from '@/Components/AiStudio/ScenarioTab';
@@ -61,6 +62,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
     const { t } = useTranslation();
     const { auth } = usePage().props;
     const { addToast } = useToast();
+    const { showConfirm } = useConfirm();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     const textareaRef = useRef(null);
@@ -334,10 +336,17 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
         }
     };
 
-    const handleRetry = (generationId) => {
-        if (!confirm(t('ai_studio.confirm_retry', { defaultValue: 'Retry this generation? Credits will be used again.' }))) {
-            return;
-        }
+    const handleRetry = async (generationId) => {
+        const confirmed = await showConfirm({
+            title: t('ai_studio.retry_title', { defaultValue: 'Xác nhận thử lại' }),
+            message: t('ai_studio.confirm_retry', { defaultValue: 'Thử lại generation này? Credit sẽ bị trừ lại.' }),
+            confirmText: t('ai_studio.retry', { defaultValue: 'Thử lại' }),
+            cancelText: t('common.cancel', { defaultValue: 'Hủy' }),
+            type: 'warning',
+            icon: '🔄',
+        });
+
+        if (!confirmed) return;
 
         router.post(`/ai-studio/generations/${generationId}/retry`, {}, {
             preserveScroll: true,
