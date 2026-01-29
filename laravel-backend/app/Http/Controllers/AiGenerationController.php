@@ -40,9 +40,14 @@ class AiGenerationController extends Controller
         $mediaService = app(\App\Services\MediaService::class);
         $folders = $mediaService->getUserFolders($user)->values()->toArray();
 
-        // Get active jobs (pending/processing generations and scenarios)
+        // Get active jobs (pending/processing OR recently created within 2 minutes)
+        // This ensures jobs persist on page refresh until they complete
+        $twoMinutesAgo = now()->subMinutes(2);
         $activeGenerations = $user->aiGenerations()
-            ->whereIn('status', ['pending', 'processing'])
+            ->where(function ($q) use ($twoMinutesAgo) {
+                $q->whereIn('status', ['pending', 'processing'])
+                    ->orWhere('created_at', '>=', $twoMinutesAgo);
+            })
             ->latest()
             ->get()
             ->map(fn($gen) => $this->formatGeneration($gen));
@@ -270,8 +275,13 @@ class AiGenerationController extends Controller
             ->toArray();
 
         // Get standalone generations only (exclude scene-related ones)
+        // Include pending/processing OR recently created within 2 minutes
+        $twoMinutesAgo = now()->subMinutes(2);
         $activeGenerations = $user->aiGenerations()
-            ->whereIn('status', ['pending', 'processing'])
+            ->where(function ($q) use ($twoMinutesAgo) {
+                $q->whereIn('status', ['pending', 'processing'])
+                    ->orWhere('created_at', '>=', $twoMinutesAgo);
+            })
             ->whereNotIn('id', $scenarioGenerationIds)
             ->latest()
             ->get()
