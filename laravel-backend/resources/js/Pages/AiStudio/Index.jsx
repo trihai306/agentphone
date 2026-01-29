@@ -293,14 +293,16 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
 
             const response = await axios.post(endpoint, payload);
 
-            // Set current generation - keeps generating=true until WebSocket/polling confirms completion
+            // Job queued - add to history, it will show "processing" status
             setCurrentGeneration(response.data.generation);
             setHistory(prev => [response.data.generation, ...prev]);
             router.reload({ only: ['currentCredits'] });
-            // Don't set generating=false here - wait for WebSocket completion event
+            addToast('Generation queued successfully!', 'success');
         } catch (error) {
             addToast(error.response?.data?.error || 'An error occurred', 'error');
-            setGenerating(false); // Only set false on error
+        } finally {
+            // Stop loading immediately after job is queued
+            setGenerating(false);
         }
     };
 
