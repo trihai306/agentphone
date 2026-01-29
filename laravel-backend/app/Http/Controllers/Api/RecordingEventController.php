@@ -558,54 +558,76 @@ class RecordingEventController extends Controller
 
             $left = $parsedBounds['left'];
             $top = $parsedBounds['top'];
-            $width = $parsedBounds['right'] - $parsedBounds['left'];
-            $height = $parsedBounds['bottom'] - $parsedBounds['top'];
+            $originalWidth = $parsedBounds['right'] - $parsedBounds['left'];
+            $originalHeight = $parsedBounds['bottom'] - $parsedBounds['top'];
 
-            // Validate dimensions (minimum 10x10, maximum 500x500 for icons)
-            if ($width < 10 || $height < 10) {
-                Log::warning("Icon dimensions too small", ['width' => $width, 'height' => $height]);
+            // Validate dimensions (minimum 16px, matching Element Inspection Protocol)
+            if ($originalWidth < 16 || $originalHeight < 16) {
+                Log::warning("Icon dimensions too small", ['width' => $originalWidth, 'height' => $originalHeight]);
                 return null;
             }
 
-            // Limit max size to prevent oversized icons
-            $maxSize = 500;
-            if ($width > $maxSize)
-                $width = $maxSize;
-            if ($height > $maxSize)
-                $height = $maxSize;
+            // ========================================
+            // ADAPTIVE VERTICAL CROPPING (Element Inspection Protocol)
+            // For tall elements (height > width * 1.5), crop only the top square portion
+            // This isolates the visual icon in list items where text labels are below
+            // ========================================
+            $width = $originalWidth;
+            $height = $originalHeight;
 
-            // Load image with Intervention Image and crop
+            if ($height > $width * 1.5) {
+                // Tall element detected - crop top square to get icon only
+                $height = min($width, (int) ($height / 2));
+                Log::info("📐 Adaptive vertical crop: {$originalWidth}x{$originalHeight} -> {$width}x{$height}");
+            }
+
+            // Load image with Intervention Image
             $image = Image::read($imageData);
 
-            // Ensure crop area is within image bounds
+            // Ensure crop area is within image bounds (Coordinate Safety Coercion)
             $imgWidth = $image->width();
             $imgHeight = $image->height();
 
             // Debug logging for scale issues
             Log::info("🔍 Icon crop debug", [
-                'bounds' => $parsedBounds,
+                'original_bounds' => "{$left},{$top} -> {$originalWidth}x{$originalHeight}",
+                'adaptive_bounds' => "{$width}x{$height}",
                 'img_size' => "{$imgWidth}x{$imgHeight}",
-                'requested_crop' => "{$left},{$top} -> {$width}x{$height}",
             ]);
 
-            if ($left < 0)
-                $left = 0;
-            if ($top < 0)
-                $top = 0;
-            if ($left + $width > $imgWidth)
-                $width = $imgWidth - $left;
-            if ($top + $height > $imgHeight)
-                $height = $imgHeight - $top;
+            // Safe coordinate coercion (matching Element Inspection Protocol)
+            $safeLeft = max(0, min($left, $imgWidth - 1));
+            $safeTop = max(0, min($top, $imgHeight - 1));
+            $safeWidth = max(1, min($width, $imgWidth - $safeLeft));
+            $safeHeight = max(1, min($height, $imgHeight - $safeTop));
 
-            if ($width <= 0 || $height <= 0) {
-                Log::warning("Invalid crop dimensions after bounds adjustment");
+            if ($safeWidth <= 10 || $safeHeight <= 10) {
+                Log::warning("Invalid crop dimensions after safety coercion", [
+                    'width' => $safeWidth,
+                    'height' => $safeHeight
+                ]);
                 return null;
             }
 
             // Crop the icon area
-            $croppedImage = $image->crop($width, $height, $left, $top);
+            $croppedImage = $image->crop($safeWidth, $safeHeight, $safeLeft, $safeTop);
 
-            // Encode as PNG for better icon quality (transparency support)
+            // ========================================
+            // RESIZE TO MAX 100px (Element Inspection Standard)
+            // Maintain aspect ratio, cap at 100px largest dimension
+            // Using Intervention Image v3 scaleDown() for aspect-ratio-preserving resize
+            // ========================================
+            $maxIconSize = 100;
+            $cropWidth = $croppedImage->width();
+            $cropHeight = $croppedImage->height();
+
+            if ($cropWidth > $maxIconSize || $cropHeight > $maxIconSize) {
+                // scaleDown maintains aspect ratio and only shrinks if needed
+                $croppedImage->scaleDown($maxIconSize, $maxIconSize);
+                Log::info("📏 Resized icon: {$cropWidth}x{$cropHeight} -> {$croppedImage->width()}x{$croppedImage->height()}");
+            }
+
+            // Encode as PNG for better icon quality (transparency support, 90% quality)
             $iconData = $croppedImage->toPng()->toString();
 
             // Save cropped icon
@@ -615,7 +637,7 @@ class RecordingEventController extends Controller
             $iconUrl = \Storage::disk('public')->url($iconFilename);
             $iconSizeKb = round(strlen($iconData) / 1024, 1);
 
-            Log::info("🎯 Icon cropped: {$iconFilename} ({$iconSizeKb}KB, {$width}x{$height})");
+            Log::info("🎯 Icon cropped: {$iconFilename} ({$iconSizeKb}KB, {$croppedImage->width()}x{$croppedImage->height()})");
 
             return $iconUrl;
         } catch (\Exception $e) {
