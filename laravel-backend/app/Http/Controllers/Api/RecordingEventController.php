@@ -662,9 +662,9 @@ class RecordingEventController extends Controller
             return null;
         }
 
-        // Handle string format: "[100,200][300,400]"
+        // Handle string format
         if (is_string($bounds)) {
-            // Parse Android accessibility bounds format
+            // Format 1: Android accessibility bounds format "[left,top][right,bottom]"
             if (preg_match('/\[(\d+),(\d+)\]\[(\d+),(\d+)\]/', $bounds, $matches)) {
                 return [
                     'left' => (int) $matches[1],
@@ -673,6 +673,17 @@ class RecordingEventController extends Controller
                     'bottom' => (int) $matches[4],
                 ];
             }
+
+            // Format 2: Comma-separated "left,top,right,bottom" (APK recording format)
+            if (preg_match('/^(\d+),(\d+),(\d+),(\d+)$/', $bounds, $matches)) {
+                return [
+                    'left' => (int) $matches[1],
+                    'top' => (int) $matches[2],
+                    'right' => (int) $matches[3],
+                    'bottom' => (int) $matches[4],
+                ];
+            }
+
             return null;
         }
 
