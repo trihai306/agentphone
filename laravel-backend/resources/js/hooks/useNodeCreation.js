@@ -361,6 +361,9 @@ export function useNodeCreation({
                     resourceId: eventData.resource_id || eventData.resourceId,
                     text: eventData.text,
                     screenshotUrl: eventData.screenshot_url || nodeSuggestion.data?.screenshotUrl,
+                    // Image for Icon Template display (TapActionConfig uses data.image)
+                    // Falls back to full screenshot URL until a cropped icon is available
+                    image: nodeSuggestion.data?.image || eventData.screenshot_url || nodeSuggestion.data?.screenshotUrl,
                     coordinates: { x: eventData.x, y: eventData.y },
                     bounds: eventData.bounds,
                     packageName: eventData.package_name,

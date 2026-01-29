@@ -52,58 +52,7 @@ return [
     */
     'models' => [
         'image' => [
-            // ============ REPLICATE MODELS ============
-            'flux-1-1-pro' => [
-                'name' => 'FLUX 1.1 Pro',
-                'description' => 'State-of-the-art image generation with exceptional quality',
-                'provider' => 'replicate',
-                'version' => 'black-forest-labs/flux-1.1-pro',
-                'credits_per_image' => 10,
-                'max_width' => 2048,
-                'max_height' => 2048,
-                'default_width' => 1024,
-                'default_height' => 1024,
-                'parameters' => [
-                    'prompt_strength' => 0.85,
-                    'num_inference_steps' => 28,
-                ],
-                'badge' => 'Popular',
-                'enabled' => true,
-            ],
-            'stable-diffusion-3-5' => [
-                'name' => 'Stable Diffusion 3.5 Large',
-                'description' => 'High quality, fast image generation',
-                'provider' => 'replicate',
-                'version' => 'stability-ai/stable-diffusion-3.5-large',
-                'credits_per_image' => 5,
-                'max_width' => 1024,
-                'max_height' => 1024,
-                'default_width' => 512,
-                'default_height' => 512,
-                'parameters' => [
-                    'num_inference_steps' => 20,
-                    'guidance_scale' => 7.5,
-                ],
-                'enabled' => true,
-            ],
-            'sdxl-turbo' => [
-                'name' => 'SDXL Turbo',
-                'description' => 'Ultra-fast image generation, lower quality',
-                'provider' => 'replicate',
-                'version' => 'stability-ai/sdxl-turbo',
-                'credits_per_image' => 3,
-                'max_width' => 1024,
-                'max_height' => 1024,
-                'default_width' => 512,
-                'default_height' => 512,
-                'parameters' => [
-                    'num_inference_steps' => 4,
-                ],
-                'badge' => 'Fast',
-                'enabled' => true,
-            ],
-
-            // ============ GOOGLE IMAGEN 4 (CURRENT) ============
+            // ============ GOOGLE IMAGEN 4 (Only Active Provider) ============
             'imagen-4-fast' => [
                 'name' => 'Imagen 4 Fast',
                 'description' => 'Fastest text-to-image generation from Google',
@@ -339,22 +288,7 @@ return [
                 'coming_soon' => true,
             ],
 
-            // ============ REPLICATE VIDEO (Legacy) ============
-            'stable-video' => [
-                'name' => 'Stable Video Diffusion',
-                'description' => 'Stable Diffusion for video generation',
-                'provider' => 'replicate',
-                'version' => 'stability-ai/stable-video-diffusion',
-                'credits_per_second' => 6,
-                'max_duration' => 5,
-                'default_duration' => 3,
-                'resolutions' => [
-                    '576p' => ['width' => 1024, 'height' => 576],
-                ],
-                'default_resolution' => '576p',
-                'fps' => 24,
-                'enabled' => true,
-            ],
+            // Replicate models removed - only Google Gemini models active
         ],
     ],
 

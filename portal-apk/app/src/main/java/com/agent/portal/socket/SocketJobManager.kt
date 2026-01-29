@@ -676,7 +676,7 @@ object SocketJobManager {
                 val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
 
                 // Build action event data with ALL element details
-                // Screenshot is optional - it may be captured asynchronously later
+                // Screenshot is encoded to base64 if available
                 val actionData = mutableMapOf<String, Any?>(
                     "device_id" to (deviceId ?: "unknown"),
                     "session_id" to sessionId,
@@ -698,11 +698,31 @@ object SocketJobManager {
                     "app_name" to event.appName,
                     "relative_timestamp" to event.relativeTimestamp,
                     "screenshot_path" to event.screenshotPath,
-                    // NOTE: No inline screenshot base64 - reduces payload size
-                    // Frontend uses screenshot_path to fetch image later if needed
                     // Action-specific data (scroll direction, deltas, text input, etc.)
                     "action_data" to event.actionData
                 )
+                
+                // Encode screenshot to base64 if available (for Flow Editor display)
+                if (event.screenshotPath != null) {
+                    try {
+                        val screenshotFile = java.io.File(event.screenshotPath)
+                        if (screenshotFile.exists()) {
+                            val bitmap = android.graphics.BitmapFactory.decodeFile(event.screenshotPath)
+                            if (bitmap != null) {
+                                val outputStream = java.io.ByteArrayOutputStream()
+                                // Compress to JPEG quality 60% for smaller payload
+                                bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 60, outputStream)
+                                val bytes = outputStream.toByteArray()
+                                val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
+                                actionData["screenshot"] = base64
+                                bitmap.recycle()
+                                Log.d(TAG, "📸 Encoded screenshot: ${base64.length / 1024}KB")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to encode screenshot: ${e.message}")
+                    }
+                }
 
                 // Send HTTP POST request
                 val client = okhttp3.OkHttpClient()

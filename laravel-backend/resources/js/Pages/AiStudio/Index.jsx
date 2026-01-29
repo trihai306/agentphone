@@ -120,7 +120,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
         if (models.length > 0 && !model) {
             const defaultModel = type === 'video'
                 ? models.find(m => m.id === 'veo-3.1') || models[0]
-                : models.find(m => m.id === 'flux-1.1-pro') || models[0];
+                : models.find(m => m.id === 'imagen-4-standard') || models[0];
             setModel(defaultModel.id);
         }
     }, [models, type]);

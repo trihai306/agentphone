@@ -607,20 +607,21 @@ object RecordingManager {
         // Notify listeners
         notifyEventAdded(eventWithSequence, eventBuffer.size)
 
-        // Capture screenshot asynchronously (slow, non-blocking)
+        // Capture screenshot asynchronously then publish event (slow, non-blocking)
+        // We wait for screenshot to be captured before publishing so Flow Editor gets the icon
         if (screenshotEnabled && context != null) {
-            captureScreenshotAsync(context, eventWithSequence)
-        }
-
-        // Publish event to server for real-time Flow Editor sync
-        try {
-            com.agent.portal.socket.SocketJobManager.publishActionEvent(
-                recordingId ?: "unknown",
-                eventWithSequence
-            )
-            Log.d(TAG, "📤 Published action event: ${event.eventType}")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to publish action event", e)
+            captureScreenshotAsync(context, eventWithSequence) { screenshotPath ->
+                // Publish event AFTER screenshot is captured so it includes the path
+                val eventWithScreenshot = if (screenshotPath != null) {
+                    eventWithSequence.copy(screenshotPath = screenshotPath)
+                } else {
+                    eventWithSequence
+                }
+                publishEventToServer(eventWithScreenshot)
+            }
+        } else {
+            // No screenshot, publish immediately
+            publishEventToServer(eventWithSequence)
         }
 
         return true
@@ -628,8 +629,13 @@ object RecordingManager {
 
     /**
      * Capture screenshot asynchronously and update event
+     * @param onComplete Called with screenshot path (or null if failed)
      */
-    private fun captureScreenshotAsync(context: Context, event: RecordedEvent) {
+    private fun captureScreenshotAsync(
+        context: Context, 
+        event: RecordedEvent,
+        onComplete: ((String?) -> Unit)? = null
+    ) {
         ScreenshotManager.captureScreenshotForEvent(context, event) { screenshotPath ->
             if (screenshotPath != null) {
                 // Update event with screenshot path
@@ -646,6 +652,23 @@ object RecordingManager {
                 screenshotFailureCount++
                 Log.w(TAG, "Screenshot capture failed for event #${event.sequenceNumber}")
             }
+            // Call completion callback
+            onComplete?.invoke(screenshotPath)
+        }
+    }
+
+    /**
+     * Publish event to server for real-time Flow Editor sync
+     */
+    private fun publishEventToServer(event: RecordedEvent) {
+        try {
+            com.agent.portal.socket.SocketJobManager.publishActionEvent(
+                recordingId ?: "unknown",
+                event
+            )
+            Log.d(TAG, "📤 Published action event: ${event.eventType} (screenshot: ${event.screenshotPath != null})")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to publish action event", e)
         }
     }
 
