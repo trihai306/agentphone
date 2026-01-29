@@ -56,7 +56,7 @@ export default function JobsQueuePanel({
     };
 
     return (
-        <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
             {/* Active Jobs Section */}
             {totalJobs > 0 && (
                 <div className={`rounded-2xl ${glassCard} overflow-hidden`}>
@@ -132,8 +132,8 @@ export default function JobsQueuePanel({
 
             {/* Empty State when no active jobs */}
             {totalJobs === 0 && (
-                <div className={`p-6 rounded-2xl text-center ${glassCard}`}>
-                    <div className="text-4xl mb-3">✨</div>
+                <div className={`p-4 rounded-2xl text-center ${glassCard}`}>
+                    <div className="text-2xl mb-2">✨</div>
                     <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                         Sẵn sàng tạo
                     </p>
