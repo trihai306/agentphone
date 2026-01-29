@@ -1050,13 +1050,13 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
 
                     {/* Media Container - Centered */}
                     <div
-                        className="relative max-w-[85vw] max-h-[70vh]"
+                        className="relative max-w-[80vw] max-h-[60vh]"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {previewGeneration.type === 'video' ? (
                             <video
                                 src={previewGeneration.result_url}
-                                className="max-w-[85vw] max-h-[70vh] rounded-xl shadow-2xl"
+                                className="max-w-[80vw] max-h-[60vh] rounded-xl shadow-2xl"
                                 controls
                                 autoPlay
                             />
@@ -1064,7 +1064,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                             <img
                                 src={previewGeneration.result_url}
                                 alt={previewGeneration.prompt}
-                                className="max-w-[85vw] max-h-[70vh] rounded-xl shadow-2xl object-contain"
+                                className="max-w-[80vw] max-h-[60vh] rounded-xl shadow-2xl object-contain"
                             />
                         )}
 
