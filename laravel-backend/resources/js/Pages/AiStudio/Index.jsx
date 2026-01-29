@@ -995,11 +995,9 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                         </div>
                                     )}
                                 </div>
-                            </div>
 
-                            {/* Right Panel - Jobs Queue */}
-                            <div className={`w-[280px] flex-shrink-0 border-l transition-colors ${themeClasses.border}`}>
-                                <div className="sticky top-0 h-screen overflow-y-auto p-4">
+                                {/* Jobs Queue Section - Below Preview */}
+                                <div className="mt-6">
                                     <JobsQueuePanel
                                         activeGenerations={activeGenerations}
                                         activeScenarios={activeScenarios}
