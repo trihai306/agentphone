@@ -1035,86 +1035,95 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
             {/* Preview Modal */}
             {previewGeneration && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
                     onClick={() => setPreviewGeneration(null)}
                 >
+                    {/* Close Button - Top Right */}
+                    <button
+                        onClick={() => setPreviewGeneration(null)}
+                        className="absolute top-4 right-4 z-20 p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all backdrop-blur-sm"
+                    >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+
+                    {/* Media Container - Centered */}
                     <div
-                        className={`relative max-w-4xl w-full rounded-2xl overflow-hidden border ${isDark
-                            ? 'bg-[#1a1a1a] border-[#2a2a2a]'
-                            : 'bg-white border-slate-200'}`}
+                        className="relative max-w-[90vw] max-h-[85vh]"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {/* Close Button */}
-                        <button
-                            onClick={() => setPreviewGeneration(null)}
-                            className={`absolute top-4 right-4 z-10 p-2 rounded-xl transition-all ${isDark
-                                ? 'bg-black/50 text-white hover:bg-black/70'
-                                : 'bg-white/90 text-slate-600 hover:bg-white shadow-lg'}`}
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
+                        {previewGeneration.type === 'video' ? (
+                            <video
+                                src={previewGeneration.result_url}
+                                className="max-w-[90vw] max-h-[85vh] rounded-xl shadow-2xl"
+                                controls
+                                autoPlay
+                            />
+                        ) : (
+                            <img
+                                src={previewGeneration.result_url}
+                                alt={previewGeneration.prompt}
+                                className="max-w-[90vw] max-h-[85vh] rounded-xl shadow-2xl object-contain"
+                            />
+                        )}
 
-                        {/* Media */}
-                        <div className={`flex items-center justify-center min-h-[400px] max-h-[70vh] ${isDark ? 'bg-[#0a0a0a]' : 'bg-slate-50'}`}>
-                            {previewGeneration.type === 'video' ? (
-                                <video
-                                    src={previewGeneration.result_url}
-                                    className="max-h-[70vh] w-auto"
-                                    controls
-                                    autoPlay
-                                />
-                            ) : (
-                                <img
-                                    src={previewGeneration.result_url}
-                                    alt={previewGeneration.prompt}
-                                    className="max-h-[70vh] w-auto"
-                                />
-                            )}
+                        {/* Floating Action Bar - Bottom of Image */}
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 px-4 py-3 rounded-2xl bg-black/70 backdrop-blur-xl border border-white/10">
+                            {/* Type Badge */}
+                            <span className="px-3 py-1.5 text-xs font-bold rounded-lg bg-violet-500/30 text-violet-300 border border-violet-500/30">
+                                {previewGeneration.type === 'video' ? '🎬 Video' : '🖼️ Ảnh'}
+                            </span>
+
+                            {/* Model */}
+                            <span className="text-xs text-white/60 hidden sm:inline">
+                                {previewGeneration.model}
+                            </span>
+
+                            {/* Divider */}
+                            <div className="w-px h-6 bg-white/20" />
+
+                            {/* Download */}
+                            <a
+                                href={previewGeneration.result_url}
+                                download
+                                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                Tải xuống
+                            </a>
+
+                            {/* Save to Media */}
+                            <button
+                                onClick={() => {
+                                    setCurrentGeneration(previewGeneration);
+                                    setShowFolderModal(true);
+                                    setPreviewGeneration(null);
+                                }}
+                                className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all border border-white/10"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                Lưu Media
+                            </button>
                         </div>
+                    </div>
 
-                        {/* Info Panel */}
-                        <div className="p-5">
-                            <p className={`text-sm mb-4 ${themeClasses.textPrimary}`}>
-                                {previewGeneration.prompt}
-                            </p>
+                    {/* Prompt - Bottom Left Corner */}
+                    <div className="absolute bottom-4 left-4 max-w-md">
+                        <p className="text-sm text-white/80 line-clamp-2 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-xl">
+                            "{previewGeneration.prompt}"
+                        </p>
+                    </div>
 
-                            <div className="flex flex-wrap items-center gap-3 mb-4">
-                                <span className={`px-2.5 py-1 text-xs font-semibold rounded-lg ${isDark ? 'bg-violet-500/20 text-violet-300' : 'bg-violet-50 text-violet-700'}`}>
-                                    {previewGeneration.type === 'video' ? '🎬 Video' : '🖼️ Ảnh'}
-                                </span>
-                                <span className={`text-xs ${themeClasses.textMuted}`}>
-                                    {previewGeneration.model}
-                                </span>
-                                <span className={`text-xs ${themeClasses.textMuted}`}>
-                                    ✨ {previewGeneration.credits_used} credits
-                                </span>
-                            </div>
-
-                            {/* Actions */}
-                            <div className={`flex items-center gap-3 pt-4 border-t ${isDark ? 'border-[#2a2a2a]' : 'border-slate-200'}`}>
-                                <a
-                                    href={previewGeneration.result_url}
-                                    download
-                                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 transition-all"
-                                >
-                                    ⬇️ Tải xuống
-                                </a>
-                                <button
-                                    onClick={() => {
-                                        setCurrentGeneration(previewGeneration);
-                                        setShowFolderModal(true);
-                                        setPreviewGeneration(null);
-                                    }}
-                                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all ${isDark
-                                        ? 'bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]'
-                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
-                                >
-                                    💾 Lưu vào Media
-                                </button>
-                            </div>
-                        </div>
+                    {/* Credits - Bottom Right Corner */}
+                    <div className="absolute bottom-4 right-4">
+                        <span className="text-sm text-white/60 bg-black/50 backdrop-blur-sm px-3 py-2 rounded-lg">
+                            ✨ {previewGeneration.credits_used} credits
+                        </span>
                     </div>
                 </div>
             )}
