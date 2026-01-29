@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, router, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
@@ -1032,10 +1033,11 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                 }
             `}</style>
 
-            {/* Preview Modal */}
-            {previewGeneration && (
+            {/* Preview Modal - Use Portal for proper centering */}
+            {typeof document !== 'undefined' && previewGeneration && createPortal(
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95"
+                    style={{ top: 0, left: 0, right: 0, bottom: 0 }}
                     onClick={() => setPreviewGeneration(null)}
                 >
                     {/* Close Button - Top Right */}
@@ -1125,7 +1127,8 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                             ✨ {previewGeneration.credits_used} credits
                         </span>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* Folder Selection Modal */}
