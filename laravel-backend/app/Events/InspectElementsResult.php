@@ -82,6 +82,9 @@ class InspectElementsResult implements ShouldBroadcastNow
             return $el;
         }, $this->textElements);
 
+        // IMPORTANT: Strip screenshot from WebSocket payload to stay under 100KB Soketi limit
+        // Screenshot is still available via $this->screenshot but not broadcasted
+        // Frontend can request screenshot separately via HTTP API if needed
         $payload = [
             'device_id' => $this->deviceId,
             'success' => $this->success,
@@ -90,7 +93,8 @@ class InspectElementsResult implements ShouldBroadcastNow
             'elements' => $elementsWithOptimizedImages,
             'text_elements' => $textStripped,  // Stripped for now
             'ocr_count' => count($this->textElements),
-            'screenshot' => $this->screenshot,  // Include full screenshot (Soketi limit 50MB)
+            'screenshot' => null,  // STRIPPED: Screenshot too large for WebSocket (100KB limit)
+            'has_screenshot' => !empty($this->screenshot),  // Flag to indicate screenshot is available
             'screen_width' => $this->screenWidth,
             'screen_height' => $this->screenHeight,
             'screenshot_width' => $this->screenshotWidth,
