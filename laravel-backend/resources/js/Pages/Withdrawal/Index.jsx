@@ -3,6 +3,7 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '../../Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from '@/Components/UI/ConfirmModal';
 
 export default function Index({
     bankAccounts = [],
@@ -17,6 +18,7 @@ export default function Index({
     const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const { showConfirm } = useConfirm();
     const [showAddBank, setShowAddBank] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -40,8 +42,16 @@ export default function Index({
         });
     };
 
-    const handleCancel = (transactionId) => {
-        if (confirm(t('withdraw.confirm_cancel', { defaultValue: 'Bạn có chắc muốn hủy yêu cầu này?' }))) {
+    const handleCancel = async (transactionId) => {
+        const confirmed = await showConfirm({
+            title: t('withdraw.cancel_title', { defaultValue: 'Hủy yêu cầu rút tiền' }),
+            message: t('withdraw.confirm_cancel', { defaultValue: 'Bạn có chắc muốn hủy yêu cầu này?' }),
+            confirmText: t('withdraw.cancel', { defaultValue: 'Hủy yêu cầu' }),
+            cancelText: t('common.close', { defaultValue: 'Đóng' }),
+            type: 'warning',
+            icon: '⚠️',
+        });
+        if (confirmed) {
             router.post(`/withdraw/${transactionId}/cancel`);
         }
     };
@@ -267,10 +277,10 @@ export default function Index({
                                         type="submit"
                                         disabled={processing || !isValidAmount || !data.bank_account_id}
                                         className={`w-full py-3 text-sm font-semibold rounded-lg transition-all ${processing || !isValidAmount || !data.bank_account_id
-                                                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                                                : isDark
-                                                    ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700 shadow-lg shadow-violet-500/25'
-                                                    : 'bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700'
+                                            ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                                            : isDark
+                                                ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700 shadow-lg shadow-violet-500/25'
+                                                : 'bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700'
                                             }`}
                                     >
                                         {processing ? t('common.processing', { defaultValue: 'Đang xử lý...' }) : t('withdraw.submit')}

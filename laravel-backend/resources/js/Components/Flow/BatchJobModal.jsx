@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useToast } from '@/Components/Layout/ToastProvider';
 import axios from 'axios';
 
 /**
@@ -15,6 +16,7 @@ export default function BatchJobModal({
 }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const { addToast } = useToast();
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedDevices, setSelectedDevices] = useState([]);
@@ -52,7 +54,7 @@ export default function BatchJobModal({
 
     const handleSubmit = async () => {
         if (selectedDevices.length === 0) {
-            confirm('Please select at least one device');
+            addToast('Please select at least one device', 'warning');
             return;
         }
 
@@ -67,11 +69,11 @@ export default function BatchJobModal({
                 execution_mode: config.executionMode,
             });
 
-            confirm(`Created ${response.data.jobs?.length || selectedDevices.length} jobs successfully!`);
+            addToast(`Created ${response.data.jobs?.length || selectedDevices.length} jobs successfully!`, 'success');
             onClose();
         } catch (error) {
             console.error('Failed to create batch jobs:', error);
-            confirm('Failed to create jobs: ' + (error.response?.data?.message || error.message));
+            addToast('Failed to create jobs: ' + (error.response?.data?.message || error.message), 'error');
         } finally {
             setIsSubmitting(false);
         }

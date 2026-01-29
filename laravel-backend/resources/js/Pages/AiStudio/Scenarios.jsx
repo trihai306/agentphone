@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import AppLayout from '../../Layouts/AppLayout';
 import { useToast } from '@/Components/Layout/ToastProvider';
+import { useConfirm } from '@/Components/UI/ConfirmModal';
 import { useTheme } from '@/Contexts/ThemeContext';
 
 /**
@@ -13,6 +14,7 @@ import { useTheme } from '@/Contexts/ThemeContext';
 export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
     const { t } = useTranslation();
     const { addToast } = useToast();
+    const { showConfirm } = useConfirm();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
@@ -48,7 +50,15 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
     }, [scenarioList]);
 
     const handleDelete = async (scenario) => {
-        if (!confirm(`Xóa kịch bản "${scenario.title || 'Không tiêu đề'}"?`)) return;
+        const confirmed = await showConfirm({
+            title: 'Xóa kịch bản',
+            message: `Bạn có chắc muốn xóa kịch bản "${scenario.title || 'Không tiêu đề'}"?`,
+            confirmText: 'Xóa',
+            cancelText: 'Hủy',
+            type: 'danger',
+            icon: '🗑️',
+        });
+        if (!confirmed) return;
 
         setDeleting(scenario.id);
         try {
@@ -188,8 +198,8 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
                                             {/* Status */}
                                             <div className="col-span-2">
                                                 <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${isDark
-                                                        ? `bg-${statusConfig.color}-500/20 text-${statusConfig.color}-400 border border-${statusConfig.color}-500/30`
-                                                        : `bg-${statusConfig.color}-100 text-${statusConfig.color}-700`
+                                                    ? `bg-${statusConfig.color}-500/20 text-${statusConfig.color}-400 border border-${statusConfig.color}-500/30`
+                                                    : `bg-${statusConfig.color}-100 text-${statusConfig.color}-700`
                                                     } ${isActive ? 'animate-pulse' : ''}`}>
                                                     <span>{statusConfig.icon}</span>
                                                     <span>{statusConfig.label}</span>
@@ -202,10 +212,10 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
                                                     <div className={`flex-1 h-2 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
                                                         <div
                                                             className={`h-full transition-all duration-500 ${scenario.status === 'completed'
-                                                                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-400'
-                                                                    : scenario.status === 'failed'
-                                                                        ? 'bg-gradient-to-r from-red-500 to-red-400'
-                                                                        : 'bg-gradient-to-r from-amber-500 to-amber-400'
+                                                                ? 'bg-gradient-to-r from-emerald-500 to-emerald-400'
+                                                                : scenario.status === 'failed'
+                                                                    ? 'bg-gradient-to-r from-red-500 to-red-400'
+                                                                    : 'bg-gradient-to-r from-amber-500 to-amber-400'
                                                                 }`}
                                                             style={{ width: `${scenario.progress || 0}%` }}
                                                         />

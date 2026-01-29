@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useToast } from '@/Components/Layout/ToastProvider';
 import { router } from '@inertiajs/react';
 import WorkflowPicker from './WorkflowPicker';
 
@@ -15,6 +16,7 @@ export default function MultiWorkflowJobModal({
 }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const { addToast } = useToast();
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedDevice, setSelectedDevice] = useState(null);
@@ -37,11 +39,11 @@ export default function MultiWorkflowJobModal({
 
     const handleSubmit = async () => {
         if (!selectedDevice) {
-            confirm('Vui lòng chọn thiết bị');
+            addToast('Vui lòng chọn thiết bị', 'warning');
             return;
         }
         if (selectedWorkflows.length === 0) {
-            confirm('Vui lòng chọn ít nhất 1 workflow');
+            addToast('Vui lòng chọn ít nhất 1 workflow', 'warning');
             return;
         }
 
@@ -60,7 +62,7 @@ export default function MultiWorkflowJobModal({
                 },
                 onError: (errors) => {
                     console.error('Failed to create job:', errors);
-                    confirm('Lỗi: ' + Object.values(errors).flat().join(', '));
+                    addToast('Lỗi: ' + Object.values(errors).flat().join(', '), 'error');
                 },
                 onFinish: () => {
                     setIsSubmitting(false);
