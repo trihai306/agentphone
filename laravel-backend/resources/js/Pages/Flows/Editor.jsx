@@ -179,7 +179,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     const { modals, openModal, closeModal, openMediaPicker, openCollectionPicker, openLoopSubFlow, openEdgeDelay, openAIConfig, MODAL_TYPES } = modalManager;
 
     // Debug panel
-    const { debugEvents, showDebugPanel, setShowDebugPanel, addDebugEvent, toggleDebugPanel } = useDebugPanel();
+    const { debugEvents, showDebugPanel, setShowDebugPanel, addDebugEvent, clearDebugEvents, toggleDebugPanel } = useDebugPanel();
 
     // ===== Core Flow State =====
     const [nodes, setNodes] = useState(flow.nodes || []);
@@ -753,13 +753,12 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                 channel.listen('.event.captured', (e) => {
                     console.log('[Recording] 📥 Received event.captured:', e);
 
-                    // Store raw event for debug panel (limit to last 20 events)
-                    setDebugEvents(prev => [...prev.slice(-19), {
-                        id: Date.now(),
-                        receivedAt: new Date().toISOString(),
+                    // Store raw event for debug panel
+                    addDebugEvent({
+                        type: 'event.captured',
                         raw: e.event,
                         suggestion: e.node_suggestion
-                    }]);
+                    });
 
                     // Use ref to always get latest createNodeFromEvent
                     createNodeFromEventRef.current(e.event, e.node_suggestion);
@@ -1768,7 +1767,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                 isOpen={showDebugPanel}
                 onToggle={() => setShowDebugPanel(!showDebugPanel)}
                 onClose={() => setShowDebugPanel(false)}
-                onClear={() => setDebugEvents([])}
+                onClear={clearDebugEvents}
                 hasConfigPanel={!!selectedNode}
             />
 
