@@ -835,187 +835,175 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                 </div>
                             </div>
 
-                            {/* Right Panel - Preview */}
+                            {/* Right Panel - History Grid */}
                             <div className="flex-1 p-6 overflow-y-auto">
-                                <div className={`h-full min-h-[400px] rounded-2xl overflow-hidden transition-all duration-300 ${isDark
-                                    ? 'bg-slate-900 border-2 border-slate-800 shadow-2xl'
-                                    : 'bg-white border-2 border-slate-200 shadow-xl'
-                                    }`}>
-                                    {currentGeneration?.status === 'completed' && currentGeneration.result_url ? (
-                                        <div className="relative h-full flex items-center justify-center p-6">
-                                            {currentGeneration.type === 'image' ? (
-                                                <img
-                                                    src={currentGeneration.result_url}
-                                                    alt=""
-                                                    className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
-                                                />
-                                            ) : (
-                                                <video
-                                                    src={currentGeneration.result_url}
-                                                    controls
-                                                    autoPlay
-                                                    loop
-                                                    className="max-w-full max-h-full rounded-xl shadow-2xl"
-                                                />
-                                            )}
+                                {/* Header */}
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className={`text-lg font-bold ${themeClasses.textPrimary}`}>
+                                        📦 Gần đây
+                                    </h2>
+                                    <Link
+                                        href="/ai-studio/generations"
+                                        className={`text-sm font-medium ${isDark ? 'text-violet-400 hover:text-violet-300' : 'text-violet-600 hover:text-violet-700'}`}
+                                    >
+                                        Xem tất cả →
+                                    </Link>
+                                </div>
 
-                                            {/* Actions */}
-                                            <div className="absolute bottom-8 right-8 flex gap-3">
-                                                <a
-                                                    href={currentGeneration.download_url || currentGeneration.result_url}
-                                                    download
-                                                    className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${isDark
-                                                        ? 'bg-[#1a1a1a] text-white hover:bg-[#2a2a2a] border border-[#2a2a2a]'
-                                                        : 'bg-white text-slate-900 hover:bg-slate-50 border border-slate-200 shadow-lg'
-                                                        }`}
-                                                >
-                                                    ⬇️ Download
-                                                </a>
+                                {/* History Grid */}
+                                {history.length > 0 ? (
+                                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {history.map((gen) => (
+                                            <div
+                                                key={gen.id}
+                                                className={`group relative rounded-xl overflow-hidden border-2 transition-all duration-200 hover:scale-[1.02] ${isDark
+                                                        ? 'bg-[#1a1a1a] border-[#2a2a2a] hover:border-violet-500/50'
+                                                        : 'bg-white border-slate-200 hover:border-violet-400'
+                                                    }`}
+                                            >
+                                                {/* Thumbnail */}
+                                                <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
+                                                    {gen.status === 'completed' && gen.result_url ? (
+                                                        gen.type === 'image' ? (
+                                                            <img
+                                                                src={gen.result_url}
+                                                                alt=""
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <video
+                                                                src={gen.result_url}
+                                                                className="w-full h-full object-cover"
+                                                                muted
+                                                                onMouseEnter={(e) => e.target.play()}
+                                                                onMouseLeave={(e) => { e.target.pause(); e.target.currentTime = 0; }}
+                                                            />
+                                                        )
+                                                    ) : gen.status === 'processing' || gen.status === 'pending' ? (
+                                                        <div className="w-full h-full flex items-center justify-center">
+                                                            <div className={`w-12 h-12 rounded-full border-4 border-t-transparent animate-spin ${isDark ? 'border-violet-500/30 border-t-violet-500' : 'border-violet-200 border-t-violet-500'}`} />
+                                                        </div>
+                                                    ) : gen.status === 'failed' ? (
+                                                        <div className="w-full h-full flex items-center justify-center">
+                                                            <span className="text-4xl">❌</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center">
+                                                            <span className="text-4xl">{gen.type === 'video' ? '🎬' : '🖼️'}</span>
+                                                        </div>
+                                                    )}
 
-                                                {/* Save to Media with Folder Selection */}
-                                                <div className="relative">
-                                                    <button
-                                                        onClick={() => setShowSaveDropdown(!showSaveDropdown)}
-                                                        className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-violet-600 text-white hover:bg-violet-500 transition-colors shadow-lg shadow-violet-500/25 flex items-center gap-2"
-                                                    >
-                                                        💾 Save to Media
-                                                        <svg className={`w-4 h-4 transition-transform ${showSaveDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                        </svg>
-                                                    </button>
-
-                                                    {showSaveDropdown && (
-                                                        <div className={`absolute right-0 bottom-full mb-2 w-56 rounded-xl shadow-xl border overflow-hidden ${isDark
-                                                            ? 'bg-[#1a1a1a] border-[#2a2a2a]'
-                                                            : 'bg-white border-slate-200'
+                                                    {/* Status Badge */}
+                                                    <div className="absolute top-2 left-2">
+                                                        <span className={`px-2 py-1 text-[10px] font-bold uppercase rounded-md ${gen.status === 'completed'
+                                                                ? 'bg-emerald-500/90 text-white'
+                                                                : gen.status === 'processing' || gen.status === 'pending'
+                                                                    ? 'bg-amber-500/90 text-white'
+                                                                    : 'bg-rose-500/90 text-white'
                                                             }`}>
-                                                            <Link
-                                                                href={`/media/save-from-ai/${currentGeneration.id}`}
-                                                                method="post"
-                                                                data={{ folder: '/' }}
-                                                                as="button"
-                                                                onClick={() => setShowSaveDropdown(false)}
-                                                                className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all ${isDark
-                                                                    ? 'text-white hover:bg-[#2a2a2a]'
-                                                                    : 'text-slate-900 hover:bg-slate-50'
-                                                                    }`}
+                                                            {gen.status === 'completed' ? '✓' : gen.status === 'processing' ? '⏳' : gen.status === 'pending' ? '⏳' : '✗'}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Type Badge */}
+                                                    <div className="absolute top-2 right-2">
+                                                        <span className={`px-2 py-1 text-[10px] font-semibold rounded-md ${isDark ? 'bg-black/50 text-white' : 'bg-white/80 text-slate-700'}`}>
+                                                            {gen.type === 'video' ? '🎬' : '🖼️'}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Hover Actions */}
+                                                    {gen.status === 'completed' && gen.result_url && (
+                                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                            <a
+                                                                href={gen.result_url}
+                                                                download
+                                                                className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors"
+                                                                title="Download"
                                                             >
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                                                </svg>
-                                                                <span>Save to Root</span>
-                                                            </Link>
+                                                                ⬇️
+                                                            </a>
                                                             <button
                                                                 onClick={() => {
-                                                                    setShowSaveDropdown(false);
+                                                                    setCurrentGeneration(gen);
                                                                     setShowFolderModal(true);
                                                                 }}
-                                                                className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-all border-t ${isDark
-                                                                    ? 'text-white hover:bg-[#2a2a2a] border-[#2a2a2a]'
-                                                                    : 'text-slate-900 hover:bg-slate-50 border-slate-100'
-                                                                    }`}
+                                                                className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors"
+                                                                title="Save to Media"
                                                             >
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                                                                </svg>
-                                                                <span>Choose Folder...</span>
+                                                                💾
+                                                            </button>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Retry for Failed */}
+                                                    {gen.status === 'failed' && (
+                                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                            <button
+                                                                onClick={() => handleRetry(gen.id)}
+                                                                className="px-3 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors"
+                                                            >
+                                                                🔄 Thử lại
                                                             </button>
                                                         </div>
                                                     )}
                                                 </div>
-                                            </div>
-                                        </div>
-                                    ) : currentGeneration?.status === 'processing' || currentGeneration?.status === 'pending' ? (
-                                        <div className="h-full flex flex-col items-center justify-center">
-                                            <div className="relative">
-                                                <div className={`w-20 h-20 rounded-full border-4 border-t-transparent animate-spin ${isDark ? 'border-violet-500/30 border-t-violet-500' : 'border-violet-200 border-t-violet-500'
-                                                    }`} />
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <span className="text-3xl">{type === 'video' ? '🎬' : '🖼️'}</span>
+
+                                                {/* Info */}
+                                                <div className="p-3">
+                                                    <p className={`text-xs font-medium truncate ${themeClasses.textPrimary}`}>
+                                                        "{gen.prompt?.substring(0, 30)}..."
+                                                    </p>
+                                                    <div className="flex items-center justify-between mt-2">
+                                                        <span className={`text-[10px] ${themeClasses.textMuted}`}>
+                                                            {gen.model}
+                                                        </span>
+                                                        <span className={`text-[10px] font-medium ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
+                                                            {gen.credits_used} ✨
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <p className={`mt-6 text-base font-semibold ${themeClasses.textPrimary}`}>
-                                                Creating your {type}...
-                                            </p>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className={`flex flex-col items-center justify-center py-16 rounded-xl border-2 border-dashed ${isDark ? 'border-[#2a2a2a]' : 'border-slate-200'}`}>
+                                        <span className="text-5xl mb-4">✨</span>
+                                        <p className={`text-base font-medium ${themeClasses.textPrimary}`}>
+                                            Chưa có sáng tạo nào
+                                        </p>
+                                        <p className={`text-sm mt-1 ${themeClasses.textMuted}`}>
+                                            Nhập prompt và nhấn Generate để bắt đầu
+                                        </p>
+                                    </div>
+                                )}
 
-                                            {/* Elapsed Time Timer */}
-                                            <div className={`mt-4 flex items-center gap-3 px-5 py-3 rounded-xl ${isDark ? 'bg-[#1a1a1a] border border-[#2a2a2a]' : 'bg-slate-50 border border-slate-200'}`}>
-                                                <div className={`text-2xl font-mono font-bold ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
-                                                    {formatElapsedTime(elapsedTime)}
+                                {/* Active Jobs Section */}
+                                {(activeGenerations?.length > 0 || activeScenarios?.length > 0) && (
+                                    <div className="mt-6">
+                                        <h3 className={`text-sm font-semibold mb-3 ${themeClasses.textPrimary}`}>
+                                            ⚡ Đang xử lý
+                                        </h3>
+                                        <div className="space-y-2">
+                                            {activeGenerations?.map((gen) => (
+                                                <div
+                                                    key={gen.id}
+                                                    className={`flex items-center gap-3 p-3 rounded-xl ${isDark ? 'bg-violet-500/10 border border-violet-500/20' : 'bg-violet-50 border border-violet-100'}`}
+                                                >
+                                                    <div className={`w-8 h-8 rounded-full border-2 border-t-transparent animate-spin ${isDark ? 'border-violet-500/50 border-t-violet-400' : 'border-violet-200 border-t-violet-500'}`} />
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className={`text-sm font-medium truncate ${themeClasses.textPrimary}`}>
+                                                            {gen.prompt?.substring(0, 40)}...
+                                                        </p>
+                                                        <p className={`text-xs ${themeClasses.textMuted}`}>
+                                                            {gen.model} • {gen.type}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <div className={`text-xs ${themeClasses.textMuted}`}>
-                                                    elapsed
-                                                </div>
-                                            </div>
-
-                                            <p className={`mt-4 text-sm max-w-md text-center ${themeClasses.textMuted}`}>
-                                                {currentGeneration.prompt?.substring(0, 100)}...
-                                            </p>
-                                            <div className={`mt-3 px-3 py-1.5 rounded-full text-xs font-semibold ${isDark ? 'bg-violet-500/20 text-violet-300' : 'bg-violet-100 text-violet-600'
-                                                }`}>
-                                                {providerColors[currentGeneration.provider]?.label || 'Processing'}
-                                            </div>
-
-                                            {/* Tip message */}
-                                            <p className={`mt-6 text-xs ${themeClasses.textMuted}`}>
-                                                💡 Video generation may take 1-3 minutes. Page refresh won't lose progress.
-                                            </p>
+                                            ))}
                                         </div>
-                                    ) : currentGeneration?.status === 'failed' ? (
-                                        <div className="h-full flex flex-col items-center justify-center">
-                                            <div className={`w-20 h-20 rounded-full flex items-center justify-center ${isDark ? 'bg-rose-500/10' : 'bg-rose-50'
-                                                }`}>
-                                                <span className="text-4xl">❌</span>
-                                            </div>
-                                            <p className={`mt-6 text-base font-semibold ${themeClasses.textPrimary}`}>
-                                                Generation failed
-                                            </p>
-                                            <p className={`mt-2 text-sm max-w-md text-center ${themeClasses.textMuted}`}>
-                                                {currentGeneration.error_message || 'Something went wrong. Please try again.'}
-                                            </p>
-                                            <button
-                                                onClick={() => handleRetry(currentGeneration.id)}
-                                                className={`mt-4 px-4 py-2 rounded-lg font-medium text-sm transition-colors inline-flex items-center gap-2 ${isDark
-                                                    ? 'bg-violet-500/10 text-violet-400 hover:bg-violet-500/20 border border-violet-500/30'
-                                                    : 'bg-violet-50 text-violet-700 hover:bg-violet-100 border border-violet-200'
-                                                    }`}
-                                            >
-                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                                </svg>
-                                                {t('ai_studio.retry', { defaultValue: 'Thử lại' })}
-                                            </button>
-                                            <p className={`mt-3 text-sm font-medium ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                                                ✓ Credits have been refunded
-                                            </p>
-                                        </div>
-                                    ) : (
-                                        <div className="h-full flex flex-col items-center justify-center">
-                                            <div className={`w-24 h-24 rounded-2xl flex items-center justify-center ${isDark
-                                                ? 'bg-gradient-to-br from-violet-600/20 to-indigo-600/20 border border-violet-500/20'
-                                                : 'bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100'
-                                                }`}>
-                                                <span className="text-5xl">{type === 'video' ? '🎬' : '🖼️'}</span>
-                                            </div>
-                                            <p className={`mt-6 text-base font-semibold ${themeClasses.textPrimary}`}>
-                                                Ready to create
-                                            </p>
-                                            <p className={`mt-2 text-sm ${themeClasses.textMuted}`}>
-                                                Your {type} will appear here
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Jobs Queue Section - Below Preview */}
-                                <div className="mt-6">
-                                    <JobsQueuePanel
-                                        activeGenerations={activeGenerations}
-                                        activeScenarios={activeScenarios}
-                                        isDark={isDark}
-                                        recentGenerations={history.slice(0, 5)}
-                                    />
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
