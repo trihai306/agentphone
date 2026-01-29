@@ -825,8 +825,8 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                             </div>
 
                             {/* Right Panel - Preview */}
-                            <div className="flex-1 p-6">
-                                <div className={`h-full min-h-[800px] rounded-2xl overflow-hidden transition-all duration-300 ${isDark
+                            <div className="flex-1 p-6 overflow-y-auto">
+                                <div className={`h-full min-h-[400px] rounded-2xl overflow-hidden transition-all duration-300 ${isDark
                                     ? 'bg-slate-900 border-2 border-slate-800 shadow-2xl'
                                     : 'bg-white border-2 border-slate-200 shadow-xl'
                                     }`}>
