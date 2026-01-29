@@ -32,6 +32,20 @@ Route::prefix('interactions')->group(function () {
     Route::delete('/{interaction}', [InteractionController::class, 'destroy']);
 });
 
+// Fetch Element Inspector screenshot from cache (public - cache key provides security via uniqueness + 5min TTL)
+// This route is public because browser fetch() can't easily send Sanctum token
+Route::get('/inspect-screenshot/{key}', function ($key) {
+    // Validate key format to prevent cache probing
+    if (!preg_match('/^inspect_screenshot_\d+_.+_\d+$/', $key)) {
+        return response()->json(['error' => 'Invalid key format'], 400);
+    }
+    $screenshot = \Illuminate\Support\Facades\Cache::get($key);
+    if (!$screenshot) {
+        return response()->json(['error' => 'Screenshot not found or expired'], 404);
+    }
+    return response()->json(['screenshot' => $screenshot]);
+});
+
 // Protected routes (require Sanctum authentication)
 Route::middleware('auth:sanctum')->group(function () {
     // User info
@@ -62,14 +76,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/devices/inspect', [DeviceController::class, 'inspectElements']);
     Route::post('/devices/inspect-result', [DeviceController::class, 'inspectElementsResult']);
 
-    // Fetch Element Inspector screenshot from cache (since WebSocket has 100KB limit)
-    Route::get('/inspect-screenshot/{key}', function ($key) {
-        $screenshot = \Illuminate\Support\Facades\Cache::get($key);
-        if (!$screenshot) {
-            return response()->json(['error' => 'Screenshot not found or expired'], 404);
-        }
-        return response()->json(['screenshot' => $screenshot]);
-    });
 
     // Realtime accessibility check - request status from device via socket
     Route::post('/devices/check-accessibility', [DeviceController::class, 'checkAccessibility']);

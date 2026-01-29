@@ -265,7 +265,9 @@ export default function ElementPickerModal({
                 // (screenshot is stripped from WebSocket to fit Soketi 100KB limit)
                 if (data.screenshot_key && data.has_screenshot) {
                     console.log('📷 Fetching screenshot from cache via API:', data.screenshot_key);
-                    fetch(`/api/inspect-screenshot/${encodeURIComponent(data.screenshot_key)}`)
+                    fetch(`/api/inspect-screenshot/${encodeURIComponent(data.screenshot_key)}`, {
+                        credentials: 'include'  // Send session cookies for auth
+                    })
                         .then(res => res.json())
                         .then(response => {
                             if (response.screenshot) {
