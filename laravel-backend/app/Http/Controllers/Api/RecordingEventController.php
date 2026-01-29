@@ -577,13 +577,16 @@ class RecordingEventController extends Controller
             // Load image with Intervention Image and crop
             $image = Image::read($imageData);
 
-            // Scale bounds if screenshot was scaled (APK sends 25% scaled)
-            // APK captures at 25% = 0.25 scale, so NO need to scale bounds
-            // The bounds from APK are already in the screenshot's coordinate system
-
             // Ensure crop area is within image bounds
             $imgWidth = $image->width();
             $imgHeight = $image->height();
+
+            // Debug logging for scale issues
+            Log::info("🔍 Icon crop debug", [
+                'bounds' => $parsedBounds,
+                'img_size' => "{$imgWidth}x{$imgHeight}",
+                'requested_crop' => "{$left},{$top} -> {$width}x{$height}",
+            ]);
 
             if ($left < 0)
                 $left = 0;
