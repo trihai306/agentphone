@@ -52,6 +52,14 @@ object ScreenshotManager {
     )
 
     /**
+     * Result of screenshot capture with optional icon crop
+     */
+    data class CaptureResult(
+        val screenshotPath: String?,
+        val iconBase64: String? = null // PNG base64 of cropped icon (max 100px)
+    )
+
+    /**
      * Capture screenshot and save with interaction highlight
      *
      * @param context Application context
@@ -595,6 +603,84 @@ object ScreenshotManager {
                 RectF(parts[0], parts[1], parts[2], parts[3])
             } else null
         } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
+     * Crop element icon from screenshot using bounds.
+     * Implements Element Inspection Protocol:
+     * - Adaptive Vertical Cropping: For tall elements (height > width * 1.5), crop only top square
+     * - Max 100px icon size with aspect ratio preserved
+     * - Safe coordinate coercion to prevent out-of-bounds
+     * - PNG encoding for quality and transparency
+     * 
+     * @param bitmap The full screenshot bitmap
+     * @param bounds The element bounds string "left,top,right,bottom"
+     * @return Base64-encoded PNG icon, or null if cropping fails
+     */
+    fun cropElementIcon(bitmap: Bitmap, bounds: String): String? {
+        val boundsRect = parseBounds(bounds) ?: return null
+        
+        val left = boundsRect.left.toInt()
+        val top = boundsRect.top.toInt()
+        var width = (boundsRect.right - boundsRect.left).toInt()
+        var height = (boundsRect.bottom - boundsRect.top).toInt()
+        
+        // Skip if too small (min 16px) or too large (max 500px)
+        if (width < 16 || height < 16) {
+            Log.d(TAG, "Element too small for icon crop: ${width}x${height}")
+            return null
+        }
+        if (width > 500 || height > 500) {
+            Log.d(TAG, "Element too large for icon crop: ${width}x${height}")
+            return null
+        }
+        
+        // ========== ADAPTIVE VERTICAL CROPPING ==========
+        // For tall elements (like app icons with text below), crop only top portion
+        // This isolates the visual icon, not the text label
+        val originalHeight = height
+        if (height > width * 1.5) {
+            height = minOf(width, height / 2)
+            Log.d(TAG, "📐 Adaptive crop: ${width}x${originalHeight} -> ${width}x${height}")
+        }
+        
+        // ========== SAFE COORDINATE COERCION ==========
+        val safeLeft = left.coerceIn(0, bitmap.width - 1)
+        val safeTop = top.coerceIn(0, bitmap.height - 1)
+        val safeWidth = width.coerceIn(1, bitmap.width - safeLeft)
+        val safeHeight = height.coerceIn(1, bitmap.height - safeTop)
+        
+        return try {
+            // Crop the icon region
+            var cropped = Bitmap.createBitmap(bitmap, safeLeft, safeTop, safeWidth, safeHeight)
+            
+            // ========== RESIZE TO MAX 100px ==========
+            val maxIconSize = 100
+            if (cropped.width > maxIconSize || cropped.height > maxIconSize) {
+                val scale = maxIconSize.toFloat() / maxOf(cropped.width, cropped.height)
+                val newWidth = (cropped.width * scale).toInt().coerceAtLeast(1)
+                val newHeight = (cropped.height * scale).toInt().coerceAtLeast(1)
+                val scaled = Bitmap.createScaledBitmap(cropped, newWidth, newHeight, true)
+                if (scaled != cropped) cropped.recycle()
+                cropped = scaled
+                Log.d(TAG, "📏 Resized icon: ${safeWidth}x${safeHeight} -> ${newWidth}x${newHeight}")
+            }
+            
+            // Encode to PNG base64 (high quality, transparency support)
+            val outputStream = java.io.ByteArrayOutputStream()
+            cropped.compress(Bitmap.CompressFormat.PNG, 90, outputStream)
+            val iconBase64 = android.util.Base64.encodeToString(
+                outputStream.toByteArray(),
+                android.util.Base64.NO_WRAP
+            )
+            
+            cropped.recycle()
+            Log.d(TAG, "🖼️ Icon cropped: ${iconBase64.length / 1024}KB")
+            iconBase64
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to crop icon: ${e.message}")
             null
         }
     }

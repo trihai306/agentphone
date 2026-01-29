@@ -709,6 +709,18 @@ object SocketJobManager {
                         if (screenshotFile.exists()) {
                             val bitmap = android.graphics.BitmapFactory.decodeFile(event.screenshotPath)
                             if (bitmap != null) {
+                                // ========== CROP ICON FIRST (before encoding full screenshot) ==========
+                                // Use bounds to crop element icon for Flow Editor node display
+                                // This provides accurate icon matching Element Inspection Protocol
+                                if (event.bounds.isNotBlank()) {
+                                    val iconBase64 = com.agent.portal.recording.ScreenshotManager.cropElementIcon(bitmap, event.bounds)
+                                    if (iconBase64 != null) {
+                                        actionData["icon"] = iconBase64
+                                        Log.d(TAG, "🖼️ Icon cropped: ${iconBase64.length / 1024}KB")
+                                    }
+                                }
+                                
+                                // Encode full screenshot as before (for context display)
                                 val outputStream = java.io.ByteArrayOutputStream()
                                 // Compress to JPEG quality 60% for smaller payload
                                 bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 60, outputStream)

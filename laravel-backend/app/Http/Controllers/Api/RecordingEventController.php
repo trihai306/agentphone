@@ -383,7 +383,8 @@ class RecordingEventController extends Controller
             'is_clickable' => 'nullable|boolean',
             'is_editable' => 'nullable|boolean',
             'is_scrollable' => 'nullable|boolean',
-            'screenshot' => 'nullable|string', // base64 encoded
+            'screenshot' => 'nullable|string', // base64 encoded full screenshot
+            'icon' => 'nullable|string', // base64 encoded cropped icon (from APK)
         ]);
 
         if ($validator->fails()) {
@@ -424,15 +425,36 @@ class RecordingEventController extends Controller
             // Also crop element icon if bounds are available
             $screenshotUrl = null;
             $iconUrl = null;
+
+            // ========== PRIORITY: Use APK-cropped icon if available ==========
+            // APK crops icon from original screenshot before compression,
+            // providing more accurate icon matching Element Inspection Protocol
+            if ($request->icon) {
+                try {
+                    $iconData = base64_decode($request->icon);
+                    $iconFilename = "recordings/{$request->session_id}/icon_{$request->sequence_number}.png";
+                    \Storage::disk('public')->put($iconFilename, $iconData);
+                    $iconUrl = \Storage::disk('public')->url($iconFilename);
+                    $sizeKb = round(strlen($iconData) / 1024, 1);
+                    Log::info("🖼️ APK icon saved: {$iconFilename} ({$sizeKb}KB)");
+                } catch (\Exception $e) {
+                    Log::warning("Failed to save APK icon: {$e->getMessage()}");
+                }
+            }
+
+            // Save full screenshot (for context display in detail view)
             if ($request->screenshot) {
                 $result = $this->saveScreenshotWithIcon(
                     $request->screenshot,
                     $request->session_id,
                     $request->sequence_number,
-                    $request->bounds
+                    $iconUrl ? null : $request->bounds // Only crop if no APK icon
                 );
                 $screenshotUrl = $result['screenshot_url'];
-                $iconUrl = $result['icon_url'];
+                // Use server-cropped icon as fallback if no APK icon
+                if (!$iconUrl && !empty($result['icon_url'])) {
+                    $iconUrl = $result['icon_url'];
+                }
             }
 
             // Prepare event data
