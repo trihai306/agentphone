@@ -183,7 +183,13 @@ class DeviceService
      */
     public function requestElementInspection(Device $device, int $userId): bool
     {
-        if (!$device->socket_connected) {
+        // Use Redis presence check for accurate real-time online status
+        // DB socket_connected can be outdated if not synced properly
+        if (!$this->presenceService->isOnline($device->user_id, $device->device_id)) {
+            \Log::info('Device not online in Redis for inspection', [
+                'device_id' => $device->device_id,
+                'user_id' => $device->user_id,
+            ]);
             return false;
         }
 
