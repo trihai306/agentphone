@@ -76,18 +76,16 @@ class FlowController extends Controller
 
         $user = Auth::user();
 
-        // Get online devices for this user
-        // Extended timeout for development (24 hours instead of 5 minutes)
-        $onlineDevices = $user->devices()
-            ->online(1440) // 24 hours for dev, consider heartbeat not running frequently
-            ->orderBy('last_active_at', 'desc')
-            ->get()
+        // Get online devices for this user via Redis (accurate real-time presence)
+        // Uses Device::getOnlineForUser() which checks Redis first, falls back to DB
+        $onlineDevices = \App\Models\Device::getOnlineForUser($user->id)
             ->map(fn($device) => [
                 'id' => $device->id,
                 'name' => $device->name,
                 'device_id' => $device->device_id,
                 'model' => $device->model,
-                'is_online' => true, // Already filtered by online scope
+                'accessibility_enabled' => $device->accessibility_enabled,
+                'is_online' => true, // Already filtered by Redis presence
                 'last_active_at' => $device->last_active_at?->diffForHumans(),
             ]);
 
