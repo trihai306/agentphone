@@ -204,7 +204,7 @@ class GeminiImagenProvider implements AiProviderInterface
 
             return [
                 'status' => 'completed',
-                'task_id' => $dataUrl, // Store data URL as task_id for later retrieval
+                'task_id' => 'imagen_' . uniqid() . '_' . time(), // Use unique ID, NOT data URL
                 'result_url' => $dataUrl,
                 'format' => 'base64',
             ];

@@ -371,11 +371,17 @@ class AiGenerationService
                     $this->createMediaRecord($generation, $path, $disk, strlen($fileContent));
 
                     // Update generation as completed
+                    // Filter out base64 data from metadata (too large for DB)
+                    $safeMetadata = $result;
+                    if (isset($safeMetadata['result_url']) && str_starts_with($safeMetadata['result_url'], 'data:')) {
+                        $safeMetadata['result_url'] = '[BASE64_SAVED_TO_FILE]';
+                    }
+
                     $generation->update([
                         'status' => AiGeneration::STATUS_COMPLETED,
                         'result_path' => $path,
                         'provider_id' => $result['task_id'] ?? 'sync_' . time(),
-                        'provider_metadata' => $result,
+                        'provider_metadata' => $safeMetadata,
                     ]);
 
                     Log::info('Synchronous generation completed', [
