@@ -37,11 +37,11 @@ export default function MultiWorkflowJobModal({
 
     const handleSubmit = async () => {
         if (!selectedDevice) {
-            alert('Vui lòng chọn thiết bị');
+            confirm('Vui lòng chọn thiết bị');
             return;
         }
         if (selectedWorkflows.length === 0) {
-            alert('Vui lòng chọn ít nhất 1 workflow');
+            confirm('Vui lòng chọn ít nhất 1 workflow');
             return;
         }
 
@@ -60,7 +60,7 @@ export default function MultiWorkflowJobModal({
                 },
                 onError: (errors) => {
                     console.error('Failed to create job:', errors);
-                    alert('Lỗi: ' + Object.values(errors).flat().join(', '));
+                    confirm('Lỗi: ' + Object.values(errors).flat().join(', '));
                 },
                 onFinish: () => {
                     setIsSubmitting(false);

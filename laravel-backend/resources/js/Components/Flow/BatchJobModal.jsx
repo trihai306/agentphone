@@ -52,7 +52,7 @@ export default function BatchJobModal({
 
     const handleSubmit = async () => {
         if (selectedDevices.length === 0) {
-            alert('Please select at least one device');
+            confirm('Please select at least one device');
             return;
         }
 
@@ -67,11 +67,11 @@ export default function BatchJobModal({
                 execution_mode: config.executionMode,
             });
 
-            alert(`Created ${response.data.jobs?.length || selectedDevices.length} jobs successfully!`);
+            confirm(`Created ${response.data.jobs?.length || selectedDevices.length} jobs successfully!`);
             onClose();
         } catch (error) {
             console.error('Failed to create batch jobs:', error);
-            alert('Failed to create jobs: ' + (error.response?.data?.message || error.message));
+            confirm('Failed to create jobs: ' + (error.response?.data?.message || error.message));
         } finally {
             setIsSubmitting(false);
         }
