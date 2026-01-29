@@ -74,7 +74,7 @@ function getPageInfo(url) {
     }
 
     // Default fallback
-    return { name: path.split('/').filter(Boolean)[0] || 'Trang', icon: '📄', path };
+    return { name: path.split('/').filter(Boolean)[0] || 'Trang', icon: 'default', path };
 }
 
 const MAX_TABS = 8;
