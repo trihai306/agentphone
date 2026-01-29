@@ -25,6 +25,7 @@ class InspectElementsResult implements ShouldBroadcastNow
         public array $textElements = [],  // OCR text elements (unified API)
         public ?string $packageName = null,
         public ?string $screenshot = null,
+        public ?string $screenshotKey = null,  // Cache key for fetching screenshot via HTTP
         public ?int $screenWidth = null,
         public ?int $screenHeight = null,
         public ?int $screenshotWidth = null,
@@ -95,6 +96,7 @@ class InspectElementsResult implements ShouldBroadcastNow
             'ocr_count' => count($this->textElements),
             'screenshot' => null,  // STRIPPED: Screenshot too large for WebSocket (100KB limit)
             'has_screenshot' => !empty($this->screenshot),  // Flag to indicate screenshot is available
+            'screenshot_key' => $this->screenshotKey,  // Cache key for HTTP fetch
             'screen_width' => $this->screenWidth,
             'screen_height' => $this->screenHeight,
             'screenshot_width' => $this->screenshotWidth,

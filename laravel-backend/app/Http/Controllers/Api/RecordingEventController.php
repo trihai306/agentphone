@@ -61,6 +61,15 @@ class RecordingEventController extends Controller
             // Handle inspect:result event separately (no session_id required)
             if ($eventType === 'inspect:result') {
                 try {
+                    // Save screenshot to cache with unique key (TTL: 5 minutes)
+                    // This allows frontend to fetch large screenshot via HTTP API
+                    $screenshotKey = null;
+                    if ($request->screenshot) {
+                        $screenshotKey = 'inspect_screenshot_' . $device->user_id . '_' . $request->device_id . '_' . time();
+                        \Illuminate\Support\Facades\Cache::put($screenshotKey, $request->screenshot, now()->addMinutes(5));
+                        Log::info("Saved screenshot to cache", ['key' => $screenshotKey, 'size_kb' => round(strlen($request->screenshot) / 1024, 2)]);
+                    }
+
                     broadcast(new \App\Events\InspectElementsResult(
                         userId: $device->user_id,
                         deviceId: $request->device_id,
@@ -68,7 +77,8 @@ class RecordingEventController extends Controller
                         elements: $request->elements ?? [],
                         textElements: $request->text_elements ?? [],
                         packageName: $request->package_name,
-                        screenshot: $request->screenshot,
+                        screenshot: $request->screenshot,  // Still pass to event (it will be stripped in broadcastWith)
+                        screenshotKey: $screenshotKey,    // Pass cache key for HTTP fetch
                         screenWidth: $request->screen_width,
                         screenHeight: $request->screen_height,
                         screenshotWidth: $request->screenshot_width,
@@ -82,7 +92,8 @@ class RecordingEventController extends Controller
                         'user_id' => $device->user_id,
                         'device_id' => $request->device_id,
                         'element_count' => $request->element_count ?? 0,
-                        'ocr_count' => count($request->text_elements ?? [])
+                        'ocr_count' => count($request->text_elements ?? []),
+                        'screenshot_key' => $screenshotKey
                     ]);
 
                     return response()->json([

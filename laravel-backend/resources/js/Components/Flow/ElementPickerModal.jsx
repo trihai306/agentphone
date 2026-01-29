@@ -242,7 +242,9 @@ export default function ElementPickerModal({
                 device_id: data.device_id,
                 success: data.success,
                 element_count: data.element_count || data.elements?.length,
-                ocr_count: data.text_elements?.length
+                ocr_count: data.text_elements?.length,
+                has_screenshot: data.has_screenshot,
+                screenshot_key: data.screenshot_key
             });
 
             // Clear the scan timeout since we received the response
@@ -259,8 +261,25 @@ export default function ElementPickerModal({
                 setPackageName(data.package_name || '');
                 setError(null);
 
-                // Handle screenshot base64 data
-                if (data.screenshot) {
+                // Handle screenshot - fetch from API if screenshot_key provided
+                // (screenshot is stripped from WebSocket to fit Soketi 100KB limit)
+                if (data.screenshot_key && data.has_screenshot) {
+                    console.log('📷 Fetching screenshot from cache via API:', data.screenshot_key);
+                    fetch(`/api/inspect-screenshot/${encodeURIComponent(data.screenshot_key)}`)
+                        .then(res => res.json())
+                        .then(response => {
+                            if (response.screenshot) {
+                                console.log('✅ Screenshot fetched successfully');
+                                setScreenshotData(response.screenshot);
+                            } else {
+                                console.warn('⚠️ Screenshot not found in cache');
+                            }
+                        })
+                        .catch(err => {
+                            console.error('❌ Failed to fetch screenshot:', err);
+                        });
+                } else if (data.screenshot) {
+                    // Legacy: screenshot included directly in WebSocket payload
                     setScreenshotData(data.screenshot);
                 }
 

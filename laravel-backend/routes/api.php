@@ -62,6 +62,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/devices/inspect', [DeviceController::class, 'inspectElements']);
     Route::post('/devices/inspect-result', [DeviceController::class, 'inspectElementsResult']);
 
+    // Fetch Element Inspector screenshot from cache (since WebSocket has 100KB limit)
+    Route::get('/inspect-screenshot/{key}', function ($key) {
+        $screenshot = \Illuminate\Support\Facades\Cache::get($key);
+        if (!$screenshot) {
+            return response()->json(['error' => 'Screenshot not found or expired'], 404);
+        }
+        return response()->json(['screenshot' => $screenshot]);
+    });
+
     // Realtime accessibility check - request status from device via socket
     Route::post('/devices/check-accessibility', [DeviceController::class, 'checkAccessibility']);
     Route::post('/devices/check-accessibility-result', [DeviceController::class, 'checkAccessibilityResult']);
