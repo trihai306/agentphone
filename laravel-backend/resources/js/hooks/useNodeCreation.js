@@ -125,7 +125,11 @@ export function useNodeCreation({
      * - Auto-connection to previous node
      */
     const createNodeFromEvent = useCallback((eventData, nodeSuggestion) => {
+        console.log('[createNodeFromEvent] 🎯 CALLED with:', { eventData, nodeSuggestion });
+
         const normalizedType = normalizeEventType(eventData.event_type);
+        console.log('[createNodeFromEvent] Normalized type:', normalizedType, 'from event_type:', eventData.event_type);
+
         const LOOP_THRESHOLD = 3; // Create loop after 3 repeated actions
 
         // Event types that should NEVER be grouped into loops
@@ -383,6 +387,14 @@ export function useNodeCreation({
                 }
                 setEdges(prevEdges => [...prevEdges, edgeConfig]);
             }
+
+            console.log('[createNodeFromEvent] ✅ Created new node:', {
+                id: newNode.id,
+                type: newNode.type,
+                label: newNode.data.label,
+                position: newNode.position,
+                existingNodesCount
+            });
 
             return [...prevNodes, newNode];
         });
