@@ -86,6 +86,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
     const [sourceImagePreview, setSourceImagePreview] = useState(null);
     const [showFolderModal, setShowFolderModal] = useState(false);
     const [showSaveDropdown, setShowSaveDropdown] = useState(false);
+    const [previewGeneration, setPreviewGeneration] = useState(null); // For modal preview
 
     const models = type === 'image' ? imageModels : videoModels;
     const selectedModel = models.find(m => m.id === model);
@@ -856,7 +857,8 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                         {history.filter(g => g.type === type).map((gen) => (
                                             <div
                                                 key={gen.id}
-                                                className={`group relative rounded-xl overflow-hidden border-2 transition-all duration-200 hover:scale-[1.02] ${isDark
+                                                onClick={() => gen.status === 'completed' && gen.result_url && setPreviewGeneration(gen)}
+                                                className={`group relative rounded-xl overflow-hidden border-2 transition-all duration-200 hover:scale-[1.02] cursor-pointer ${isDark
                                                     ? 'bg-[#1a1a1a] border-[#2a2a2a] hover:border-violet-500/50'
                                                     : 'bg-white border-slate-200 hover:border-violet-400'
                                                     }`}
@@ -1029,6 +1031,93 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                     background: ${isDark ? '#64748b' : '#94a3b8'};
                 }
             `}</style>
+
+            {/* Preview Modal */}
+            {previewGeneration && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+                    onClick={() => setPreviewGeneration(null)}
+                >
+                    <div
+                        className={`relative max-w-4xl w-full rounded-2xl overflow-hidden border ${isDark
+                            ? 'bg-[#1a1a1a] border-[#2a2a2a]'
+                            : 'bg-white border-slate-200'}`}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Close Button */}
+                        <button
+                            onClick={() => setPreviewGeneration(null)}
+                            className={`absolute top-4 right-4 z-10 p-2 rounded-xl transition-all ${isDark
+                                ? 'bg-black/50 text-white hover:bg-black/70'
+                                : 'bg-white/90 text-slate-600 hover:bg-white shadow-lg'}`}
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+
+                        {/* Media */}
+                        <div className={`flex items-center justify-center min-h-[400px] max-h-[70vh] ${isDark ? 'bg-[#0a0a0a]' : 'bg-slate-50'}`}>
+                            {previewGeneration.type === 'video' ? (
+                                <video
+                                    src={previewGeneration.result_url}
+                                    className="max-h-[70vh] w-auto"
+                                    controls
+                                    autoPlay
+                                />
+                            ) : (
+                                <img
+                                    src={previewGeneration.result_url}
+                                    alt={previewGeneration.prompt}
+                                    className="max-h-[70vh] w-auto"
+                                />
+                            )}
+                        </div>
+
+                        {/* Info Panel */}
+                        <div className="p-5">
+                            <p className={`text-sm mb-4 ${themeClasses.textPrimary}`}>
+                                {previewGeneration.prompt}
+                            </p>
+
+                            <div className="flex flex-wrap items-center gap-3 mb-4">
+                                <span className={`px-2.5 py-1 text-xs font-semibold rounded-lg ${isDark ? 'bg-violet-500/20 text-violet-300' : 'bg-violet-50 text-violet-700'}`}>
+                                    {previewGeneration.type === 'video' ? '🎬 Video' : '🖼️ Ảnh'}
+                                </span>
+                                <span className={`text-xs ${themeClasses.textMuted}`}>
+                                    {previewGeneration.model}
+                                </span>
+                                <span className={`text-xs ${themeClasses.textMuted}`}>
+                                    ✨ {previewGeneration.credits_used} credits
+                                </span>
+                            </div>
+
+                            {/* Actions */}
+                            <div className={`flex items-center gap-3 pt-4 border-t ${isDark ? 'border-[#2a2a2a]' : 'border-slate-200'}`}>
+                                <a
+                                    href={previewGeneration.result_url}
+                                    download
+                                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 transition-all"
+                                >
+                                    ⬇️ Tải xuống
+                                </a>
+                                <button
+                                    onClick={() => {
+                                        setCurrentGeneration(previewGeneration);
+                                        setShowFolderModal(true);
+                                        setPreviewGeneration(null);
+                                    }}
+                                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all ${isDark
+                                        ? 'bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]'
+                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                                >
+                                    💾 Lưu vào Media
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Folder Selection Modal */}
             <FolderSelectModal
