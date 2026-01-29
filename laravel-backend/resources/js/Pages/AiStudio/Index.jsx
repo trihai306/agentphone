@@ -63,6 +63,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     const textareaRef = useRef(null);
+    const currentGenerationRef = useRef(null);
 
     const [type, setType] = useState('video');
     const [model, setModel] = useState('');
@@ -153,6 +154,11 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
         return () => clearInterval(timer);
     }, [currentGeneration?.id, currentGeneration?.status]);
 
+    // Keep ref in sync with state for WebSocket handlers
+    useEffect(() => {
+        currentGenerationRef.current = currentGeneration;
+    }, [currentGeneration]);
+
     // WebSocket listeners for real-time AI generation updates
     useEffect(() => {
         if (!window.Echo || !auth?.user?.id) return;
@@ -162,6 +168,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
         // Listen for generation completion
         const completedHandler = (event) => {
             console.log('AI Generation completed:', event);
+            const currentGen = currentGenerationRef.current;
 
             // Update history
             setHistory(prev => {
@@ -180,7 +187,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
             });
 
             // Update current generation if it matches
-            if (currentGeneration?.id === event.generation_id) {
+            if (currentGen?.id === event.generation_id) {
                 setCurrentGeneration(prev => ({
                     ...prev,
                     status: 'completed',
@@ -195,6 +202,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
         // Listen for generation failure
         const failedHandler = (event) => {
             console.log('AI Generation failed:', event);
+            const currentGen = currentGenerationRef.current;
 
             // Update history
             setHistory(prev => {
@@ -212,7 +220,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
             });
 
             // Update current generation if it matches
-            if (currentGeneration?.id === event.generation_id) {
+            if (currentGen?.id === event.generation_id) {
                 setCurrentGeneration(prev => ({
                     ...prev,
                     status: 'failed',
@@ -230,7 +238,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
             channel.stopListening('.ai-generation.completed', completedHandler);
             channel.stopListening('.ai-generation.failed', failedHandler);
         };
-    }, [auth?.user?.id, currentGeneration?.id]);
+    }, [auth?.user?.id, addToast, t]); // Removed currentGeneration?.id - use ref instead
 
     // Fallback polling for status updates (in case WebSocket fails)
     useEffect(() => {
@@ -285,13 +293,14 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
 
             const response = await axios.post(endpoint, payload);
 
+            // Set current generation - keeps generating=true until WebSocket/polling confirms completion
             setCurrentGeneration(response.data.generation);
             setHistory(prev => [response.data.generation, ...prev]);
             router.reload({ only: ['currentCredits'] });
+            // Don't set generating=false here - wait for WebSocket completion event
         } catch (error) {
             addToast(error.response?.data?.error || 'An error occurred', 'error');
-        } finally {
-            setGenerating(false);
+            setGenerating(false); // Only set false on error
         }
     };
 
