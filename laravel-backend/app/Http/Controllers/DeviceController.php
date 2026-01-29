@@ -463,14 +463,21 @@ class DeviceController extends Controller
             'last_active_at' => now(),
         ]);
 
-        // Always broadcast accessibility status to FE (even if unchanged)
-        // This ensures FE gets the latest status after every check
-        \Log::info('Broadcasting accessibility status to FE', [
-            'device_id' => $device->device_id,
-            'accessibility_enabled' => $accessibilityEnabled,
-        ]);
+        // Debounce broadcast - only broadcast once per device per 3 seconds
+        // This prevents duplicate notifications if APK or FE calls endpoint multiple times
+        $cacheKey = "accessibility_broadcast_debounce:{$device->device_id}";
+        if (\Cache::add($cacheKey, true, 3)) {
+            \Log::info('Broadcasting accessibility status to FE', [
+                'device_id' => $device->device_id,
+                'accessibility_enabled' => $accessibilityEnabled,
+            ]);
 
-        broadcast(new \App\Events\DeviceAccessibilityChanged($device, $accessibilityEnabled));
+            broadcast(new \App\Events\DeviceAccessibilityChanged($device, $accessibilityEnabled));
+        } else {
+            \Log::debug('Accessibility broadcast debounced (duplicate within 3s)', [
+                'device_id' => $device->device_id,
+            ]);
+        }
 
         return response()->json([
             'success' => true,

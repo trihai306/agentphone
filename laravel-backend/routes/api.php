@@ -5,7 +5,7 @@ use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\Api\ServicePackageController;
 use App\Http\Controllers\Api\InteractionController;
 use App\Http\Controllers\Api\NotificationController;
-use App\Http\Controllers\API\AIOrchestrationController;
+use App\Http\Controllers\Api\AIOrchestrationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
