@@ -8,6 +8,7 @@ use App\Models\Device;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Intervention\Image\Laravel\Facades\Image;
 
 class RecordingEventController extends Controller
 {
@@ -420,9 +421,18 @@ class RecordingEventController extends Controller
             }
 
             // Handle screenshot upload if provided
+            // Also crop element icon if bounds are available
             $screenshotUrl = null;
+            $iconUrl = null;
             if ($request->screenshot) {
-                $screenshotUrl = $this->saveScreenshot($request->screenshot, $request->session_id, $request->sequence_number);
+                $result = $this->saveScreenshotWithIcon(
+                    $request->screenshot,
+                    $request->session_id,
+                    $request->sequence_number,
+                    $request->bounds
+                );
+                $screenshotUrl = $result['screenshot_url'];
+                $iconUrl = $result['icon_url'];
             }
 
             // Prepare event data
@@ -442,6 +452,7 @@ class RecordingEventController extends Controller
                 'is_editable' => $request->is_editable ?? false,
                 'is_scrollable' => $request->is_scrollable ?? false,
                 'screenshot_url' => $screenshotUrl,
+                'icon_url' => $iconUrl, // Cropped element icon
             ];
 
             // Store action in session's actions array
@@ -486,27 +497,185 @@ class RecordingEventController extends Controller
     }
 
     /**
-     * Save base64 screenshot to storage
+     * Save base64 screenshot to storage AND crop element icon if bounds provided
      * Screenshots are sent as JPEG (scaled 25%, quality 60%) from APK
+     * 
+     * @param string $base64 Base64 encoded screenshot
+     * @param string $sessionId Recording session ID
+     * @param int $sequence Sequence number
+     * @param mixed $bounds Element bounds (string "[left,top][right,bottom]" or array)
+     * @return array ['screenshot_url' => string|null, 'icon_url' => string|null]
      */
-    private function saveScreenshot(string $base64, string $sessionId, int $sequence): ?string
+    private function saveScreenshotWithIcon(string $base64, string $sessionId, int $sequence, $bounds = null): array
     {
+        $result = ['screenshot_url' => null, 'icon_url' => null];
+
         try {
             $imageData = base64_decode($base64);
 
-            // Use JPEG extension since APK sends JPEG format
-            $filename = "recordings/{$sessionId}/screenshot_{$sequence}.jpg";
-            \Storage::disk('public')->put($filename, $imageData);
+            // Save full screenshot
+            $screenshotFilename = "recordings/{$sessionId}/screenshot_{$sequence}.jpg";
+            \Storage::disk('public')->put($screenshotFilename, $imageData);
+            $result['screenshot_url'] = \Storage::disk('public')->url($screenshotFilename);
 
-            $url = \Storage::disk('public')->url($filename);
             $sizeKb = round(strlen($imageData) / 1024, 1);
-            Log::info("📸 Screenshot saved: {$filename} ({$sizeKb}KB)");
+            Log::info("📸 Screenshot saved: {$screenshotFilename} ({$sizeKb}KB)");
 
-            return $url;
+            // Crop element icon if bounds are provided
+            if ($bounds) {
+                $iconUrl = $this->cropElementIcon($imageData, $sessionId, $sequence, $bounds);
+                if ($iconUrl) {
+                    $result['icon_url'] = $iconUrl;
+                }
+            }
+
+            return $result;
         } catch (\Exception $e) {
             Log::warning("Failed to save screenshot: {$e->getMessage()}");
+            return $result;
+        }
+    }
+
+    /**
+     * Crop element icon from screenshot based on bounds
+     * Handles both string format "[left,top][right,bottom]" and array format
+     * 
+     * @param string $imageData Raw image data
+     * @param string $sessionId Recording session ID
+     * @param int $sequence Sequence number
+     * @param mixed $bounds Element bounds
+     * @return string|null URL of cropped icon or null on failure
+     */
+    private function cropElementIcon(string $imageData, string $sessionId, int $sequence, $bounds): ?string
+    {
+        try {
+            // Parse bounds - can be string "[100,200][300,400]" or array {left, top, right, bottom}
+            $parsedBounds = $this->parseBounds($bounds);
+            if (!$parsedBounds) {
+                Log::warning("Could not parse bounds for icon crop", ['bounds' => $bounds]);
+                return null;
+            }
+
+            $left = $parsedBounds['left'];
+            $top = $parsedBounds['top'];
+            $width = $parsedBounds['right'] - $parsedBounds['left'];
+            $height = $parsedBounds['bottom'] - $parsedBounds['top'];
+
+            // Validate dimensions (minimum 10x10, maximum 500x500 for icons)
+            if ($width < 10 || $height < 10) {
+                Log::warning("Icon dimensions too small", ['width' => $width, 'height' => $height]);
+                return null;
+            }
+
+            // Limit max size to prevent oversized icons
+            $maxSize = 500;
+            if ($width > $maxSize)
+                $width = $maxSize;
+            if ($height > $maxSize)
+                $height = $maxSize;
+
+            // Load image with Intervention Image and crop
+            $image = Image::read($imageData);
+
+            // Scale bounds if screenshot was scaled (APK sends 25% scaled)
+            // APK captures at 25% = 0.25 scale, so NO need to scale bounds
+            // The bounds from APK are already in the screenshot's coordinate system
+
+            // Ensure crop area is within image bounds
+            $imgWidth = $image->width();
+            $imgHeight = $image->height();
+
+            if ($left < 0)
+                $left = 0;
+            if ($top < 0)
+                $top = 0;
+            if ($left + $width > $imgWidth)
+                $width = $imgWidth - $left;
+            if ($top + $height > $imgHeight)
+                $height = $imgHeight - $top;
+
+            if ($width <= 0 || $height <= 0) {
+                Log::warning("Invalid crop dimensions after bounds adjustment");
+                return null;
+            }
+
+            // Crop the icon area
+            $croppedImage = $image->crop($width, $height, $left, $top);
+
+            // Encode as PNG for better icon quality (transparency support)
+            $iconData = $croppedImage->toPng()->toString();
+
+            // Save cropped icon
+            $iconFilename = "recordings/{$sessionId}/icon_{$sequence}.png";
+            \Storage::disk('public')->put($iconFilename, $iconData);
+
+            $iconUrl = \Storage::disk('public')->url($iconFilename);
+            $iconSizeKb = round(strlen($iconData) / 1024, 1);
+
+            Log::info("🎯 Icon cropped: {$iconFilename} ({$iconSizeKb}KB, {$width}x{$height})");
+
+            return $iconUrl;
+        } catch (\Exception $e) {
+            Log::warning("Failed to crop element icon: {$e->getMessage()}");
             return null;
         }
+    }
+
+    /**
+     * Parse bounds from various formats
+     * Supports:
+     * - String: "[100,200][300,400]" (Android format)
+     * - Array: {left: 100, top: 200, right: 300, bottom: 400}
+     * - Array: [100, 200, 300, 400]
+     * 
+     * @param mixed $bounds
+     * @return array|null ['left', 'top', 'right', 'bottom'] or null
+     */
+    private function parseBounds($bounds): ?array
+    {
+        if (empty($bounds)) {
+            return null;
+        }
+
+        // Handle string format: "[100,200][300,400]"
+        if (is_string($bounds)) {
+            // Parse Android accessibility bounds format
+            if (preg_match('/\[(\d+),(\d+)\]\[(\d+),(\d+)\]/', $bounds, $matches)) {
+                return [
+                    'left' => (int) $matches[1],
+                    'top' => (int) $matches[2],
+                    'right' => (int) $matches[3],
+                    'bottom' => (int) $matches[4],
+                ];
+            }
+            return null;
+        }
+
+        // Handle array format with named keys
+        if (is_array($bounds) || is_object($bounds)) {
+            $bounds = (array) $bounds;
+
+            if (isset($bounds['left'], $bounds['top'], $bounds['right'], $bounds['bottom'])) {
+                return [
+                    'left' => (int) $bounds['left'],
+                    'top' => (int) $bounds['top'],
+                    'right' => (int) $bounds['right'],
+                    'bottom' => (int) $bounds['bottom'],
+                ];
+            }
+
+            // Handle numeric array [left, top, right, bottom]
+            if (isset($bounds[0], $bounds[1], $bounds[2], $bounds[3])) {
+                return [
+                    'left' => (int) $bounds[0],
+                    'top' => (int) $bounds[1],
+                    'right' => (int) $bounds[2],
+                    'bottom' => (int) $bounds[3],
+                ];
+            }
+        }
+
+        return null;
     }
 
     /**
