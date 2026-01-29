@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { usePage, router, Link } from '@inertiajs/react';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import { getPageMetadata } from '@/Config/pageMetadata';
+import { getPageMetadata, ICONS } from '@/Config/pageMetadata';
 import LanguageSwitcher from '../LanguageSwitcher';
 
 const notificationStyles = {
@@ -63,11 +63,13 @@ export default function Header({ title, userName, setSidebarOpen }) {
                     {/* Page Metadata */}
                     <div className="hidden lg:flex items-center gap-3 flex-1 min-w-0">
                         {/* Icon */}
-                        <div className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-lg ${isDark
+                        <div className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center ${isDark
                             ? 'bg-gradient-to-br from-violet-500/20 to-purple-600/20 border border-violet-500/30'
                             : 'bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-200'
                             }`}>
-                            {pageMetadata.icon}
+                            <svg className={`w-5 h-5 ${isDark ? 'text-violet-400' : 'text-violet-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={ICONS[pageMetadata.icon] || ICONS.default} />
+                            </svg>
                         </div>
 
                         {/* Title & Breadcrumb */}
@@ -121,8 +123,11 @@ export default function Header({ title, userName, setSidebarOpen }) {
 
                     {/* Mobile: Simple Title */}
                     <div className="lg:hidden flex-1 min-w-0">
-                        <h1 className={`text-sm font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            {pageMetadata.icon} {title || pageMetadata.title}
+                        <h1 className={`text-sm font-semibold truncate flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <svg className={`w-4 h-4 flex-shrink-0 ${isDark ? 'text-violet-400' : 'text-violet-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={ICONS[pageMetadata.icon] || ICONS.default} />
+                            </svg>
+                            {title || pageMetadata.title}
                         </h1>
                     </div>
                 </div>
