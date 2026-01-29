@@ -840,7 +840,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                 {/* Header */}
                                 <div className="flex items-center justify-between mb-4">
                                     <h2 className={`text-lg font-bold ${themeClasses.textPrimary}`}>
-                                        📦 Gần đây
+                                        {type === 'image' ? '🖼️ Ảnh gần đây' : '🎬 Video gần đây'}
                                     </h2>
                                     <Link
                                         href="/ai-studio/generations"
@@ -850,15 +850,15 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                     </Link>
                                 </div>
 
-                                {/* History Grid */}
-                                {history.length > 0 ? (
+                                {/* History Grid - Filtered by type */}
+                                {history.filter(g => g.type === type).length > 0 ? (
                                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                                        {history.map((gen) => (
+                                        {history.filter(g => g.type === type).map((gen) => (
                                             <div
                                                 key={gen.id}
                                                 className={`group relative rounded-xl overflow-hidden border-2 transition-all duration-200 hover:scale-[1.02] ${isDark
-                                                        ? 'bg-[#1a1a1a] border-[#2a2a2a] hover:border-violet-500/50'
-                                                        : 'bg-white border-slate-200 hover:border-violet-400'
+                                                    ? 'bg-[#1a1a1a] border-[#2a2a2a] hover:border-violet-500/50'
+                                                    : 'bg-white border-slate-200 hover:border-violet-400'
                                                     }`}
                                             >
                                                 {/* Thumbnail */}
@@ -896,10 +896,10 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                     {/* Status Badge */}
                                                     <div className="absolute top-2 left-2">
                                                         <span className={`px-2 py-1 text-[10px] font-bold uppercase rounded-md ${gen.status === 'completed'
-                                                                ? 'bg-emerald-500/90 text-white'
-                                                                : gen.status === 'processing' || gen.status === 'pending'
-                                                                    ? 'bg-amber-500/90 text-white'
-                                                                    : 'bg-rose-500/90 text-white'
+                                                            ? 'bg-emerald-500/90 text-white'
+                                                            : gen.status === 'processing' || gen.status === 'pending'
+                                                                ? 'bg-amber-500/90 text-white'
+                                                                : 'bg-rose-500/90 text-white'
                                                             }`}>
                                                             {gen.status === 'completed' ? '✓' : gen.status === 'processing' ? '⏳' : gen.status === 'pending' ? '⏳' : '✗'}
                                                         </span>
@@ -968,9 +968,9 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                     </div>
                                 ) : (
                                     <div className={`flex flex-col items-center justify-center py-16 rounded-xl border-2 border-dashed ${isDark ? 'border-[#2a2a2a]' : 'border-slate-200'}`}>
-                                        <span className="text-5xl mb-4">✨</span>
+                                        <span className="text-5xl mb-4">{type === 'image' ? '🖼️' : '🎬'}</span>
                                         <p className={`text-base font-medium ${themeClasses.textPrimary}`}>
-                                            Chưa có sáng tạo nào
+                                            Chưa có {type === 'image' ? 'ảnh' : 'video'} nào
                                         </p>
                                         <p className={`text-sm mt-1 ${themeClasses.textMuted}`}>
                                             Nhập prompt và nhấn Generate để bắt đầu
