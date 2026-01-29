@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useToast } from '@/Components/Layout/ToastProvider';
 import { aiApi } from '@/services/api';
 
 /**
@@ -32,6 +33,7 @@ import { aiApi } from '@/services/api';
  */
 export default function AINodeConfigModal({ isOpen, onClose, nodeData, onSave }) {
     const { theme } = useTheme();
+    const { addToast } = useToast();
     const { t } = useTranslation();
     const isDark = theme === 'dark';
 
@@ -161,7 +163,7 @@ export default function AINodeConfigModal({ isOpen, onClose, nodeData, onSave })
                     cost: response.data.cost,
                     responseTime: response.data.debug?.response_time_ms,
                 });
-                alert(`✅ Test successful!\n\nResponse: ${response.data.result.substring(0, 200)}...\n\nTokens: ${response.data.tokens_used}\nCost: $${response.data.cost}`);
+                addToast(`✅ Test successful! Tokens: ${response.data.tokens_used}`, 'success');
             } else {
                 throw new Error(response.error || 'Test failed');
             }
@@ -170,7 +172,7 @@ export default function AINodeConfigModal({ isOpen, onClose, nodeData, onSave })
                 success: false,
                 error: error.message || 'Unknown error',
             });
-            alert('❌ Test failed: ' + (error.message || 'Unknown error'));
+            addToast('❌ Test failed: ' + (error.message || 'Unknown error'), 'error');
         } finally {
             setIsTesting(false);
         }
