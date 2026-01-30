@@ -403,8 +403,19 @@ object EventCapture {
                     isEditable = elementData.isEditable,
                     isScrollable = elementData.isScrollable,
                     actionData = actionData,
-                    x = elementData.centerX,
-                    y = elementData.centerY,
+                    // ========== USE REAL TAP COORDINATES ==========
+                    // Prefer actual touch coordinates from TouchCaptureOverlay
+                    // Fallback to element center if touch coordinates not available
+                    x = if (eventType == EVENT_TAP || eventType == EVENT_LONG_TAP || eventType == EVENT_DOUBLE_TAP) {
+                        TouchCaptureOverlay.getRecentTapCoordinates()?.first ?: elementData.centerX
+                    } else {
+                        elementData.centerX
+                    },
+                    y = if (eventType == EVENT_TAP || eventType == EVENT_LONG_TAP || eventType == EVENT_DOUBLE_TAP) {
+                        TouchCaptureOverlay.getRecentTapCoordinates()?.second ?: elementData.centerY
+                    } else {
+                        elementData.centerY
+                    },
                     nodeIndex = null  // Will be calculated if needed during replay
                 )
             } else {
@@ -1118,14 +1129,19 @@ object EventCapture {
      * Score a node based on how much identifying information it has.
      * Higher score = more info = better for element selection.
      * 
-     * Weighted scoring:
-     * - Unique resourceId: +4 (best identifier for replay)
-     * - Meaningful text (>2 chars, not just numbers): +3
-     * - Content description: +2
-     * - Basic resourceId: +2
+     * Weighted scoring (v2 - Smart Selection):
+     * - Meaningful text (>2 chars, not just numbers): +4
+     * - Content description (accessibility label): +3
+     * - Unique resourceId (not obfuscated): +3
+     * - Basic resourceId: +1
+     * - Semantic class (Button, ImageView, etc.): +2
      * - Clickable: +1
      * - Editable: +1
-     * - Tiny element (<20x20): -1 (likely invisible placeholder)
+     * 
+     * Penalties:
+     * - Obfuscated resourceId (e37, a12, etc.): -2
+     * - Container class (FrameLayout, LinearLayout, etc.): -3
+     * - Tiny element (<20x20): -1
      */
     private fun scoreNode(node: AccessibilityNodeInfo): Int {
         var score = 0
@@ -1133,52 +1149,96 @@ object EventCapture {
         val resourceId = node.viewIdResourceName ?: ""
         val text = node.text?.toString() ?: ""
         val contentDesc = node.contentDescription?.toString() ?: ""
+        val className = node.className?.toString() ?: ""
         
-        // Resource ID scoring - unique IDs get bonus
+        // ========== RESOURCE ID SCORING ==========
         if (resourceId.isNotBlank()) {
-            score += 2
-            // Bonus for unique-looking resource IDs (no index/position/number suffix)
-            if (!resourceId.matches(Regex(".*[_\\-](\\d+|index|position|item)$"))) {
-                score += 2  // Total +4 for unique resourceId
+            // Extract the last part of the resource ID (after `:id/` or `/`)
+            val lastPart = resourceId.substringAfterLast("/", resourceId)
+            
+            // Check if obfuscated (short alphanumeric like e37, pcu, h2b, a11)
+            // Obfuscated IDs are typically 1-4 chars that don't look like real words
+            // Pattern: short alphanumeric (1-4 chars) that are not semantic words
+            val isShortAlphanumeric = lastPart.length <= 4 && lastPart.matches(Regex("^[a-zA-Z0-9_]+$"))
+            val isLikelyObfuscated = isShortAlphanumeric && !isSemanticResourceId(lastPart)
+            
+            if (isLikelyObfuscated) {
+                score -= 2  // Penalty for obfuscated IDs like e37, pcu, a11
+                Log.d(TAG, "Obfuscated ID penalty: $lastPart (len=${lastPart.length})")
+            } else {
+                score += 1  // Basic resourceId
+                // Bonus for unique-looking resource IDs (no index/position/number suffix)
+                if (!resourceId.matches(Regex(".*[_\\-](\\d+|index|position|item)$"))) {
+                    score += 2  // Total +3 for unique, meaningful resourceId
+                }
             }
         }
         
-        // Text scoring - meaningful text gets bonus
+        // ========== TEXT SCORING (highest priority) ==========
         if (text.isNotBlank()) {
             if (text.length > 2 && !text.matches(Regex("^\\d+$"))) {
-                score += 3  // Meaningful text
+                score += 4  // Meaningful text - most valuable
             } else {
                 score += 1  // Short or numeric text
             }
         }
         
-        // Content description (accessibility label)
+        // ========== CONTENT DESCRIPTION (accessibility label) ==========
         if (contentDesc.isNotBlank()) {
-            score += 2
+            score += 3  // Increased from +2, accessibility labels are very valuable
         }
         
-        // Bonus for being clickable (actionable element)
+        // ========== CLASS NAME SCORING ==========
+        // Penalize container/layout classes - they are NOT the actual interactive element
+        val containerClasses = listOf("FrameLayout", "LinearLayout", "ViewGroup", 
+            "RelativeLayout", "ConstraintLayout", "CoordinatorLayout", "CardView")
+        if (containerClasses.any { className.endsWith(it) }) {
+            score -= 3  // Heavy penalty - these are layout wrappers, not semantic elements
+        }
+        
+        // Bonus for semantic/interactive classes - these are actual UI components
+        val semanticClasses = listOf("Button", "ImageButton", "TextView", "EditText", 
+            "CheckBox", "Switch", "RadioButton", "ImageView", "ToggleButton", "Spinner")
+        if (semanticClasses.any { className.endsWith(it) }) {
+            score += 2  // Bonus for semantic elements
+        }
+        
+        // ========== INTERACTIVITY SCORING ==========
         if (node.isClickable) {
             score += 1
         }
         
-        // Bonus for being editable (input field)
         if (node.isEditable) {
             score += 1
         }
         
-        // Penalty for tiny elements (likely invisible placeholders)
+        // ========== SIZE PENALTY ==========
         try {
             val rect = Rect()
             node.getBoundsInScreen(rect)
             if (rect.width() < 20 && rect.height() < 20) {
-                score -= 1
+                score -= 1  // Tiny elements are likely invisible placeholders
             }
         } catch (e: Exception) {
             // Ignore bounds check errors
         }
         
         return score
+    }
+    
+    /**
+     * Check if a short resource ID is likely a semantic/meaningful name.
+     * Short IDs like "btn", "icon", "text", "img" are semantic.
+     * Short IDs like "pcu", "e37", "h2b", "a11" are obfuscated by ProGuard/R8.
+     */
+    private fun isSemanticResourceId(id: String): Boolean {
+        // Common semantic short IDs that apps intentionally use
+        val semanticShortIds = setOf(
+            "btn", "icon", "text", "img", "view", "item", "root", "card",
+            "row", "list", "grid", "tab", "menu", "bar", "nav", "btn",
+            "edit", "chat", "send", "back", "home", "play", "stop", "like"
+        )
+        return id.lowercase() in semanticShortIds
     }
     
     /**
@@ -1586,27 +1646,51 @@ object EventCapture {
                 return null
             }
             
-            // ========== SMART SORTING WITH SIZE PENALTY ==========
-            // 1. Penalize elements too large for icon cropping (>500px in any dimension)
-            // 2. Consider score (info quality) + area (specificity)
-            // Elements with width or height > 500 get score reduced by 3
-            // This ensures smaller, identifiable elements are preferred over large containers
+            // ========== AGGRESSIVE SIZE PENALTY ==========
+            // CRITICAL: Prevent full-screen and near-fullscreen containers from being selected
+            // Phones typically: 1080x2208, 1080x2400, 1440x3200
+            // Icons should be small - max 100-200px
+            // Any element > 800px is definitely NOT an icon
+            val candidatesToRemove = mutableListOf<ElementCandidate>()
+            
             candidates.forEach { candidate ->
                 val rect = parseBoundsForSize(candidate.bounds)
                 if (rect != null) {
                     val width = rect.width()
                     val height = rect.height()
-                    // Penalize oversized elements that would fail icon cropping
-                    if (width > 500 || height > 500) {
-                        candidate.score -= 5 // Heavy penalty - these will fail crop anyway
-                        Log.d(TAG, "Size penalty applied: ${candidate.resourceId.takeLast(20)} (${width}x${height})")
+                    
+                    // FILTER OUT: Full-screen containers (>1000px width AND >1800px height)
+                    // These are NEVER icons - remove them entirely
+                    if (width > 1000 && height > 1800) {
+                        Log.d(TAG, "🚫 REMOVING fullscreen element: ${candidate.resourceId.takeLast(25)} (${width}x${height})")
+                        candidatesToRemove.add(candidate)
+                        return@forEach
                     }
-                    // Slight penalty for very wide elements (likely toolbars)
+                    
+                    // HEAVY PENALTY: Near-fullscreen or very large (>800px in any dimension)
+                    // These are containers/wrappers, not icons
+                    if (width > 800 || height > 800) {
+                        candidate.score -= 20 // Massive penalty - almost guaranteed not an icon
+                        Log.d(TAG, "🔴 Heavy penalty: ${candidate.resourceId.takeLast(20)} (${width}x${height})")
+                    }
+                    // MODERATE PENALTY: Large elements (>500px) - unlikely icons
+                    else if (width > 500 || height > 500) {
+                        candidate.score -= 10
+                        Log.d(TAG, "🟠 Moderate penalty: ${candidate.resourceId.takeLast(20)} (${width}x${height})")
+                    }
+                    // SMALL PENALTY: Medium elements (>300px) - might be icon+label
+                    else if (width > 300 || height > 300) {
+                        candidate.score -= 3
+                    }
+                    // SLIGHT PENALTY: Wide toolbar-like elements
                     else if (width > 400 && height < 100) {
                         candidate.score -= 2
                     }
                 }
             }
+            
+            // Remove full-screen elements
+            candidates.removeAll(candidatesToRemove)
             
             // Sort by adjusted score (descending), then by area (ascending for smaller = more specific)
             candidates.sortWith(compareByDescending<ElementCandidate> { it.score }

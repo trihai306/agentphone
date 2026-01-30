@@ -155,6 +155,17 @@
 
                             </LinearLayout>
 
+                            <!-- Build Time -->
+                            <TextView
+                                android:id="@+id/tvBuildTime"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Build: ---"
+                                android:textSize="10sp"
+                                android:textColor="@color/accent_blue"
+                                android:fontFamily="monospace"
+                                android:layout_marginTop="4dp" />
+
                         </LinearLayout>
 
                         <!-- Connected Badge -->

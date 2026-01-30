@@ -179,6 +179,36 @@ export default function Header({ title, userName, setSidebarOpen }) {
                         </kbd>
                     </button>
 
+                    {/* Contact Support */}
+                    <div className="hidden sm:flex items-center gap-1">
+                        {/* Zalo */}
+                        <a
+                            href="https://zalo.me/0987654321"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`p-1.5 rounded-lg transition-all ${isDark
+                                ? 'hover:bg-[#1a1a1a]'
+                                : 'hover:bg-gray-100'
+                                }`}
+                            title={t('header.contact_zalo', { defaultValue: 'Liên hệ qua Zalo' })}
+                        >
+                            <img src="/images/icons/zalo.png" alt="Zalo" className="w-6 h-6 rounded" />
+                        </a>
+                        {/* Facebook Messenger */}
+                        <a
+                            href="https://m.me/clickai.support"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`p-1.5 rounded-lg transition-all ${isDark
+                                ? 'hover:bg-[#1a1a1a]'
+                                : 'hover:bg-gray-100'
+                                }`}
+                            title={t('header.contact_facebook', { defaultValue: 'Liên hệ qua Facebook' })}
+                        >
+                            <img src="/images/icons/messenger.png" alt="Messenger" className="w-6 h-6 rounded" />
+                        </a>
+                    </div>
+
                     {/* Divider */}
                     <div className={`hidden md:block w-px h-6 ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-200'}`} />
 

@@ -29,6 +29,13 @@ import com.agent.portal.recording.RecordingManager
 
 class MainActivity : AppCompatActivity() {
 
+    companion object {
+        private const val TAG = "MainActivity"
+        // ========== BUILD TIMESTAMP ==========
+        // Update this manually each build to verify APK version
+        const val BUILD_TIME = "2026-01-30 10:58"
+    }
+
     private lateinit var binding: ActivityMainBinding
     private val handler = Handler(Looper.getMainLooper())
     private var isRefreshing = false
@@ -138,6 +145,11 @@ class MainActivity : AppCompatActivity() {
             registerReceiver(tokenExpirationReceiver, filter)
         }
         Log.i(TAG, "Token expiration receiver registered")
+        
+        // ========== SHOW BUILD TIME ==========
+        // Toast to verify APK version is updated
+        Toast.makeText(this, "🔧 Build: $BUILD_TIME", Toast.LENGTH_LONG).show()
+        Log.i(TAG, "========== APK BUILD: $BUILD_TIME ==========")
     }
 
     private fun initializeSocket() {
@@ -241,6 +253,9 @@ class MainActivity : AppCompatActivity() {
             newDeviceId
         }
         binding.tvDeviceId.text = "ID: $deviceId"
+        
+        // Build Time Display
+        binding.tvBuildTime.text = "🔧 Build: $BUILD_TIME"
 
         // Copy button
         binding.btnCopyDeviceId.setOnClickListener {
@@ -923,7 +938,4 @@ class MainActivity : AppCompatActivity() {
         imm.showInputMethodPicker()
     }
 
-    companion object {
-        private const val TAG = "MainActivity"
-    }
 }

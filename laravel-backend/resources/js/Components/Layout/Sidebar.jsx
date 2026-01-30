@@ -26,6 +26,7 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
             items: [
                 { href: '/flows', icon: 'flow', label: t('navigation.workflows'), active: url?.startsWith('/flows'), highlight: true },
                 { href: '/campaigns', icon: 'seed', label: t('navigation.campaigns'), active: url?.startsWith('/campaigns'), highlight: true },
+                { href: '/tasks', icon: 'tasks', label: t('navigation.tasks', { defaultValue: 'Nhiệm Vụ' }), active: url?.startsWith('/tasks'), highlight: true },
                 { href: '/jobs', icon: 'play', label: t('navigation.jobs'), active: url?.startsWith('/jobs') },
                 { href: '/data-collections', icon: 'database', label: t('navigation.data_collections'), active: url?.startsWith('/data-collections') },
             ]

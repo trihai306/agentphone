@@ -618,6 +618,73 @@ object ScreenshotManager {
     }
 
     /**
+     * Crop icon from screenshot using tap coordinates.
+     * Two-phase approach for accurate icon detection:
+     * 1. Crop large region (200x200) around tap point
+     * 2. Apply smart content detection to find actual icon boundaries
+     * 
+     * @param bitmap The full screenshot bitmap
+     * @param tapX X coordinate of tap
+     * @param tapY Y coordinate of tap
+     * @param regionSize Size of initial capture region (default 200px)
+     * @return Base64-encoded PNG icon, or null if cropping fails
+     */
+    fun cropIconAtCoordinates(bitmap: Bitmap, tapX: Int, tapY: Int, regionSize: Int = 200): String? {
+        val halfSize = regionSize / 2
+        
+        // Calculate bounds centered on tap, clamped to screen
+        val left = (tapX - halfSize).coerceIn(0, bitmap.width - 1)
+        val top = (tapY - halfSize).coerceIn(0, bitmap.height - 1)
+        val right = (tapX + halfSize).coerceAtMost(bitmap.width)
+        val bottom = (tapY + halfSize).coerceAtMost(bitmap.height)
+        
+        val cropWidth = right - left
+        val cropHeight = bottom - top
+        
+        if (cropWidth < 30 || cropHeight < 30) {
+            Log.d(TAG, "Region too small: ${cropWidth}x${cropHeight}")
+            return null
+        }
+        
+        return try {
+            // Phase 1: Crop large region around tap point
+            var cropped = Bitmap.createBitmap(bitmap, left, top, cropWidth, cropHeight)
+            Log.d(TAG, "📐 Phase 1: Cropped ${cropWidth}x${cropHeight} region at ($tapX, $tapY)")
+            
+            // Phase 2: Smart content detection - find actual icon boundaries
+            cropped = smartCropContent(cropped)
+            Log.d(TAG, "🎯 Phase 2: Smart detected icon ${cropped.width}x${cropped.height}")
+            
+            // Phase 3: Resize to max 100px for consistent icon size
+            val maxIconSize = 100
+            if (cropped.width > maxIconSize || cropped.height > maxIconSize) {
+                val scale = maxIconSize.toFloat() / maxOf(cropped.width, cropped.height)
+                val newWidth = (cropped.width * scale).toInt().coerceAtLeast(1)
+                val newHeight = (cropped.height * scale).toInt().coerceAtLeast(1)
+                val scaled = Bitmap.createScaledBitmap(cropped, newWidth, newHeight, true)
+                if (scaled != cropped) cropped.recycle()
+                cropped = scaled
+                Log.d(TAG, "📏 Phase 3: Resized to ${newWidth}x${newHeight}")
+            }
+            
+            // Encode to PNG base64
+            val outputStream = java.io.ByteArrayOutputStream()
+            cropped.compress(Bitmap.CompressFormat.PNG, 90, outputStream)
+            val iconBase64 = android.util.Base64.encodeToString(
+                outputStream.toByteArray(),
+                android.util.Base64.NO_WRAP
+            )
+            
+            cropped.recycle()
+            Log.d(TAG, "🖼️ Icon ready: ${iconBase64.length / 1024}KB")
+            iconBase64
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to crop icon at coordinates: ${e.message}")
+            null
+        }
+    }
+    
+    /**
      * Crop element icon from screenshot using bounds.
      * Implements Element Inspection Protocol:
      * - Adaptive Vertical Cropping: For tall elements (height > width * 1.5), crop only top square
@@ -632,8 +699,8 @@ object ScreenshotManager {
     fun cropElementIcon(bitmap: Bitmap, bounds: String): String? {
         val boundsRect = parseBounds(bounds) ?: return null
         
-        val left = boundsRect.left.toInt()
-        val top = boundsRect.top.toInt()
+        var left = boundsRect.left.toInt()
+        var top = boundsRect.top.toInt()
         var width = (boundsRect.right - boundsRect.left).toInt()
         var height = (boundsRect.bottom - boundsRect.top).toInt()
         
@@ -646,6 +713,17 @@ object ScreenshotManager {
             Log.d(TAG, "Element too large for icon crop: ${width}x${height}")
             return null
         }
+        
+        // ========== TIGHTER CROPPING ==========
+        // Shrink bounds inward by 12% on each side to remove excess padding
+        val shrinkPercentage = 0.12f
+        val shrinkX = (width * shrinkPercentage).toInt()
+        val shrinkY = (height * shrinkPercentage).toInt()
+        left += shrinkX
+        top += shrinkY
+        width -= (shrinkX * 2)
+        height -= (shrinkY * 2)
+        Log.d(TAG, "📐 Tighter crop: shrunk by ${shrinkX}px x ${shrinkY}px -> ${width}x${height}")
         
         // ========== ADAPTIVE VERTICAL CROPPING ==========
         // For tall elements (like app icons with text below), crop only top portion
@@ -665,6 +743,11 @@ object ScreenshotManager {
         return try {
             // Crop the icon region
             var cropped = Bitmap.createBitmap(bitmap, safeLeft, safeTop, safeWidth, safeHeight)
+            
+            // ========== SMART CONTENT DETECTION ==========
+            // Use edge detection to find actual content and crop tighter
+            cropped = smartCropContent(cropped)
+            Log.d(TAG, "📐 Smart crop: ${safeWidth}x${safeHeight} -> ${cropped.width}x${cropped.height}")
             
             // ========== RESIZE TO MAX 100px ==========
             val maxIconSize = 100
@@ -692,6 +775,95 @@ object ScreenshotManager {
         } catch (e: Exception) {
             Log.w(TAG, "Failed to crop icon: ${e.message}")
             null
+        }
+    }
+
+    /**
+     * Smart crop that detects content boundaries by analyzing pixels
+     * Scans from edges inward to find where actual content begins
+     */
+    private fun smartCropContent(bitmap: Bitmap): Bitmap {
+        if (bitmap.width < 10 || bitmap.height < 10) return bitmap
+        
+        try {
+            val width = bitmap.width
+            val height = bitmap.height
+            
+            // Sample background color from corners
+            val cornerSize = minOf(3, width / 4, height / 4)
+            val bgColors = mutableListOf<Int>()
+            
+            for (x in 0 until cornerSize) {
+                for (y in 0 until cornerSize) bgColors.add(bitmap.getPixel(x, y))
+            }
+            for (x in (width - cornerSize) until width) {
+                for (y in 0 until cornerSize) bgColors.add(bitmap.getPixel(x, y))
+            }
+            for (x in 0 until cornerSize) {
+                for (y in (height - cornerSize) until height) bgColors.add(bitmap.getPixel(x, y))
+            }
+            for (x in (width - cornerSize) until width) {
+                for (y in (height - cornerSize) until height) bgColors.add(bitmap.getPixel(x, y))
+            }
+            
+            val bgColor = bgColors.groupBy { it }.maxByOrNull { it.value.size }?.key ?: bgColors[0]
+            val bgRed = Color.red(bgColor)
+            val bgGreen = Color.green(bgColor)
+            val bgBlue = Color.blue(bgColor)
+            val tolerance = 40
+            
+            fun isDifferentFromBg(pixel: Int): Boolean {
+                val alpha = Color.alpha(pixel)
+                if (alpha < 128) return true
+                val dr = kotlin.math.abs(Color.red(pixel) - bgRed)
+                val dg = kotlin.math.abs(Color.green(pixel) - bgGreen)
+                val db = kotlin.math.abs(Color.blue(pixel) - bgBlue)
+                return (dr + dg + db) > tolerance * 3
+            }
+            
+            var contentLeft = 0
+            var contentRight = width - 1
+            var contentTop = 0
+            var contentBottom = height - 1
+            
+            outer@ for (x in 0 until width) {
+                for (y in 0 until height) {
+                    if (isDifferentFromBg(bitmap.getPixel(x, y))) { contentLeft = x; break@outer }
+                }
+            }
+            outer@ for (x in (width - 1) downTo 0) {
+                for (y in 0 until height) {
+                    if (isDifferentFromBg(bitmap.getPixel(x, y))) { contentRight = x; break@outer }
+                }
+            }
+            outer@ for (y in 0 until height) {
+                for (x in 0 until width) {
+                    if (isDifferentFromBg(bitmap.getPixel(x, y))) { contentTop = y; break@outer }
+                }
+            }
+            outer@ for (y in (height - 1) downTo 0) {
+                for (x in 0 until width) {
+                    if (isDifferentFromBg(bitmap.getPixel(x, y))) { contentBottom = y; break@outer }
+                }
+            }
+            
+            val padding = 2
+            contentLeft = (contentLeft - padding).coerceAtLeast(0)
+            contentTop = (contentTop - padding).coerceAtLeast(0)
+            contentRight = (contentRight + padding).coerceAtMost(width - 1)
+            contentBottom = (contentBottom + padding).coerceAtMost(height - 1)
+            
+            val newWidth = contentRight - contentLeft + 1
+            val newHeight = contentBottom - contentTop + 1
+            
+            if (newWidth >= 10 && newHeight >= 10 && (newWidth < width * 0.9 || newHeight < height * 0.9)) {
+                Log.d(TAG, "🎯 Smart crop: ${width}x${height} -> ${newWidth}x${newHeight}")
+                return Bitmap.createBitmap(bitmap, contentLeft, contentTop, newWidth, newHeight)
+            }
+            return bitmap
+        } catch (e: Exception) {
+            Log.w(TAG, "Smart crop failed: ${e.message}")
+            return bitmap
         }
     }
 

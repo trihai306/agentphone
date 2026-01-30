@@ -38,6 +38,41 @@ class TouchCaptureOverlay : Service() {
         @Volatile
         var isRunning = false
             private set
+        
+        // ========== LAST TAP COORDINATES ==========
+        // Stores the last tap position captured via MotionEvent
+        // EventCapture reads these to get accurate tap coordinates
+        @Volatile
+        var lastTapX: Float = 0f
+            private set
+        
+        @Volatile
+        var lastTapY: Float = 0f
+            private set
+        
+        @Volatile
+        var lastTapTimestamp: Long = 0L
+            private set
+        
+        /**
+         * Get last tap coordinates if they are recent (within 500ms)
+         * Returns null if no recent tap or coordinates are stale
+         */
+        fun getRecentTapCoordinates(): Pair<Int, Int>? {
+            val age = System.currentTimeMillis() - lastTapTimestamp
+            return if (age < 500 && lastTapTimestamp > 0) {
+                Pair(lastTapX.toInt(), lastTapY.toInt())
+            } else {
+                null
+            }
+        }
+        
+        /**
+         * Clear last tap coordinates (called after EventCapture uses them)
+         */
+        fun clearLastTap() {
+            lastTapTimestamp = 0L
+        }
     }
 
     private var windowManager: WindowManager? = null
@@ -83,11 +118,11 @@ class TouchCaptureOverlay : Service() {
                     WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
                 else
                     WindowManager.LayoutParams.TYPE_PHONE,
-                // STRATEGY: Tiny overlay (1x1) that doesn't block touches
+                // STRATEGY: Tiny overlay (1x1) that observes touches without blocking
                 // Use FLAG_WATCH_OUTSIDE_TOUCH to receive ACTION_OUTSIDE events for ALL touches
                 // Since overlay is only 1x1, ALL touches are "outside" → we observe without blocking!
+                // NOTE: Do NOT use FLAG_NOT_TOUCHABLE - it blocks ALL touch events including ACTION_OUTSIDE
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
                         WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                         WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
                 PixelFormat.TRANSLUCENT
@@ -166,7 +201,14 @@ class TouchCaptureOverlay : Service() {
                     touchStartY = y
                     touchStartTime = currentTime
                     isSwiping = false
-                    Log.d(TAG, "Touch started at (${x.toInt()}, ${y.toInt()})")
+                    
+                    // ========== STORE TAP COORDINATES ==========
+                    // Store for EventCapture to use for accurate tap position
+                    lastTapX = x
+                    lastTapY = y
+                    lastTapTimestamp = currentTime
+                    
+                    Log.d(TAG, "👆 Touch at (${x.toInt()}, ${y.toInt()}) - stored for EventCapture")
                 } else {
                     // Subsequent touch or end of gesture
                     val deltaX = x - touchStartX

@@ -27,6 +27,7 @@ use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WithdrawalController;
 use App\Http\Controllers\UserBankAccountController;
+use App\Http\Controllers\TaskController;
 use Illuminate\Support\Facades\Route;
 
 // Locale Route (available for all users)
@@ -259,5 +260,18 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{listing}', [MarketplaceController::class, 'destroy'])->name('destroy');
         Route::post('/{listing}/purchase', [MarketplaceController::class, 'purchase'])->name('purchase');
         Route::post('/{listing}/rate', [MarketplaceController::class, 'rate'])->name('rate');
+    });
+
+    // Tasks (Peer-to-peer Job Exchange)
+    Route::prefix('tasks')->name('tasks.')->group(function () {
+        Route::get('/', [TaskController::class, 'index'])->name('index');
+        Route::get('/my', [TaskController::class, 'myTasks'])->name('my');
+        Route::get('/create', [TaskController::class, 'create'])->name('create');
+        Route::post('/', [TaskController::class, 'store'])->name('store');
+        Route::get('/{task}', [TaskController::class, 'show'])->name('show');
+        Route::post('/{task}/apply', [TaskController::class, 'apply'])->name('apply');
+        Route::post('/{task}/cancel', [TaskController::class, 'cancel'])->name('cancel');
+        Route::patch('/{task}/applications/{application}', [TaskController::class, 'handleApplication'])->name('handle-application');
+        Route::post('/{task}/applications/{application}/start', [TaskController::class, 'startExecution'])->name('start-execution');
     });
 });
