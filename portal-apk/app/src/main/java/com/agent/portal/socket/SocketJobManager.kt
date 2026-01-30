@@ -709,11 +709,53 @@ object SocketJobManager {
                         if (screenshotFile.exists()) {
                             val bitmap = android.graphics.BitmapFactory.decodeFile(event.screenshotPath)
                             if (bitmap != null) {
-                                // ========== CROP ICON FIRST (before encoding full screenshot) ==========
-                                // Use bounds to crop element icon for Flow Editor node display
-                                // This provides accurate icon matching Element Inspection Protocol
-                                if (event.bounds.isNotBlank()) {
-                                    val iconBase64 = com.agent.portal.recording.ScreenshotManager.cropElementIcon(bitmap, event.bounds)
+                                // ========== SMART ICON CROPPING ==========
+                                // For tap events, use Accessibility Tree to find best element at coordinates
+                                // This aligns with Element Picker approach for consistent, accurate icons
+                                var iconBounds: String? = null
+                                
+                                // Only do tree search for tap events with coordinates
+                                if ((event.eventType == "tap" || event.eventType == "long_tap") && 
+                                    event.x != null && event.y != null) {
+                                    
+                                    try {
+                                        // Get accessibility service and root node
+                                        val accessibilityService = com.agent.portal.accessibility.PortalAccessibilityService.instance
+                                        val rootNode = accessibilityService?.rootInActiveWindow
+                                        
+                                        if (rootNode != null) {
+                                            // Find best element at tap coordinates using Element Picker logic
+                                            val bestElement = com.agent.portal.recording.EventCapture.findBestElementAtCoordinates(
+                                                rootNode, event.x, event.y
+                                            )
+                                            
+                                            if (bestElement != null && bestElement.score >= 2) {
+                                                // Use the more accurate bounds from tree search
+                                                iconBounds = bestElement.bounds
+                                                Log.d(TAG, "🎯 Using tree-search bounds: ${iconBounds} (score=${bestElement.score})")
+                                                
+                                                // Also update action data with better element info
+                                                actionData["best_resource_id"] = bestElement.resourceId
+                                                actionData["best_text"] = bestElement.text
+                                                actionData["best_content_desc"] = bestElement.contentDescription
+                                            }
+                                            
+                                            rootNode.recycle()
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.w(TAG, "Tree search failed, using event bounds: ${e.message}")
+                                    }
+                                }
+                                
+                                // Fall back to event bounds if tree search didn't find anything
+                                if (iconBounds == null && event.bounds.isNotBlank()) {
+                                    iconBounds = event.bounds
+                                    Log.d(TAG, "📍 Using event bounds: ${iconBounds}")
+                                }
+                                
+                                // Crop icon using determined bounds
+                                if (iconBounds != null) {
+                                    val iconBase64 = com.agent.portal.recording.ScreenshotManager.cropElementIcon(bitmap, iconBounds)
                                     if (iconBase64 != null) {
                                         actionData["icon"] = iconBase64
                                         Log.d(TAG, "🖼️ Icon cropped: ${iconBase64.length / 1024}KB")

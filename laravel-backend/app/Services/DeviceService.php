@@ -98,6 +98,7 @@ class DeviceService
     /**
      * Mark device online in Redis after registration
      * Called when APK opens and registers/updates device
+     * Also broadcasts status change so Flow Editor updates immediately
      */
     public function markDeviceOnlineAfterRegister(Device $device): void
     {
@@ -106,6 +107,15 @@ class DeviceService
             $device->device_id,
             $device->id
         );
+
+        // Update DB status to match Redis
+        $device->update([
+            'socket_connected' => true,
+            'last_active_at' => now(),
+        ]);
+
+        // Broadcast to Flow Editor so device appears immediately
+        broadcast(new DeviceStatusChanged($device, 'online'));
     }
 
     /**

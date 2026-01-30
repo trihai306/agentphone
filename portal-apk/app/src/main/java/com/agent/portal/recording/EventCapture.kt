@@ -1545,7 +1545,215 @@ object EventCapture {
         
         Log.d(TAG, "Gesture detector and Touch Exploration state reset")
     }
+    
+    // ========== ELEMENT INSPECTION AT COORDINATES ==========
+    // Find the best element at given coordinates using Accessibility Tree
+    // Used during recording to accurately identify tapped elements
+    // Follows Element Picker approach: prioritize elements with most info
+    
+    /**
+     * Find the best element at given tap coordinates.
+     * Traverses the accessibility tree to find all elements containing (x, y),
+     * then selects the one with the most identifying information.
+     * 
+     * Priority scoring (same as scoreNode):
+     * - Unique resourceId: +4
+     * - Meaningful text: +3
+     * - Content description: +2
+     * - Clickable: +1
+     * - Smallest area: bonus for more specific elements
+     * 
+     * @param rootNode The root of the accessibility tree
+     * @param x X coordinate of the tap
+     * @param y Y coordinate of the tap
+     * @return BestElementResult containing bounds and element data, or null if not found
+     */
+    fun findBestElementAtCoordinates(
+        rootNode: AccessibilityNodeInfo?,
+        x: Int,
+        y: Int
+    ): BestElementResult? {
+        if (rootNode == null || x < 0 || y < 0) return null
+        
+        val candidates = mutableListOf<ElementCandidate>()
+        
+        try {
+            // Collect all elements containing the tap point
+            collectElementsAtPoint(rootNode, x, y, candidates, 0)
+            
+            if (candidates.isEmpty()) {
+                Log.d(TAG, "No elements found at ($x, $y)")
+                return null
+            }
+            
+            // ========== SMART SORTING WITH SIZE PENALTY ==========
+            // 1. Penalize elements too large for icon cropping (>500px in any dimension)
+            // 2. Consider score (info quality) + area (specificity)
+            // Elements with width or height > 500 get score reduced by 3
+            // This ensures smaller, identifiable elements are preferred over large containers
+            candidates.forEach { candidate ->
+                val rect = parseBoundsForSize(candidate.bounds)
+                if (rect != null) {
+                    val width = rect.width()
+                    val height = rect.height()
+                    // Penalize oversized elements that would fail icon cropping
+                    if (width > 500 || height > 500) {
+                        candidate.score -= 5 // Heavy penalty - these will fail crop anyway
+                        Log.d(TAG, "Size penalty applied: ${candidate.resourceId.takeLast(20)} (${width}x${height})")
+                    }
+                    // Slight penalty for very wide elements (likely toolbars)
+                    else if (width > 400 && height < 100) {
+                        candidate.score -= 2
+                    }
+                }
+            }
+            
+            // Sort by adjusted score (descending), then by area (ascending for smaller = more specific)
+            candidates.sortWith(compareByDescending<ElementCandidate> { it.score }
+                .thenBy { it.area })
+            
+            val best = candidates.first()
+            Log.i(TAG, "🎯 Best element at ($x, $y): score=${best.score}, area=${best.area}, " +
+                "id=${best.resourceId.takeLast(30)}, text=${best.text.take(20)}")
+            
+            // Recycle non-selected nodes
+            candidates.drop(1).forEach { 
+                try { 
+                    // Don't recycle - we don't own these nodes 
+                } catch (e: Exception) { }
+            }
+            
+            return BestElementResult(
+                bounds = best.bounds,
+                resourceId = best.resourceId,
+                text = best.text,
+                contentDescription = best.contentDescription,
+                className = best.className,
+                isClickable = best.isClickable,
+                centerX = best.centerX,
+                centerY = best.centerY,
+                score = best.score
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Error finding element at coordinates: ${e.message}")
+            return null
+        }
+    }
+    
+    /**
+     * Recursively collect all elements that contain the given point.
+     */
+    private fun collectElementsAtPoint(
+        node: AccessibilityNodeInfo,
+        x: Int,
+        y: Int,
+        results: MutableList<ElementCandidate>,
+        depth: Int
+    ) {
+        if (depth > 25) return // Max depth limit
+        
+        // Skip invisible elements
+        if (!node.isVisibleToUser) {
+            // Still check children
+            for (i in 0 until node.childCount) {
+                val child = node.getChild(i) ?: continue
+                collectElementsAtPoint(child, x, y, results, depth + 1)
+                try { child.recycle() } catch (e: Exception) { }
+            }
+            return
+        }
+        
+        // Get bounds
+        val rect = Rect()
+        node.getBoundsInScreen(rect)
+        
+        // Check if point is inside bounds
+        if (rect.contains(x, y) && rect.width() > 0 && rect.height() > 0) {
+            // Calculate score for this element
+            val score = scoreNode(node)
+            val area = rect.width() * rect.height()
+            
+            // Only include interactive or identifiable elements
+            val hasInfo = !node.viewIdResourceName.isNullOrBlank() ||
+                !node.text.isNullOrBlank() ||
+                !node.contentDescription.isNullOrBlank()
+            val isInteractive = node.isClickable || node.isLongClickable || 
+                node.isEditable || node.isCheckable
+            
+            if (hasInfo || isInteractive) {
+                val centerX = rect.left + rect.width() / 2
+                val centerY = rect.top + rect.height() / 2
+                
+                results.add(ElementCandidate(
+                    bounds = formatBounds(rect),
+                    resourceId = node.viewIdResourceName ?: "",
+                    text = node.text?.toString() ?: "",
+                    contentDescription = node.contentDescription?.toString() ?: "",
+                    className = node.className?.toString() ?: "",
+                    isClickable = node.isClickable,
+                    centerX = centerX,
+                    centerY = centerY,
+                    score = score,
+                    area = area
+                ))
+            }
+        }
+        
+        // Recurse into children
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i) ?: continue
+            collectElementsAtPoint(child, x, y, results, depth + 1)
+            try { child.recycle() } catch (e: Exception) { }
+        }
+    }
+    
+    /**
+     * Parse bounds string to get width/height for size penalty calculation.
+     * Handles both "left,top,right,bottom" format.
+     */
+    private fun parseBoundsForSize(bounds: String): android.graphics.Rect? {
+        return try {
+            val parts = bounds.split(",").map { it.trim().toInt() }
+            if (parts.size == 4) {
+                android.graphics.Rect(parts[0], parts[1], parts[2], parts[3])
+            } else null
+        } catch (e: Exception) {
+            null
+        }
+    }
 }
+
+/**
+ * Result of finding the best element at coordinates.
+ * Contains all data needed for recording and icon cropping.
+ */
+data class BestElementResult(
+    val bounds: String,
+    val resourceId: String,
+    val text: String,
+    val contentDescription: String,
+    val className: String,
+    val isClickable: Boolean,
+    val centerX: Int,
+    val centerY: Int,
+    val score: Int
+)
+
+/**
+ * Candidate element during coordinate search.
+ */
+private data class ElementCandidate(
+    val bounds: String,
+    val resourceId: String,
+    val text: String,
+    val contentDescription: String,
+    val className: String,
+    val isClickable: Boolean,
+    val centerX: Int,
+    val centerY: Int,
+    var score: Int,
+    val area: Int
+)
 
 /**
  * Container for element data extracted from AccessibilityNodeInfo.

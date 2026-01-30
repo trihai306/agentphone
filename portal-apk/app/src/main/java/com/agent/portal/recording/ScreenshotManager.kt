@@ -123,8 +123,8 @@ object ScreenshotManager {
             val bitmap = originalBitmap.copy(Bitmap.Config.ARGB_8888, true)
             val canvas = Canvas(bitmap)
 
-            // Draw interaction highlight
-            drawInteractionHighlight(canvas, event)
+            // Draw interaction highlight - DISABLED: keep screenshot clean
+            // drawInteractionHighlight(canvas, event)
 
             // Save to file
             val screenshotPath = saveScreenshot(context, bitmap, event)
@@ -162,23 +162,33 @@ object ScreenshotManager {
 
         when (event.eventType) {
             "tap" -> {
-                // Draw circle at tap point - Green
-                paint.color = Color.parseColor("#4CAF50")
+                // Draw blue crosshair/sniper scope at tap point
+                paint.color = Color.parseColor("#2196F3") // Blue
 
                 if (centerX != null && centerY != null) {
-                    // Draw outer circle
-                    canvas.drawCircle(centerX, centerY, 60f, paint)
-                    // Draw inner filled circle
-                    paint.style = Paint.Style.FILL
-                    paint.alpha = 80
-                    canvas.drawCircle(centerX, centerY, 40f, paint)
-
-                    // Draw crosshair
+                    // Outer ring
                     paint.style = Paint.Style.STROKE
-                    paint.alpha = 255
                     paint.strokeWidth = 4f
-                    canvas.drawLine(centerX - 80f, centerY, centerX + 80f, centerY, paint)
-                    canvas.drawLine(centerX, centerY - 80f, centerX, centerY + 80f, paint)
+                    paint.alpha = 255
+                    canvas.drawCircle(centerX, centerY, 50f, paint)
+
+                    // Inner ring
+                    paint.strokeWidth = 3f
+                    canvas.drawCircle(centerX, centerY, 25f, paint)
+
+                    // Center dot
+                    paint.style = Paint.Style.FILL
+                    canvas.drawCircle(centerX, centerY, 6f, paint)
+
+                    // Crosshair lines (gap in center)
+                    paint.style = Paint.Style.STROKE
+                    paint.strokeWidth = 3f
+                    // Horizontal lines with gap
+                    canvas.drawLine(centerX - 70f, centerY, centerX - 30f, centerY, paint)
+                    canvas.drawLine(centerX + 30f, centerY, centerX + 70f, centerY, paint)
+                    // Vertical lines with gap
+                    canvas.drawLine(centerX, centerY - 70f, centerX, centerY - 30f, paint)
+                    canvas.drawLine(centerX, centerY + 30f, centerX, centerY + 70f, paint)
                 } else if (bounds != null) {
                     // Draw rectangle around element
                     val rect = RectF(bounds)
