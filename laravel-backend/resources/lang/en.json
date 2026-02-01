@@ -300,7 +300,8 @@
                 "delete": "Delete",
                 "save": "Save",
                 "start_building": "Start Building",
-                "start_building_desc": "Drag nodes from the left panel to create your workflow"
+                "start_building_desc": "Drag nodes from the left panel to create your workflow",
+                "collapse": "Collapse"
             },
             "config": {
                 "node_properties": "Node Properties",
@@ -417,7 +418,11 @@
                 "no_device_selected": "No device selected",
                 "select_device_first": "Please select a device before using this feature",
                 "execution_probability": "Execution Probability",
-                "execution_probability_tooltip": "Chance this node will execute (0-100%)"
+                "execution_probability_tooltip": "Chance this node will execute (0-100%)",
+                "no_collection_selected": "No collection selected",
+                "records": "records",
+                "files_selected": "files selected",
+                "multi_mode": "Multi-file mode"
             }
         }
     },
@@ -1496,5 +1501,16 @@
         "paid": "Paid",
         "expired": "Expired",
         "remaining": "remaining"
+    },
+    "flow": {
+        "ai": {
+            "tabs": {
+                "llm": "AI Model",
+                "prompt": "Prompt",
+                "tools": "Tools",
+                "memory": "Memory",
+                "output": "Output"
+            }
+        }
     }
 }

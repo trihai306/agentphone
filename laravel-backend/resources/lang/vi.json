@@ -300,7 +300,8 @@
                 "delete": "Xóa",
                 "save": "Lưu",
                 "start_building": "Bắt Đầu Xây Dựng",
-                "start_building_desc": "Kéo nodes từ bảng bên trái để tạo workflow của bạn"
+                "start_building_desc": "Kéo nodes từ bảng bên trái để tạo workflow của bạn",
+                "collapse": "Thu gọn"
             },
             "config": {
                 "node_properties": "Thuộc Tính Node",
@@ -417,7 +418,11 @@
                 "no_device_selected": "Chưa chọn thiết bị",
                 "select_device_first": "Vui lòng chọn thiết bị trước khi sử dụng tính năng này",
                 "execution_probability": "Tỉ Lệ Thực Thi",
-                "execution_probability_tooltip": "Khả năng node này được thực thi (0-100%)"
+                "execution_probability_tooltip": "Khả năng node này được thực thi (0-100%)",
+                "no_collection_selected": "Chưa chọn bộ sưu tập",
+                "records": "bản ghi",
+                "files_selected": "file đã chọn",
+                "multi_mode": "Chế độ nhiều file"
             }
         }
     },
@@ -1502,5 +1507,16 @@
         "paid": "Có thưởng",
         "expired": "Đã hết hạn",
         "remaining": "còn lại"
+    },
+    "flow": {
+        "ai": {
+            "tabs": {
+                "llm": "Model AI",
+                "prompt": "Prompt",
+                "tools": "Công cụ",
+                "memory": "Bộ nhớ",
+                "output": "Đầu ra"
+            }
+        }
     }
 }
