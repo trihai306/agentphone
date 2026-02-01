@@ -120,6 +120,7 @@
     "auth": {
         "login": {
             "title": "Login",
+            "subtitle": "Sign in to your account",
             "email": "Email",
             "password": "Password",
             "remember_me": "Remember me",
@@ -160,6 +161,7 @@
         "edit_device": "Edit Device",
         "delete_device": "Delete Device",
         "no_devices": "No devices found",
+        "create": "Register Device",
         "status": {
             "online": "Online",
             "offline": "Offline",
@@ -732,6 +734,7 @@
         "rows": "rows",
         "add_row": "Add row",
         "export": "Export",
+        "exporting": "Exporting...",
         "record_added": "Record added",
         "record_updated": "Record updated",
         "record_deleted": "Record deleted",
@@ -1067,6 +1070,8 @@
     "topup": {
         "title": "Top Up",
         "description": "Add funds to your wallet to use services",
+        "deposit": "Deposit",
+        "no_topups_yet": "You haven't made any deposits yet",
         "amount": "Amount",
         "select_amount": "Select amount",
         "select_package": "Select top-up package",
@@ -1149,7 +1154,8 @@
         "no_bank_account": "You don't have any bank accounts yet",
         "add_bank_account": "Add bank account",
         "cancel": "Cancel request",
-        "confirm_cancel": "Are you sure you want to cancel this request?"
+        "confirm_cancel": "Are you sure you want to cancel this request?",
+        "cancel_title": "Cancel Withdrawal Request"
     },
     "wallet": {
         "title": "Wallet",
@@ -1178,7 +1184,8 @@
         "branch_placeholder": "Branch (optional)",
         "default": "Default",
         "set_default": "Set as default",
-        "confirm_delete": "Are you sure you want to delete this account?"
+        "confirm_delete": "Are you sure you want to delete this account?",
+        "confirm_delete_message": "This bank account will be permanently deleted."
     },
     "transaction": {
         "code": "Transaction code",
@@ -1399,7 +1406,9 @@
         "success": "Success!",
         "error": "Error!",
         "warning": "Warning!",
-        "info": "Information"
+        "info": "Information",
+        "empty": "No notifications",
+        "view_all": "View all"
     },
     "error_reports": {
         "title": "Error Reports",
@@ -1588,6 +1597,7 @@
         "devices": "Devices",
         "workflows": "Workflows",
         "data_collections": "Data",
+        "tasks": "Tasks",
         "packages": "Packages",
         "pricing": "Pricing",
         "profile": "Profile",

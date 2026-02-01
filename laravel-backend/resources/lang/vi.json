@@ -161,6 +161,7 @@
         "edit_device": "Chỉnh Sửa Thiết Bị",
         "delete_device": "Xóa Thiết Bị",
         "no_devices": "Chưa có thiết bị nào",
+        "create": "Đăng Ký Thiết Bị",
         "status": {
             "online": "Trực tuyến",
             "offline": "Ngoại tuyến",
@@ -733,6 +734,7 @@
         "rows": "dòng",
         "add_row": "Thêm dòng",
         "export": "Xuất",
+        "exporting": "Đang xuất...",
         "record_added": "Đã thêm bản ghi",
         "record_updated": "Đã cập nhật bản ghi",
         "record_deleted": "Đã xóa bản ghi",
@@ -1068,6 +1070,8 @@
     "topup": {
         "title": "Nạp Tiền",
         "description": "Thêm tiền vào ví để sử dụng dịch vụ",
+        "deposit": "Nạp Tiền",
+        "no_topups_yet": "Bạn chưa có giao dịch nạp tiền nào",
         "amount": "Số tiền",
         "select_amount": "Chọn số tiền",
         "select_package": "Chọn gói nạp tiền",
@@ -1150,7 +1154,8 @@
         "no_bank_account": "Bạn chưa có tài khoản ngân hàng nào",
         "add_bank_account": "Thêm tài khoản ngân hàng",
         "cancel": "Hủy yêu cầu",
-        "confirm_cancel": "Bạn có chắc muốn hủy yêu cầu này?"
+        "confirm_cancel": "Bạn có chắc muốn hủy yêu cầu này?",
+        "cancel_title": "Hủy Yêu Cầu Rút Tiền"
     },
     "wallet": {
         "title": "Ví Tiền",
@@ -1179,7 +1184,8 @@
         "branch_placeholder": "Chi nhánh (tùy chọn)",
         "default": "Mặc định",
         "set_default": "Đặt làm mặc định",
-        "confirm_delete": "Bạn có chắc muốn xóa tài khoản này?"
+        "confirm_delete": "Bạn có chắc muốn xóa tài khoản này?",
+        "confirm_delete_message": "Tài khoản ngân hàng này sẽ bị xóa vĩnh viễn."
     },
     "transaction": {
         "code": "Mã giao dịch",
@@ -1597,6 +1603,7 @@
         "devices": "Thiết Bị",
         "workflows": "Workflows",
         "data_collections": "Dữ Liệu",
+        "tasks": "Nhiệm Vụ",
         "packages": "Gói Dịch Vụ",
         "pricing": "Bảng Giá",
         "profile": "Hồ Sơ",
