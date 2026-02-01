@@ -2,24 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Bank;
 use App\Models\Transaction;
 use App\Models\UserBankAccount;
 use App\Services\TransactionService;
 use App\Services\NotificationService;
+use App\Services\WalletService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class WithdrawalController extends Controller
 {
-    protected TransactionService $transactionService;
-    protected NotificationService $notificationService;
-
-    public function __construct(TransactionService $transactionService, NotificationService $notificationService)
-    {
-        $this->transactionService = $transactionService;
-        $this->notificationService = $notificationService;
+    public function __construct(
+        protected TransactionService $transactionService,
+        protected NotificationService $notificationService,
+        protected WalletService $walletService
+    ) {
     }
 
     /**
@@ -28,10 +26,26 @@ class WithdrawalController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $wallet = $user->wallets()->where('is_active', true)->first();
+        $wallet = $this->walletService->getActiveWallet($user);
 
-        // Lấy danh sách tài khoản ngân hàng của user
-        $bankAccounts = UserBankAccount::where('user_id', $user->id)
+        return Inertia::render('Withdrawal/Index', [
+            'bankAccounts' => $this->getBankAccounts($user),
+            'pendingWithdrawals' => $this->getPendingWithdrawals($user),
+            'recentWithdrawals' => $this->getRecentWithdrawals($user),
+            'walletBalance' => $wallet?->balance ?? 0,
+            'availableBalance' => $wallet?->available_balance ?? 0,
+            'lockedBalance' => $wallet?->locked_balance ?? 0,
+            'minWithdrawal' => 50000,
+            'withdrawalFee' => 0,
+        ]);
+    }
+
+    /**
+     * Get user's bank accounts
+     */
+    protected function getBankAccounts($user)
+    {
+        return UserBankAccount::where('user_id', $user->id)
             ->with('bank')
             ->orderBy('is_default', 'desc')
             ->orderBy('created_at', 'desc')
@@ -47,9 +61,14 @@ class WithdrawalController extends Controller
                 'is_default' => $account->is_default,
                 'is_verified' => $account->is_verified,
             ]);
+    }
 
-        // Lấy danh sách yêu cầu rút tiền đang chờ
-        $pendingWithdrawals = Transaction::where('user_id', $user->id)
+    /**
+     * Get pending withdrawal requests
+     */
+    protected function getPendingWithdrawals($user)
+    {
+        return Transaction::where('user_id', $user->id)
             ->where('type', Transaction::TYPE_WITHDRAWAL)
             ->whereIn('status', [Transaction::STATUS_PENDING, Transaction::STATUS_PROCESSING])
             ->with('userBankAccount.bank')
@@ -67,9 +86,14 @@ class WithdrawalController extends Controller
                 'account_name' => $tx->userBankAccount?->account_name,
                 'created_at' => $tx->created_at->format('d/m/Y H:i'),
             ]);
+    }
 
-        // Lịch sử rút tiền gần đây
-        $recentWithdrawals = Transaction::where('user_id', $user->id)
+    /**
+     * Get recent withdrawal history
+     */
+    protected function getRecentWithdrawals($user)
+    {
+        return Transaction::where('user_id', $user->id)
             ->where('type', Transaction::TYPE_WITHDRAWAL)
             ->with('userBankAccount.bank')
             ->orderBy('created_at', 'desc')
@@ -89,17 +113,6 @@ class WithdrawalController extends Controller
                 'created_at' => $tx->created_at->format('d/m/Y H:i'),
                 'completed_at' => $tx->completed_at?->format('d/m/Y H:i'),
             ]);
-
-        return Inertia::render('Withdrawal/Index', [
-            'bankAccounts' => $bankAccounts,
-            'pendingWithdrawals' => $pendingWithdrawals,
-            'recentWithdrawals' => $recentWithdrawals,
-            'walletBalance' => $wallet?->balance ?? 0,
-            'availableBalance' => $wallet?->available_balance ?? 0,
-            'lockedBalance' => $wallet?->locked_balance ?? 0,
-            'minWithdrawal' => 50000,
-            'withdrawalFee' => 0, // Phí rút tiền (có thể cấu hình)
-        ]);
     }
 
     /**
@@ -120,7 +133,6 @@ class WithdrawalController extends Controller
 
         $user = Auth::user();
 
-        // Kiểm tra tài khoản ngân hàng thuộc về user
         $bankAccount = UserBankAccount::where('id', $request->bank_account_id)
             ->where('user_id', $user->id)
             ->first();
@@ -130,14 +142,13 @@ class WithdrawalController extends Controller
         }
 
         try {
-            $transaction = $this->transactionService->createWithdrawal($user, [
+            $this->transactionService->createWithdrawal($user, [
                 'amount' => $request->amount,
-                'fee' => 0, // Có thể cấu hình phí rút tiền
+                'fee' => 0,
                 'user_bank_account_id' => $request->bank_account_id,
                 'user_note' => $request->note,
             ]);
 
-            // Thông báo cho admin
             $this->notificationService->sendToAdmins(
                 'Yêu cầu rút tiền mới',
                 "Người dùng {$user->name} yêu cầu rút " . number_format($request->amount) . " ₫",
@@ -147,7 +158,6 @@ class WithdrawalController extends Controller
             );
 
             return back()->with('success', 'Yêu cầu rút tiền đã được gửi. Vui lòng chờ admin xử lý.');
-
         } catch (\Exception $e) {
             return back()->withErrors(['amount' => $e->getMessage()]);
         }
@@ -160,12 +170,10 @@ class WithdrawalController extends Controller
     {
         $user = Auth::user();
 
-        // Kiểm tra transaction thuộc về user
         if ($transaction->user_id !== $user->id) {
             abort(403);
         }
 
-        // Kiểm tra loại và trạng thái
         if ($transaction->type !== Transaction::TYPE_WITHDRAWAL) {
             return back()->withErrors(['error' => 'Giao dịch không hợp lệ']);
         }

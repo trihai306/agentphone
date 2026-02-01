@@ -77,6 +77,20 @@ class MediaController extends Controller
     }
 
     /**
+     * API: Get user's storage stats as JSON (for modals/pickers)
+     */
+    public function apiStats(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user();
+        $stats = $this->mediaService->getStorageStats($user);
+
+        return response()->json([
+            'success' => true,
+            'data' => $stats,
+        ]);
+    }
+
+    /**
      * Display a listing of the user's media
      */
     public function index(Request $request): Response

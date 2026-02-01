@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ConfigSection } from '../shared';
-import MediaPickerModal from '@/Components/MediaPickerModal';
+import MediaLibraryModal from '@/Components/MediaLibraryModal';
 
 /**
  * FileInputConfig - Configuration for file input nodes
@@ -15,32 +15,66 @@ export function FileInputConfig({ data, updateData, isDark }) {
     const fileName = data.fileName || null;
     const folderName = data.folderName || null;
     const filePath = data.filePath || null;
+    const filesArray = data.files || null;
 
     const hasSelection = (selectionType === 'file' && fileName) ||
+        (selectionType === 'files' && filesArray && filesArray.length > 0) ||
         (selectionType === 'folder' && folderName);
 
-    // Handle file selected from Media Library
-    const handleFileSelected = (file) => {
-        updateData('selectionType', 'file');
-        updateData('fileId', file.id);
-        updateData('fileName', file.original_name || file.name);
-        updateData('filePath', file.url || file.file_url);
-        updateData('fileType', file.type);
-        updateData('fileSize', file.size || file.formatted_size);
+    // Handle file(s) selected from Media Library - supports both single and multi-select
+    const handleFileSelected = (files) => {
+        // Normalize to array for consistent handling
+        const fileArray = Array.isArray(files) ? files : [files];
+
+        if (fileArray.length === 1) {
+            // Single file mode
+            const file = fileArray[0];
+            updateData('selectionType', 'file');
+            updateData('fileId', file.id);
+            updateData('fileName', file.original_name || file.name);
+            updateData('filePath', file.url || file.file_url);
+            updateData('fileType', file.type);
+            updateData('fileSize', file.size || file.formatted_size);
+            updateData('files', null); // Clear multi-file data
+        } else {
+            // Multi-file mode
+            updateData('selectionType', 'files');
+            updateData('files', fileArray.map(file => ({
+                id: file.id,
+                name: file.original_name || file.name,
+                url: file.url || file.file_url,
+                type: file.type,
+                size: file.size || file.formatted_size,
+            })));
+            updateData('fileId', null);
+            updateData('fileName', `${fileArray.length} files`);
+            updateData('filePath', null);
+        }
         // Clear folder data
         updateData('folderName', null);
         updateData('folderPath', null);
     };
 
-    // Handle folder selected from Media Library
-    const handleFolderSelected = (folder) => {
+    // Handle folder selected from Media Library (includes files list)
+    const handleFolderSelected = (folder, files = []) => {
         updateData('selectionType', 'folder');
         updateData('folderName', folder.name);
         updateData('folderPath', folder.path);
-        // Clear file data
+        // Store files in folder for processing
+        if (files && files.length > 0) {
+            updateData('folderFiles', files.map(file => ({
+                id: file.id,
+                name: file.original_name || file.name,
+                url: file.url || file.file_url,
+                type: file.type,
+            })));
+            updateData('folderFileCount', files.length);
+        }
+        // Clear single/multi file data
         updateData('fileId', null);
         updateData('fileName', null);
         updateData('filePath', null);
+        updateData('files', null);
     };
 
     // Clear selection
@@ -51,6 +85,9 @@ export function FileInputConfig({ data, updateData, isDark }) {
         updateData('filePath', null);
         updateData('folderName', null);
         updateData('folderPath', null);
+        updateData('folderFiles', null);
+        updateData('folderFileCount', null);
+        updateData('files', null);
     };
 
     return (
@@ -79,6 +116,43 @@ export function FileInputConfig({ data, updateData, isDark }) {
                                             {t('flows.editor.config.random_file_desc')}
                                         </span>
                                     </div>
+                                </div>
+                            </div>
+                        ) : selectionType === 'files' && filesArray ? (
+                            /* Multiple Files Preview */
+                            <div className="p-4">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isDark ? 'bg-violet-500/20' : 'bg-violet-50'}`}>
+                                        <span className={`text-xl font-bold ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
+                                            {filesArray.length}
+                                        </span>
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                            {filesArray.length} {t('flows.editor.config.files_selected', 'files selected')}
+                                        </p>
+                                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${isDark ? 'bg-violet-500/20 text-violet-400' : 'bg-violet-100 text-violet-600'}`}>
+                                            {t('flows.editor.config.multi_mode', 'Multi-file')}
+                                        </span>
+                                    </div>
+                                </div>
+                                {/* File list preview */}
+                                <div className={`space-y-1 max-h-32 overflow-y-auto ${isDark ? 'scrollbar-dark' : ''}`}>
+                                    {filesArray.slice(0, 5).map((file, idx) => (
+                                        <div key={file.id || idx} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-100'}`}>
+                                            <span className={`text-xs truncate flex-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                {file.name}
+                                            </span>
+                                            <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                {file.type}
+                                            </span>
+                                        </div>
+                                    ))}
+                                    {filesArray.length > 5 && (
+                                        <p className={`text-xs text-center py-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                            +{filesArray.length - 5} {t('common.more', 'more')}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         ) : (
@@ -176,13 +250,14 @@ export function FileInputConfig({ data, updateData, isDark }) {
                 </div>
             )}
 
-            {/* Media Picker Modal */}
-            <MediaPickerModal
+            {/* Media Library Modal */}
+            <MediaLibraryModal
                 isOpen={showMediaPicker}
                 onClose={() => setShowMediaPicker(false)}
                 onSelect={handleFileSelected}
                 onSelectFolder={handleFolderSelected}
                 allowFolderSelection={true}
+                allowMultiple={true}
                 fileType="any"
             />
         </>

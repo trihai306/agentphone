@@ -4,51 +4,30 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreDataCollectionRequest;
 use App\Models\DataCollection;
-use App\Models\DataRecord;
+use App\Services\DataCollectionService;
+use App\Services\DataCollectionCacheService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class DataCollectionController extends Controller
 {
+    public function __construct(
+        protected DataCollectionService $collectionService,
+        protected DataCollectionCacheService $cacheService
+    ) {
+    }
+
     /**
-     * Display a listing of collections (Grid view)
+     * Display a listing of collections
      */
     public function index()
     {
         $user = Auth::user();
 
-        $collections = $user->dataCollections()
-            ->withCount([
-                'records' => function ($query) {
-                    $query->where('status', 'active');
-                }
-            ])
-            ->orderBy('updated_at', 'desc')
-            ->get()
-            ->map(fn($collection) => [
-                'id' => $collection->id,
-                'name' => $collection->name,
-                'description' => $collection->description,
-                'icon' => $collection->icon,
-                'color' => $collection->color,
-                'total_records' => $collection->total_records,
-                'schema' => $collection->schema,
-                'updated_at' => $collection->updated_at->diffForHumans(),
-                'created_at' => $collection->created_at->toISOString(),
-            ]);
-
-        $totalRecords = DataRecord::whereHas('collection', function ($query) use ($user) {
-            $query->where('user_id', $user->id);
-        })->where('status', 'active')->count();
-
         return Inertia::render('DataCollections/Index', [
-            'collections' => $collections,
-            'stats' => [
-                'total_collections' => $user->dataCollections()->count(),
-                'total_records' => $totalRecords,
-                'active_workflows' => 0, // TODO: Count workflows using data sources
-            ],
+            'collections' => $this->collectionService->getCollectionsForUser($user),
+            'stats' => $this->collectionService->getCollectionStats($user),
         ]);
     }
 
@@ -73,89 +52,33 @@ class DataCollectionController extends Controller
     }
 
     /**
-     * Display the specified collection with records (Table view)
-     * Optimized with cursor pagination for handling millions of records
+     * Display the specified collection with records
      */
     public function show(Request $request, DataCollection $dataCollection)
     {
         $this->authorize('view', $dataCollection);
 
-        // Get cache service
-        $cache = app(\App\Services\DataCollectionCacheService::class);
+        $params = [
+            'cursor' => $request->input('cursor'),
+            'direction' => $request->input('direction', 'next'),
+            'per_page' => $request->input('per_page', 50),
+            'search' => $request->input('search'),
+            'sort' => $request->input('sort', 'id'),
+            'order' => $request->input('order', 'desc'),
+        ];
 
-        // Parse query parameters
-        $cursor = $request->input('cursor'); // Record ID for cursor pagination
-        $direction = $request->input('direction', 'next'); // next or prev
-        $perPage = min((int) $request->input('per_page', 50), 100); // Max 100
-        $search = $request->input('search');
-        $sortField = $request->input('sort', 'id');
-        $sortDir = $request->input('order', 'desc');
-
-        // Build optimized query
-        $query = $dataCollection->records()
-            ->where('status', 'active')
-            ->whereNull('deleted_at');
-
-        // Apply search if provided (uses fulltext index if available)
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                // Search in JSON data field
-                $q->whereRaw("JSON_SEARCH(LOWER(data), 'one', LOWER(?)) IS NOT NULL", ["%{$search}%"]);
-            });
-        }
-
-        // Apply cursor pagination (O(1) performance!)
-        if ($cursor) {
-            if ($direction === 'next') {
-                $query->where('id', '<', $cursor);
-            } else {
-                $query->where('id', '>', $cursor);
-            }
-        }
-
-        // Order and limit
-        $query->orderBy($sortField === 'created_at' ? 'created_at' : 'id', $sortDir);
-
-        // Fetch one extra to determine if there are more pages
-        $records = $query->limit($perPage + 1)->get();
-
-        // Check if there are more records
-        $hasMore = $records->count() > $perPage;
-        if ($hasMore) {
-            $records = $records->take($perPage);
-        }
-
-        // Get cursors for navigation
-        $nextCursor = $hasMore && $records->isNotEmpty() ? $records->last()->id : null;
-        $prevCursor = $cursor ? $records->first()?->id : null;
-
-        // Map records
-        $mappedRecords = $records->map(fn($record) => [
-            'id' => $record->id,
-            'data' => $record->data,
-            'created_at' => $record->created_at?->toISOString(),
-            'updated_at' => $record->updated_at?->diffForHumans(),
-        ]);
-
-        // Get total count from cache (critical for large tables!)
-        $totalRecords = $cache->getRecordCount($dataCollection);
+        $totalRecords = $this->cacheService->getRecordCount($dataCollection);
 
         return Inertia::render('DataCollections/Show', [
-            'collection' => $cache->getMetadata($dataCollection) + [
+            'collection' => $this->cacheService->getMetadata($dataCollection) + [
                 'total_records' => $totalRecords,
                 'updated_at' => $dataCollection->updated_at?->diffForHumans(),
             ],
-            'records' => [
-                'data' => $mappedRecords,
-                'next_cursor' => $nextCursor,
-                'prev_cursor' => $prevCursor,
-                'has_more' => $hasMore,
-                'per_page' => $perPage,
-            ],
+            'records' => $this->collectionService->getRecordsWithPagination($dataCollection, $params),
             'filters' => [
-                'search' => $search,
-                'sort' => $sortField,
-                'order' => $sortDir,
+                'search' => $params['search'],
+                'sort' => $params['sort'],
+                'order' => $params['order'],
             ],
         ]);
     }
@@ -209,35 +132,14 @@ class DataCollectionController extends Controller
             'records' => 'required|array',
         ]);
 
-        // Create collection
-        $collection = Auth::user()->dataCollections()->create([
-            'name' => $validated['name'],
-            'description' => $validated['description'] ?? 'Imported from CSV',
-            'icon' => $validated['icon'] ?? '📊',
-            'color' => $validated['color'] ?? '#3b82f6',
-            'schema' => $validated['schema'],
-            'total_records' => count($validated['records']),
-        ]);
-
-        // Create records
-        $recordCount = 0;
-        foreach ($validated['records'] as $recordData) {
-            $collection->records()->create([
-                'data' => $recordData,
-                'status' => 'active',
-            ]);
-            $recordCount++;
-        }
-
-        // Update total_records count
-        $collection->update(['total_records' => $recordCount]);
+        $collection = $this->collectionService->createFromImport(Auth::user(), $validated);
 
         return redirect()->route('data-collections.show', $collection)
-            ->with('success', "Collection created with {$recordCount} records!");
+            ->with('success', "Collection created with {$collection->total_records} records!");
     }
 
     /**
-     * Import data from CSV
+     * Import data from CSV file
      */
     public function import(Request $request, DataCollection $dataCollection)
     {
@@ -248,54 +150,24 @@ class DataCollectionController extends Controller
             'mapping' => 'required|array',
         ]);
 
-        $file = $request->file('file');
-        $mapping = $request->mapping;
-
-        $csv = array_map('str_getcsv', file($file->getRealPath()));
-        $headers = array_shift($csv);
-
-        $imported = 0;
-        foreach ($csv as $row) {
-            $data = [];
-            foreach ($mapping as $schemaField => $csvColumn) {
-                $columnIndex = array_search($csvColumn, $headers);
-                if ($columnIndex !== false) {
-                    $data[$schemaField] = $row[$columnIndex] ?? null;
-                }
-            }
-
-            $dataCollection->records()->create([
-                'data' => $data,
-                'status' => 'active',
-            ]);
-            $imported++;
-        }
+        $imported = $this->collectionService->importFromFile(
+            $dataCollection,
+            $request->file('file'),
+            $request->mapping
+        );
 
         return back()->with('success', "Imported {$imported} records successfully!");
     }
 
     /**
      * Export collection to CSV
-     * Supports bulk export by passing ?ids=1,2,3 query parameter
      */
     public function export(Request $request, DataCollection $dataCollection)
     {
         $this->authorize('view', $dataCollection);
 
-        // Get specific record IDs if provided (for bulk export)
         $ids = $request->input('ids');
         $recordIds = $ids ? explode(',', $ids) : null;
-
-        // Build query
-        $query = $dataCollection->records()->where('status', 'active');
-
-        // Filter by specific IDs if provided
-        if ($recordIds) {
-            $query->whereIn('id', $recordIds);
-        }
-
-        $records = $query->get();
-        $schema = $dataCollection->schema;
 
         $filename = str_slug($dataCollection->name) . '-' . now()->format('Y-m-d') . '.csv';
         $headers = [
@@ -303,24 +175,7 @@ class DataCollectionController extends Controller
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
-        $callback = function () use ($records, $schema) {
-            $file = fopen('php://output', 'w');
-
-            // Header row
-            $headerRow = array_column($schema, 'name');
-            fputcsv($file, $headerRow);
-
-            // Data rows
-            foreach ($records as $record) {
-                $row = [];
-                foreach ($schema as $field) {
-                    $row[] = $record->data[$field['name']] ?? '';
-                }
-                fputcsv($file, $row);
-            }
-
-            fclose($file);
-        };
+        $callback = $this->collectionService->exportToCsv($dataCollection, $recordIds);
 
         return response()->stream($callback, 200, $headers);
     }

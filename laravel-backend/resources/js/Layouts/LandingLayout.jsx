@@ -19,10 +19,8 @@ export default function LandingLayout({ children }) {
                     <div className="flex items-center justify-between h-20">
                         {/* Logo */}
                         <Link href="/" className="flex items-center gap-3 group">
-                            <div className="relative w-11 h-11 bg-gradient-to-br from-purple-500 via-blue-600 to-cyan-500 rounded-2xl flex items-center justify-center shadow-xl shadow-purple-500/30 group-hover:shadow-purple-500/50 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3">
-                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
+                            <div className="relative w-11 h-11 rounded-2xl overflow-hidden shadow-xl shadow-purple-500/30 group-hover:shadow-purple-500/50 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3">
+                                <img src="/images/logo.png" alt="CLICKAI Logo" className="w-full h-full object-cover" />
                                 {/* Glow effect */}
                                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500 to-cyan-500 opacity-0 group-hover:opacity-30 blur-xl transition-opacity"></div>
                             </div>
@@ -201,10 +199,8 @@ export default function LandingLayout({ children }) {
                         {/* Company Info */}
                         <div className="col-span-1 md:col-span-2">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-11 h-11 bg-gradient-to-br from-purple-500 via-blue-600 to-cyan-500 rounded-2xl flex items-center justify-center shadow-xl">
-                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                    </svg>
+                                <div className="w-11 h-11 rounded-2xl overflow-hidden shadow-xl">
+                                    <img src="/images/logo.png" alt="CLICKAI Logo" className="w-full h-full object-cover" />
                                 </div>
                                 <span className="text-2xl font-extrabold bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent">
                                     CLICKAI
@@ -265,8 +261,8 @@ function NavLink({ href, children, active = false }) {
         <Link
             href={href}
             className={`relative px-4 py-2 font-bold text-sm rounded-xl transition-all duration-300 ${active
-                    ? 'text-white bg-gradient-to-r from-purple-600 to-blue-600 shadow-lg shadow-purple-500/30'
-                    : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
+                ? 'text-white bg-gradient-to-r from-purple-600 to-blue-600 shadow-lg shadow-purple-500/30'
+                : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
                 }`}
         >
             {children}

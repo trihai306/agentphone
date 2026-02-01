@@ -1,0 +1,40 @@
+# Docker files
+docker-compose.override.yml
+.docker-data/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Laravel
+/vendor/
+/node_modules/
+/.phpunit.result.cache
+/.phpunit.cache
+/public/hot
+/public/storage
+/public/build
+/storage/*.key
+/storage/logs/*.log
+
+# Environment
+.env
+.env.backup
+.env.production
+
+# Logs
+*.log
+npm-debug.log*
+
+# Testing
+/coverage/
+.phpunit.result.cache
+
+# Build
+/public/build/

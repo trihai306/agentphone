@@ -73,8 +73,8 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
                     {!collapsed ? (
                         <>
                             <Link href="/" className="flex items-center gap-3 group">
-                                <div className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-                                    <span className="text-sm font-bold text-white">C</span>
+                                <div className="relative w-8 h-8 rounded-xl overflow-hidden shadow-lg shadow-violet-500/30">
+                                    <img src="/images/logo.png" alt="CLICKAI" className="w-full h-full object-cover" />
                                     <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border-2 border-white dark:border-[#0c0c0e]" />
                                 </div>
                                 <span className={`text-sm font-bold bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent`}>
@@ -92,8 +92,8 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
                             </button>
                         </>
                     ) : (
-                        <div className="mx-auto w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-                            <span className="text-sm font-bold text-white">C</span>
+                        <div className="mx-auto w-8 h-8 rounded-xl overflow-hidden shadow-lg shadow-violet-500/30">
+                            <img src="/images/logo.png" alt="CLICKAI" className="w-full h-full object-cover" />
                         </div>
                     )}
                 </div>

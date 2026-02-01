@@ -9,7 +9,8 @@ export default function Show({ task, userApplication, userDevices = [], canApply
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
-    const formatVND = (value) => new Intl.NumberFormat('vi-VN').format(value || 0);
+    // 1 Xu = 100 VNĐ
+    const toXu = (vnd) => Math.floor((vnd || 0) / 100);
     const formatDate = (date) => date ? new Date(date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null;
 
     const [showApplyModal, setShowApplyModal] = useState(false);
@@ -87,16 +88,13 @@ export default function Show({ task, userApplication, userDevices = [], canApply
                                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${status.bg} ${status.text}`}>
                                         {status.label}
                                     </span>
-                                    {task.reward_amount > 0 && (
-                                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-white/90 text-gray-900">
-                                            💰 {formatVND(task.reward_amount)} đ
-                                        </span>
-                                    )}
-                                    {task.reward_amount <= 0 && (
-                                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-400 text-white">
-                                            🆓 {t('tasks.free_task', 'MIỄN PHÍ')}
-                                        </span>
-                                    )}
+                                    {/* Reward in Xu */}
+                                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/90 text-white flex items-center gap-1.5">
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {toXu(task.reward_amount).toLocaleString()} Xu
+                                    </span>
                                 </div>
                                 <h1 className="text-3xl font-bold text-white mb-2">{task.title}</h1>
                                 <p className="text-white/80 text-lg">{task.description || t('tasks.no_description', 'Không có mô tả')}</p>

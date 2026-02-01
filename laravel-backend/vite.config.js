@@ -13,4 +13,12 @@ export default defineConfig({
             include: "**/*.{jsx,tsx}",
         }),
     ],
+    server: {
+        host: '0.0.0.0',
+        port: 5174,  // Changed from 5173 to avoid conflict
+        hmr: {
+            host: 'localhost',
+            port: 5174,
+        },
+    },
 });

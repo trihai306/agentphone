@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CustomFieldController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DesignSystemController;
 use App\Http\Controllers\ErrorReportController;
 use App\Http\Controllers\FlowController;
 use App\Http\Controllers\FeaturesController;
@@ -44,6 +45,7 @@ Route::get('/pricing', [PricingController::class, 'index'])->name('pricing');
 Route::get('/about', [AboutController::class, 'index'])->name('about');
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+Route::get('/design-system', [DesignSystemController::class, 'index'])->name('design-system');
 
 // Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -96,6 +98,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/topup/process', [TopupController::class, 'process'])->name('topup.process');
     Route::get('/topup/{topup}/payment', [TopupController::class, 'payment'])->name('topup.payment');
     Route::get('/topup/history', [TopupController::class, 'history'])->name('topup.history');
+    Route::post('/topup/purchase-xu', [TopupController::class, 'purchaseXu'])->name('topup.purchase-xu');
 
     // Wallet & Transaction History
     Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
@@ -174,6 +177,7 @@ Route::middleware(['auth'])->group(function () {
     // JSON endpoints for media picker modal (session auth)
     Route::get('/media/list.json', [MediaController::class, 'apiList'])->name('media.apiList');
     Route::get('/media/folders.json', [MediaController::class, 'apiFolders'])->name('media.apiFolders');
+    Route::get('/media/stats.json', [MediaController::class, 'apiStats'])->name('media.apiStats');
     Route::resource('media', MediaController::class)->except(['create', 'edit']);
     Route::post('/media/{medium}/move', [MediaController::class, 'move'])->name('media.move');
 

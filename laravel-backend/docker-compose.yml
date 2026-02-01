@@ -1,0 +1,137 @@
+# Docker Compose for Laravel Backend Development
+# Soketi connects to production domain (clickai.lionsoftware.cloud)
+# Includes: Laravel Octane, Queue Workers, Scheduler, MySQL, Redis
+
+# version removed (deprecated in newer Docker Compose)
+
+services:
+  # ============================================
+  # Laravel Application (Octane + Queue + Scheduler)
+  # ============================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: clickai-laravel
+    restart: unless-stopped
+    ports:
+      - "8001:8000" # Laravel Octane
+      - "5174:5174" # Vite dev server (5174 to avoid conflict with local 5173)
+    volumes:
+      # Mount source code for development
+      - .:/var/www/html
+      # Persist storage
+      - ./storage:/var/www/html/storage
+      # Exclude vendor and node_modules (use container's)
+      - /var/www/html/vendor
+      - /var/www/html/node_modules
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: laravel_backend
+      DB_USERNAME: root
+      DB_PASSWORD: admin
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      QUEUE_CONNECTION: redis
+      CACHE_STORE: redis
+      # Soketi connects to production domain
+      BROADCAST_CONNECTION: pusher
+      PUSHER_HOST: clickai.lionsoftware.cloud
+      PUSHER_PORT: 443
+      PUSHER_SCHEME: https
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - clickai-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ============================================
+  # MySQL Database
+  # ============================================
+  mysql:
+    image: mysql:8.0
+    container_name: clickai-mysql
+    restart: unless-stopped
+    # ports:
+    #   - "3307:3306"  # Uncomment if you need external access
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: laravel_backend
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - clickai-network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-padmin" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ============================================
+  # Redis (Queue & Cache)
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: clickai-redis
+    restart: unless-stopped
+    # ports:
+    #   - "6380:6379"  # Uncomment if you need external access
+    volumes:
+      - redis-data:/data
+    networks:
+      - clickai-network
+    command: redis-server --appendonly yes
+
+  # ============================================
+  # phpMyAdmin (Optional - Database Management)
+  # ============================================
+  phpmyadmin:
+    image: phpmyadmin:5
+    container_name: clickai-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: admin
+    depends_on:
+      - mysql
+    networks:
+      - clickai-network
+
+  # ============================================
+  # Mailpit (Local Email Testing)
+  # ============================================
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: clickai-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
+    networks:
+      - clickai-network
+
+networks:
+  clickai-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:

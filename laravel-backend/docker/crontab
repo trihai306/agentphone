@@ -1,0 +1,2 @@
+# Laravel Scheduler Cron
+* * * * * www-data cd /var/www/html && php artisan schedule:run >> /var/www/html/storage/logs/scheduler.log 2>&1

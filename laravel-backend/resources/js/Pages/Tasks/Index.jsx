@@ -9,7 +9,8 @@ export default function Index({ tasks = { data: [] }, filters: rawFilters = {}, 
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
-    const formatVND = (value) => new Intl.NumberFormat('vi-VN').format(value || 0);
+    // 1 Xu = 100 VNĐ
+    const toXu = (vnd) => Math.floor((vnd || 0) / 100);
 
     // Defensive: PHP empty array becomes [] in JS, convert to object
     const filters = Array.isArray(rawFilters) ? {} : (rawFilters || {});
@@ -179,26 +180,6 @@ export default function Index({ tasks = { data: [] }, filters: rawFilters = {}, 
                             <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                 <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{tasks?.total || 0}</span> {t('common.results', 'kết quả')}
                             </span>
-
-                            {/* Price Filter Pills */}
-                            <div className={`flex rounded-xl overflow-hidden ${isDark ? 'bg-white/5 border border-white/10' : 'bg-gray-100'}`}>
-                                {[
-                                    { value: 'all', label: t('common.all', 'Tất cả') },
-                                    { value: 'free', label: t('tasks.free', 'Miễn phí') },
-                                    { value: 'paid', label: t('tasks.paid', 'Có thưởng') },
-                                ].map((option) => (
-                                    <button
-                                        key={option.value}
-                                        onClick={() => handleFilterChange('price', option.value)}
-                                        className={`px-4 py-2 text-xs font-medium transition-all ${filterPriceType === option.value
-                                            ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white'
-                                            : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-                                            }`}
-                                    >
-                                        {option.label}
-                                    </button>
-                                ))}
-                            </div>
                         </div>
 
                         {/* Sort */}
@@ -231,13 +212,13 @@ export default function Index({ tasks = { data: [] }, filters: rawFilters = {}, 
                                             <div className="absolute top-4 right-4 w-20 h-20 rounded-full bg-white/10 blur-xl" />
                                             <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-black/10 blur-2xl -translate-x-1/2 translate-y-1/2" />
 
-                                            {/* Reward Badge */}
+                                            {/* Reward Badge - In Xu */}
                                             <div className="absolute top-4 right-4">
-                                                <span className={`px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md ${task.reward_amount <= 0
-                                                    ? 'bg-emerald-500/90 text-white'
-                                                    : 'bg-white/90 text-gray-900'
-                                                    }`}>
-                                                    {task.reward_amount <= 0 ? t('tasks.free_task', 'MIỄN PHÍ') : `${formatVND(task.reward_amount)} đ`}
+                                                <span className="px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md bg-amber-500/90 text-white flex items-center gap-1.5">
+                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    {toXu(task.reward_amount).toLocaleString()} Xu
                                                 </span>
                                             </div>
 
