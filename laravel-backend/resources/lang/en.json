@@ -1020,7 +1020,15 @@
         "popular": "Popular",
         "choose_plan": "Choose plan",
         "get_started": "Get started",
-        "contact_sales": "Contact sales"
+        "contact_sales": "Contact sales",
+        "hero_title_1": "Simple &",
+        "hero_title_2": "Transparent Pricing",
+        "hero_desc": "Choose the plan that fits your needs",
+        "transparent": "Transparent",
+        "one_time": "One-Time",
+        "subscription": "Subscription",
+        "all": "All",
+        "credits": "Credits"
     },
     "profile": {
         "title": "Profile",
@@ -1041,7 +1049,20 @@
         "name": "Name",
         "email": "Email",
         "save_changes": "Save Changes",
-        "update_password": "Update Password"
+        "update_password": "Update Password",
+        "bio": "Bio",
+        "bio_placeholder": "Write a few lines about yourself...",
+        "phone": "Phone",
+        "location": "Location",
+        "activity_overview": "Activity Overview",
+        "active_packages": "Active Packages",
+        "wallet_balance": "Wallet Balance",
+        "ai_credits": "AI Credits",
+        "storage": "Storage",
+        "used": "Used",
+        "expires": "Expires",
+        "media_files": "Media Files",
+        "data_collections": "Data Collections"
     },
     "topup": {
         "title": "Top Up",
@@ -1194,7 +1215,12 @@
         "gallery": "Gallery",
         "cost": "Cost",
         "credits_required": "Credits required",
-        "remaining_credits": "Remaining credits"
+        "remaining_credits": "Remaining credits",
+        "retry": "Retry",
+        "retry_title": "Retry Generation",
+        "retry_started": "Retrying...",
+        "confirm_retry": "Are you sure you want to retry?",
+        "generation_completed": "Generation completed!"
     },
     "ai_credits": {
         "title": "AI Credits",
@@ -1211,7 +1237,23 @@
         "credit_usage": "Credit Usage",
         "cost_per_image": "1 credit per image",
         "cost_per_video": "5 credits per video",
-        "purchase_success": "Successfully purchased {{credits}} AI credits!"
+        "purchase_success": "Successfully purchased {{credits}} AI credits!",
+        "custom_amount": {
+            "title": "Custom Amount Purchase",
+            "subtitle": "Enter the number of credits you want to buy",
+            "amount_label": "Number of Credits",
+            "min_amount": "Minimum 10 credits",
+            "min_amount_error": "Minimum amount is 10 credits",
+            "rate": "Rate: 1 credit = $0.04",
+            "will_receive": "You will receive",
+            "to_receive": "credits",
+            "purchase_button": "Purchase Credits",
+            "confirm_title": "Confirm Purchase",
+            "confirm_question": "Are you sure you want to buy?",
+            "confirm_message": "Buy {{credits}} credits for {{price}}",
+            "insufficient_balance": "Insufficient wallet balance",
+            "success": "Purchase successful!"
+        }
     },
     "media": {
         "title": "Media Library",
@@ -1775,20 +1817,23 @@
         }
     },
     "header": {
-        "welcome_back": "Welcome back"
+        "welcome_back": "Welcome back",
+        "xu_tooltip": "XU - Your currency unit",
+        "contact_zalo": "Contact via Zalo",
+        "contact_facebook": "Contact via Facebook"
     },
     "tasks": {
         "title": "Tasks",
         "subtitle": "Task Marketplace - Share and earn from workflows",
         "create": "Create Task",
         "my_tasks": "My Tasks",
-        "my_tasks_subtitle": "Manage your created and accepted tasks",
+        "my_tasks_subtitle": "Manage tasks you created and accepted",
         "created_tasks": "Created",
         "accepted_tasks": "Accepted",
         "no_created_tasks": "No tasks created yet",
         "no_accepted_tasks": "No tasks accepted yet",
-        "create_first_prompt": "Create your first task to share a workflow",
-        "browse_tasks": "Browse tasks to get started",
+        "create_first_prompt": "Create your first task to share workflows",
+        "browse_tasks": "Browse task list to get started",
         "browse": "Browse Tasks",
         "search_placeholder": "Search tasks...",
         "open": "Open",
@@ -1800,6 +1845,15 @@
         "rejected": "Rejected",
         "running": "Running",
         "failed": "Failed",
+        "available": "Available",
+        "be_first": "Be the first to create a task!",
+        "create_first": "Create first task",
+        "description": "Task description",
+        "tags": "Tags",
+        "required_devices": "Required devices",
+        "deadline_soon": "Deadline soon",
+        "reward_high": "High reward",
+        "reward_low": "Low reward",
         "pending_apps": "pending",
         "devices_needed": "devices needed",
         "devices_accepted": "Devices accepted",
@@ -1899,6 +1953,24 @@
                 "tools": "Tools",
                 "memory": "Memory",
                 "output": "Output"
+            },
+            "configTitle": "AI Configuration",
+            "configSubtitle": "Set up model and prompt",
+            "test": "Test",
+            "testing": "Testing...",
+            "llm": {
+                "title": "LLM Model",
+                "provider": "Provider",
+                "model": "Model",
+                "apiToken": "API Token",
+                "advanced": "Advanced"
+            },
+            "prompt": {
+                "title": "Prompt",
+                "placeholder": "Enter your prompt..."
+            },
+            "output": {
+                "title": "Output"
             }
         }
     }

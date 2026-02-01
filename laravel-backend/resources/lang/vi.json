@@ -120,6 +120,7 @@
     "auth": {
         "login": {
             "title": "Đăng Nhập",
+            "subtitle": "Đăng nhập vào tài khoản của bạn",
             "email": "Email",
             "password": "Mật khẩu",
             "remember_me": "Ghi nhớ đăng nhập",
@@ -1020,7 +1021,15 @@
         "popular": "Phổ biến",
         "choose_plan": "Chọn gói",
         "get_started": "Bắt đầu",
-        "contact_sales": "Liên hệ bán hàng"
+        "contact_sales": "Liên hệ bán hàng",
+        "hero_title_1": "Định Giá",
+        "hero_title_2": "Đơn Giản & Minh Bạch",
+        "hero_desc": "Chọn gói phù hợp với nhu cầu của bạn",
+        "transparent": "Minh Bạch",
+        "one_time": "Thanh Toán Một Lần",
+        "subscription": "Thuê Bao",
+        "all": "Tất Cả",
+        "credits": "Credits"
     },
     "profile": {
         "title": "Hồ Sơ",
@@ -1041,7 +1050,20 @@
         "name": "Họ tên",
         "email": "Email",
         "save_changes": "Lưu thay đổi",
-        "update_password": "Cập nhật mật khẩu"
+        "update_password": "Cập nhật mật khẩu",
+        "bio": "Giới thiệu",
+        "bio_placeholder": "Viết vài dòng về bản thân...",
+        "phone": "Số điện thoại",
+        "location": "Địa điểm",
+        "activity_overview": "Tổng Quan Hoạt Động",
+        "active_packages": "Gói Đang Sử Dụng",
+        "wallet_balance": "Số Dư Ví",
+        "ai_credits": "AI Credits",
+        "storage": "Dung Lượng",
+        "used": "Đã dùng",
+        "expires": "Hết hạn",
+        "media_files": "Tệp Media",
+        "data_collections": "Bộ Sưu Tập Dữ Liệu"
     },
     "topup": {
         "title": "Nạp Tiền",
@@ -1194,7 +1216,12 @@
         "gallery": "Thư Viện",
         "cost": "Chi phí",
         "credits_required": "Credits cần",
-        "remaining_credits": "Credits còn lại"
+        "remaining_credits": "Credits còn lại",
+        "retry": "Thử Lại",
+        "retry_title": "Thử Lại Tạo",
+        "retry_started": "Đang thử lại...",
+        "confirm_retry": "Bạn có chắc muốn thử lại?",
+        "generation_completed": "Tạo hoàn tất!"
     },
     "ai_credits": {
         "title": "AI Credits",
@@ -1211,7 +1238,23 @@
         "credit_usage": "Sử Dụng Credits",
         "cost_per_image": "1 credit mỗi ảnh",
         "cost_per_video": "5 credits mỗi video",
-        "purchase_success": "Mua {{credits}} AI credits thành công!"
+        "purchase_success": "Mua {{credits}} AI credits thành công!",
+        "custom_amount": {
+            "title": "Mua Số Lượng Tùy Chỉnh",
+            "subtitle": "Nhập số credits bạn muốn mua",
+            "amount_label": "Số Credits",
+            "min_amount": "Tối thiểu 10 credits",
+            "min_amount_error": "Số lượng tối thiểu là 10 credits",
+            "rate": "Tỷ giá: 1 credit = 1.000đ",
+            "will_receive": "Bạn sẽ nhận được",
+            "to_receive": "credits",
+            "purchase_button": "Mua Credits",
+            "confirm_title": "Xác Nhận Mua",
+            "confirm_question": "Bạn có chắc muốn mua?",
+            "confirm_message": "Mua {{credits}} credits với giá {{price}}",
+            "insufficient_balance": "Số dư ví không đủ",
+            "success": "Mua thành công!"
+        }
     },
     "media": {
         "title": "Thư Viện",
@@ -1363,7 +1406,9 @@
         "success": "Thành công!",
         "error": "Lỗi!",
         "warning": "Cảnh báo!",
-        "info": "Thông tin"
+        "info": "Thông tin",
+        "empty": "Không có thông báo nào",
+        "view_all": "Xem tất cả"
     },
     "error_reports": {
         "title": "Báo Lỗi",
@@ -1781,7 +1826,10 @@
         }
     },
     "header": {
-        "welcome_back": "Chào mừng trở lại"
+        "welcome_back": "Chào mừng trở lại",
+        "xu_tooltip": "XU - Đơn vị tiền tệ của bạn",
+        "contact_zalo": "Liên hệ qua Zalo",
+        "contact_facebook": "Liên hệ qua Facebook"
     },
     "tasks": {
         "title": "Nhiệm Vụ",
@@ -1806,6 +1854,15 @@
         "rejected": "Từ chối",
         "running": "Đang chạy",
         "failed": "Thất bại",
+        "available": "Khả Dụng",
+        "be_first": "Hãy là người đầu tiên tạo nhiệm vụ!",
+        "create_first": "Tạo nhiệm vụ đầu tiên",
+        "description": "Mô tả nhiệm vụ",
+        "tags": "Tags",
+        "required_devices": "Thiết bị yêu cầu",
+        "deadline_soon": "Sắp hết hạn",
+        "reward_high": "Thưởng cao",
+        "reward_low": "Thưởng thấp",
         "pending_apps": "chờ duyệt",
         "devices_needed": "máy cần",
         "devices_accepted": "Máy đã nhận",
@@ -1905,6 +1962,24 @@
                 "tools": "Công cụ",
                 "memory": "Bộ nhớ",
                 "output": "Đầu ra"
+            },
+            "configTitle": "Cấu Hình AI",
+            "configSubtitle": "Thiết lập model và prompt",
+            "test": "Kiểm Tra",
+            "testing": "Đang kiểm tra...",
+            "llm": {
+                "title": "Model LLM",
+                "provider": "Nhà cung cấp",
+                "model": "Model",
+                "apiToken": "API Token",
+                "advanced": "Nâng cao"
+            },
+            "prompt": {
+                "title": "Prompt",
+                "placeholder": "Nhập prompt của bạn..."
+            },
+            "output": {
+                "title": "Đầu Ra"
             }
         }
     }
