@@ -1,0 +1,7 @@
+# E2E Test Results
+tests/e2e/results/
+tests/e2e/reports/
+
+# Playwright
+playwright-report/
+test-results/

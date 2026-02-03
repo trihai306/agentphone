@@ -200,6 +200,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/generate/image-to-video', [AiGenerationController::class, 'generateVideoFromImage'])->name('generate.image-to-video');
         Route::post('/estimate-cost', [AiGenerationController::class, 'estimateCost'])->name('estimate-cost');
         Route::get('/generations', [AiGenerationController::class, 'myGenerations'])->name('generations');
+        Route::get('/gallery', [AiGenerationController::class, 'myGenerations'])->name('gallery'); // Alias for gallery
         Route::get('/generations/{generation}', [AiGenerationController::class, 'show'])->name('generations.show');
         Route::get('/generations/{generation}/status', [AiGenerationController::class, 'checkStatus'])->name('generations.status');
         Route::delete('/generations/{generation}', [AiGenerationController::class, 'delete'])->name('generations.delete');

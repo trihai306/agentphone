@@ -1,0 +1,280 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - complementary [ref=e5]:
+    - generic [ref=e6]:
+      - link "CLICKAI CLICKAI" [ref=e8] [cursor=pointer]:
+        - /url: /
+        - img "CLICKAI" [ref=e10]
+        - generic [ref=e12]: CLICKAI
+      - navigation [ref=e13]:
+        - generic [ref=e14]:
+          - paragraph [ref=e16]: Chính
+          - generic [ref=e17]:
+            - link "Bảng Điều Khiển" [ref=e19] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e20]
+              - generic [ref=e22]: Bảng Điều Khiển
+            - link "Thiết Bị" [ref=e24] [cursor=pointer]:
+              - /url: /devices
+              - img [ref=e25]
+              - generic [ref=e27]: Thiết Bị
+        - generic [ref=e28]:
+          - generic [ref=e29]:
+            - generic [ref=e30]: ⚡
+            - paragraph [ref=e31]: Tự Động Hóa
+          - generic [ref=e32]:
+            - link "Workflows" [ref=e34] [cursor=pointer]:
+              - /url: /flows
+              - img [ref=e35]
+              - generic [ref=e37]: Workflows
+            - link "Campaigns" [ref=e39] [cursor=pointer]:
+              - /url: /campaigns
+              - img [ref=e40]
+              - generic [ref=e42]: Campaigns
+            - link "Nhiệm Vụ" [ref=e44] [cursor=pointer]:
+              - /url: /tasks
+              - img [ref=e45]
+              - generic [ref=e47]: Nhiệm Vụ
+            - link "Jobs" [ref=e49] [cursor=pointer]:
+              - /url: /jobs
+              - img [ref=e50]
+              - generic [ref=e52]: Jobs
+            - link "Dữ Liệu" [ref=e54] [cursor=pointer]:
+              - /url: /data-collections
+              - img [ref=e55]
+              - generic [ref=e57]: Dữ Liệu
+        - generic [ref=e58]:
+          - paragraph [ref=e60]: Tài Nguyên
+          - generic [ref=e61]:
+            - link "AI Studio" [ref=e63] [cursor=pointer]:
+              - /url: /ai-studio
+              - img [ref=e64]
+              - generic [ref=e66]: AI Studio
+            - link "AI Credits" [ref=e68] [cursor=pointer]:
+              - /url: /ai-credits
+              - img [ref=e69]
+              - generic [ref=e71]: AI Credits
+            - link "Marketplace" [ref=e73] [cursor=pointer]:
+              - /url: /marketplace
+              - img [ref=e74]
+              - generic [ref=e76]: Marketplace
+            - link "Thư Viện" [ref=e78] [cursor=pointer]:
+              - /url: /media
+              - img [ref=e79]
+              - generic [ref=e81]: Thư Viện
+        - generic [ref=e82]:
+          - paragraph [ref=e84]: Tài Chính
+          - generic [ref=e85]:
+            - link "Ví Tiền" [ref=e87] [cursor=pointer]:
+              - /url: /wallet
+              - img [ref=e88]
+              - generic [ref=e90]: Ví Tiền
+            - link "Nạp Tiền" [ref=e92] [cursor=pointer]:
+              - /url: /topup
+              - img [ref=e93]
+              - generic [ref=e95]: Nạp Tiền
+            - link "Rút Tiền" [ref=e97] [cursor=pointer]:
+              - /url: /withdraw
+              - img [ref=e98]
+              - generic [ref=e100]: Rút Tiền
+            - link "Tài Khoản NH" [ref=e102] [cursor=pointer]:
+              - /url: /bank-accounts
+              - img [ref=e103]
+              - generic [ref=e105]: Tài Khoản NH
+            - link "Gói Dịch Vụ" [ref=e107] [cursor=pointer]:
+              - /url: /packages
+              - img [ref=e108]
+              - generic [ref=e110]: Gói Dịch Vụ
+        - generic [ref=e111]:
+          - paragraph [ref=e112]: Truy Cập Nhanh
+          - generic [ref=e113]:
+            - link "Thông Báo" [ref=e115] [cursor=pointer]:
+              - /url: /notifications
+              - img [ref=e116]
+              - generic [ref=e118]: Thông Báo
+            - link "Báo Lỗi" [ref=e120] [cursor=pointer]:
+              - /url: /error-reports
+              - img [ref=e121]
+              - generic [ref=e123]: Báo Lỗi
+      - button "Thu gọn menu" [ref=e125] [cursor=pointer]:
+        - img [ref=e126]
+      - button "A Admin admin@example.com" [ref=e129] [cursor=pointer]:
+        - generic [ref=e131]: A
+        - generic [ref=e133]:
+          - paragraph [ref=e134]: Admin
+          - paragraph [ref=e135]: admin@example.com
+        - img [ref=e136]
+  - generic [ref=e138]:
+    - banner [ref=e139]:
+      - generic [ref=e140]:
+        - generic [ref=e142]:
+          - img [ref=e144]
+          - generic [ref=e147]:
+            - heading "Thư Viện" [level=1] [ref=e148]
+            - generic [ref=e149]: •
+            - paragraph [ref=e150]: Quản lý file media
+        - generic [ref=e151]:
+          - link "100" [ref=e152] [cursor=pointer]:
+            - /url: /ai-credits
+            - img [ref=e153]
+            - generic [ref=e155]: "100"
+          - link "0" [ref=e156] [cursor=pointer]:
+            - /url: /topup
+            - img [ref=e157]
+            - generic [ref=e159]: "0"
+          - link "0 ₫" [ref=e160] [cursor=pointer]:
+            - /url: /topup
+            - img [ref=e161]
+            - generic [ref=e163]: 0 ₫
+          - button "⌘K" [ref=e164] [cursor=pointer]:
+            - img [ref=e165]
+            - generic [ref=e167]: ⌘K
+          - generic [ref=e168]:
+            - link "Zalo" [ref=e169] [cursor=pointer]:
+              - /url: https://zalo.me/0987654321
+              - img "Zalo" [ref=e170]
+            - link "Messenger" [ref=e171] [cursor=pointer]:
+              - /url: https://m.me/clickai.support
+              - img "Messenger" [ref=e172]
+          - button "Select language" [ref=e175] [cursor=pointer]:
+            - generic [ref=e176]: 🇻🇳
+            - generic [ref=e177]: VI
+            - img [ref=e178]
+          - button "Toggle theme" [ref=e180] [cursor=pointer]:
+            - img [ref=e181]
+          - button [ref=e184] [cursor=pointer]:
+            - img [ref=e185]
+    - generic [ref=e188]:
+      - generic [ref=e189]:
+        - link "Thiết Bị" [ref=e190] [cursor=pointer]:
+          - /url: /devices
+          - img [ref=e191]
+          - generic [ref=e193]: Thiết Bị
+          - button [ref=e194]:
+            - img [ref=e195]
+        - link "Thư Viện" [ref=e197] [cursor=pointer]:
+          - /url: /media
+          - img [ref=e198]
+          - generic [ref=e200]: Thư Viện
+          - button [ref=e201]:
+            - img [ref=e202]
+      - button "Đóng tất cả tabs" [ref=e204] [cursor=pointer]:
+        - img [ref=e205]
+    - main [ref=e207]:
+      - generic [ref=e208]:
+        - generic [ref=e209]:
+          - generic [ref=e210]:
+            - paragraph [ref=e211]: Thư Viện Media
+            - button "Tất cả tệp 7" [ref=e212] [cursor=pointer]:
+              - img [ref=e213]
+              - generic [ref=e215]: Tất cả tệp
+              - generic [ref=e216]: "7"
+            - button "Hình ảnh 7" [ref=e217] [cursor=pointer]:
+              - img [ref=e218]
+              - generic [ref=e220]: Hình ảnh
+              - generic [ref=e221]: "7"
+            - button "Video 0" [ref=e222] [cursor=pointer]:
+              - img [ref=e223]
+              - generic [ref=e225]: Video
+              - generic [ref=e226]: "0"
+            - button "AI Generated 1" [ref=e227] [cursor=pointer]:
+              - img [ref=e228]
+              - generic [ref=e230]: AI Generated
+              - generic [ref=e231]: "1"
+            - paragraph [ref=e233]: Liên Kết Nhanh
+            - link "AI Studio" [ref=e234] [cursor=pointer]:
+              - /url: /ai-studio
+              - img [ref=e235]
+              - generic [ref=e237]: AI Studio
+              - img [ref=e238]
+            - link "AI Gallery" [ref=e240] [cursor=pointer]:
+              - /url: /ai-studio/generations
+              - img [ref=e241]
+              - generic [ref=e243]: AI Gallery
+              - img [ref=e244]
+          - generic [ref=e246]:
+            - generic [ref=e247]:
+              - generic [ref=e248]: Dung Lượng
+              - link "Chi tiết →" [ref=e249] [cursor=pointer]:
+                - /url: /media/storage-plans
+            - generic [ref=e252]:
+              - generic [ref=e253]: 7.2 MB / 1.0 GB
+              - generic [ref=e254]: Free
+        - generic [ref=e255]:
+          - generic [ref=e256]:
+            - generic [ref=e257]:
+              - heading "Thư Viện" [level=1] [ref=e258]
+              - generic [ref=e259]: 5 files
+            - generic [ref=e260]:
+              - generic [ref=e261]:
+                - img [ref=e262]
+                - textbox "Tìm kiếm" [ref=e264]
+              - generic [ref=e265]:
+                - button [ref=e266] [cursor=pointer]:
+                  - img [ref=e267]
+                - button [ref=e269] [cursor=pointer]:
+                  - img [ref=e270]
+              - button "Hiện/Ẩn Chi Tiết" [ref=e272] [cursor=pointer]:
+                - img [ref=e273]
+              - generic [ref=e275] [cursor=pointer]:
+                - img [ref=e276]
+                - text: Tải lên
+          - generic [ref=e279]:
+            - generic [ref=e280] [cursor=pointer]:
+              - img [ref=e281]
+              - generic [ref=e283]: ai-generated
+              - generic [ref=e284]: Thư Mục
+            - generic [ref=e289] [cursor=pointer]:
+              - paragraph [ref=e290]: test-single-upload.png
+              - paragraph [ref=e291]: 123.43 KB
+            - generic [ref=e296] [cursor=pointer]:
+              - paragraph [ref=e297]: test-single-upload.png
+              - paragraph [ref=e298]: 123.43 KB
+            - generic [ref=e303] [cursor=pointer]:
+              - paragraph [ref=e304]: media-before-upload.png
+              - paragraph [ref=e305]: 126.60 KB
+            - generic [ref=e310] [cursor=pointer]:
+              - paragraph [ref=e311]: test-upload.png
+              - paragraph [ref=e312]: 295.43 KB
+            - generic [ref=e317] [cursor=pointer]:
+              - paragraph [ref=e318]: 76734f5d-4877-4fc7-8e4c-186f26473ebd.png
+              - paragraph [ref=e319]: 2.49 MB
+        - generic [ref=e320]:
+          - generic [ref=e321]:
+            - heading "Chi Tiết" [level=3] [ref=e322]
+            - button [ref=e323] [cursor=pointer]:
+              - img [ref=e324]
+          - img "test-single-upload.png" [ref=e327]
+          - generic [ref=e328]:
+            - generic [ref=e329]:
+              - paragraph [ref=e330]: Tên File
+              - paragraph [ref=e331]: test-single-upload.png
+            - generic [ref=e332]:
+              - generic [ref=e333]:
+                - paragraph [ref=e334]: Loại
+                - paragraph [ref=e335]: image/png
+              - generic [ref=e336]:
+                - paragraph [ref=e337]: Kích Thước
+                - paragraph [ref=e338]: 123.43 KB
+              - generic [ref=e339]:
+                - paragraph [ref=e340]: Đã tải lên
+                - paragraph [ref=e341]: 19:58 3 thg 2, 2026
+          - generic [ref=e342]:
+            - button "Sao Chép Link" [ref=e343] [cursor=pointer]:
+              - img [ref=e344]
+              - text: Sao Chép Link
+            - generic [ref=e346]:
+              - link "Tải Xuống" [ref=e347] [cursor=pointer]:
+                - /url: http://localhost:8001/storage/media/2/0c66501c-041f-49ce-a2ab-5d4ed653e057.png
+                - img [ref=e348]
+                - text: Tải Xuống
+              - button "Xóa" [ref=e350] [cursor=pointer]:
+                - img [ref=e351]
+                - text: Xóa
+            - link "Mở File Gốc" [ref=e353] [cursor=pointer]:
+              - /url: http://localhost:8001/storage/media/2/0c66501c-041f-49ce-a2ab-5d4ed653e057.png
+              - img [ref=e354]
+              - text: Mở File Gốc
+```

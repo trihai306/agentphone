@@ -38,7 +38,7 @@ class AiScenarioController extends Controller
             ])
             ->paginate(12);
 
-        return Inertia::render('AIStudio/Scenarios', [
+        return Inertia::render('AiStudio/Scenarios', [
             'scenarios' => $scenarios,
             'currentCredits' => $user->ai_credits,
         ]);

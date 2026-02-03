@@ -269,6 +269,7 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
                                             </label>
                                             <input
                                                 type="text"
+                                                name="name"
                                                 value={profileForm.data.name}
                                                 onChange={e => profileForm.setData('name', e.target.value)}
                                                 className={`w-full px-4 py-2.5 rounded-lg text-sm ${isDark ? 'bg-[#222] border-[#2a2a2a] text-white' : 'bg-white border-gray-200 text-gray-900'
@@ -284,6 +285,7 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
                                             </label>
                                             <input
                                                 type="email"
+                                                name="email"
                                                 value={profileForm.data.email}
                                                 onChange={e => profileForm.setData('email', e.target.value)}
                                                 className={`w-full px-4 py-2.5 rounded-lg text-sm ${isDark ? 'bg-[#222] border-[#2a2a2a] text-white' : 'bg-white border-gray-200 text-gray-900'
@@ -301,6 +303,7 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
                                             </label>
                                             <input
                                                 type="tel"
+                                                name="phone"
                                                 value={profileForm.data.phone}
                                                 onChange={e => profileForm.setData('phone', e.target.value)}
                                                 placeholder="+84..."
@@ -314,6 +317,7 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
                                             </label>
                                             <input
                                                 type="text"
+                                                name="location"
                                                 value={profileForm.data.location}
                                                 onChange={e => profileForm.setData('location', e.target.value)}
                                                 placeholder="Hà Nội, Việt Nam"

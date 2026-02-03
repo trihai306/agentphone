@@ -30,12 +30,25 @@ class AiCreditController extends Controller
     }
 
     /**
-     * Get available credit packages (API endpoint)
+     * Get available credit packages (returns Inertia page or JSON)
      */
-    public function packages()
+    public function packages(Request $request)
     {
-        return response()->json([
-            'packages' => $this->creditService->getActivePackages(),
+        $packages = $this->creditService->getActivePackages();
+        
+        // If API request, return JSON
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json([
+                'packages' => $packages,
+            ]);
+        }
+        
+        // Otherwise return Inertia page (same as index)
+        $user = Auth::user();
+        return Inertia::render('AiCredits/Index', [
+            'packages' => $packages,
+            'currentCredits' => $user->ai_credits,
+            'walletBalance' => $this->creditService->getWalletBalance($user),
         ]);
     }
 

@@ -500,7 +500,7 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                                                 )}
 
                                                 {/* Overlay */}
-                                                <div className={`absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3`}>
+                                                <div className={`absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3 pointer-events-none`}>
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-white text-xs font-medium truncate">{item.original_name}</p>
                                                         <p className="text-white/60 text-[10px]">{item.formatted_size}</p>

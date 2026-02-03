@@ -615,21 +615,27 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                         <label className={`block text-sm font-semibold mb-3 ${themeClasses.textPrimary}`}>
                                             {generationMode === 'image' ? 'Motion Description' : 'Prompt'}
                                         </label>
-                                        <textarea
-                                            ref={textareaRef}
-                                            value={prompt}
-                                            onChange={(e) => setPrompt(e.target.value)}
-                                            placeholder={generationMode === 'image'
-                                                ? "Describe how the image should animate..."
-                                                : "Describe what you want to create..."
-                                            }
-                                            disabled={generating}
-                                            rows={4}
-                                            className={`w-full px-4 py-3 rounded-xl resize-none text-sm transition-all duration-200 border focus:outline-none focus:ring-2 ${isDark
-                                                ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-slate-500 focus:border-violet-500 focus:ring-violet-500/20'
-                                                : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-violet-400 focus:ring-violet-400/20'
-                                                }`}
-                                        />
+                                        <div className="relative group">
+                                            <textarea
+                                                ref={textareaRef}
+                                                value={prompt}
+                                                onChange={(e) => setPrompt(e.target.value)}
+                                                placeholder={generationMode === 'image'
+                                                    ? "Describe how the image should animate..."
+                                                    : "✨ Describe what you want to create... Be specific for best results!"
+                                                }
+                                                disabled={generating}
+                                                rows={5}
+                                                className={`w-full px-4 py-4 rounded-xl resize-none text-sm transition-all duration-300 border-2 focus:outline-none ${isDark
+                                                    ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-slate-500 focus:border-violet-500 focus:shadow-[0_0_20px_rgba(139,92,246,0.15)]'
+                                                    : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-violet-400 focus:shadow-[0_0_20px_rgba(139,92,246,0.1)]'
+                                                    }`}
+                                            />
+                                            {/* Character count */}
+                                            <div className={`absolute bottom-3 right-3 text-xs ${prompt.length > 0 ? (isDark ? 'text-violet-400' : 'text-violet-600') : themeClasses.textMuted}`}>
+                                                {prompt.length}/500
+                                            </div>
+                                        </div>
                                     </div>
 
                                     {/* Model Selection */}
@@ -830,24 +836,30 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                     <button
                                         onClick={handleGenerate}
                                         disabled={!prompt.trim() || !model || generating}
-                                        className={`w-full py-4 rounded-xl font-semibold text-base transition-all duration-200 ${prompt.trim() && model && !generating
-                                            ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-500/30 active:scale-[0.98]'
+                                        className={`group relative w-full py-4 rounded-xl font-semibold text-base transition-all duration-300 overflow-hidden ${prompt.trim() && model && !generating
+                                            ? 'bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-600 bg-[length:200%_100%] animate-gradient-x text-white hover:shadow-xl hover:shadow-violet-500/40 active:scale-[0.98]'
                                             : isDark
                                                 ? 'bg-[#1a1a1a] text-slate-500 cursor-not-allowed'
                                                 : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                             }`}
                                     >
-                                        {generating ? (
-                                            <span className="flex items-center justify-center gap-2">
-                                                <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                                Generating...
-                                            </span>
-                                        ) : (
-                                            <>✨ Generate · {calculateEstimatedCost()} credits</>
+                                        {/* Shimmer effect */}
+                                        {prompt.trim() && model && !generating && (
+                                            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                                         )}
+                                        <span className="relative">
+                                            {generating ? (
+                                                <span className="flex items-center justify-center gap-2">
+                                                    <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    Đang tạo...
+                                                </span>
+                                            ) : (
+                                                <>✨ Tạo ngay · {calculateEstimatedCost()} credits</>
+                                            )}
+                                        </span>
                                     </button>
                                 </div>
                             </div>
@@ -985,14 +997,25 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className={`flex flex-col items-center justify-center py-16 rounded-xl border-2 border-dashed ${isDark ? 'border-[#2a2a2a]' : 'border-slate-200'}`}>
-                                        <span className="text-5xl mb-4">{type === 'image' ? '🖼️' : '🎬'}</span>
-                                        <p className={`text-base font-medium ${themeClasses.textPrimary}`}>
+                                    <div className={`flex flex-col items-center justify-center py-20 rounded-2xl border-2 border-dashed transition-all ${isDark ? 'border-[#2a2a2a] bg-gradient-to-br from-violet-500/5 to-indigo-500/5' : 'border-slate-200 bg-gradient-to-br from-violet-50/50 to-indigo-50/50'}`}>
+                                        <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-5 ${isDark ? 'bg-gradient-to-br from-violet-600/20 to-indigo-600/20' : 'bg-gradient-to-br from-violet-100 to-indigo-100'}`}>
+                                            <span className="text-4xl">{type === 'image' ? '🖼️' : '🎬'}</span>
+                                        </div>
+                                        <p className={`text-lg font-semibold ${themeClasses.textPrimary}`}>
                                             Chưa có {type === 'image' ? 'ảnh' : 'video'} nào
                                         </p>
-                                        <p className={`text-sm mt-1 ${themeClasses.textMuted}`}>
+                                        <p className={`text-sm mt-2 ${themeClasses.textMuted}`}>
                                             Nhập prompt và nhấn Generate để bắt đầu
                                         </p>
+                                        <button
+                                            onClick={() => textareaRef.current?.focus()}
+                                            className={`mt-5 px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${isDark 
+                                                ? 'bg-violet-600/20 text-violet-400 hover:bg-violet-600/30 border border-violet-500/30' 
+                                                : 'bg-violet-100 text-violet-700 hover:bg-violet-200 border border-violet-200'
+                                            }`}
+                                        >
+                                            ✨ Bắt đầu tạo
+                                        </button>
                                     </div>
                                 )}
 
