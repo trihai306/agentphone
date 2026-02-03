@@ -225,16 +225,18 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
             >
-                {/* Sidebar */}
-                <MediaSidebar
-                    activeFilter={filters?.type}
-                    activeFolder={filters?.folder}
-                    onFilterChange={applyFilter}
-                    stats={stats}
-                    folders={folders}
-                    storagePlan={storage_plan}
-                    isDark={isDark}
-                />
+                {/* Sidebar - Hidden on mobile */}
+                <div className="hidden md:block">
+                    <MediaSidebar
+                        activeFilter={filters?.type}
+                        activeFolder={filters?.folder}
+                        onFilterChange={applyFilter}
+                        stats={stats}
+                        folders={folders}
+                        storagePlan={storage_plan}
+                        isDark={isDark}
+                    />
+                </div>
 
                 {/* Main Content */}
                 <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -620,14 +622,30 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                     </div>
                 </div>
 
-                {/* Detail Panel */}
+                {/* Detail Panel - Hidden on mobile, shown as overlay */}
                 {showDetailPanel && (
-                    <MediaDetailPanel
-                        item={activeItem}
-                        onClose={() => setActiveItem(null)}
-                        onDelete={handleDelete}
-                        isDark={isDark}
-                    />
+                    <div className="hidden md:block">
+                        <MediaDetailPanel
+                            item={activeItem}
+                            onClose={() => setActiveItem(null)}
+                            onDelete={handleDelete}
+                            isDark={isDark}
+                        />
+                    </div>
+                )}
+
+                {/* Mobile Detail Panel - Full screen overlay */}
+                {showDetailPanel && activeItem && (
+                    <div className="md:hidden fixed inset-0 z-50 bg-black/50" onClick={() => setActiveItem(null)}>
+                        <div className="absolute right-0 top-0 h-full w-full max-w-sm" onClick={e => e.stopPropagation()}>
+                            <MediaDetailPanel
+                                item={activeItem}
+                                onClose={() => setActiveItem(null)}
+                                onDelete={handleDelete}
+                                isDark={isDark}
+                            />
+                        </div>
+                    </div>
                 )}
 
                 {/* Context Menu for files */}

@@ -412,10 +412,10 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
 
     return (
         <AppLayout title="AI Studio">
-            <div className={`min-h-screen transition-colors duration-300 ${themeClasses.pageBg}`}>
-                <div className="max-w-[1600px] mx-auto">
+            <div className={`min-h-screen transition-colors duration-300 overflow-x-hidden ${themeClasses.pageBg}`}>
+                <div className="max-w-[1600px] mx-auto px-4 sm:px-0">
                     {/* Header - Simplified */}
-                    <div className={`sticky top-0 z-20 px-6 py-3 border-b backdrop-blur-xl transition-colors duration-300 ${isDark ? 'bg-[#0a0a0a]/90 border-[#1a1a1a]' : 'bg-white/90 border-slate-200'
+                    <div className={`sticky top-0 z-20 px-4 sm:px-6 py-3 border-b backdrop-blur-xl transition-colors duration-300 ${isDark ? 'bg-[#0a0a0a]/90 border-[#1a1a1a]' : 'bg-white/90 border-slate-200'
                         }`}>
                         <div className="flex items-center justify-between">
                             {/* Left: Logo + Title */}
@@ -474,8 +474,8 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                     activeScenarios={activeScenarios}
                                 />
                             </div>
-                            {/* Jobs Queue Panel - Right Side */}
-                            <div className={`w-[320px] flex-shrink-0 border-l transition-colors ${themeClasses.border}`}>
+                            {/* Jobs Queue Panel - Right Side - Hidden on mobile */}
+                            <div className={`hidden lg:block w-[320px] flex-shrink-0 border-l transition-colors ${themeClasses.border}`}>
                                 <div className="sticky top-0 h-screen overflow-y-auto p-4">
                                     <JobsQueuePanel
                                         activeGenerations={activeGenerations}
@@ -490,10 +490,10 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
 
                     {/* Video/Image Generation */}
                     {type !== 'scenario' && (
-                        <div className="flex">
-                            {/* Left Panel - Input */}
-                            <div className={`w-[480px] flex-shrink-0 border-r transition-colors ${themeClasses.border}`}>
-                                <div className="p-6 space-y-7">
+                        <div className="flex flex-col lg:flex-row">
+                            {/* Left Panel - Input - Full width on mobile */}
+                            <div className={`w-full lg:w-[480px] flex-shrink-0 lg:border-r transition-colors ${themeClasses.border}`}>
+                                <div className="p-4 sm:p-6 space-y-7">
                                     {/* Type Selector */}
                                     <div>
                                         <label className={`block text-xs font-semibold mb-3 uppercase tracking-wide ${themeClasses.textMuted}`}>

@@ -12,7 +12,7 @@ export default function LandingLayout({ children }) {
     };
 
     return (
-        <div className="min-h-screen bg-white dark:bg-[#0A0A0F] transition-colors duration-300">
+        <div className="min-h-screen bg-white dark:bg-[#0A0A0F] transition-colors duration-300 overflow-x-hidden">
             {/* Premium Navigation */}
             <nav className="sticky top-0 z-50 bg-white/90 dark:bg-[#0A0A0F]/90 backdrop-blur-2xl border-b border-gray-200/50 dark:border-white/10 shadow-sm dark:shadow-purple-500/5">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -18,6 +18,7 @@ export default function Index() {
 
     return (
         <LandingLayout>
+            <div className="overflow-x-hidden">
             <SeoHead
                 title="CLICKAI - Nền Tảng Tự Động Hoá Phone Farm"
                 description="Nền tảng No-Code tự động hoá phone farm. Kéo thả workflow, Vision AI nhận diện UI, thao tác như người thật 24/7."
@@ -36,8 +37,8 @@ export default function Index() {
 
                 {/* Gradient Orbs */}
                 <div className="absolute inset-0 overflow-hidden">
-                    <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-purple-500/10 to-transparent rounded-full blur-[100px]"></div>
-                    <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-gradient-to-tl from-cyan-500/10 to-transparent rounded-full blur-[80px]"></div>
+                    <div className="absolute top-0 left-1/4 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-gradient-to-br from-purple-500/10 to-transparent rounded-full blur-[100px]"></div>
+                    <div className="absolute bottom-0 right-1/4 w-[200px] md:w-[400px] h-[200px] md:h-[400px] bg-gradient-to-tl from-cyan-500/10 to-transparent rounded-full blur-[80px]"></div>
                 </div>
 
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
@@ -200,6 +201,7 @@ export default function Index() {
                     </Link>
                 </div>
             </section>
+            </div>
         </LandingLayout>
     );
 }
