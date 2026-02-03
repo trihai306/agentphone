@@ -395,80 +395,133 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                         )}
 
                         {/* Media Grid/List */}
-                        {(folders.length > 0 && !currentFolder) || media?.data?.length > 0 ? (
-                            viewMode === 'grid' ? (
-                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-                                    {/* Folder Cards - only show when not inside a folder */}
-                                    {!currentFolder && folders.map((folder) => (
-                                        <div
-                                            key={`folder-${folder}`}
-                                            onClick={() => navigateToFolder(folder)}
-                                            onDragOver={(e) => { e.preventDefault(); setDragOverFolder(folder); }}
-                                            onDragLeave={() => setDragOverFolder(null)}
-                                            onDrop={(e) => handleDropOnFolder(e, folder)}
-                                            className={`group relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02] flex flex-col items-center justify-center ${dragOverFolder === folder
-                                                ? 'ring-2 ring-violet-500 ring-offset-2 ' + (isDark ? 'ring-offset-[#0d0d0d] bg-violet-500/20' : 'ring-offset-white bg-violet-100')
-                                                : isDark ? 'bg-[#1a1a1a] hover:bg-[#222]' : 'bg-gray-100 hover:bg-gray-50'
-                                                } border-2 border-dashed ${isDark ? 'border-[#2a2a2a]' : 'border-gray-200'}`}
-                                        >
-                                            <svg className={`w-16 h-16 mb-2 ${isDark ? 'text-amber-500' : 'text-amber-400'}`} fill="currentColor" viewBox="0 0 24 24">
-                                                <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
-                                            </svg>
-                                            <span className={`text-sm font-medium text-center px-2 truncate max-w-full ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                                {folder}
-                                            </span>
-                                            <span className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                {t('media.folder', 'Thư mục')}
-                                            </span>
-                                        </div>
-                                    ))}
+                        {/* Hide folders when type filter is active (image/video/ai) */}
+                        {(() => {
+                            const hasTypeFilter = filters?.type && !['', 'all', 'any'].includes(filters.type);
+                            const showFolders = !currentFolder && !hasTypeFilter;
+                            return (folders.length > 0 && showFolders) || media?.data?.length > 0 ? (
+                                viewMode === 'grid' ? (
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+                                        {/* Folder Cards - only show in "All Files" view (no type filter) */}
+                                        {showFolders && folders.map((folder) => (
+                                            <div
+                                                key={`folder-${folder}`}
+                                                onClick={() => navigateToFolder(folder)}
+                                                onDragOver={(e) => { e.preventDefault(); setDragOverFolder(folder); }}
+                                                onDragLeave={() => setDragOverFolder(null)}
+                                                onDrop={(e) => handleDropOnFolder(e, folder)}
+                                                className={`group relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02] flex flex-col items-center justify-center ${dragOverFolder === folder
+                                                    ? 'ring-2 ring-violet-500 ring-offset-2 ' + (isDark ? 'ring-offset-[#0d0d0d] bg-violet-500/20' : 'ring-offset-white bg-violet-100')
+                                                    : isDark ? 'bg-[#1a1a1a] hover:bg-[#222]' : 'bg-gray-100 hover:bg-gray-50'
+                                                    } border-2 border-dashed ${isDark ? 'border-[#2a2a2a]' : 'border-gray-200'}`}
+                                            >
+                                                <svg className={`w-16 h-16 mb-2 ${isDark ? 'text-amber-500' : 'text-amber-400'}`} fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
+                                                </svg>
+                                                <span className={`text-sm font-medium text-center px-2 truncate max-w-full ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                                    {folder}
+                                                </span>
+                                                <span className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                    {t('media.folder', 'Thư mục')}
+                                                </span>
+                                            </div>
+                                        ))}
 
-                                    {/* Media Items */}
-                                    {media.data.map((item) => (
-                                        <div
-                                            key={item.id}
-                                            draggable
-                                            onDragStart={(e) => handleMediaDragStart(e, item)}
-                                            onDragEnd={handleMediaDragEnd}
-                                            onClick={() => setActiveItem(item)}
-                                            onContextMenu={(e) => handleContextMenu(e, item)}
-                                            className={`group relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02] ${activeItem?.id === item.id
-                                                ? isDark
-                                                    ? 'ring-2 ring-white ring-offset-2 ring-offset-[#0d0d0d]'
-                                                    : 'ring-2 ring-gray-900 ring-offset-2'
-                                                : ''
-                                                } ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-100'}`}
-                                        >
-                                            {item.type === 'video' ? (
-                                                <div className="relative w-full h-full">
-                                                    <video
-                                                        src={item.url}
-                                                        className="w-full h-full object-cover"
-                                                        muted
-                                                        loop
-                                                        playsInline
-                                                        preload="metadata"
-                                                        onMouseEnter={(e) => e.target.play().catch(() => { })}
-                                                        onMouseLeave={(e) => { e.target.pause(); e.target.currentTime = 0; }}
-                                                    />
-                                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-black/40 backdrop-blur-sm opacity-70 group-hover:opacity-100 transition-opacity`}>
-                                                            <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                                        {/* Media Items */}
+                                        {media.data.map((item) => (
+                                            <div
+                                                key={item.id}
+                                                draggable
+                                                onDragStart={(e) => handleMediaDragStart(e, item)}
+                                                onDragEnd={handleMediaDragEnd}
+                                                onClick={() => setActiveItem(item)}
+                                                onContextMenu={(e) => handleContextMenu(e, item)}
+                                                className={`group relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02] ${activeItem?.id === item.id
+                                                    ? isDark
+                                                        ? 'ring-2 ring-white ring-offset-2 ring-offset-[#0d0d0d]'
+                                                        : 'ring-2 ring-gray-900 ring-offset-2'
+                                                    : ''
+                                                    } ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-100'}`}
+                                            >
+                                                {item.type === 'video' ? (
+                                                    <div className="relative w-full h-full">
+                                                        <video
+                                                            src={item.url}
+                                                            className="w-full h-full object-cover"
+                                                            muted
+                                                            loop
+                                                            playsInline
+                                                            preload="metadata"
+                                                            onMouseEnter={(e) => e.target.play().catch(() => { })}
+                                                            onMouseLeave={(e) => { e.target.pause(); e.target.currentTime = 0; }}
+                                                        />
+                                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-black/40 backdrop-blur-sm opacity-70 group-hover:opacity-100 transition-opacity`}>
+                                                                <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <img src={item.thumbnail_url || item.url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                                                )}
+
+                                                {/* Checkbox */}
+                                                <div className="absolute top-2 left-2">
+                                                    <label
+                                                        className={`w-5 h-5 rounded-md flex items-center justify-center cursor-pointer transition-all ${selectedItems.includes(item.id)
+                                                            ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
+                                                            : 'bg-black/30 backdrop-blur-sm border border-white/20 group-hover:opacity-100 opacity-0'
+                                                            }`}
+                                                        onClick={(e) => toggleSelect(item.id, e)}
+                                                    >
+                                                        {selectedItems.includes(item.id) && (
+                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                        )}
+                                                    </label>
+                                                </div>
+
+                                                {/* AI Badge */}
+                                                {item.source === 'ai_generated' && (
+                                                    <div className="absolute top-2 right-2">
+                                                        <div className={`px-1.5 py-0.5 rounded-md ${isDark ? 'bg-blue-900/80' : 'bg-blue-500/80'}`}>
+                                                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                                             </svg>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            ) : (
-                                                <img src={item.thumbnail_url || item.url} alt="" className="w-full h-full object-cover" loading="lazy" />
-                                            )}
+                                                )}
 
-                                            {/* Checkbox */}
-                                            <div className="absolute top-2 left-2">
+                                                {/* Overlay */}
+                                                <div className={`absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3`}>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-white text-xs font-medium truncate">{item.original_name}</p>
+                                                        <p className="text-white/60 text-[10px]">{item.formatted_size}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    /* List View */
+                                    <div className={`rounded-xl overflow-hidden ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
+                                        {media.data.map((item) => (
+                                            <div
+                                                key={item.id}
+                                                onClick={() => setActiveItem(item)}
+                                                onContextMenu={(e) => handleContextMenu(e, item)}
+                                                className={`flex items-center gap-4 p-4 border-b last:border-b-0 transition-all cursor-pointer ${activeItem?.id === item.id
+                                                    ? isDark ? 'bg-white/5' : 'bg-gray-50'
+                                                    : isDark ? 'border-[#2a2a2a] hover:bg-white/5' : 'border-gray-100 hover:bg-gray-50'
+                                                    }`}
+                                            >
                                                 <label
-                                                    className={`w-5 h-5 rounded-md flex items-center justify-center cursor-pointer transition-all ${selectedItems.includes(item.id)
-                                                        ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
-                                                        : 'bg-black/30 backdrop-blur-sm border border-white/20 group-hover:opacity-100 opacity-0'
+                                                    className={`w-5 h-5 rounded-md flex items-center justify-center cursor-pointer transition-all border ${selectedItems.includes(item.id)
+                                                        ? isDark ? 'bg-white border-white text-black' : 'bg-gray-900 border-gray-900 text-white'
+                                                        : isDark ? 'border-[#2a2a2a] hover:border-gray-500' : 'border-gray-300 hover:border-gray-400'
                                                         }`}
                                                     onClick={(e) => toggleSelect(item.id, e)}
                                                 >
@@ -478,117 +531,69 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                                                         </svg>
                                                     )}
                                                 </label>
-                                            </div>
-
-                                            {/* AI Badge */}
-                                            {item.source === 'ai_generated' && (
-                                                <div className="absolute top-2 right-2">
-                                                    <div className={`px-1.5 py-0.5 rounded-md ${isDark ? 'bg-blue-900/80' : 'bg-blue-500/80'}`}>
-                                                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                                        </svg>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Overlay */}
-                                            <div className={`absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3`}>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-white text-xs font-medium truncate">{item.original_name}</p>
-                                                    <p className="text-white/60 text-[10px]">{item.formatted_size}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                /* List View */
-                                <div className={`rounded-xl overflow-hidden ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
-                                    {media.data.map((item) => (
-                                        <div
-                                            key={item.id}
-                                            onClick={() => setActiveItem(item)}
-                                            onContextMenu={(e) => handleContextMenu(e, item)}
-                                            className={`flex items-center gap-4 p-4 border-b last:border-b-0 transition-all cursor-pointer ${activeItem?.id === item.id
-                                                ? isDark ? 'bg-white/5' : 'bg-gray-50'
-                                                : isDark ? 'border-[#2a2a2a] hover:bg-white/5' : 'border-gray-100 hover:bg-gray-50'
-                                                }`}
-                                        >
-                                            <label
-                                                className={`w-5 h-5 rounded-md flex items-center justify-center cursor-pointer transition-all border ${selectedItems.includes(item.id)
-                                                    ? isDark ? 'bg-white border-white text-black' : 'bg-gray-900 border-gray-900 text-white'
-                                                    : isDark ? 'border-[#2a2a2a] hover:border-gray-500' : 'border-gray-300 hover:border-gray-400'
-                                                    }`}
-                                                onClick={(e) => toggleSelect(item.id, e)}
-                                            >
-                                                {selectedItems.includes(item.id) && (
-                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                                    </svg>
-                                                )}
-                                            </label>
-                                            <div className={`w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 ${isDark ? 'bg-[#222]' : 'bg-gray-100'}`}>
-                                                {item.type === 'video' ? (
-                                                    <div className="relative w-full h-full">
-                                                        <video src={item.url} className="w-full h-full object-cover" muted playsInline preload="metadata" />
-                                                        <div className="absolute inset-0 flex items-center justify-center">
-                                                            <svg className="w-4 h-4 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 20 20">
-                                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                                                            </svg>
+                                                <div className={`w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 ${isDark ? 'bg-[#222]' : 'bg-gray-100'}`}>
+                                                    {item.type === 'video' ? (
+                                                        <div className="relative w-full h-full">
+                                                            <video src={item.url} className="w-full h-full object-cover" muted playsInline preload="metadata" />
+                                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                                <svg className="w-4 h-4 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                                                                </svg>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                ) : (
-                                                    <img src={item.thumbnail_url || item.url} alt="" className="w-full h-full object-cover" />
-                                                )}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className={`font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.original_name}</p>
-                                                <div className="flex items-center gap-2 mt-0.5">
-                                                    <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                        {item.type === 'image' ? 'Image' : 'Video'}
-                                                    </span>
-                                                    {item.source === 'ai_generated' && (
-                                                        <span className={`inline-flex items-center gap-1 text-xs ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
-                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                                            </svg>
-                                                            AI
-                                                        </span>
+                                                    ) : (
+                                                        <img src={item.thumbnail_url || item.url} alt="" className="w-full h-full object-cover" />
                                                     )}
                                                 </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className={`font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.original_name}</p>
+                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                        <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                            {item.type === 'image' ? 'Image' : 'Video'}
+                                                        </span>
+                                                        {item.source === 'ai_generated' && (
+                                                            <span className={`inline-flex items-center gap-1 text-xs ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
+                                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                                                </svg>
+                                                                AI
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{item.formatted_size}</div>
+                                                <div className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{new Date(item.created_at).toLocaleDateString('vi-VN')}</div>
                                             </div>
-                                            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{item.formatted_size}</div>
-                                            <div className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{new Date(item.created_at).toLocaleDateString('vi-VN')}</div>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
+                                )
+                            ) : (
+                                /* Empty State */
+                                <div className={`flex flex-col items-center justify-center py-20 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
+                                    <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${isDark ? 'bg-[#222]' : 'bg-gray-100'}`}>
+                                        <svg className={`w-10 h-10 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <h3 className={`mt-6 text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                        {t('media.no_files', 'Chưa có file nào')}
+                                    </h3>
+                                    <p className={`mt-2 text-sm max-w-sm text-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                        {t('media.upload_first_file', 'Tải lên hoặc kéo thả file vào đây để bắt đầu')}
+                                    </p>
+                                    <label className={`mt-6 flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium cursor-pointer transition-all ${isDark
+                                        ? 'bg-white text-black hover:bg-gray-100'
+                                        : 'bg-gray-900 text-white hover:bg-gray-800'
+                                        }`}>
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                        </svg>
+                                        {t('media.upload_files', 'Tải lên file')}
+                                        <input type="file" multiple className="hidden" accept="image/*,video/*" onChange={(e) => handleUpload(e.target.files)} />
+                                    </label>
                                 </div>
                             )
-                        ) : (
-                            /* Empty State */
-                            <div className={`flex flex-col items-center justify-center py-20 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
-                                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${isDark ? 'bg-[#222]' : 'bg-gray-100'}`}>
-                                    <svg className={`w-10 h-10 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
-                                <h3 className={`mt-6 text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    {t('media.no_files', 'Chưa có file nào')}
-                                </h3>
-                                <p className={`mt-2 text-sm max-w-sm text-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    {t('media.upload_first_file', 'Tải lên hoặc kéo thả file vào đây để bắt đầu')}
-                                </p>
-                                <label className={`mt-6 flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium cursor-pointer transition-all ${isDark
-                                    ? 'bg-white text-black hover:bg-gray-100'
-                                    : 'bg-gray-900 text-white hover:bg-gray-800'
-                                    }`}>
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                    </svg>
-                                    {t('media.upload_files', 'Tải lên file')}
-                                    <input type="file" multiple className="hidden" accept="image/*,video/*" onChange={(e) => handleUpload(e.target.files)} />
-                                </label>
-                            </div>
-                        )}
+                        })()}
 
                         {/* Pagination */}
                         {media?.last_page > 1 && (
