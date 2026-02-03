@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import axios from 'axios';
+import { aiStudioApi } from '@/services/api';
 import AppLayout from '../../Layouts/AppLayout';
 import { useToast } from '@/Components/Layout/ToastProvider';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
@@ -29,13 +29,13 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
         const pollInterval = setInterval(async () => {
             try {
                 const updates = await Promise.all(
-                    activeScenarios.map(s => axios.get(`/ai-studio/scenarios/${s.id}/status`))
+                    activeScenarios.map(s => aiStudioApi.getScenarioStatus(s.id))
                 );
 
                 setScenarioList(prev => {
                     const updated = [...prev];
                     updates.forEach(res => {
-                        const scenario = res.data.scenario;
+                        const scenario = res.scenario;
                         const idx = updated.findIndex(s => s.id === scenario.id);
                         if (idx !== -1) updated[idx] = scenario;
                     });
@@ -62,7 +62,7 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
 
         setDeleting(scenario.id);
         try {
-            await axios.delete(`/ai-studio/scenarios/${scenario.id}`);
+            await aiStudioApi.deleteScenario(scenario.id);
             setScenarioList(prev => prev.filter(s => s.id !== scenario.id));
             addToast('Đã xóa kịch bản', 'success');
         } catch (error) {

@@ -251,6 +251,83 @@ export const aiApi = {
             provider,
         });
     },
+
+    /**
+     * Generate portrait image
+     */
+    generatePortrait: async (payload) => {
+        return apiService.post('/api/ai/generate-portrait', payload);
+    },
 };
+
+/**
+ * AI Studio API - Image/Video generation, scenarios
+ */
+export const aiStudioApi = {
+    // Generations
+    getGenerationStatus: async (id) => apiService.get(`/ai-studio/generations/${id}/status`),
+    generate: async (endpoint, payload) => apiService.post(endpoint, payload),
+    generateImage: async (payload) => apiService.post('/ai-studio/generate-image', payload),
+    generateVideo: async (payload) => apiService.post('/ai-studio/generate-video', payload),
+    getActiveJobs: async () => apiService.get('/ai-studio/active-jobs'),
+    estimateCost: async (payload) => apiService.post('/ai-studio/estimate-cost', payload),
+
+    // Scenarios
+    parseScenario: async (payload) => apiService.post('/ai-studio/scenarios/parse', payload),
+    estimateScenario: async (payload) => apiService.post('/ai-studio/scenarios/estimate', payload),
+    saveScenario: async (payload) => apiService.post('/ai-studio/scenarios', payload),
+    generateScenario: async (id) => apiService.post(`/ai-studio/scenarios/${id}/generate`),
+    getScenarioStatus: async (id) => apiService.get(`/ai-studio/scenarios/${id}/status`),
+    deleteScenario: async (id) => apiService.delete(`/ai-studio/scenarios/${id}`),
+};
+
+/**
+ * Media API - Media library operations
+ */
+export const mediaApi = {
+    list: async (params = '') => apiService.get(`/media/list.json${params ? '?' + params : ''}`),
+    getFolders: async () => apiService.get('/media/folders.json'),
+    getStats: async () => apiService.get('/media/stats.json'),
+    upload: async (formData, config = {}) => {
+        try {
+            const response = await api.post('/media', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+                ...config,
+            });
+            return handleResponse(response);
+        } catch (error) {
+            return handleError(error);
+        }
+    },
+};
+
+/**
+ * Campaign API - Data collection records
+ */
+export const campaignApi = {
+    getCollectionRecords: async (collectionId, perPage = 500) =>
+        apiService.get(`/api/data-collections/${collectionId}/records?per_page=${perPage}`),
+};
+
+/**
+ * Extended Flow API - Batch jobs
+ */
+flowApi.batchJobs = async (flowId, payload) =>
+    apiService.post(`/api/flows/${flowId}/jobs/batch`, payload);
+
+/**
+ * Extended Recording API - Convert recording to nodes
+ */
+recordingApi.convertToNodes = async (payload) =>
+    apiService.post('/api/recording/convert-to-nodes', payload);
+
+/**
+ * Extended Device API - Inspection
+ */
+deviceApi.inspect = async (deviceId) =>
+    apiService.post('/devices/inspect', { device_id: deviceId });
+
+deviceApi.getInspectScreenshot = async (screenshotKey) =>
+    apiService.get(`/api/inspect-screenshot/${encodeURIComponent(screenshotKey)}`);
 
 export default apiService;

@@ -6,7 +6,7 @@ import { useTheme } from '@/Contexts/ThemeContext';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
 import { useToast } from '@/Components/Layout/ToastProvider';
 
-export default function MyListings({ listings, stats, userFlows = [] }) {
+export default function MyListings({ listings, stats, userCampaigns = [] }) {
     const { t } = useTranslation();
     const { theme } = useTheme();
     const { auth } = usePage().props;
@@ -21,7 +21,7 @@ export default function MyListings({ listings, stats, userFlows = [] }) {
 
     const [showPublishModal, setShowPublishModal] = useState(false);
     const [publishData, setPublishData] = useState({
-        listable_type: 'flow',
+        listable_type: 'campaign',
         listable_id: '',
         title: '',
         description: '',
@@ -31,16 +31,16 @@ export default function MyListings({ listings, stats, userFlows = [] }) {
     });
     const [tagInput, setTagInput] = useState('');
     const [publishing, setPublishing] = useState(false);
-    const [selectedFlow, setSelectedFlow] = useState(null);
+    const [selectedCampaign, setSelectedCampaign] = useState(null);
 
-    const handleFlowSelect = (flowId) => {
-        const flow = userFlows.find(f => f.id == flowId);
-        setSelectedFlow(flow);
+    const handleCampaignSelect = (campaignId) => {
+        const campaign = userCampaigns.find(c => c.id == campaignId);
+        setSelectedCampaign(campaign);
         setPublishData({
             ...publishData,
-            listable_id: flowId,
-            title: flow?.name || '',
-            description: flow?.description || '',
+            listable_id: campaignId,
+            title: campaign?.name || '',
+            description: campaign?.description || '',
         });
     };
 
@@ -66,7 +66,7 @@ export default function MyListings({ listings, stats, userFlows = [] }) {
                 addToast(t('marketplace.publish_success', 'Submitted for review!'), 'success');
                 setShowPublishModal(false);
                 setPublishData({
-                    listable_type: 'flow',
+                    listable_type: 'campaign',
                     listable_id: '',
                     title: '',
                     description: '',
@@ -240,7 +240,7 @@ export default function MyListings({ listings, stats, userFlows = [] }) {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                                    {listing.listable_type?.includes('DataCollection') ? 'Collection' : 'Workflow'}
+                                                    {listing.listable_type?.includes('Campaign') ? 'Campaign' : 'Workflow'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
@@ -358,34 +358,35 @@ export default function MyListings({ listings, stats, userFlows = [] }) {
                             </div>
 
                             <form onSubmit={handlePublish} className="p-6 space-y-5">
-                                {/* Workflow Selection */}
+                                {/* Campaign Selection */}
                                 <div>
                                     <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                        {t('marketplace.select_workflow', 'Select Workflow')} <span className="text-red-500">*</span>
+                                        {t('marketplace.select_campaign', 'Chọn Campaign')} <span className="text-red-500">*</span>
                                     </label>
                                     <select
                                         value={publishData.listable_id}
-                                        onChange={(e) => handleFlowSelect(e.target.value)}
+                                        onChange={(e) => handleCampaignSelect(e.target.value)}
                                         required
                                         className={`w-full px-4 py-3 rounded-xl text-sm ${isDark
                                             ? 'bg-white/5 border-white/10 text-white'
                                             : 'bg-gray-50 border-gray-200 text-gray-900'
                                             } border focus:outline-none focus:ring-2 focus:ring-indigo-500/20`}
                                     >
-                                        <option value="">{t('marketplace.choose_workflow', 'Choose a workflow...')}</option>
-                                        {userFlows.map((flow) => (
-                                            <option key={flow.id} value={flow.id}>
-                                                {flow.name}
-                                                {flow.bundled_collection_count > 0 ? ` (+ ${flow.bundled_collection_count} ${t('marketplace.data_structures', 'data structures')})` : ''}
+                                        <option value="">{t('marketplace.choose_campaign', 'Chọn một campaign...')}</option>
+                                        {userCampaigns.map((campaign) => (
+                                            <option key={campaign.id} value={campaign.id}>
+                                                {campaign.name}
+                                                {campaign.workflows_count > 0 ? ` (${campaign.workflows_count} workflows` : ''}
+                                                {campaign.collections_count > 0 ? `, ${campaign.collections_count} collections)` : campaign.workflows_count > 0 ? ')' : ''}
                                             </option>
                                         ))}
                                     </select>
-                                    {selectedFlow?.bundled_collection_count > 0 && (
-                                        <p className={`text-xs mt-2 flex items-center gap-1.5 ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+                                    {selectedCampaign && (selectedCampaign.workflows_count > 0 || selectedCampaign.collections_count > 0) && (
+                                        <p className={`text-xs mt-2 flex items-center gap-1.5 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
                                             </svg>
-                                            {t('marketplace.includes_data_structure', 'Includes data structure')} ({t('marketplace.schema_only', 'Schema only, no data')})
+                                            {t('marketplace.includes_resources', 'Bao gồm')} {selectedCampaign.workflows_count} workflows, {selectedCampaign.collections_count} collections
                                         </p>
                                     )}
                                 </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import axios from 'axios';
+import { aiStudioApi, aiApi } from '@/services/api';
 
 /**
  * ScenarioTab - AI Scenario/Script to Scenes Component
@@ -146,10 +146,10 @@ export default function ScenarioTab({
                 payload.images = imagesBase64;
             }
 
-            const response = await axios.post('/ai-studio/scenarios/parse', payload);
+            const response = await aiStudioApi.parseScenario(payload);
 
-            if (response.data.success) {
-                const parsedScenes = response.data.data.scenes;
+            if (response.success) {
+                const parsedScenes = response.data.scenes;
 
                 // Attach source images to corresponding scenes for Image-to-Video
                 if (sourceImages.length > 0) {
@@ -162,7 +162,7 @@ export default function ScenarioTab({
                 }
 
                 setScenes(parsedScenes);
-                setTitle(response.data.data.title || '');
+                setTitle(response.data.title || '');
                 setStep('scenes');
 
                 // Estimate credits
@@ -180,15 +180,15 @@ export default function ScenarioTab({
         if (!model || sceneList.length === 0) return;
 
         try {
-            const response = await axios.post('/ai-studio/scenarios/estimate', {
+            const response = await aiStudioApi.estimateScenario({
                 model,
                 output_type: outputType,
                 scenes: sceneList,
                 settings,
             });
 
-            if (response.data.success) {
-                setTotalCredits(response.data.total_credits);
+            if (response.success) {
+                setTotalCredits(response.total_credits);
             }
         } catch (error) {
             console.error('Failed to estimate credits', error);
@@ -240,7 +240,7 @@ export default function ScenarioTab({
             }));
 
             // Save the scenario with images
-            const saveResponse = await axios.post('/ai-studio/scenarios', {
+            const saveResponse = await aiStudioApi.saveScenario({
                 script,
                 title,
                 output_type: outputType,
@@ -249,15 +249,15 @@ export default function ScenarioTab({
                 settings,
             });
 
-            if (saveResponse.data.success) {
-                const savedScenario = saveResponse.data.scenario;
+            if (saveResponse.success) {
+                const savedScenario = saveResponse.scenario;
                 setScenario(savedScenario);
 
                 // Start generation
-                const genResponse = await axios.post(`/ai-studio/scenarios/${savedScenario.id}/generate`);
+                const genResponse = await aiStudioApi.generateScenario(savedScenario.id);
 
-                if (genResponse.data.success) {
-                    setScenario(genResponse.data.scenario);
+                if (genResponse.success) {
+                    setScenario(genResponse.scenario);
                     addToast('Đã bắt đầu tạo video cho tất cả các cảnh', 'success');
 
                     // Start polling
@@ -274,10 +274,10 @@ export default function ScenarioTab({
     const startPolling = (scenarioId) => {
         const pollInterval = setInterval(async () => {
             try {
-                const response = await axios.get(`/ai-studio/scenarios/${scenarioId}/status`);
+                const response = await aiStudioApi.getScenarioStatus(scenarioId);
 
-                if (response.data.success) {
-                    const updatedScenario = response.data.scenario;
+                if (response.success) {
+                    const updatedScenario = response.scenario;
                     setScenario(updatedScenario);
                     setScenes(updatedScenario.scenes);
 
@@ -395,15 +395,15 @@ export default function ScenarioTab({
                         'elderly 65 years old'
                 }. ${newCharacter.description}. High quality, realistic, professional portrait photography.`;
 
-            const response = await axios.post('/api/ai/generate-portrait', {
+            const response = await aiApi.generatePortrait({
                 prompt,
                 style: 'realistic'
             });
 
-            if (response.data?.image_url) {
+            if (response?.image_url) {
                 setNewCharacter({
                     ...newCharacter,
-                    image: { url: response.data.image_url, file: null, type: 'ai' }
+                    image: { url: response.image_url, file: null, type: 'ai' }
                 });
                 addToast('Đã tạo hình ảnh nhân vật!', 'success');
             }

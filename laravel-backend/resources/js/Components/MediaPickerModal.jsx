@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { mediaApi } from '@/services/api';
 
 /**
  * MediaPickerModal - Reusable modal for selecting files or folders from user's media library
@@ -50,17 +51,15 @@ export default function MediaPickerModal({
                 params.append('type', fileType);
             }
 
-            const response = await window.axios.get(`/media/list.json?${params.toString()}`);
-            const data = response.data;
-
+            const response = await mediaApi.list(params.toString());
             // Handle paginated or direct response
-            const files = data?.data || data || [];
+            const files = response?.data || response || [];
             setMediaFiles(files);
 
             // Get folders - only show at root level or get subfolders
             if (!currentFolder) {
-                const foldersResponse = await window.axios.get('/media/folders.json');
-                setFolders(foldersResponse.data?.folders || foldersResponse.data || []);
+                const foldersResponse = await mediaApi.getFolders();
+                setFolders(foldersResponse?.folders || foldersResponse || []);
             } else {
                 setFolders([]); // No nested folders for now
             }

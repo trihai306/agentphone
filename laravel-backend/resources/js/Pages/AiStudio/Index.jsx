@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, router, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import axios from 'axios';
+import { aiStudioApi } from '@/services/api';
 import AppLayout from '../../Layouts/AppLayout';
 import { useToast } from '@/Components/Layout/ToastProvider';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
@@ -255,11 +255,13 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
         // Poll less frequently since WebSocket handles real-time updates
         const interval = setInterval(async () => {
             try {
-                const response = await axios.get(`/ai-studio/generations/${currentGeneration.id}/status`);
-                setCurrentGeneration(response.data.generation);
-                if (response.data.generation.status === 'completed' || response.data.generation.status === 'failed') {
-                    setHistory(prev => [response.data.generation, ...prev.filter(g => g.id !== currentGeneration.id)]);
-                    setGenerating(false);
+                const result = await aiStudioApi.getGenerationStatus(currentGeneration.id);
+                if (result.success) {
+                    setCurrentGeneration(result.data.generation);
+                    if (result.data.generation.status === 'completed' || result.data.generation.status === 'failed') {
+                        setHistory(prev => [result.data.generation, ...prev.filter(g => g.id !== currentGeneration.id)]);
+                        setGenerating(false);
+                    }
                 }
             } catch (error) {
                 console.error('Failed to check status:', error);
@@ -295,15 +297,19 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                 payload.source_image = sourceImage;
             }
 
-            const response = await axios.post(endpoint, payload);
+            const result = await aiStudioApi.generate(endpoint, payload);
 
-            // Job queued - add to history, it will show "processing" status
-            setCurrentGeneration(response.data.generation);
-            setHistory(prev => [response.data.generation, ...prev]);
-            router.reload({ only: ['currentCredits'] });
-            addToast('Generation queued successfully!', 'success');
+            if (result.success) {
+                // Job queued - add to history, it will show "processing" status
+                setCurrentGeneration(result.data.generation);
+                setHistory(prev => [result.data.generation, ...prev]);
+                router.reload({ only: ['currentCredits'] });
+                addToast('Generation queued successfully!', 'success');
+            } else {
+                addToast(result.error || 'An error occurred', 'error');
+            }
         } catch (error) {
-            addToast(error.response?.data?.error || 'An error occurred', 'error');
+            addToast(error.message || 'An error occurred', 'error');
         } finally {
             // Stop loading immediately after job is queued
             setGenerating(false);

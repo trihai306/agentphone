@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { deviceApi } from '@/services/api';
 
 /**
  * Custom hook to manage device apps list via socket
@@ -49,11 +50,9 @@ export function useDeviceApps(userId) {
         setAppsLoading(true);
 
         try {
-            const response = await window.axios.post('/devices/apps', {
-                device_id: deviceId
-            });
+            const response = await deviceApi.getApps(deviceId);
 
-            if (!response?.data?.success) {
+            if (!response?.success) {
                 console.error('❌ useDeviceApps: API request failed');
                 setAppsLoading(false);
             }

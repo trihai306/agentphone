@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { deviceApi } from '@/services/api';
 
 /**
  * Custom hook to manage device selection and status
@@ -26,9 +27,7 @@ export function useDeviceManager(initialDevices = [], auth = null) {
 
         const checkAccessibility = async () => {
             try {
-                await window.axios.post('/devices/check-accessibility', {
-                    device_id: selectedDevice.device_id
-                });
+                await deviceApi.checkAccessibility(selectedDevice.device_id);
                 console.log('✅ useDeviceManager: Accessibility check sent for device:', selectedDevice.device_id);
             } catch (err) {
                 console.warn('⚠️ useDeviceManager: Auto accessibility check failed:', err);
@@ -107,11 +106,9 @@ export function useDeviceManager(initialDevices = [], auth = null) {
         }
 
         try {
-            const response = await window.axios.post('/devices/check-accessibility', {
-                device_id: selectedDevice.device_id
-            });
-            console.log('✅ useDeviceManager: Manual accessibility check:', response.data);
-            return response.data;
+            const response = await deviceApi.checkAccessibility(selectedDevice.device_id);
+            console.log('✅ useDeviceManager: Manual accessibility check:', response);
+            return response;
         } catch (err) {
             console.error('❌ useDeviceManager: Accessibility check failed:', err);
             throw err;

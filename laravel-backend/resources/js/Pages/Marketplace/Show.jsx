@@ -68,6 +68,13 @@ export default function Show({ listing, hasPurchased, userPurchase, relatedListi
                 </svg>
             );
         }
+        if (type?.includes('Campaign')) {
+            return (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+            );
+        }
         return (
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
@@ -113,7 +120,9 @@ export default function Show({ listing, hasPurchased, userPurchase, relatedListi
                                     {/* Type Badge */}
                                     <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-white/20 text-white backdrop-blur-md border border-white/20">
                                         {getListableIcon(listing.listable_type)}
-                                        {listing.listable_type?.includes('DataCollection') ? 'Data Collection' : 'Workflow'}
+                                        {listing.listable_type?.includes('Campaign') ? 'Campaign'
+                                            : listing.listable_type?.includes('DataCollection') ? 'Data Collection'
+                                                : 'Workflow'}
                                     </div>
 
                                     {/* Stats */}
@@ -318,15 +327,17 @@ export default function Show({ listing, hasPurchased, userPurchase, relatedListi
                                             {t('marketplace.purchased', 'Purchased')}
                                         </div>
                                         <Link
-                                            href={userPurchase?.cloned_type?.includes('Flow')
-                                                ? `/flows/${userPurchase.cloned_id}/edit`
-                                                : `/data-collections/${userPurchase.cloned_id}`}
+                                            href={userPurchase?.cloned_type?.includes('Campaign')
+                                                ? `/campaigns/${userPurchase.cloned_id}`
+                                                : userPurchase?.cloned_type?.includes('Flow')
+                                                    ? `/flows/${userPurchase.cloned_id}/edit`
+                                                    : `/data-collections/${userPurchase.cloned_id}`}
                                             className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                             </svg>
-                                            {t('marketplace.open_item', 'Open Item')}
+                                            {t('marketplace.open_item', 'Mở Campaign')}
                                         </Link>
                                     </div>
                                 ) : (

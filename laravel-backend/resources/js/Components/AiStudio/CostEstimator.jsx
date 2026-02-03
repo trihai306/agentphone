@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { aiStudioApi } from '@/services/api';
 
 export default function CostEstimator({ type, model, params, className = '' }) {
     const [cost, setCost] = useState(null);
@@ -14,12 +14,14 @@ export default function CostEstimator({ type, model, params, className = '' }) {
         const fetchCost = async () => {
             setLoading(true);
             try {
-                const response = await axios.post('/ai-studio/estimate-cost', {
+                const result = await aiStudioApi.estimateCost({
                     type,
                     model,
                     params: params || {},
                 });
-                setCost(response.data.cost);
+                if (result.success) {
+                    setCost(result.data.cost);
+                }
             } catch (error) {
                 console.error('Failed to estimate cost:', error);
                 setCost(null);
@@ -31,6 +33,7 @@ export default function CostEstimator({ type, model, params, className = '' }) {
         // Debounce
         const timer = setTimeout(fetchCost, 300);
         return () => clearTimeout(timer);
+
     }, [type, model, params]);
 
     if (!model) {

@@ -44,6 +44,10 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
         Array.from(files).forEach((file, index) => {
             formData.append(`files[${index}]`, file);
         });
+        // Include current folder so files are uploaded to the correct location
+        if (filters?.folder) {
+            formData.append('folder', filters.folder);
+        }
         const progressInterval = setInterval(() => {
             setUploadProgress(prev => prev >= 90 ? 90 : prev + 10);
         }, 200);
@@ -61,7 +65,7 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                 }, 500);
             },
         });
-    }, [addToast, t]);
+    }, [addToast, t, filters?.folder]);
 
     // Track if we're doing an internal drag (moving media to folder) vs external (uploading file)
     const [isInternalDrag, setIsInternalDrag] = useState(false);

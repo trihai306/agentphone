@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { deviceApi } from '@/services/api';
 
 /**
  * ElementPickerModal - Professional UI for selecting elements from device
@@ -485,9 +486,9 @@ export default function ElementPickerModal({
             // SINGLE API call for element detection
             // Accessibility scan provides: elements + screenshot + element properties
             // No need for separate OCR call - reduces complexity and prevents screenshot conflicts
-            const response = await window.axios.post('/devices/inspect', { device_id: deviceId });
+            const response = await deviceApi.inspect(deviceId);
 
-            if (!response?.data?.success) {
+            if (!response?.success) {
                 setError('Không thể scan thiết bị');
                 setLoading(false);
                 if (scanTimeoutRef.current) {

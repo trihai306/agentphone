@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useToast } from '@/Components/Layout/ToastProvider';
-import axios from 'axios';
+import { flowApi } from '@/services/api';
 
 /**
  * BatchJobModal - Create and dispatch jobs to multiple devices
@@ -60,7 +60,7 @@ export default function BatchJobModal({
 
         setIsSubmitting(true);
         try {
-            const response = await axios.post(`/api/flows/${flow.id}/jobs/batch`, {
+            const response = await flowApi.batchJobs(flow.id, {
                 device_ids: selectedDevices,
                 data_collection_id: selectedCollection,
                 name: config.name,
@@ -69,11 +69,11 @@ export default function BatchJobModal({
                 execution_mode: config.executionMode,
             });
 
-            addToast(`Created ${response.data.jobs?.length || selectedDevices.length} jobs successfully!`, 'success');
+            addToast(`Created ${response.jobs?.length || selectedDevices.length} jobs successfully!`, 'success');
             onClose();
         } catch (error) {
             console.error('Failed to create batch jobs:', error);
-            addToast('Failed to create jobs: ' + (error.response?.data?.message || error.message), 'error');
+            addToast('Failed to create jobs: ' + (error.message || 'Unknown error'), 'error');
         } finally {
             setIsSubmitting(false);
         }

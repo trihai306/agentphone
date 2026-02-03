@@ -33,6 +33,7 @@ class MarketplaceListing extends Model
     protected $casts = [
         'tags' => 'array',
         'bundled_collection_ids' => 'array',
+        'bundled_workflow_ids' => 'array',
         'published_at' => 'datetime',
         'price' => 'integer',
         'downloads_count' => 'integer',
@@ -91,6 +92,7 @@ class MarketplaceListing extends Model
         $modelClass = match ($type) {
             'data_collection', 'collection' => DataCollection::class,
             'flow', 'workflow' => Flow::class,
+            'campaign' => Campaign::class,
             default => $type,
         };
         return $query->where('listable_type', $modelClass);
@@ -114,6 +116,7 @@ class MarketplaceListing extends Model
         return match ($this->listable_type) {
             DataCollection::class => 'Data Collection',
             Flow::class => 'Workflow',
+            Campaign::class => 'Campaign',
             default => class_basename($this->listable_type),
         };
     }
@@ -182,5 +185,46 @@ class MarketplaceListing extends Model
         }
 
         return array_unique($collectionIds);
+    }
+
+    /**
+     * Extract all resources (workflows + collections) from a Campaign
+     */
+    public static function extractResourcesFromCampaign(Campaign $campaign): array
+    {
+        $workflowIds = [];
+        $collectionIds = [];
+
+        // Get all workflows attached to campaign
+        $campaign->load('workflows.nodes');
+        foreach ($campaign->workflows as $workflow) {
+            $workflowIds[] = $workflow->id;
+            // Extract collections from workflow nodes
+            $collectionIds = array_merge(
+                $collectionIds,
+                self::extractCollectionIdsFromFlow($workflow)
+            );
+        }
+
+        // Add campaign's primary data collection
+        if ($campaign->data_collection_id) {
+            $collectionIds[] = $campaign->data_collection_id;
+        }
+
+        return [
+            'workflow_ids' => array_unique($workflowIds),
+            'collection_ids' => array_unique($collectionIds),
+        ];
+    }
+
+    /**
+     * Get bundled Workflows
+     */
+    public function getBundledWorkflows()
+    {
+        if (empty($this->bundled_workflow_ids)) {
+            return collect();
+        }
+        return Flow::whereIn('id', $this->bundled_workflow_ids)->get();
     }
 }

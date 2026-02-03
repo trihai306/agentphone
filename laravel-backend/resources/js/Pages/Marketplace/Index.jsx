@@ -89,7 +89,7 @@ export default function Index({ listings = { data: [] }, filters = {}, stats = {
                                     {t('marketplace.title', 'Chợ Chia Sẻ')}
                                 </h1>
                                 <p className={`mt-2 text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                    Khám phá {stats?.total_listings || 0}+ workflows từ cộng đồng
+                                    Khám phá {stats?.total_listings || 0}+ campaigns từ cộng đồng
                                 </p>
                             </div>
                             <Link
@@ -111,7 +111,7 @@ export default function Index({ listings = { data: [] }, filters = {}, stats = {
                                 </svg>
                                 <input
                                     type="text"
-                                    placeholder="Tìm kiếm workflows, TikTok automation, e-commerce..."
+                                    placeholder="Tìm kiếm campaigns, TikTok automation, e-commerce..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className={`w-full pl-14 pr-32 py-4 text-base bg-transparent ${isDark ? 'text-white placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'} focus:outline-none`}
@@ -132,10 +132,10 @@ export default function Index({ listings = { data: [] }, filters = {}, stats = {
                                     key={cat.id}
                                     onClick={() => handleCategoryClick(cat.id)}
                                     className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${filterCategory === cat.id
-                                            ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-500/30'
-                                            : isDark
-                                                ? 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/10'
-                                                : 'bg-white text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-200 shadow-sm'
+                                        ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-500/30'
+                                        : isDark
+                                            ? 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/10'
+                                            : 'bg-white text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-200 shadow-sm'
                                         }`}
                                 >
                                     <span className="text-base">{cat.icon}</span>
@@ -166,8 +166,8 @@ export default function Index({ listings = { data: [] }, filters = {}, stats = {
                                         key={option.value}
                                         onClick={() => handleFilterChange('price', option.value)}
                                         className={`px-4 py-2 text-xs font-medium transition-all ${filterPriceType === option.value
-                                                ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white'
-                                                : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                                            ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white'
+                                            : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                                             }`}
                                     >
                                         {option.label}
@@ -208,8 +208,8 @@ export default function Index({ listings = { data: [] }, filters = {}, stats = {
                                         {/* Price Badge */}
                                         <div className="absolute top-4 right-4">
                                             <span className={`px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md ${listing.price_type === 'free'
-                                                    ? 'bg-emerald-500/90 text-white'
-                                                    : 'bg-white/90 text-gray-900'
+                                                ? 'bg-emerald-500/90 text-white'
+                                                : 'bg-white/90 text-gray-900'
                                                 }`}>
                                                 {listing.price_type === 'free' ? 'MIỄN PHÍ' : `${formatVND(listing.price)} đ`}
                                             </span>

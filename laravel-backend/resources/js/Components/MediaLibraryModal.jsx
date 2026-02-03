@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { createPortal } from 'react-dom';
+import { mediaApi } from '@/services/api';
 
 /**
  * MediaLibraryModal - Full-featured media library modal matching /media page UI
@@ -77,23 +78,28 @@ export default function MediaLibraryModal({
                 params.append('type', fileType);
             }
 
-            const response = await window.axios.get(`/media/list.json?${params.toString()}`);
-            const data = response.data;
-            const files = data?.data || data || [];
-            setMediaFiles(files);
+            const result = await mediaApi.list(params.toString());
+            if (result.success) {
+                const files = result.data?.data || result.data || [];
+                setMediaFiles(files);
+            }
 
             // Get folders - only show at root level
             if (!currentFolder) {
-                const foldersResponse = await window.axios.get('/media/folders.json');
-                setFolders(foldersResponse.data?.folders || foldersResponse.data || []);
+                const foldersResult = await mediaApi.getFolders();
+                if (foldersResult.success) {
+                    setFolders(foldersResult.data?.folders || foldersResult.data || []);
+                }
             } else {
                 setFolders([]);
             }
 
             // Get stats
             try {
-                const statsResponse = await window.axios.get('/media/stats.json');
-                setStats(statsResponse.data || {});
+                const statsResult = await mediaApi.getStats();
+                if (statsResult.success) {
+                    setStats(statsResult.data || {});
+                }
             } catch (err) {
                 // Stats may not exist
             }
@@ -117,9 +123,7 @@ export default function MediaLibraryModal({
             setUploadProgress(prev => prev >= 90 ? 90 : prev + 10);
         }, 200);
 
-        window.axios.post('/media', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        }).then(() => {
+        mediaApi.upload(formData).then(() => {
             fetchMedia();
         }).finally(() => {
             clearInterval(progressInterval);

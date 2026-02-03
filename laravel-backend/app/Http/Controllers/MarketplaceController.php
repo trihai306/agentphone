@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Campaign;
 use App\Models\DataCollection;
 use App\Models\DataRecord;
 use App\Models\Flow;
@@ -70,8 +71,7 @@ class MarketplaceController extends Controller
         $stats = [
             'total_listings' => MarketplaceListing::published()->count(),
             'total_downloads' => MarketplaceListing::published()->sum('downloads_count'),
-            'collections_count' => MarketplaceListing::published()->byType('collection')->count(),
-            'workflows_count' => MarketplaceListing::published()->byType('flow')->count(),
+            'campaigns_count' => MarketplaceListing::published()->byType('campaign')->count(),
         ];
 
         // Get popular tags
@@ -155,7 +155,7 @@ class MarketplaceController extends Controller
     }
 
     /**
-     * Purchase/Download a listing
+     * Purchase/Download a listing (Campaign)
      */
     public function purchase(Request $request, MarketplaceListing $listing)
     {
@@ -165,12 +165,12 @@ class MarketplaceController extends Controller
 
         // Check if already purchased
         if ($user->marketplacePurchases()->where('listing_id', $listing->id)->exists()) {
-            return back()->with('error', 'You have already purchased this item.');
+            return back()->with('error', 'Bạn đã mua campaign này rồi.');
         }
 
         // Cannot purchase own listing
         if ($listing->user_id === $user->id) {
-            return back()->with('error', 'You cannot purchase your own listing.');
+            return back()->with('error', 'Bạn không thể mua campaign của chính mình.');
         }
 
         return DB::transaction(function () use ($user, $listing) {
@@ -179,7 +179,7 @@ class MarketplaceController extends Controller
             // Handle payment for paid items
             if ($listing->price_type === MarketplaceListing::PRICE_TYPE_PAID) {
                 if ($user->ai_credits < $listing->price) {
-                    return back()->with('error', 'Insufficient credits. You need ' . $listing->price . ' credits.');
+                    return back()->with('error', 'Không đủ credits. Bạn cần ' . number_format($listing->price) . ' credits.');
                 }
 
                 // Deduct from buyer
@@ -191,9 +191,12 @@ class MarketplaceController extends Controller
                 $listing->user->addAiCredits($sellerShare);
             }
 
-            // Clone bundled DataCollections first (for workflows)
+            // Get original campaign
+            $originalCampaign = $listing->listable;
+
+            // Step 1: Clone bundled DataCollections (schema only)
             $collectionMapping = [];
-            if ($listing->listable instanceof Flow && !empty($listing->bundled_collection_ids)) {
+            if (!empty($listing->bundled_collection_ids)) {
                 $bundledCollections = DataCollection::whereIn('id', $listing->bundled_collection_ids)->get();
                 foreach ($bundledCollections as $collection) {
                     $clonedCollection = $this->cloneDataCollectionSchemaOnly($collection, $user);
@@ -201,26 +204,33 @@ class MarketplaceController extends Controller
                 }
             }
 
-            // Clone the listable to user's account
-            $cloned = $this->cloneListable($listing->listable, $user, $collectionMapping);
+            // Step 2: Clone bundled Workflows
+            $workflowMapping = [];
+            if (!empty($listing->bundled_workflow_ids)) {
+                $bundledWorkflows = Flow::whereIn('id', $listing->bundled_workflow_ids)->get();
+                foreach ($bundledWorkflows as $workflow) {
+                    $clonedWorkflow = $this->cloneFlow($workflow, $user, $collectionMapping);
+                    $workflowMapping[$workflow->id] = $clonedWorkflow->id;
+                }
+            }
+
+            // Step 3: Clone Campaign
+            $clonedCampaign = $this->cloneCampaign($originalCampaign, $user, $workflowMapping, $collectionMapping);
 
             // Record purchase
             MarketplacePurchase::create([
                 'user_id' => $user->id,
                 'listing_id' => $listing->id,
-                'cloned_type' => get_class($cloned),
-                'cloned_id' => $cloned->id,
+                'cloned_type' => Campaign::class,
+                'cloned_id' => $clonedCampaign->id,
                 'price_paid' => $pricePaid,
             ]);
 
             // Increment download count
             $listing->increment('downloads_count');
 
-            $redirectRoute = $cloned instanceof Flow
-                ? route('flows.edit', $cloned)
-                : route('data-collections.show', $cloned);
-
-            return redirect($redirectRoute)->with('success', 'Successfully added to your account!');
+            return redirect()->route('campaigns.show', $clonedCampaign)
+                ->with('success', 'Campaign đã được thêm vào tài khoản của bạn!');
         });
     }
 
@@ -246,41 +256,38 @@ class MarketplaceController extends Controller
                 ->sum('price_paid') * 0.8, // 80% seller share
         ];
 
-        // Get user's available items for publishing
-        $userFlows = $user->flows()
-            ->select('id', 'name', 'description')
-            ->with('nodes:id,flow_id,type,data')
+        // Get user's Campaigns for publishing
+        $userCampaigns = Campaign::where('user_id', $user->id)
+            ->with(['workflows', 'dataCollection'])
+            ->orderBy('name')
             ->get()
-            ->map(function ($flow) {
-                // Extract bundled collection count from nodes
-                $collectionIds = MarketplaceListing::extractCollectionIdsFromFlow($flow);
+            ->map(function ($campaign) {
+                $resources = MarketplaceListing::extractResourcesFromCampaign($campaign);
                 return [
-                    'id' => $flow->id,
-                    'name' => $flow->name,
-                    'description' => $flow->description,
-                    'bundled_collection_count' => count($collectionIds),
+                    'id' => $campaign->id,
+                    'name' => $campaign->name,
+                    'description' => $campaign->description,
+                    'icon' => $campaign->icon,
+                    'color' => $campaign->color,
+                    'workflows_count' => count($resources['workflow_ids']),
+                    'collections_count' => count($resources['collection_ids']),
                 ];
             });
-
-        $userCollections = $user->dataCollections()
-            ->select('id', 'name', 'description', 'icon', 'color', 'total_records')
-            ->get();
 
         return Inertia::render('Marketplace/MyListings', [
             'listings' => $listings,
             'stats' => $stats,
-            'userFlows' => $userFlows,
-            'userCollections' => $userCollections,
+            'userCampaigns' => $userCampaigns,
         ]);
     }
 
     /**
-     * Publish a new listing (workflows only - data collections are bundled automatically)
+     * Publish a Campaign to marketplace
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'listable_id' => 'required|integer|exists:flows,id',
+            'listable_id' => 'required|integer|exists:campaigns,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:2000',
             'tags' => 'nullable|array|max:10',
@@ -291,46 +298,45 @@ class MarketplaceController extends Controller
 
         $user = auth()->user();
 
-        // Marketplace only sells workflows - Data Collections are bundled automatically
-        $modelClass = Flow::class;
-
-        // Verify ownership
-        $listable = $modelClass::where('user_id', $user->id)
+        // Marketplace sells Campaigns
+        $campaign = Campaign::where('user_id', $user->id)
             ->findOrFail($validated['listable_id']);
 
         // Check if already listed
-        $existingListing = MarketplaceListing::where('listable_type', $modelClass)
-            ->where('listable_id', $listable->id)
+        $existingListing = MarketplaceListing::where('listable_type', Campaign::class)
+            ->where('listable_id', $campaign->id)
             ->whereNull('deleted_at')
             ->first();
 
         if ($existingListing) {
-            return back()->with('error', 'This workflow is already listed on the marketplace.');
+            return back()->with('error', 'Campaign này đã được đăng bán rồi.');
         }
 
-        // Extract bundled DataCollection IDs from workflow nodes
-        $bundledCollectionIds = null;
-        $listable->load('nodes');
-        $collectionIds = MarketplaceListing::extractCollectionIdsFromFlow($listable);
+        // Extract bundled resources from campaign
+        $resources = MarketplaceListing::extractResourcesFromCampaign($campaign);
+
+        // Verify ownership of bundled workflows
+        $ownedWorkflowIds = Flow::where('user_id', $user->id)
+            ->whereIn('id', $resources['workflow_ids'])
+            ->pluck('id')
+            ->toArray();
 
         // Verify ownership of bundled collections
-        if (!empty($collectionIds)) {
-            $ownedCollections = DataCollection::where('user_id', $user->id)
-                ->whereIn('id', $collectionIds)
-                ->pluck('id')
-                ->toArray();
-            $bundledCollectionIds = $ownedCollections;
-        }
+        $ownedCollectionIds = DataCollection::where('user_id', $user->id)
+            ->whereIn('id', $resources['collection_ids'])
+            ->pluck('id')
+            ->toArray();
 
-        // Create listing - auto-published (no review required)
+        // Create listing - auto-published
         $listing = MarketplaceListing::create([
             'user_id' => $user->id,
-            'listable_type' => $modelClass,
-            'listable_id' => $listable->id,
+            'listable_type' => Campaign::class,
+            'listable_id' => $campaign->id,
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
             'tags' => $validated['tags'] ?? [],
-            'bundled_collection_ids' => $bundledCollectionIds,
+            'bundled_workflow_ids' => $ownedWorkflowIds,
+            'bundled_collection_ids' => $ownedCollectionIds,
             'price_type' => $validated['price_type'],
             'price' => $validated['price_type'] === 'paid' ? ($validated['price'] ?? 0) : 0,
             'status' => MarketplaceListing::STATUS_PUBLISHED,
@@ -338,7 +344,7 @@ class MarketplaceController extends Controller
         ]);
 
         return redirect()->route('marketplace.my-listings')
-            ->with('success', 'Tin đăng đã được đăng thành công!');
+            ->with('success', 'Campaign đã được đăng bán thành công!');
     }
 
     /**
@@ -506,5 +512,71 @@ class MarketplaceController extends Controller
 
         return $clone;
     }
-}
 
+    /**
+     * Clone a Campaign with all its relationships
+     */
+    private function cloneCampaign(Campaign $original, $user, array $workflowMapping = [], array $collectionMapping = []): Campaign
+    {
+        // Clone campaign base attributes
+        $clone = $original->replicate([
+            'user_id',
+            'status',
+            'total_records',
+            'records_processed',
+            'records_success',
+            'records_failed',
+            'last_run_at',
+            'next_run_at',
+        ]);
+        $clone->user_id = $user->id;
+        $clone->name = $original->name . ' (Marketplace)';
+        $clone->status = Campaign::STATUS_DRAFT;
+        $clone->total_records = 0;
+        $clone->records_processed = 0;
+        $clone->records_success = 0;
+        $clone->records_failed = 0;
+
+        // Update data_collection_id reference
+        if ($original->data_collection_id && isset($collectionMapping[$original->data_collection_id])) {
+            $clone->data_collection_id = $collectionMapping[$original->data_collection_id];
+        } else {
+            $clone->data_collection_id = null;
+        }
+
+        // Clear device-specific assignments (buyer will set their own devices)
+        $clone->device_record_assignments = null;
+
+        $clone->save();
+
+        // Clone workflow relationships with remapped IDs
+        foreach ($original->workflows as $workflow) {
+            $newWorkflowId = $workflowMapping[$workflow->id] ?? null;
+            if (!$newWorkflowId)
+                continue;
+
+            // Get pivot data
+            $pivot = $workflow->pivot;
+
+            // Update variable_source_collection_id if present
+            $variableSourceId = $pivot->variable_source_collection_id;
+            if ($variableSourceId && isset($collectionMapping[$variableSourceId])) {
+                $variableSourceId = $collectionMapping[$variableSourceId];
+            }
+
+            $clone->workflows()->attach($newWorkflowId, [
+                'sequence' => $pivot->sequence,
+                'repeat_count' => $pivot->repeat_count,
+                'execution_mode' => $pivot->execution_mode,
+                'delay_between_repeats' => $pivot->delay_between_repeats,
+                'conditions' => $pivot->conditions,
+                'variable_source_collection_id' => $variableSourceId,
+                'iteration_strategy' => $pivot->iteration_strategy,
+            ]);
+        }
+
+        // Note: We don't clone devices - buyer will add their own devices
+
+        return $clone;
+    }
+}

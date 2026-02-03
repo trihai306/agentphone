@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from '@inertiajs/react';
-import axios from 'axios';
+import { aiStudioApi } from '@/services/api';
 
 /**
  * Jobs Queue Panel - Shows active generations, scenarios, and recent history
@@ -23,10 +23,10 @@ export default function JobsQueuePanel({
     useEffect(() => {
         const fetchActiveJobs = async () => {
             try {
-                const response = await axios.get('/ai-studio/active-jobs');
-                if (response.data) {
-                    setGenerations(response.data.activeGenerations || []);
-                    setScenarios(response.data.activeScenarios || []);
+                const result = await aiStudioApi.getActiveJobs();
+                if (result.success && result.data) {
+                    setGenerations(result.data.activeGenerations || []);
+                    setScenarios(result.data.activeScenarios || []);
                 }
             } catch (e) {
                 console.error('Failed to fetch active jobs:', e);

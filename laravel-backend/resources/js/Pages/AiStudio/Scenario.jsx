@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import axios from 'axios';
+import { aiStudioApi } from '@/services/api';
 import AppLayout from '../../Layouts/AppLayout';
 import { useToast } from '@/Components/Layout/ToastProvider';
 import { useTheme } from '@/Contexts/ThemeContext';
@@ -75,9 +75,9 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
         const pollInterval = setInterval(async () => {
             try {
                 const updates = await Promise.all(
-                    activeScenarios.map(s => axios.get(`/ai-studio/scenarios/${s.id}/status`))
+                    activeScenarios.map(s => aiStudioApi.getScenarioStatus(s.id))
                 );
-                const updated = updates.map(r => r.data.scenario);
+                const updated = updates.map(r => r.scenario);
                 const stillActive = updated.filter(s => ['queued', 'generating'].includes(s.status));
                 setActiveScenarios(stillActive);
 
@@ -102,12 +102,12 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
 
         setParsing(true);
         try {
-            const response = await axios.post('/ai-studio/scenarios/parse', {
+            const response = await aiStudioApi.parseScenario({
                 script, output_type: outputType, style, platform,
             });
 
-            if (response.data.success) {
-                const data = response.data.data;
+            if (response.success) {
+                const data = response.data;
                 setScenes(data.scenes);
                 setTitle(data.title || '');
                 setAiMetadata({
@@ -131,10 +131,10 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
     const estimateCredits = async (sceneList) => {
         if (!model || sceneList.length === 0) return;
         try {
-            const response = await axios.post('/ai-studio/scenarios/estimate', {
+            const response = await aiStudioApi.estimateScenario({
                 model, output_type: outputType, scenes: sceneList, settings,
             });
-            if (response.data.success) setTotalCredits(response.data.total_credits);
+            if (response.success) setTotalCredits(response.total_credits);
         } catch (error) {
             console.error('Failed to estimate credits', error);
         }
@@ -153,19 +153,19 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
         // Show loading state but don't switch to generating view
         setParsing(true);
         try {
-            const saveResponse = await axios.post('/ai-studio/scenarios', {
+            const saveResponse = await aiStudioApi.saveScenario({
                 script, title, output_type: outputType, model, scenes, settings,
                 chain_mode: chainMode,
                 characters: characters.length > 0 ? characters : null,
             });
 
-            if (saveResponse.data.success) {
-                const savedScenario = saveResponse.data.scenario;
-                const genResponse = await axios.post(`/ai-studio/scenarios/${savedScenario.id}/generate`);
+            if (saveResponse.success) {
+                const savedScenario = saveResponse.scenario;
+                const genResponse = await aiStudioApi.generateScenario(savedScenario.id);
 
-                if (genResponse.data.success) {
+                if (genResponse.success) {
                     // Add to active scenarios list
-                    const newScenario = genResponse.data.scenario;
+                    const newScenario = genResponse.scenario;
                     setActiveScenarios(prev => [newScenario, ...prev]);
 
                     // Reset form for new scenario
