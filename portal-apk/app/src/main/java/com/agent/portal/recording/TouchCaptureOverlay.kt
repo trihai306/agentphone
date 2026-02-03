@@ -194,6 +194,22 @@ class TouchCaptureOverlay : Service() {
                 // We need to track the gesture sequence ourselves
 
                 val currentTime = System.currentTimeMillis()
+                
+                // ========== ALWAYS STORE TAP COORDINATES ==========
+                // Store EVERY touch for EventCapture to use for accurate tap position
+                // Do this BEFORE any other logic so we never miss a tap
+                lastTapX = x
+                lastTapY = y
+                lastTapTimestamp = currentTime
+                Log.d(TAG, "👆 Touch at (${x.toInt()}, ${y.toInt()}) - stored for EventCapture")
+                
+                // Auto-reset gesture tracking if too much time passed (stale state protection)
+                // This prevents getting stuck in "subsequent touch" branch forever
+                val GESTURE_TIMEOUT_MS = 300L
+                if (touchStartTime != 0L && (currentTime - touchStartTime) > GESTURE_TIMEOUT_MS) {
+                    Log.d(TAG, "Gesture timeout - resetting tracking")
+                    touchStartTime = 0L
+                }
 
                 if (touchStartTime == 0L) {
                     // First touch in sequence
@@ -201,14 +217,6 @@ class TouchCaptureOverlay : Service() {
                     touchStartY = y
                     touchStartTime = currentTime
                     isSwiping = false
-                    
-                    // ========== STORE TAP COORDINATES ==========
-                    // Store for EventCapture to use for accurate tap position
-                    lastTapX = x
-                    lastTapY = y
-                    lastTapTimestamp = currentTime
-                    
-                    Log.d(TAG, "👆 Touch at (${x.toInt()}, ${y.toInt()}) - stored for EventCapture")
                 } else {
                     // Subsequent touch or end of gesture
                     val deltaX = x - touchStartX

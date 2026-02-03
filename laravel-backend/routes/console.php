@@ -44,6 +44,11 @@ Schedule::command('cleanup:old-data --force')
     ->appendOutputTo(storage_path('logs/cleanup.log'))
     ->onSuccess(fn() => Cache::put('schedule_last_run:cleanup:old-data', ['time' => now()->format('d/m H:i:s'), 'status' => 'success'], now()->addHours(24)));
 
+// Telescope data pruning - keep entries for 48 hours
+Schedule::command('telescope:prune --hours=48')
+    ->daily()
+    ->onSuccess(fn() => Cache::put('schedule_last_run:telescope:prune', ['time' => now()->format('d/m H:i:s'), 'status' => 'success'], now()->addHours(24)));
+
 // =============================================
 // MAINTENANCE (Weekly)
 // =============================================

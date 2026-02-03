@@ -61,8 +61,9 @@ RUN chown -R www-data:www-data /var/www/html \
 # Copy custom PHP config (upload limits, memory)
 COPY docker/php.ini /usr/local/etc/php/conf.d/99-custom.ini
 
-# Copy supervisor config
+# Copy supervisor configs (production + development)
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/supervisord.dev.conf /etc/supervisor/conf.d/supervisord.dev.conf
 
 # Copy cron config
 COPY docker/crontab /etc/cron.d/laravel-cron

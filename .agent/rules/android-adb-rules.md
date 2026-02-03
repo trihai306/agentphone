@@ -1,3 +1,10 @@
+---
+trigger: glob
+glob: portal-apk/**
+description: Safety rules for ADB commands when working with Android APK
+---
+
+# ANDROID ADB SAFETY RULES
 
 Khi làm việc với Android APK và ADB:
 

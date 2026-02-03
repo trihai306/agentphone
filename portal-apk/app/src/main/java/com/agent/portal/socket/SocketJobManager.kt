@@ -565,14 +565,6 @@ object SocketJobManager {
     fun addJobListener(listener: JobListener) {
         jobListeners.add(listener)
     }
-
-    /**
-     * Remove job listener
-     */
-    fun removeJobListener(listener: JobListener) {
-        jobListeners.remove(listener)
-    }
-
     /**
      * Publish custom event to Laravel backend via HTTP API
      * 
@@ -1544,6 +1536,15 @@ object SocketJobManager {
             job.status = if (result.success) JobStatus.COMPLETED else JobStatus.FAILED
             job.result = result
 
+            // Report result to backend
+            reportJobResult(
+                jobId = job.id,
+                success = result.success,
+                message = result.message,
+                error = result.error,
+                executionTime = result.executionTime
+            )
+
             executingJobs.remove(job.id)
             jobQueue.remove(job.id)
 
@@ -1568,6 +1569,15 @@ object SocketJobManager {
                 error = e.message
             )
 
+            // Report failure to backend
+            reportJobResult(
+                jobId = job.id,
+                success = false,
+                message = "Job execution failed: ${e.message}",
+                error = e.message,
+                executionTime = 0
+            )
+
             executingJobs.remove(job.id)
             jobQueue.remove(job.id)
 
@@ -1579,6 +1589,65 @@ object SocketJobManager {
                     FloatingJobProgressService.hide(context)
                 }
             }
+        }
+    }
+
+    /**
+     * Report job completion/failure to backend
+     * This allows BE to:
+     * 1. Update job status in database
+     * 2. Release the job slot for next job
+     * 3. Trigger any post-job hooks
+     */
+    private suspend fun reportJobResult(
+        jobId: String,
+        success: Boolean,
+        message: String,
+        error: String? = null,
+        executionTime: Long = 0
+    ) {
+        try {
+            val context = contextRef?.get() ?: return
+            val token = authToken ?: return
+            val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
+
+            val payload = mapOf(
+                "job_id" to jobId,
+                "device_id" to (deviceId ?: "unknown"),
+                "success" to success,
+                "status" to if (success) "completed" else "failed",
+                "message" to message,
+                "error" to error,
+                "execution_time" to executionTime,
+                "timestamp" to System.currentTimeMillis()
+            )
+
+            val client = okhttp3.OkHttpClient()
+            val json = gson.toJson(payload)
+            val requestBody = okhttp3.RequestBody.create(
+                "application/json".toMediaTypeOrNull(),
+                json
+            )
+
+            val request = okhttp3.Request.Builder()
+                .url("$apiUrl/jobs/$jobId/result")
+                .post(requestBody)
+                .addHeader("Authorization", "Bearer $token")
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Accept", "application/json")
+                .build()
+
+            val response = client.newCall(request).execute()
+            
+            if (response.isSuccessful) {
+                Log.i(TAG, "✅ Job result reported: $jobId → ${if (success) "completed" else "failed"}")
+            } else {
+                Log.w(TAG, "⚠️ Failed to report job result: ${response.code}")
+            }
+            
+            response.close()
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Error reporting job result", e)
         }
     }
 
@@ -2812,320 +2881,6 @@ object SocketJobManager {
         }
     }
 
-    /**
-     * Smart bounds crop with intelligent icon/text separation
-     * 
-     * Strategy:
-     * 1. Find edges with UNIFORM color/transparency (padding)
-     * 2. Use horizontal projection to detect gap between icon and text
-     * 3. Crop to icon region only (before gap)
-     * 
-     * @param bitmap Input bitmap
-     * @return Tightly cropped icon (no text)
-     */
-    private fun smartCropIconBounds(bitmap: android.graphics.Bitmap): android.graphics.Bitmap {
-        try {
-            val width = bitmap.width
-            val height = bitmap.height
-            
-            Log.d(TAG, "   Smart bounds: Input ${width}x${height}")
-            
-            if (width < 10 || height < 10) return bitmap
-            
-            // ========== STEP 1: Detect Uniform Padding Edges ==========
-            // Sample corner to detect padding color
-            val corner = bitmap.getPixel(0, 0)
-            val threshold = 50.0
-            
-            // Find top content edge
-            var top = 0
-            rowLoop@ for (y in 0 until height) {
-                for (x in 0 until width) {
-                    val pixel = bitmap.getPixel(x, y)
-                    if (colorDistanceInt(pixel, corner) > threshold) {
-                        top = y
-                        break@rowLoop
-                    }
-                }
-            }
-            
-            // Find bottom content edge  
-            var bottom = height - 1
-            rowLoop@ for (y in height - 1 downTo 0) {
-                for (x in 0 until width) {
-                    val pixel = bitmap.getPixel(x, y)
-                    if (colorDistanceInt(pixel, corner) > threshold) {
-                        bottom = y
-                        break@rowLoop
-                    }
-                }
-            }
-            
-            // Find left content edge
-            var left = 0
-            colLoop@ for (x in 0 until width) {
-                for (y in 0 until height) {
-                    val pixel = bitmap.getPixel(x, y)
-                    if (colorDistanceInt(pixel, corner) > threshold) {
-                        left = x
-                        break@colLoop
-                    }
-                }
-            }
-            
-            // Find right content edge
-            var right = width - 1
-            colLoop@ for (x in width - 1 downTo 0) {
-                for (y in 0 until height) {
-                    val pixel = bitmap.getPixel(x, y)
-                    if (colorDistanceInt(pixel, corner) > threshold) {
-                        right = x
-                        break@colLoop
-                    }
-                }
-            }
-            
-            Log.d(TAG, "   Content bounds: top=$top, bottom=$bottom, left=$left, right=$right")
-            
-            if (right <= left || bottom <= top) {
-                Log.d(TAG, "   No content bounds found, keeping original")
-                return bitmap
-            }
-            
-            // ========== STEP 2: Intelligent Icon/Text Separation ==========
-            // Use horizontal projection to detect gap between icon and text
-            
-            val contentHeight = bottom - top + 1
-            val rowDensities = IntArray(contentHeight)
-            
-            // Calculate pixel density for each row in content region
-            for (y in 0 until contentHeight) {
-                val actualY = top + y
-                var contentPixels = 0
-                for (x in left..right) {
-                    val pixel = bitmap.getPixel(x, actualY)
-                    if (colorDistanceInt(pixel, corner) > threshold) {
-                        contentPixels++
-                    }
-                }
-                rowDensities[y] = contentPixels
-            }
-            
-            // Find the largest gap (consecutive low-density rows)
-            var maxGapStart = -1
-            var maxGapLength = 0
-            var currentGapStart = -1
-            var currentGapLength = 0
-            
-            val lowDensityThreshold = (right - left + 1) * 0.2 // 20% of width
-            
-            for (y in 0 until contentHeight) {
-                if (rowDensities[y] < lowDensityThreshold) {
-                    // Low density row (gap)
-                    if (currentGapStart == -1) {
-                        currentGapStart = y
-                        currentGapLength = 1
-                    } else {
-                        currentGapLength++
-                    }
-                } else {
-                    // High density row (content)
-                    if (currentGapLength > maxGapLength) {
-                        maxGapStart = currentGapStart
-                        maxGapLength = currentGapLength
-                    }
-                    currentGapStart = -1
-                    currentGapLength = 0
-                }
-            }
-            
-            // Check final gap
-            if (currentGapLength > maxGapLength) {
-                maxGapStart = currentGapStart
-                maxGapLength = currentGapLength
-            }
-            
-            val originalBottom = bottom
-            
-            if (maxGapStart > 0 && maxGapLength >= 2) {
-                // Found significant gap - crop before it
-                bottom = top + maxGapStart - 1
-                Log.d(TAG, "   Gap detected: rows $maxGapStart-${maxGapStart + maxGapLength - 1} (length=$maxGapLength)")
-                Log.d(TAG, "   Cropping to icon region: bottom $originalBottom -> $bottom")
-            } else {
-                // No clear gap - use top 50% as fallback
-                val iconHeight = (contentHeight * 0.5).toInt()
-                bottom = top + iconHeight
-                Log.d(TAG, "   No clear gap, using top 50%: bottom $originalBottom -> $bottom")
-            }
-            
-            // Add minimal padding
-            val padding = 1
-            left = (left - padding).coerceAtLeast(0)
-            top = (top - padding).coerceAtLeast(0)
-            right = (right + padding).coerceAtMost(width - 1)
-            bottom = (bottom + padding).coerceAtMost(height - 1)
-            
-            val finalWidth = right - left + 1
-            val finalHeight = bottom - top + 1
-            
-            Log.d(TAG, "   Final dimensions: ${finalWidth}x${finalHeight}")
-            
-            // Verify sensible dimensions
-            if (finalWidth < 8 || finalHeight < 8) {
-                Log.d(TAG, "   Result too small, keeping original")
-                return bitmap
-            }
-            
-            // ========== STEP 3: Crop ==========
-            val cropped = android.graphics.Bitmap.createBitmap(bitmap, left, top, finalWidth, finalHeight)
-            
-            val removedRatio = 1.0 - (finalWidth * finalHeight).toDouble() / (width * height)
-            Log.i(TAG, "✅ Bounds cropped: ${width}x${height} -> ${finalWidth}x${finalHeight} (${"%.1f".format(removedRatio * 100)}% removed, icon only)")
-            
-            return cropped
-            
-        } catch (e: Exception) {
-            Log.w(TAG, "⚠️ Bounds crop failed: ${e.message}")
-            return bitmap
-        }
-    }
-    
-    /**
-     * Color distance for Int pixel values
-     */
-    private fun colorDistanceInt(pixel1: Int, pixel2: Int): Double {
-        val r1 = (pixel1 shr 16) and 0xFF
-        val g1 = (pixel1 shr 8) and 0xFF
-        val b1 = pixel1 and 0xFF
-        
-        val r2 = (pixel2 shr 16) and 0xFF
-        val g2 = (pixel2 shr 8) and 0xFF
-        val b2 = pixel2 and 0xFF
-        
-        return kotlin.math.sqrt(
-            ((r1 - r2) * (r1 - r2) +
-             (g1 - g2) * (g1 - g2) +
-             (b1 - b2) * (b1 - b2)).toDouble()
-        )
-    }
-
-    /**
-     * Remove uniform background from bitmap (both dark and light backgrounds)
-     * Detects edge color and removes similar colored pixels to make them transparent
-     */
-    private fun removeDarkBackground(bitmap: android.graphics.Bitmap): android.graphics.Bitmap {
-        try {
-            val width = bitmap.width
-            val height = bitmap.height
-            
-            if (width < 10 || height < 10) return bitmap
-            
-            // Create mutable bitmap with alpha channel
-            val result = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
-            val canvas = android.graphics.Canvas(result)
-            canvas.drawBitmap(bitmap, 0f, 0f, null)
-            
-            // Get all pixels
-            val pixels = IntArray(width * height)
-            result.getPixels(pixels, 0, width, 0, 0, width, height)
-            
-            // Sample corner pixels to detect background color
-            val cornerSamples = mutableListOf<Int>()
-            val sampleSize = 3
-            
-            // Top-left corner
-            for (y in 0 until sampleSize) {
-                for (x in 0 until sampleSize) {
-                    cornerSamples.add(pixels[y * width + x])
-                }
-            }
-            // Top-right corner
-            for (y in 0 until sampleSize) {
-                for (x in width - sampleSize until width) {
-                    cornerSamples.add(pixels[y * width + x])
-                }
-            }
-            // Bottom-left corner  
-            for (y in height - sampleSize until height) {
-                for (x in 0 until sampleSize) {
-                    cornerSamples.add(pixels[y * width + x])
-                }
-            }
-            // Bottom-right corner
-            for (y in height - sampleSize until height) {
-                for (x in width - sampleSize until width) {
-                    cornerSamples.add(pixels[y * width + x])
-                }
-            }
-            
-            // Calculate average corner color
-            var avgR = 0
-            var avgG = 0
-            var avgB = 0
-            for (pixel in cornerSamples) {
-                avgR += (pixel shr 16) and 0xFF
-                avgG += (pixel shr 8) and 0xFF
-                avgB += pixel and 0xFF
-            }
-            avgR /= cornerSamples.size
-            avgG /= cornerSamples.size
-            avgB /= cornerSamples.size
-            
-            // Check if corners are uniform (low variance)
-            var variance = 0
-            for (pixel in cornerSamples) {
-                val r = (pixel shr 16) and 0xFF
-                val g = (pixel shr 8) and 0xFF
-                val b = pixel and 0xFF
-                variance += kotlin.math.abs(r - avgR) + kotlin.math.abs(g - avgG) + kotlin.math.abs(b - avgB)
-            }
-            variance /= cornerSamples.size
-            
-            // If corners aren't uniform (variance > 30), don't remove background
-            if (variance > 30) {
-                Log.d(TAG, "Icon corners not uniform (variance=$variance), keeping original")
-                return bitmap
-            }
-            
-            // Tolerance for background color matching
-            val tolerance = 35
-            
-            // Make background pixels transparent
-            var pixelsRemoved = 0
-            for (i in pixels.indices) {
-                val pixel = pixels[i]
-                val r = (pixel shr 16) and 0xFF
-                val g = (pixel shr 8) and 0xFF
-                val b = pixel and 0xFF
-                
-                // Check if similar to background color
-                val diffR = kotlin.math.abs(r - avgR)
-                val diffG = kotlin.math.abs(g - avgG)
-                val diffB = kotlin.math.abs(b - avgB)
-                
-                if (diffR < tolerance && diffG < tolerance && diffB < tolerance) {
-                    pixels[i] = 0x00000000 // Transparent
-                    pixelsRemoved++
-                }
-            }
-            
-            // Only apply if we removed a reasonable amount (10-90%)
-            val removalRatio = pixelsRemoved.toFloat() / pixels.size
-            if (removalRatio < 0.1f || removalRatio > 0.9f) {
-                Log.d(TAG, "Background removal ratio out of range (${"%.1f".format(removalRatio * 100)}%), keeping original")
-                return bitmap
-            }
-            
-            result.setPixels(pixels, 0, width, 0, 0, width, height)
-            Log.d(TAG, "Removed background: ${pixelsRemoved} pixels (${"%.1f".format(removalRatio * 100)}%), bg color=($avgR,$avgG,$avgB)")
-            return result
-            
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to remove background: ${e.message}")
-            return bitmap
-        }
-    }
 
     fun shutdown() {
         disconnect()

@@ -19,6 +19,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Stephenjude\FilamentDebugger\DebuggerPlugin;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -92,6 +93,9 @@ class AdminPanelProvider extends PanelProvider
             ->topNavigation() // Menu hiển thị ở header thay vì sidebar
             ->maxContentWidth('full')
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
+            ->plugins([
+                DebuggerPlugin::make(),
+            ])
             ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn() => Blade::render('@include("filament.scripts.echo")')
