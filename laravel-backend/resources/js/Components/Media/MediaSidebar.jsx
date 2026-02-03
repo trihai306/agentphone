@@ -43,8 +43,11 @@ export default function MediaSidebar({
                     <button
                         key={item.key}
                         onClick={() => {
-                            onFilterChange('type', item.key === 'all' ? null : item.key);
-                            onFilterChange('folder', null);
+                            // Send both type and folder in single request to avoid race condition
+                            onFilterChange({
+                                type: item.key === 'all' ? null : item.key,
+                                folder: null
+                            });
                         }}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${(activeFilter === item.key && !activeFolder) || (item.key === 'all' && !activeFilter && !activeFolder)
                             ? isDark

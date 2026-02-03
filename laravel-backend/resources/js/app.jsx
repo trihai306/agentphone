@@ -10,6 +10,7 @@ import i18n from './i18n';
 import { ToastProvider } from './Components/Layout/ToastProvider';
 import { ConfirmProvider } from './Components/UI/ConfirmModal';
 import PageTransition from './Components/Layout/PageTransition';
+import ErrorBoundary from './Components/ErrorBoundary';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -35,13 +36,15 @@ createInertiaApp({
         root.render(
             <I18nextProvider i18n={i18n}>
                 <ThemeProvider>
-                    <ToastProvider>
-                        <ConfirmProvider>
-                            <PageTransition>
-                                <App {...props} />
-                            </PageTransition>
-                        </ConfirmProvider>
-                    </ToastProvider>
+                    <ErrorBoundary>
+                        <ToastProvider>
+                            <ConfirmProvider>
+                                <PageTransition>
+                                    <App {...props} />
+                                </PageTransition>
+                            </ConfirmProvider>
+                        </ToastProvider>
+                    </ErrorBoundary>
                 </ThemeProvider>
             </I18nextProvider>
         );

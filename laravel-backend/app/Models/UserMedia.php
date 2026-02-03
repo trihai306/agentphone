@@ -148,10 +148,18 @@ class UserMedia extends Model
 
     /**
      * Scope for media in a specific folder
+     * Normalizes folder path (removes leading slash if present)
      */
     public function scopeInFolder($query, string $folder)
     {
-        return $query->where('folder', $folder);
+        // Normalize: remove leading slash if present
+        $normalizedFolder = ltrim($folder, '/');
+
+        // Match both formats: with and without leading slash
+        return $query->where(function ($q) use ($normalizedFolder) {
+            $q->where('folder', $normalizedFolder)
+                ->orWhere('folder', '/' . $normalizedFolder);
+        });
     }
 
     /**

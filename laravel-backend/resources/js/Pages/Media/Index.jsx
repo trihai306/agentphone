@@ -128,7 +128,11 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
     };
 
     const applyFilter = (key, value) => {
-        router.get('/media', { ...filters, [key]: value }, { preserveState: true });
+        // Support both single key-value and object with multiple params
+        const newFilters = typeof key === 'object'
+            ? { ...filters, ...key }
+            : { ...filters, [key]: value };
+        router.get('/media', newFilters, { preserveState: true });
     };
 
     const handleContextMenu = (e, item) => {
@@ -160,7 +164,8 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
 
     // Navigate into folder
     const navigateToFolder = (folderName) => {
-        router.get('/media', { ...filters, folder: '/' + folderName, type: null }, { preserveState: true });
+        // Don't add leading slash - backend handles normalization
+        router.get('/media', { ...filters, folder: folderName, type: null }, { preserveState: true });
     };
 
     // Navigate back to root

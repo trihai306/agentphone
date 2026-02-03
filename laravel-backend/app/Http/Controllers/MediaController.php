@@ -99,22 +99,25 @@ class MediaController extends Controller
 
         $query = UserMedia::where('user_id', $user->id);
 
-        // Filter by type
-        if ($request->filled('type')) {
+        // Filter by type - when type is specified, show ALL files of that type (ignore folder)
+        $hasTypeFilter = $request->filled('type') && !in_array($request->type, ['', 'all', 'any']);
+
+        if ($hasTypeFilter) {
             match ($request->type) {
                 'image' => $query->images(),
                 'video' => $query->videos(),
                 'ai' => $query->where('source', 'ai_generated'),
                 default => null,
             };
+            // Note: When filtering by type, we show ALL matching files regardless of folder
         }
 
-        // Filter by folder
+        // Filter by folder - only apply if no type filter is active
         if ($request->filled('folder')) {
             // Show files in specific folder
             $query->inFolder($request->folder);
-        } else {
-            // When no folder filter, only show files at root level (not in any subfolder)
+        } elseif (!$hasTypeFilter) {
+            // Only apply root folder filter for "All Files" view (no type filter)
             $query->where(function ($q) {
                 $q->where('folder', '/')
                     ->orWhereNull('folder');
@@ -127,8 +130,8 @@ class MediaController extends Controller
         }
 
         // Sort
-        $sortBy = $request->get('sort', 'created_at');
-        $sortDir = $request->get('dir', 'desc');
+        $sortBy = $request->input('sort', 'created_at');
+        $sortDir = $request->input('dir', 'desc');
         $query->orderBy($sortBy, $sortDir);
 
         $media = $query->paginate(24)->withQueryString();

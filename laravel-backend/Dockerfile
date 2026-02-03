@@ -58,6 +58,9 @@ RUN mkdir -p storage/framework/{cache,sessions,views} \
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache
 
+# Copy custom PHP config (upload limits, memory)
+COPY docker/php.ini /usr/local/etc/php/conf.d/99-custom.ini
+
 # Copy supervisor config
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
