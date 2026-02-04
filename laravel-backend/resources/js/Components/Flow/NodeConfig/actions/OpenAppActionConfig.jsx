@@ -14,16 +14,63 @@ export function OpenAppActionConfig({ data, updateData, updateMultipleData, isDa
     const handleAppSelect = (app) => {
         updateMultipleData({
             packageName: app.packageName,
-            appName: app.appName || app.name
+            appName: app.appName || app.name,
+            appIcon: app.icon || null
         });
     };
 
+    // Get current app info
+    const currentPackage = data.packageName || data.package_name || '';
+    const currentAppName = data.appName || '';
+    const currentAppIcon = data.appIcon || null;
+
     return (
         <>
+            {/* Selected App Preview */}
+            {currentPackage && (
+                <ConfigSection title={t('flows.editor.config.selected_app', { defaultValue: 'Selected App' })} isDark={isDark}>
+                    <div className={`flex items-center gap-3 p-3 rounded-xl ${isDark ? 'bg-[#1a1a1a] border border-[#2a2a2a]' : 'bg-gray-50 border border-gray-200'}`}>
+                        {/* App Icon */}
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0 ${isDark ? 'bg-[#252525]' : 'bg-white shadow-sm'}`}>
+                            {currentAppIcon ? (
+                                <img
+                                    src={`data:image/png;base64,${currentAppIcon}`}
+                                    alt={currentAppName || 'App'}
+                                    className="w-10 h-10 object-contain"
+                                />
+                            ) : (
+                                <span className="text-2xl">📱</span>
+                            )}
+                        </div>
+
+                        {/* App Info */}
+                        <div className="flex-1 min-w-0">
+                            <div className={`font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                {currentAppName || 'Unknown App'}
+                            </div>
+                            <div className={`text-xs font-mono truncate ${isDark ? 'text-emerald-400/70' : 'text-emerald-600/70'}`}>
+                                {currentPackage}
+                            </div>
+                        </div>
+
+                        {/* Clear button */}
+                        <button
+                            onClick={() => updateMultipleData({ packageName: '', appName: '', appIcon: null })}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all flex-shrink-0 ${isDark ? 'hover:bg-white/10 text-gray-500' : 'hover:bg-gray-200 text-gray-400'}`}
+                            title={t('common.clear', 'Clear')}
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </ConfigSection>
+            )}
+
             <ConfigSection title={t('flows.editor.config.package_name', { defaultValue: 'Package Name' })} isDark={isDark}>
                 <input
                     type="text"
-                    value={data.packageName || data.package_name || ''}
+                    value={currentPackage}
                     onChange={(e) => updateData('packageName', e.target.value)}
                     placeholder="com.example.app"
                     className={`w-full px-3 py-2 text-sm rounded-lg border font-mono ${isDark
