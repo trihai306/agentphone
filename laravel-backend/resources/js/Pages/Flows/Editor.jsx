@@ -1406,9 +1406,9 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         { type: 'double_tap', label: t('flows.editor.nodes.double_tap', 'Double Tap'), icon: 'doubletap', color: '#8b5cf6', bgColor: 'rgba(139, 92, 246, 0.15)', description: t('flows.editor.nodes.double_tap_desc', 'Double tap element'), category: 'action' },
 
         // Advanced Gestures
-        { type: 'drag_drop', label: t('flows.editor.nodes.drag_drop', 'Drag & Drop'), icon: 'move', color: '#14b8a6', bgColor: 'rgba(20, 184, 166, 0.15)', description: t('flows.editor.nodes.drag_drop_desc', 'Drag element to location'), category: 'action' },
-        { type: 'pinch_zoom', label: t('flows.editor.nodes.pinch_zoom', 'Pinch Zoom'), icon: 'zoom', color: '#f97316', bgColor: 'rgba(249, 115, 22, 0.15)', description: t('flows.editor.nodes.pinch_zoom_desc', 'Zoom in or out'), category: 'action' },
-        { type: 'fling', label: t('flows.editor.nodes.fling', 'Fling'), icon: 'zap', color: '#eab308', bgColor: 'rgba(234, 179, 8, 0.15)', description: t('flows.editor.nodes.fling_desc', 'Fast scroll/fling'), category: 'action' },
+        { type: 'drag_drop', label: t('flows.editor.nodes.drag_drop', 'Drag & Drop'), icon: 'dragdrop', color: '#14b8a6', bgColor: 'rgba(20, 184, 166, 0.15)', description: t('flows.editor.nodes.drag_drop_desc', 'Drag element to location'), category: 'action' },
+        { type: 'pinch_zoom', label: t('flows.editor.nodes.pinch_zoom', 'Pinch Zoom'), icon: 'pinchzoom', color: '#f97316', bgColor: 'rgba(249, 115, 22, 0.15)', description: t('flows.editor.nodes.pinch_zoom_desc', 'Zoom in or out'), category: 'action' },
+        { type: 'fling', label: t('flows.editor.nodes.fling', 'Fling'), icon: 'fling', color: '#eab308', bgColor: 'rgba(234, 179, 8, 0.15)', description: t('flows.editor.nodes.fling_desc', 'Fast scroll/fling'), category: 'action' },
 
         // System Actions
         { type: 'recents', label: t('flows.editor.nodes.recents', 'Recent Apps'), icon: 'grid', color: '#0ea5e9', bgColor: 'rgba(14, 165, 233, 0.15)', description: t('flows.editor.nodes.recents_desc', 'Open recent apps'), category: 'action' },
@@ -1416,7 +1416,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         { type: 'quick_settings', label: t('flows.editor.nodes.quick_settings', 'Quick Settings'), icon: 'settings', color: '#8b5cf6', bgColor: 'rgba(139, 92, 246, 0.15)', description: t('flows.editor.nodes.quick_settings_desc', 'Open quick settings'), category: 'action' },
 
         // Text Operations
-        { type: 'clear_text', label: t('flows.editor.nodes.clear_text', 'Clear Text'), icon: 'eraser', color: '#ef4444', bgColor: 'rgba(239, 68, 68, 0.15)', description: t('flows.editor.nodes.clear_text_desc', 'Clear text field'), category: 'action' },
+        { type: 'clear_text', label: t('flows.editor.nodes.clear_text', 'Clear Text'), icon: 'trash', color: '#ef4444', bgColor: 'rgba(239, 68, 68, 0.15)', description: t('flows.editor.nodes.clear_text_desc', 'Clear text field'), category: 'action' },
         { type: 'get_text', label: t('flows.editor.nodes.get_text', 'Get Text'), icon: 'text', color: '#22c55e', bgColor: 'rgba(34, 197, 94, 0.15)', description: t('flows.editor.nodes.get_text_desc', 'Extract text from element'), category: 'action' },
         { type: 'append_text', label: t('flows.editor.nodes.append_text', 'Append Text'), icon: 'plus', color: '#3b82f6', bgColor: 'rgba(59, 130, 246, 0.15)', description: t('flows.editor.nodes.append_text_desc', 'Add text to field'), category: 'action' },
         { type: 'select_all', label: t('flows.editor.nodes.select_all', 'Select All'), icon: 'selectall', color: '#a855f7', bgColor: 'rgba(168, 85, 247, 0.15)', description: t('flows.editor.nodes.select_all_desc', 'Select all text'), category: 'action' },
