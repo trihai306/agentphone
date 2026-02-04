@@ -76,16 +76,20 @@ class FlowController extends Controller
 
         $user = Auth::user();
 
-        // Get online devices for this user via Redis (accurate real-time presence)
-        // Uses Device::getOnlineForUser() which checks Redis first, falls back to DB
-        $onlineDevices = \App\Models\Device::getOnlineForUser($user->id)
+        // Get ONLINE devices only (socket_connected = true)
+        // When user selects device, we ping to verify it's still online
+        $devices = $user->devices()
+            ->where('status', 'active')
+            ->where('socket_connected', true) // Only online devices
+            ->orderBy('last_active_at', 'desc')
+            ->get()
             ->map(fn($device) => [
                 'id' => $device->id,
                 'name' => $device->name,
                 'device_id' => $device->device_id,
                 'model' => $device->model,
                 'accessibility_enabled' => $device->accessibility_enabled,
-                'is_online' => true, // Already filtered by Redis presence
+                'socket_connected' => $device->socket_connected,
                 'last_active_at' => $device->last_active_at?->diffForHumans(),
             ]);
 
@@ -121,7 +125,7 @@ class FlowController extends Controller
 
         return Inertia::render('Flows/Editor', [
             'flow' => $flow->toReactFlowFormat(),
-            'onlineDevices' => $onlineDevices->values()->toArray(),
+            'devices' => $devices->values()->toArray(),
             'mediaFiles' => $mediaFiles->toArray(),
             'dataCollections' => $dataCollections->toArray(),
         ]);

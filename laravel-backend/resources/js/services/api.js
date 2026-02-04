@@ -155,6 +155,15 @@ export const deviceApi = {
     sendCommand: async (deviceId, command, params = {}) => {
         return apiService.post('/devices/command', { device_id: deviceId, command, ...params });
     },
+
+    /**
+     * Verify device is online by sending ping via WebSocket
+     * APK must respond with pong within timeout
+     * More accurate than Redis/DB check
+     */
+    verifyOnline: async (deviceId) => {
+        return apiService.post('/devices/verify-online', { device_id: deviceId });
+    },
 };
 
 /**

@@ -311,6 +311,7 @@ export default function NodeConfigPanel({
                     <FileInputConfig
                         data={nodeData}
                         updateData={updateData}
+                        updateMultipleData={updateMultipleData}
                         isDark={isDark}
                     />
                 )}

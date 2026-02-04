@@ -26,18 +26,19 @@ class DevicePongReceived implements ShouldBroadcastNow
 
     public function broadcastOn(): Channel
     {
-        // Broadcast to presence channel so frontend receives the confirmation
-        return new PresenceChannel("devices.{$this->userId}");
+        // Broadcast to user's private channel so frontend receives the confirmation
+        return new \Illuminate\Broadcasting\PrivateChannel("user.{$this->userId}");
     }
 
     public function broadcastAs(): string
     {
-        return 'pong.received';
+        return 'device.pong';
     }
 
     public function broadcastWith(): array
     {
         return [
+            'success' => true, // Required by frontend
             'device_id' => $this->deviceId,
             'ping_id' => $this->pingId,
             'latency_ms' => $this->latencyMs,

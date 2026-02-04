@@ -7,7 +7,7 @@ import MediaLibraryModal from '@/Components/MediaLibraryModal';
  * FileInputConfig - Configuration for file input nodes
  * Supports single file or folder selection with random file mode
  */
-export function FileInputConfig({ data, updateData, isDark }) {
+export function FileInputConfig({ data, updateData, updateMultipleData, isDark }) {
     const [showMediaPicker, setShowMediaPicker] = useState(false);
     const { t } = useTranslation();
 
@@ -22,59 +22,84 @@ export function FileInputConfig({ data, updateData, isDark }) {
         (selectionType === 'folder' && folderName);
 
     // Handle file(s) selected from Media Library - supports both single and multi-select
+    // Uses batch update to avoid stale closure issues with multiple rapid updates
     const handleFileSelected = (files) => {
         // Normalize to array for consistent handling
         const fileArray = Array.isArray(files) ? files : [files];
 
         if (fileArray.length === 1) {
-            // Single file mode
+            // Single file mode - batch all updates together
             const file = fileArray[0];
-            updateData('selectionType', 'file');
-            updateData('fileId', file.id);
-            updateData('fileName', file.original_name || file.name);
-            updateData('filePath', file.url || file.file_url);
-            updateData('fileType', file.type);
-            updateData('fileSize', file.size || file.formatted_size);
-            updateData('files', null); // Clear multi-file data
+            const updates = {
+                selectionType: 'file',
+                fileId: file.id,
+                fileName: file.original_name || file.name,
+                filePath: file.url || file.file_url,
+                fileType: file.type,
+                fileSize: file.size || file.formatted_size,
+                files: null, // Clear multi-file data
+                folderName: null, // Clear folder data
+                folderPath: null,
+            };
+
+            if (updateMultipleData) {
+                updateMultipleData(updates);
+            } else {
+                // Fallback for backward compatibility
+                Object.entries(updates).forEach(([key, value]) => updateData(key, value));
+            }
         } else {
-            // Multi-file mode
-            updateData('selectionType', 'files');
-            updateData('files', fileArray.map(file => ({
-                id: file.id,
-                name: file.original_name || file.name,
-                url: file.url || file.file_url,
-                type: file.type,
-                size: file.size || file.formatted_size,
-            })));
-            updateData('fileId', null);
-            updateData('fileName', `${fileArray.length} files`);
-            updateData('filePath', null);
+            // Multi-file mode - batch all updates together
+            const updates = {
+                selectionType: 'files',
+                files: fileArray.map(file => ({
+                    id: file.id,
+                    name: file.original_name || file.name,
+                    url: file.url || file.file_url,
+                    type: file.type,
+                    size: file.size || file.formatted_size,
+                })),
+                fileId: null,
+                fileName: `${fileArray.length} files`,
+                filePath: null,
+                folderName: null, // Clear folder data
+                folderPath: null,
+            };
+
+            if (updateMultipleData) {
+                updateMultipleData(updates);
+            } else {
+                Object.entries(updates).forEach(([key, value]) => updateData(key, value));
+            }
         }
-        // Clear folder data
-        updateData('folderName', null);
-        updateData('folderPath', null);
     };
 
     // Handle folder selected from Media Library (includes files list)
+    // Uses batch update to avoid stale closure issues
     const handleFolderSelected = (folder, files = []) => {
-        updateData('selectionType', 'folder');
-        updateData('folderName', folder.name);
-        updateData('folderPath', folder.path);
-        // Store files in folder for processing
-        if (files && files.length > 0) {
-            updateData('folderFiles', files.map(file => ({
+        const updates = {
+            selectionType: 'folder',
+            folderName: folder.name,
+            folderPath: folder.path,
+            folderFiles: files && files.length > 0 ? files.map(file => ({
                 id: file.id,
                 name: file.original_name || file.name,
                 url: file.url || file.file_url,
                 type: file.type,
-            })));
-            updateData('folderFileCount', files.length);
+            })) : null,
+            folderFileCount: files && files.length > 0 ? files.length : null,
+            // Clear single/multi file data
+            fileId: null,
+            fileName: null,
+            filePath: null,
+            files: null,
+        };
+
+        if (updateMultipleData) {
+            updateMultipleData(updates);
+        } else {
+            Object.entries(updates).forEach(([key, value]) => updateData(key, value));
         }
-        // Clear single/multi file data
-        updateData('fileId', null);
-        updateData('fileName', null);
-        updateData('filePath', null);
-        updateData('files', null);
     };
 
     // Clear selection

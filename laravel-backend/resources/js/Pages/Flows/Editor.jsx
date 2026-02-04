@@ -169,7 +169,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
     // ===== Phase 2 Custom Hooks =====
     // Device management
-    const { selectedDevice, onlineDevices, setSelectedDevice, setOnlineDevices } = useDeviceManager(props.onlineDevices || [], auth);
+    const { selectedDevice, devices, setSelectedDevice, setDevices, isPinging, pingError, hasVerifiedDevice, clearPingError } = useDeviceManager(props.devices || [], auth);
 
     // Device apps (Phase 1)
     const { apps: deviceApps, appsLoading: deviceAppsLoading, requestApps: requestDeviceApps } = useDeviceApps(auth?.user?.id);
@@ -794,8 +794,8 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                 userChannel.listen('.device.accessibility.changed', (event) => {
 
 
-                    // Update onlineDevices list (for dropdown display)
-                    setOnlineDevices(prev => prev.map(d =>
+                    // Update devices list (for dropdown display)
+                    setDevices(prev => prev.map(d =>
                         d.device_id === event.device.device_id
                             ? { ...d, accessibility_enabled: event.accessibility_enabled }
                             : d
@@ -1446,7 +1446,9 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                     // Device state
                     selectedDevice={selectedDevice}
                     setSelectedDevice={setSelectedDevice}
-                    onlineDevices={onlineDevices}
+                    devices={devices}
+                    isPinging={isPinging}
+                    pingError={pingError}
 
                     // Modal controls
                     modals={modals}

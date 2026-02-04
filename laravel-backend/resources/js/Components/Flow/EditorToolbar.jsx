@@ -28,7 +28,9 @@ export default function EditorToolbar({
     // Device state
     selectedDevice,
     setSelectedDevice,
-    onlineDevices,
+    devices,
+    isPinging,
+    pingError,
 
     // Modal controls
     modals,
@@ -140,7 +142,7 @@ export default function EditorToolbar({
                                     ? 'bg-[#1a1a1a]/80 border-[#2a2a2a] text-gray-400 hover:text-white hover:border-[#3a3a3a]'
                                     : 'bg-white/80 border-gray-200 text-gray-600 hover:text-gray-900 hover:border-gray-300'
                                 }`}
-                            title={selectedDevice ? `Connected: ${selectedDevice.name}` : `${onlineDevices.length} device(s) online`}
+                            title={selectedDevice ? `Connected: ${selectedDevice.name}` : `${devices.length} device(s) available`}
                             aria-label="Device selector"
                             aria-expanded={modals.deviceSelector.isOpen}
                         >
@@ -160,11 +162,11 @@ export default function EditorToolbar({
                             {selectedDevice ? (
                                 <span className="truncate max-w-[120px] font-semibold">{selectedDevice.name}</span>
                             ) : (
-                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${onlineDevices.length > 0
+                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${devices.length > 0
                                     ? 'bg-emerald-500/20 text-emerald-400'
                                     : 'bg-gray-500/20 text-gray-500'
                                     }`}>
-                                    {onlineDevices.length}
+                                    {devices.length}
                                 </span>
                             )}
 
@@ -176,12 +178,14 @@ export default function EditorToolbar({
                         {/* Device Selector Dropdown */}
                         <DeviceSelectorDropdown
                             isOpen={modals.deviceSelector.isOpen}
-                            devices={onlineDevices}
+                            devices={devices}
                             selectedDevice={selectedDevice}
                             onSelect={setSelectedDevice}
                             onDisconnect={() => setSelectedDevice(null)}
                             onClose={() => closeModal('deviceSelector')}
                             addToast={addToast}
+                            isPinging={isPinging}
+                            pingError={pingError}
                         />
                     </div>
 
