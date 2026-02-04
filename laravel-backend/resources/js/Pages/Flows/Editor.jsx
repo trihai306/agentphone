@@ -116,6 +116,43 @@ const nodeTypes = {
     back: SmartActionNode,
     home: SmartActionNode,
 
+    // Advanced Gestures
+    drag_drop: SmartActionNode,
+    pinch_zoom: SmartActionNode,
+    fling: SmartActionNode,
+
+    // System Actions
+    recents: SmartActionNode,
+    notifications: SmartActionNode,
+    quick_settings: SmartActionNode,
+    lock_screen: SmartActionNode,
+    power_dialog: SmartActionNode,
+
+    // Text Operations
+    clear_text: SmartActionNode,
+    get_text: SmartActionNode,
+    append_text: SmartActionNode,
+    select_all: SmartActionNode,
+
+    // Element Inspection
+    get_bounds: SmartActionNode,
+    is_visible: SmartActionNode,
+    count_elements: SmartActionNode,
+
+    // Media Controls
+    volume_up: SmartActionNode,
+    volume_down: SmartActionNode,
+    mute: SmartActionNode,
+    media_play_pause: SmartActionNode,
+    media_next: SmartActionNode,
+    media_previous: SmartActionNode,
+
+    // Wait Conditions
+    wait_for_text: SmartActionNode,
+    wait_for_activity: SmartActionNode,
+    wait_for_package: SmartActionNode,
+    wait_idle: SmartActionNode,
+
     // Logic/Conditions - Premium Glass versions
     condition: GlassConditionNode,
     probability: GlassProbabilityNode,
