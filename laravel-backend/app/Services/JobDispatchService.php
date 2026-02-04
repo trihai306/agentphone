@@ -182,6 +182,16 @@ class JobDispatchService
                 }
             }
 
+            // Special handling for back/home shortcut nodes - ensure keyCode is set
+            if ($task->node_type === 'back' && empty($inputData['key']) && empty($inputData['keyCode'])) {
+                $inputData['key'] = 'KEYCODE_BACK';
+                $inputData['keyCode'] = 'KEYCODE_BACK';
+            }
+            if ($task->node_type === 'home' && empty($inputData['key']) && empty($inputData['keyCode'])) {
+                $inputData['key'] = 'KEYCODE_HOME';
+                $inputData['keyCode'] = 'KEYCODE_HOME';
+            }
+
             return [
                 'id' => $task->node_id,
                 'type' => $actionType,
@@ -339,6 +349,8 @@ class JobDispatchService
             'pressKey' => 'press_key',
             'press_key' => 'press_key',
             'key_event' => 'press_key',
+            'back' => 'press_key',      // Back button shortcut node
+            'home' => 'press_key',      // Home button shortcut node
 
             // App actions
             'startApp' => 'start_app',
