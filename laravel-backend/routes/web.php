@@ -163,6 +163,9 @@ Route::middleware(['auth'])->group(function () {
     // Device Online Status Polling (Redis-based, poll every 45s)
     Route::get('/devices/online-status', [\App\Http\Controllers\DeviceController::class, 'getOnlineStatus'])->name('devices.onlineStatus');
 
+    // Device Online Verification (ping via WebSocket, session auth for Flow Editor)
+    Route::post('/devices/verify-online', [\App\Http\Controllers\DeviceController::class, 'verifyOnline'])->name('devices.verifyOnline');
+
     // Workflow Listener Routes (Web auth for Flow Editor registration)
     Route::post('/recording-listener/register', [\App\Http\Controllers\Api\RecordingEventController::class, 'registerListener'])->name('recording.listener.register');
     Route::post('/recording-listener/unregister', [\App\Http\Controllers\Api\RecordingEventController::class, 'unregisterListener'])->name('recording.listener.unregister');
