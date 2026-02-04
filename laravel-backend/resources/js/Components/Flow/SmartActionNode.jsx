@@ -241,22 +241,31 @@ function SmartActionNode({ data, selected, id }) {
                         backgroundColor: `${colors.primary}20`,
                     }}
                 >
-                    <div className="w-6 h-6 [&>svg]:w-full [&>svg]:h-full" style={{ color: colors.primary }}>
-                        {isRunning ? (
-                            <svg className="w-full h-full animate-spin" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                            </svg>
-                        ) : isSuccess ? (
-                            <svg className="w-full h-full text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>
-                        ) : isError ? (
-                            <svg className="w-full h-full text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        ) : ActionIcon}
-                    </div>
+                    {/* Show app icon for open_app if available */}
+                    {(actionType === 'open_app' || actionType === 'launch_app') && data?.appIcon ? (
+                        <img
+                            src={`data:image/png;base64,${data.appIcon}`}
+                            alt={data?.appName || 'App'}
+                            className="w-8 h-8 object-contain rounded-lg"
+                        />
+                    ) : (
+                        <div className="w-6 h-6 [&>svg]:w-full [&>svg]:h-full" style={{ color: colors.primary }}>
+                            {isRunning ? (
+                                <svg className="w-full h-full animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                </svg>
+                            ) : isSuccess ? (
+                                <svg className="w-full h-full text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            ) : isError ? (
+                                <svg className="w-full h-full text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            ) : ActionIcon}
+                        </div>
+                    )}
                 </div>
 
                 {/* Text content */}
@@ -282,8 +291,8 @@ function SmartActionNode({ data, selected, id }) {
                 {data?.probability !== undefined && data.probability < 100 && (
                     <div
                         className={`absolute -top-2 ${data?.isRecorded ? '-right-8' : '-right-2'} px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 border-2 ${data.probability < 50
-                                ? 'bg-amber-500 text-white border-amber-600'
-                                : 'bg-blue-500 text-white border-blue-600'
+                            ? 'bg-amber-500 text-white border-amber-600'
+                            : 'bg-blue-500 text-white border-blue-600'
                             }`}
                         title={`${data.probability}% chance to execute`}
                     >
