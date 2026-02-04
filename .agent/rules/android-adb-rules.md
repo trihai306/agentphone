@@ -1,6 +1,5 @@
 ---
-trigger: glob
-glob: portal-apk/**
+trigger: always_on
 description: Safety rules for ADB commands when working with Android APK
 ---
 

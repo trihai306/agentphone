@@ -1,6 +1,5 @@
 ---
-trigger: glob
-glob: laravel-backend/app/**/*.php
+trigger: always_on
 description: Controller-Service pattern standard for Laravel backend
 ---
 
@@ -213,4 +212,3 @@ public function update(Request $request, Example $example)
 | Service chuẩn | `CampaignService.php` |
 | Service phức tạp | `FlowService.php` |
 | Service với API | `AiGenerationService.php` |
-

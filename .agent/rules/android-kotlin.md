@@ -1,6 +1,5 @@
 ---
-trigger: glob
-glob: portal-apk/**/*.kt
+trigger: always_on
 description: Kotlin development patterns for ClickAI Android Agent
 ---
 
@@ -271,4 +270,3 @@ adb logcat | grep -i "job"
 | Recording capture | `recording/RecordingManager.kt` |
 | Accessibility | `accessibility/PortalAccessibilityService.kt` |
 | Overlay UI | `overlay/FloatingRecordingService.kt` |
-

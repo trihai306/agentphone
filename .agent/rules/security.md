@@ -1,6 +1,5 @@
 ---
-trigger: glob
-glob: laravel-backend/**/*.php
+trigger: always_on
 description: Security best practices for Laravel backend development
 ---
 

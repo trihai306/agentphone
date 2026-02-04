@@ -389,6 +389,10 @@ object SocketJobManager {
                         Log.w(TAG, "🔍 Received find:icon via main handler!")
                         handleFindIcon(event.data)
                     }
+                    "ping:request" -> {
+                        Log.w(TAG, "🏓 PING:REQUEST received via main handler!")
+                        handlePingRequest(event.data ?: "")
+                    }
                     "pusher_internal:subscription_succeeded" -> {
                         Log.w(TAG, "🟢 PUSHER INTERNAL: Subscription confirmed by server!")
                     }
@@ -499,6 +503,16 @@ object SocketJobManager {
             override fun onEvent(event: PusherEvent) {
                 Log.w(TAG, "📱 EXPLICIT BIND: check:accessibility received!")
                 handleCheckAccessibility(event.data ?: "")
+            }
+            override fun onSubscriptionSucceeded(channelName: String) {}
+            override fun onAuthenticationFailure(message: String?, e: Exception?) {}
+        })
+
+        // Explicit bind for ping:request (real-time online verification)
+        deviceChannel?.bind("ping:request", object : com.pusher.client.channel.PrivateChannelEventListener {
+            override fun onEvent(event: PusherEvent) {
+                Log.w(TAG, "🏓 EXPLICIT BIND: ping:request received!")
+                handlePingRequest(event.data ?: "")
             }
             override fun onSubscriptionSucceeded(channelName: String) {}
             override fun onAuthenticationFailure(message: String?, e: Exception?) {}
@@ -2285,6 +2299,81 @@ object SocketJobManager {
                 response.close()
             } catch (e: Exception) {
                 Log.e(TAG, "Error handling accessibility check", e)
+            }
+        }
+    }
+
+    /**
+     * Handle ping request from web for real-time online verification
+     * Responds with pong immediately to confirm device is truly online
+     */
+    private fun handlePingRequest(data: String) {
+        scope.launch {
+            try {
+                Log.i(TAG, "🏓 Received ping request, responding with pong...")
+                
+                // Parse ping data to get ping_id
+                val pingData = try {
+                    gson.fromJson(data, Map::class.java) as? Map<String, Any>
+                } catch (e: Exception) {
+                    Log.w(TAG, "Could not parse ping data: $data")
+                    null
+                }
+                
+                val pingId = pingData?.get("ping_id")?.toString()
+                if (pingId.isNullOrEmpty()) {
+                    Log.w(TAG, "❌ No ping_id in request, cannot respond")
+                    return@launch
+                }
+                
+                val context = contextRef?.get() ?: run {
+                    Log.e(TAG, "❌ Context not available")
+                    return@launch
+                }
+                
+                // Get auth token
+                val sessionManager = com.agent.portal.auth.SessionManager(context)
+                val session = sessionManager.getSession()
+                val token = session?.token ?: run {
+                    Log.w(TAG, "No auth token, cannot send pong")
+                    return@launch
+                }
+                
+                // Use NetworkUtils for proper host resolution
+                val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
+                
+                val payload = mapOf(
+                    "device_id" to (deviceId ?: "unknown"),
+                    "ping_id" to pingId
+                )
+                
+                val client = okhttp3.OkHttpClient()
+                val json = gson.toJson(payload)
+                val requestBody = okhttp3.RequestBody.create(
+                    "application/json".toMediaTypeOrNull(),
+                    json
+                )
+                
+                val request = okhttp3.Request.Builder()
+                    .url("$apiUrl/devices/pong")
+                    .post(requestBody)
+                    .addHeader("Authorization", "Bearer $token")
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Accept", "application/json")
+                    .build()
+                
+                val response = client.newCall(request).execute()
+                
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string()
+                    Log.i(TAG, "✅ PONG sent successfully! Response: ${responseBody?.take(100)}")
+                } else {
+                    Log.w(TAG, "❌ Failed to send pong: ${response.code}")
+                }
+                
+                response.close()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error handling ping request", e)
             }
         }
     }

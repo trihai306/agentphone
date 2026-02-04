@@ -1,6 +1,5 @@
 ---
-trigger: glob
-glob: laravel-backend/database/**/*.php
+trigger: always_on
 description: Database design patterns and best practices
 ---
 

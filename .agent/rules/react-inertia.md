@@ -1,6 +1,5 @@
 ---
-trigger: glob
-glob: laravel-backend/resources/js/**/*.{jsx,js}
+trigger: always_on
 description: React + Inertia.js patterns for frontend development
 ---
 
@@ -236,4 +235,3 @@ import useWalletUpdates from '@/hooks/useWalletUpdates';
 | Form page | `Pages/Campaigns/Create.jsx` |
 | Detail page | `Pages/Flows/Show.jsx` |
 | Public page | `Pages/Features/Index.jsx` |
-

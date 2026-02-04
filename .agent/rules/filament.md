@@ -1,6 +1,5 @@
 ---
 trigger: glob
-glob: laravel-backend/app/Filament/**/*.php
 description: Filament v3 development patterns for Admin Panel
 ---
 
@@ -449,22 +448,4 @@ Tables\Columns\TextColumn::make('created_at')
 - Quá nhiều columns (dùng `toggleable`)
 - Custom quá nhiều khi Filament có sẵn
 
-## COMMANDS
-
-```bash
-# Create Resource
-php artisan make:filament-resource Device --generate
-
-# Create RelationManager
-php artisan make:filament-relation-manager DeviceResource jobs name
-
-# Create Widget
-php artisan make:filament-widget StatsOverview --stats-overview
-
-# Create Page
-php artisan make:filament-page Settings
-
-# Clear cache
-php artisan filament:clear-cached-components
-php artisan filament:cache-components
 ```

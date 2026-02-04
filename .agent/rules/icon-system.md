@@ -1,6 +1,5 @@
 ---
-trigger: glob
-glob: laravel-backend/resources/js/**/*.{jsx,js}
+trigger: always_on
 description: Unified Icon System - SVG stroke icons matching sidebar standard
 ---
 

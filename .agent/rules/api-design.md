@@ -1,6 +1,5 @@
 ---
-trigger: glob
-glob: laravel-backend/app/Http/Controllers/Api/**/*.php
+trigger: always_on
 description: RESTful API design patterns and response standards
 ---
 

@@ -1,6 +1,5 @@
 ---
-trigger: glob
-glob: laravel-backend/tests/**/*.php
+trigger: always_on
 description: Testing standards for Laravel backend (PHPUnit/Pest)
 ---
 
