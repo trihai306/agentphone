@@ -91,6 +91,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/devices/apps', [DeviceController::class, 'getInstalledApps']);
     Route::post('/devices/apps-result', [DeviceController::class, 'installedAppsResult']);
 
+    // Real-time ping/pong verification (more accurate than Redis/DB check)
+    Route::post('/devices/verify-online', [DeviceController::class, 'verifyOnline']);
+    Route::post('/devices/pong', [DeviceController::class, 'pongResult']);
+
+    // Device online status (quick Redis check)
+    Route::get('/devices/online-status', [DeviceController::class, 'getOnlineStatus']);
+
     // Subscription management
     Route::prefix('subscriptions')->group(function () {
         Route::get('/current', [ServicePackageController::class, 'current']);

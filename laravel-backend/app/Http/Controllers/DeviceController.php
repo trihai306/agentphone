@@ -525,6 +525,114 @@ class DeviceController extends Controller
     }
 
     /**
+     * Verify device is really online by sending ping via WebSocket
+     * APK must respond with pong within timeout
+     * This is more accurate than Redis/DB check
+     */
+    public function verifyOnline(Request $request): JsonResponse
+    {
+        $request->validate(['device_id' => 'required|string']);
+
+        $device = $this->deviceService->findByDeviceId($request->user(), $request->input('device_id'));
+
+        if (!$device) {
+            return response()->json(['success' => false, 'message' => 'Device not found'], 404);
+        }
+
+        // Generate unique ping ID
+        $pingId = uniqid('ping_', true);
+        $timestamp = now();
+
+        // Store ping in cache for matching pong response
+        \Cache::put("device_ping:{$pingId}", [
+            'device_id' => $device->device_id,
+            'user_id' => $request->user()->id,
+            'sent_at' => $timestamp->timestamp * 1000, // milliseconds
+        ], 30); // 30 second TTL
+
+        // Send ping to device via WebSocket
+        broadcast(new \App\Events\DevicePingRequest($device->device_id, $request->user()->id, $pingId));
+
+        \Log::info('📡 Ping sent to device', [
+            'device_id' => $device->device_id,
+            'ping_id' => $pingId,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Ping sent to device, waiting for pong...',
+            'ping_id' => $pingId,
+            'device_id' => $device->device_id,
+        ]);
+    }
+
+    /**
+     * Receive pong response from device (APK calls this)
+     */
+    public function pongResult(Request $request): JsonResponse
+    {
+        $request->validate([
+            'device_id' => 'required|string',
+            'ping_id' => 'required|string',
+        ]);
+
+        $pingId = $request->input('ping_id');
+        $deviceId = $request->input('device_id');
+        $receivedAt = now()->timestamp * 1000; // milliseconds
+
+        // Retrieve stored ping data
+        $pingData = \Cache::pull("device_ping:{$pingId}");
+
+        if (!$pingData) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ping expired or not found',
+            ], 400);
+        }
+
+        // Calculate latency
+        $latencyMs = (int) ($receivedAt - $pingData['sent_at']);
+
+        // Verify device matches
+        if ($pingData['device_id'] !== $deviceId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Device ID mismatch',
+            ], 400);
+        }
+
+        // Mark device as verified online in Redis
+        $device = $this->deviceService->findByDeviceId($request->user(), $deviceId);
+        if ($device) {
+            $this->presenceService->markOnline($device->user_id, $device->device_id, $device->id);
+            $device->update([
+                'socket_connected' => true,
+                'last_active_at' => now(),
+            ]);
+        }
+
+        // Broadcast pong to frontend
+        broadcast(new \App\Events\DevicePongReceived(
+            $pingData['user_id'],
+            $deviceId,
+            $pingId,
+            $latencyMs
+        ));
+
+        \Log::info('✅ Pong received from device', [
+            'device_id' => $deviceId,
+            'ping_id' => $pingId,
+            'latency_ms' => $latencyMs,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pong received',
+            'latency_ms' => $latencyMs,
+        ]);
+    }
+
+    /**
      * Get online status for all user's devices
      * 
      * OPTIMIZED: Uses Redis for O(1) lookup
