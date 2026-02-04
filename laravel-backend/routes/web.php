@@ -208,6 +208,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/active-jobs', [AiGenerationController::class, 'activeJobs'])->name('active-jobs');
 
         // AI Scenarios (Script to Scenes)
+        Route::get('/scenario-builder', [\App\Http\Controllers\AiScenarioController::class, 'builder'])->name('scenario.builder');
+        Route::get('/scenario-builder/{scenario}', [\App\Http\Controllers\AiScenarioController::class, 'builderEdit'])->name('scenario.builder.edit');
         Route::get('/scenarios', [\App\Http\Controllers\AiScenarioController::class, 'index'])->name('scenarios.index');
         Route::get('/scenarios/create', [\App\Http\Controllers\AiScenarioController::class, 'create'])->name('scenarios.create');
         Route::post('/scenarios/parse', [\App\Http\Controllers\AiScenarioController::class, 'parseScript'])->name('scenarios.parse');

@@ -45,6 +45,71 @@ class AiScenarioController extends Controller
     }
 
     /**
+     * Scenario Builder Page - Professional Visual Editor
+     */
+    public function builder()
+    {
+        $user = Auth::user();
+
+        // Get templates
+        $templates = \App\Models\ScenarioTemplate::where('is_public', true)
+            ->orderBy('category')
+            ->orderBy('usage_count', 'desc')
+            ->get(['id', 'name', 'description', 'script_template', 'category', 'thumbnail'])
+            ->map(fn($t) => [
+                'id' => $t->id,
+                'name' => $t->name,
+                'description' => $t->description,
+                'script' => $t->script_template,
+                'category' => $t->category,
+                'thumbnail_url' => $t->thumbnail,
+            ]);
+
+        return Inertia::render('AiStudio/ScenarioBuilder', [
+            'currentCredits' => $user->ai_credits,
+            'videoModels' => $this->generationService->getAvailableModels('video'),
+            'imageModels' => $this->generationService->getAvailableModels('image'),
+            'templates' => $templates,
+        ]);
+    }
+
+    /**
+     * Scenario Builder Edit - Edit existing scenario
+     */
+    public function builderEdit(AiScenario $scenario)
+    {
+        $user = Auth::user();
+
+        // Authorization check
+        if ($scenario->user_id !== $user->id) {
+            abort(403);
+        }
+
+        $scenario->load(['scenes' => fn($q) => $q->orderBy('order')]);
+
+        $templates = \App\Models\ScenarioTemplate::where('is_public', true)
+            ->orderBy('category')
+            ->orderBy('usage_count', 'desc')
+            ->get(['id', 'name', 'description', 'script_template', 'category', 'thumbnail'])
+            ->map(fn($t) => [
+                'id' => $t->id,
+                'name' => $t->name,
+                'description' => $t->description,
+                'script' => $t->script_template,
+                'category' => $t->category,
+                'thumbnail_url' => $t->thumbnail,
+            ]);
+
+        return Inertia::render('AiStudio/ScenarioBuilder', [
+            'currentCredits' => $user->ai_credits,
+            'videoModels' => $this->generationService->getAvailableModels('video'),
+            'imageModels' => $this->generationService->getAvailableModels('image'),
+            'templates' => $templates,
+            'scenario' => $this->formatScenario($scenario),
+        ]);
+    }
+
+    /**
      * Show scenario creation page
      */
     public function create()

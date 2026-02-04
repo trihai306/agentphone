@@ -70,8 +70,8 @@ COPY docker/crontab /etc/cron.d/laravel-cron
 RUN chmod 0644 /etc/cron.d/laravel-cron \
     && crontab /etc/cron.d/laravel-cron
 
-# Expose port for Octane
+# Expose port for Laravel
 EXPOSE 8000
 
-# Start supervisor
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Start supervisor with DEV config (php artisan serve instead of Octane)
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.dev.conf"]

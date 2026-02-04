@@ -83,10 +83,15 @@ class GeminiVeoProvider implements AiProviderInterface
             $instance['negativePrompt'] = $options['negative_prompt'];
         }
 
-        // NOTE: aspectRatio, resolution, and durationSeconds are NOT supported in current preview models
-        // Only send these params when using stable/ga versions (not 'preview' suffix)
+        // NOTE: aspectRatio, resolution, and durationSeconds are NOT supported in:
+        // - Preview models (suffix 'preview')
+        // - Veo 2.0 models (veo-2.0-*)
+        // Only send these params when using Veo 3.x stable/ga versions
         $isPreviewModel = str_contains($model, 'preview');
-        if (!$isPreviewModel) {
+        $isVeo2 = str_contains($model, 'veo-2');
+        $supportsAdvancedParams = !$isPreviewModel && !$isVeo2;
+        
+        if ($supportsAdvancedParams) {
             // Aspect ratio
             $aspectRatio = $options['aspect_ratio'] ?? '16:9';
             if (in_array($aspectRatio, $this->validAspectRatios)) {
@@ -108,7 +113,7 @@ class GeminiVeoProvider implements AiProviderInterface
         }
 
         // Optional seed for reproducibility (may or may not be supported by preview)
-        if (!$isPreviewModel && !empty($options['seed'])) {
+        if ($supportsAdvancedParams && !empty($options['seed'])) {
             $instance['seed'] = (int) $options['seed'];
         }
 

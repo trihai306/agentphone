@@ -455,6 +455,16 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                 >
                                     Gallery
                                 </Link>
+
+                                <Link
+                                    href="/ai-studio/scenario-builder"
+                                    className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors flex items-center gap-2 ${isDark
+                                        ? 'text-violet-400 hover:text-violet-300 hover:bg-violet-600/10'
+                                        : 'text-violet-600 hover:text-violet-700 hover:bg-violet-50'
+                                        }`}
+                                >
+                                    ✨ Scenario Builder
+                                </Link>
                             </div>
                         </div>
                     </div>
