@@ -320,6 +320,87 @@ enum class ActionType(val value: String) {
     @SerializedName("repeat_click")
     REPEAT_CLICK("repeat_click"),
 
+    // === SYSTEM ACTIONS ===
+    @SerializedName("recents")
+    RECENTS("recents"),
+
+    @SerializedName("notifications")
+    NOTIFICATIONS("notifications"),
+
+    @SerializedName("quick_settings")
+    QUICK_SETTINGS("quick_settings"),
+
+    @SerializedName("lock_screen")
+    LOCK_SCREEN("lock_screen"),
+
+    @SerializedName("power_dialog")
+    POWER_DIALOG("power_dialog"),
+
+    // === TEXT OPERATIONS ===
+    @SerializedName("clear_text")
+    CLEAR_TEXT("clear_text"),
+
+    @SerializedName("get_text")
+    GET_TEXT("get_text"),
+
+    @SerializedName("append_text")
+    APPEND_TEXT("append_text"),
+
+    @SerializedName("select_all")
+    SELECT_ALL("select_all"),
+
+    // === ADVANCED GESTURES ===
+    @SerializedName("drag_drop")
+    DRAG_DROP("drag_drop"),
+
+    @SerializedName("pinch_zoom")
+    PINCH_ZOOM("pinch_zoom"),
+
+    @SerializedName("fling")
+    FLING("fling"),
+
+    // === ELEMENT INSPECTION ===
+    @SerializedName("get_bounds")
+    GET_BOUNDS("get_bounds"),
+
+    @SerializedName("count_elements")
+    COUNT_ELEMENTS("count_elements"),
+
+    @SerializedName("is_visible")
+    IS_VISIBLE("is_visible"),
+
+    // === MEDIA CONTROLS ===
+    @SerializedName("volume_up")
+    VOLUME_UP("volume_up"),
+
+    @SerializedName("volume_down")
+    VOLUME_DOWN("volume_down"),
+
+    @SerializedName("mute")
+    MUTE("mute"),
+
+    @SerializedName("media_play_pause")
+    MEDIA_PLAY_PAUSE("media_play_pause"),
+
+    @SerializedName("media_next")
+    MEDIA_NEXT("media_next"),
+
+    @SerializedName("media_previous")
+    MEDIA_PREVIOUS("media_previous"),
+
+    // === WAIT CONDITIONS ===
+    @SerializedName("wait_for_text")
+    WAIT_FOR_TEXT("wait_for_text"),
+
+    @SerializedName("wait_for_activity")
+    WAIT_FOR_ACTIVITY("wait_for_activity"),
+
+    @SerializedName("wait_for_package")
+    WAIT_FOR_PACKAGE("wait_for_package"),
+
+    @SerializedName("wait_idle")
+    WAIT_IDLE("wait_idle"),
+
     @SerializedName("custom")
     CUSTOM("custom")
 }

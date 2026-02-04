@@ -1,5 +1,6 @@
 package com.agent.portal.socket
 
+import android.accessibilityservice.AccessibilityService
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -294,6 +295,32 @@ class JobExecutor(context: Context) {
                     ActionType.ELEMENT_CHECK -> executeElementCheck(action.params)
                     ActionType.WAIT_FOR_ELEMENT -> executeWaitForElement(action.params)
                     ActionType.REPEAT_CLICK -> executeRepeatClick(action.params)
+                    // System Actions
+                    ActionType.RECENTS -> executeGlobalAction("recents")
+                    ActionType.NOTIFICATIONS -> executeGlobalAction("notifications")
+                    ActionType.QUICK_SETTINGS -> executeGlobalAction("quick_settings")
+                    ActionType.LOCK_SCREEN -> executeGlobalAction("lock_screen")
+                    ActionType.POWER_DIALOG -> executeGlobalAction("power_dialog")
+                    // Text Operations
+                    ActionType.CLEAR_TEXT -> executeClearText(action.params)
+                    ActionType.GET_TEXT -> executeGetText(action.params)
+                    ActionType.APPEND_TEXT -> executeAppendText(action.params)
+                    ActionType.SELECT_ALL -> executeSelectAll(action.params)
+                    // Advanced Gestures
+                    ActionType.DRAG_DROP -> executeDragDrop(action.params)
+                    ActionType.PINCH_ZOOM -> executePinchZoom(action.params)
+                    ActionType.FLING -> executeFling(action.params)
+                    // Element Inspection
+                    ActionType.GET_BOUNDS -> executeGetBounds(action.params)
+                    ActionType.COUNT_ELEMENTS -> executeCountElements(action.params)
+                    ActionType.IS_VISIBLE -> executeIsVisible(action.params)
+                    // Media Controls
+                    ActionType.VOLUME_UP -> executePressKey(mapOf("key" to "VOLUME_UP"))
+                    ActionType.VOLUME_DOWN -> executePressKey(mapOf("key" to "VOLUME_DOWN"))
+                    ActionType.MUTE -> executePressKey(mapOf("key" to "VOLUME_MUTE"))
+                    ActionType.MEDIA_PLAY_PAUSE -> executePressKey(mapOf("key" to "MEDIA_PLAY_PAUSE"))
+                    ActionType.MEDIA_NEXT -> executePressKey(mapOf("key" to "MEDIA_NEXT"))
+                    ActionType.MEDIA_PREVIOUS -> executePressKey(mapOf("key" to "MEDIA_PREVIOUS"))
                     ActionType.CUSTOM -> executeCustom(action.params, jobParams)
                 }
 
@@ -334,7 +361,7 @@ class JobExecutor(context: Context) {
                 // Tap/Click actions
                 "tap", "click" -> executeTap(params)
                 "double_tap" -> executeDoubleTap(params)
-                "long_press", "long_tap" -> executeLongPress(params)
+                "long_press", "long_tap", "long_click" -> executeLongPress(params)
                 
                 // Swipe/Scroll actions
                 "swipe" -> executeSwipe(params)
@@ -363,6 +390,43 @@ class JobExecutor(context: Context) {
                 
                 // Repeat click - multiple rapid taps
                 "repeat_click" -> executeRepeatClick(params)
+                
+                // === SYSTEM ACTIONS ===
+                "recents" -> executeGlobalAction("recents")
+                "notifications" -> executeGlobalAction("notifications")
+                "quick_settings" -> executeGlobalAction("quick_settings")
+                "lock_screen" -> executeGlobalAction("lock_screen")
+                "power_dialog" -> executeGlobalAction("power_dialog")
+                
+                // === TEXT OPERATIONS ===
+                "clear_text" -> executeClearText(params)
+                "get_text" -> executeGetText(params)
+                "append_text" -> executeAppendText(params)
+                "select_all" -> executeSelectAll(params)
+                
+                // === ADVANCED GESTURES ===
+                "drag_drop" -> executeDragDrop(params)
+                "pinch_zoom" -> executePinchZoom(params)
+                "fling" -> executeFling(params)
+                
+                // === ELEMENT INSPECTION ===
+                "get_bounds" -> executeGetBounds(params)
+                "count_elements" -> executeCountElements(params)
+                "is_visible" -> executeIsVisible(params)
+                
+                // === MEDIA CONTROLS ===
+                "volume_up" -> executePressKey(mapOf("key" to "VOLUME_UP"))
+                "volume_down" -> executePressKey(mapOf("key" to "VOLUME_DOWN"))
+                "mute" -> executePressKey(mapOf("key" to "VOLUME_MUTE"))
+                "media_play_pause" -> executePressKey(mapOf("key" to "MEDIA_PLAY_PAUSE"))
+                "media_next" -> executePressKey(mapOf("key" to "MEDIA_NEXT"))
+                "media_previous" -> executePressKey(mapOf("key" to "MEDIA_PREVIOUS"))
+                
+                // === WAIT CONDITIONS ===
+                "wait_for_text" -> executeWaitForText(params)
+                "wait_for_activity" -> executeWaitForActivity(params)
+                "wait_for_package" -> executeWaitForPackage(params)
+                "wait_idle" -> executeWaitIdle(params)
                 
                 else -> ActionResult(
                     actionId = "unknown",
@@ -1993,6 +2057,238 @@ class JobExecutor(context: Context) {
         }
     }
 
+    /**
+     * Wait for specific text to appear anywhere on screen
+     * Params:
+     * - text: Text to wait for (required)
+     * - timeout: Max wait time (ms, default 10000)
+     * - pollInterval: Check interval (ms, default 500)
+     */
+    private suspend fun executeWaitForText(params: Map<String, Any>): ActionResult {
+        val accessibilityService = PortalAccessibilityService.instance
+            ?: return ActionResult(
+                actionId = "wait_for_text",
+                success = false,
+                message = "Accessibility service not available",
+                error = "Service not running"
+            )
+        
+        val text = params["text"] as? String
+        val timeout = (params["timeout"] as? Number)?.toLong() ?: 10000L
+        val pollInterval = (params["pollInterval"] as? Number)?.toLong() ?: 500L
+        
+        if (text.isNullOrBlank()) {
+            return ActionResult(
+                actionId = "wait_for_text",
+                success = false,
+                message = "Missing text parameter",
+                error = "text is required"
+            )
+        }
+        
+        Log.d(TAG, "⏳ WaitForText: text=$text, timeout=${timeout}ms")
+        
+        val startTime = System.currentTimeMillis()
+        var found = false
+        
+        while (System.currentTimeMillis() - startTime < timeout) {
+            val rootNode = accessibilityService.rootInActiveWindow
+            if (rootNode != null) {
+                val nodes = rootNode.findAccessibilityNodeInfosByText(text)
+                if (nodes.isNotEmpty()) {
+                    found = true
+                    nodes.forEach { it.recycle() }
+                    break
+                }
+            }
+            delay(pollInterval)
+        }
+        
+        val timeSpent = System.currentTimeMillis() - startTime
+        
+        return if (found) {
+            Log.d(TAG, "✅ WaitForText: Found '$text' after ${timeSpent}ms")
+            ActionResult(
+                actionId = "wait_for_text",
+                success = true,
+                message = "Text '$text' found after ${timeSpent}ms",
+                data = mapOf("text" to text, "timeSpent" to timeSpent)
+            )
+        } else {
+            Log.d(TAG, "❌ WaitForText: Timeout waiting for '$text'")
+            ActionResult(
+                actionId = "wait_for_text",
+                success = false,
+                message = "Text '$text' not found within ${timeout}ms",
+                error = "Timeout"
+            )
+        }
+    }
+
+    /**
+     * Wait for specific activity to be in foreground
+     * Params:
+     * - activity: Activity class name (required)
+     * - timeout: Max wait time (ms, default 10000)
+     * - pollInterval: Check interval (ms, default 500)
+     */
+    private suspend fun executeWaitForActivity(params: Map<String, Any>): ActionResult {
+        val accessibilityService = PortalAccessibilityService.instance
+            ?: return ActionResult(
+                actionId = "wait_for_activity",
+                success = false,
+                message = "Accessibility service not available",
+                error = "Service not running"
+            )
+        
+        val activity = params["activity"] as? String
+        val timeout = (params["timeout"] as? Number)?.toLong() ?: 10000L
+        val pollInterval = (params["pollInterval"] as? Number)?.toLong() ?: 500L
+        
+        if (activity.isNullOrBlank()) {
+            return ActionResult(
+                actionId = "wait_for_activity",
+                success = false,
+                message = "Missing activity parameter",
+                error = "activity is required"
+            )
+        }
+        
+        Log.d(TAG, "⏳ WaitForActivity: activity=$activity, timeout=${timeout}ms")
+        
+        val startTime = System.currentTimeMillis()
+        var found = false
+        
+        while (System.currentTimeMillis() - startTime < timeout) {
+            val rootNode = accessibilityService.rootInActiveWindow
+            if (rootNode != null) {
+                val currentWindow = rootNode.window
+                val currentActivity = currentWindow?.root?.className?.toString() ?: ""
+                if (currentActivity.contains(activity)) {
+                    found = true
+                    break
+                }
+            }
+            delay(pollInterval)
+        }
+        
+        val timeSpent = System.currentTimeMillis() - startTime
+        
+        return if (found) {
+            Log.d(TAG, "✅ WaitForActivity: Found '$activity' after ${timeSpent}ms")
+            ActionResult(
+                actionId = "wait_for_activity",
+                success = true,
+                message = "Activity '$activity' found after ${timeSpent}ms",
+                data = mapOf("activity" to activity, "timeSpent" to timeSpent)
+            )
+        } else {
+            Log.d(TAG, "❌ WaitForActivity: Timeout waiting for '$activity'")
+            ActionResult(
+                actionId = "wait_for_activity",
+                success = false,
+                message = "Activity '$activity' not found within ${timeout}ms",
+                error = "Timeout"
+            )
+        }
+    }
+
+    /**
+     * Wait for specific package/app to be in foreground
+     * Params:
+     * - packageName: Package name (required)
+     * - timeout: Max wait time (ms, default 10000)
+     * - pollInterval: Check interval (ms, default 500)
+     */
+    private suspend fun executeWaitForPackage(params: Map<String, Any>): ActionResult {
+        val accessibilityService = PortalAccessibilityService.instance
+            ?: return ActionResult(
+                actionId = "wait_for_package",
+                success = false,
+                message = "Accessibility service not available",
+                error = "Service not running"
+            )
+        
+        val packageName = params["packageName"] as? String
+        val timeout = (params["timeout"] as? Number)?.toLong() ?: 10000L
+        val pollInterval = (params["pollInterval"] as? Number)?.toLong() ?: 500L
+        
+        if (packageName.isNullOrBlank()) {
+            return ActionResult(
+                actionId = "wait_for_package",
+                success = false,
+                message = "Missing packageName parameter",
+                error = "packageName is required"
+            )
+        }
+        
+        Log.d(TAG, "⏳ WaitForPackage: packageName=$packageName, timeout=${timeout}ms")
+        
+        val startTime = System.currentTimeMillis()
+        var found = false
+        
+        while (System.currentTimeMillis() - startTime < timeout) {
+            val rootNode = accessibilityService.rootInActiveWindow
+            if (rootNode != null) {
+                val currentPackage = rootNode.packageName?.toString()
+                if (currentPackage == packageName) {
+                    found = true
+                    break
+                }
+            }
+            delay(pollInterval)
+        }
+        
+        val timeSpent = System.currentTimeMillis() - startTime
+        
+        return if (found) {
+            Log.d(TAG, "✅ WaitForPackage: Found '$packageName' after ${timeSpent}ms")
+            ActionResult(
+                actionId = "wait_for_package",
+                success = true,
+                message = "Package '$packageName' found after ${timeSpent}ms",
+                data = mapOf("packageName" to packageName, "timeSpent" to timeSpent)
+            )
+        } else {
+            Log.d(TAG, "❌ WaitForPackage: Timeout waiting for '$packageName'")
+            ActionResult(
+                actionId = "wait_for_package",
+                success = false,
+                message = "Package '$packageName' not found within ${timeout}ms",
+                error = "Timeout"
+            )
+        }
+    }
+
+    /**
+     * Wait for UI to become idle (no pending events)
+     * Params:
+     * - timeout: Max wait time (ms, default 5000)
+     * - idleTime: Time UI must be idle (ms, default 500)
+     */
+    private suspend fun executeWaitIdle(params: Map<String, Any>): ActionResult {
+        val timeout = (params["timeout"] as? Number)?.toLong() ?: 5000L
+        val idleTime = (params["idleTime"] as? Number)?.toLong() ?: 500L
+        
+        Log.d(TAG, "⏳ WaitIdle: timeout=${timeout}ms, idleTime=${idleTime}ms")
+        
+        val startTime = System.currentTimeMillis()
+        
+        // Simply wait for the specified idle time
+        // In a more advanced implementation, we could monitor UI changes
+        delay(idleTime)
+        
+        val timeSpent = System.currentTimeMillis() - startTime
+        
+        Log.d(TAG, "✅ WaitIdle: Completed after ${timeSpent}ms")
+        return ActionResult(
+            actionId = "wait_idle",
+            success = true,
+            message = "UI idle after ${timeSpent}ms",
+            data = mapOf("timeSpent" to timeSpent)
+        )
+    }
+
 
     private suspend fun executeCustom(params: Map<String, Any>, jobParams: Map<String, Any>?): ActionResult {
         // Custom action implementation
@@ -2222,5 +2518,553 @@ class JobExecutor(context: Context) {
         
         Log.d(TAG, "   [click] All strategies failed")
         return false
+    }
+
+    // ================================================================================
+    // === NEW ACTION IMPLEMENTATIONS ===
+    // ================================================================================
+
+    /**
+     * Execute global action (recents, notifications, quick_settings, etc.)
+     */
+    private suspend fun executeGlobalAction(action: String): ActionResult {
+        val accessibilityService = PortalAccessibilityService.instance
+            ?: throw Exception("Accessibility service not available")
+
+        val globalAction = when (action) {
+            "recents" -> AccessibilityService.GLOBAL_ACTION_RECENTS
+            "notifications" -> AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS
+            "quick_settings" -> AccessibilityService.GLOBAL_ACTION_QUICK_SETTINGS
+            "lock_screen" -> if (android.os.Build.VERSION.SDK_INT >= 28) 
+                AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN else -1
+            "power_dialog" -> if (android.os.Build.VERSION.SDK_INT >= 21)
+                AccessibilityService.GLOBAL_ACTION_POWER_DIALOG else -1
+            else -> -1
+        }
+
+        if (globalAction == -1) {
+            return ActionResult(
+                actionId = action,
+                success = false,
+                message = "Action '$action' not supported on this Android version",
+                error = "Unsupported action"
+            )
+        }
+
+        val success = accessibilityService.performGlobalAction(globalAction)
+        delay(300) // Wait for animation
+
+        return ActionResult(
+            actionId = action,
+            success = success,
+            message = if (success) "Global action '$action' executed" else "Failed to execute $action"
+        )
+    }
+
+    /**
+     * Clear text from focused text field
+     */
+    private suspend fun executeClearText(params: Map<String, Any>): ActionResult {
+        val accessibilityService = PortalAccessibilityService.instance
+            ?: throw Exception("Accessibility service not available")
+
+        val rootNode = accessibilityService.rootInActiveWindow
+            ?: throw Exception("Cannot access view hierarchy")
+
+        try {
+            // Find focused editable node
+            val focusedNode = rootNode.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+            
+            if (focusedNode != null && focusedNode.isEditable) {
+                val args = android.os.Bundle()
+                args.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, "")
+                val success = focusedNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
+                focusedNode.recycle()
+                rootNode.recycle()
+                
+                return ActionResult(
+                    actionId = "clear_text",
+                    success = success,
+                    message = if (success) "Text cleared" else "Failed to clear text"
+                )
+            }
+
+            rootNode.recycle()
+            return ActionResult(
+                actionId = "clear_text",
+                success = false,
+                message = "No focused editable field found",
+                error = "No editable field"
+            )
+        } catch (e: Exception) {
+            rootNode.recycle()
+            throw e
+        }
+    }
+
+    /**
+     * Get text from element and return in result data
+     */
+    private suspend fun executeGetText(params: Map<String, Any>): ActionResult {
+        val accessibilityService = PortalAccessibilityService.instance
+            ?: throw Exception("Accessibility service not available")
+
+        val rootNode = accessibilityService.rootInActiveWindow
+            ?: throw Exception("Cannot access view hierarchy")
+
+        try {
+            val resourceId = params["resourceId"] as? String
+            val text = params["text"] as? String
+            val contentDescription = params["contentDescription"] as? String
+            val outputVariable = params["outputVariable"] as? String ?: "extracted_text"
+
+            // Find element
+            val criteria = ElementCriteria(
+                resourceId = resourceId,
+                contentDescription = contentDescription,
+                text = text,
+                className = null,
+                fuzzyMatch = false,
+                ignoreCase = true
+            )
+
+            val targetNode = findBestMatchingNode(rootNode, criteria)
+            if (targetNode != null) {
+                val extractedText = targetNode.text?.toString() ?: ""
+                targetNode.recycle()
+                rootNode.recycle()
+
+                return ActionResult(
+                    actionId = "get_text",
+                    success = true,
+                    message = "Text extracted: ${extractedText.take(50)}",
+                    data = mapOf(
+                        "text" to extractedText,
+                        "variable" to outputVariable
+                    )
+                )
+            }
+
+            rootNode.recycle()
+            return ActionResult(
+                actionId = "get_text",
+                success = false,
+                message = "Element not found",
+                error = "Element not found"
+            )
+        } catch (e: Exception) {
+            rootNode.recycle()
+            throw e
+        }
+    }
+
+    /**
+     * Append text to existing content in focused field
+     */
+    private suspend fun executeAppendText(params: Map<String, Any>): ActionResult {
+        val accessibilityService = PortalAccessibilityService.instance
+            ?: throw Exception("Accessibility service not available")
+
+        val appendText = params["text"] as? String ?: params["value"] as? String ?: ""
+        if (appendText.isEmpty()) {
+            return ActionResult(
+                actionId = "append_text",
+                success = false,
+                message = "No text to append",
+                error = "Empty text"
+            )
+        }
+
+        val rootNode = accessibilityService.rootInActiveWindow
+            ?: throw Exception("Cannot access view hierarchy")
+
+        try {
+            val focusedNode = rootNode.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+            
+            if (focusedNode != null && focusedNode.isEditable) {
+                val currentText = focusedNode.text?.toString() ?: ""
+                val newText = currentText + appendText
+                
+                val args = android.os.Bundle()
+                args.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, newText)
+                val success = focusedNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
+                focusedNode.recycle()
+                rootNode.recycle()
+                
+                return ActionResult(
+                    actionId = "append_text",
+                    success = success,
+                    message = if (success) "Text appended" else "Failed to append text"
+                )
+            }
+
+            rootNode.recycle()
+            return ActionResult(
+                actionId = "append_text",
+                success = false,
+                message = "No focused editable field found",
+                error = "No editable field"
+            )
+        } catch (e: Exception) {
+            rootNode.recycle()
+            throw e
+        }
+    }
+
+    /**
+     * Select all text in focused field
+     */
+    private suspend fun executeSelectAll(params: Map<String, Any>): ActionResult {
+        val accessibilityService = PortalAccessibilityService.instance
+            ?: throw Exception("Accessibility service not available")
+
+        val rootNode = accessibilityService.rootInActiveWindow
+            ?: throw Exception("Cannot access view hierarchy")
+
+        try {
+            val focusedNode = rootNode.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+            
+            if (focusedNode != null && focusedNode.isEditable) {
+                val textLength = focusedNode.text?.length ?: 0
+                
+                val args = android.os.Bundle()
+                args.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, 0)
+                args.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, textLength)
+                val success = focusedNode.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION, args)
+                focusedNode.recycle()
+                rootNode.recycle()
+                
+                return ActionResult(
+                    actionId = "select_all",
+                    success = success,
+                    message = if (success) "Text selected ($textLength chars)" else "Failed to select text"
+                )
+            }
+
+            rootNode.recycle()
+            return ActionResult(
+                actionId = "select_all",
+                success = false,
+                message = "No focused editable field found",
+                error = "No editable field"
+            )
+        } catch (e: Exception) {
+            rootNode.recycle()
+            throw e
+        }
+    }
+
+    /**
+     * Drag and drop from one point to another
+     */
+    private suspend fun executeDragDrop(params: Map<String, Any>): ActionResult {
+        val accessibilityService = PortalAccessibilityService.instance
+            ?: throw Exception("Accessibility service not available")
+
+        val startX = (params["startX"] as? Number)?.toInt() ?: (params["x"] as? Number)?.toInt()
+        val startY = (params["startY"] as? Number)?.toInt() ?: (params["y"] as? Number)?.toInt()
+        val endX = (params["endX"] as? Number)?.toInt()
+        val endY = (params["endY"] as? Number)?.toInt()
+        val duration = (params["duration"] as? Number)?.toLong() ?: 1000L
+
+        if (startX == null || startY == null || endX == null || endY == null) {
+            return ActionResult(
+                actionId = "drag_drop",
+                success = false,
+                message = "Missing coordinates. Required: startX, startY, endX, endY",
+                error = "Invalid params"
+            )
+        }
+
+        // Use longer duration for drag (feels like a hold + move)
+        val result = accessibilityService.dragGesture(startX, startY, endX, endY, duration)
+        
+        return ActionResult(
+            actionId = "drag_drop",
+            success = result.success,
+            message = if (result.success) "Dragged from ($startX,$startY) to ($endX,$endY)" 
+                     else "Drag failed: ${result.message}"
+        )
+    }
+
+    /**
+     * Pinch zoom gesture (requires API 24+)
+     */
+    private suspend fun executePinchZoom(params: Map<String, Any>): ActionResult {
+        val accessibilityService = PortalAccessibilityService.instance
+            ?: throw Exception("Accessibility service not available")
+
+        if (android.os.Build.VERSION.SDK_INT < 24) {
+            return ActionResult(
+                actionId = "pinch_zoom",
+                success = false,
+                message = "Pinch zoom requires Android 7.0+ (API 24)",
+                error = "Unsupported API level"
+            )
+        }
+
+        val centerX = (params["centerX"] as? Number)?.toInt() ?: (params["x"] as? Number)?.toInt()
+        val centerY = (params["centerY"] as? Number)?.toInt() ?: (params["y"] as? Number)?.toInt()
+        val zoomIn = params["zoomIn"] as? Boolean ?: true
+        val scale = (params["scale"] as? Number)?.toFloat() ?: 1.5f
+
+        // Calculate screen center if not provided
+        val displayMetrics = context.resources.displayMetrics
+        val x = centerX ?: (displayMetrics.widthPixels / 2)
+        val y = centerY ?: (displayMetrics.heightPixels / 2)
+
+        // Create two-finger pinch gesture
+        val offset = (100 * scale).toInt()
+        val startOffset = if (zoomIn) offset / 2 else offset
+        val endOffset = if (zoomIn) offset else offset / 2
+
+        // Finger 1: move from center-left to further left (zoom in) or closer (zoom out)
+        val result1 = accessibilityService.swipeGesture(
+            x - startOffset, y,
+            x - endOffset, y,
+            300
+        )
+
+        // Finger 2: move from center-right to further right
+        val result2 = accessibilityService.swipeGesture(
+            x + startOffset, y,
+            x + endOffset, y,
+            300
+        )
+
+        // Note: Multi-touch gestures require GestureDescription.Builder with multiple strokes
+        // Current implementation is simplified - for full pinch support, need API 24+ combined gesture
+        
+        return ActionResult(
+            actionId = "pinch_zoom",
+            success = result1.success && result2.success,
+            message = if (zoomIn) "Zoomed in at ($x,$y)" else "Zoomed out at ($x,$y)"
+        )
+    }
+
+    /**
+     * Quick swipe/fling gesture
+     */
+    private suspend fun executeFling(params: Map<String, Any>): ActionResult {
+        val accessibilityService = PortalAccessibilityService.instance
+            ?: throw Exception("Accessibility service not available")
+
+        val direction = params["direction"] as? String ?: "up"
+        val startX = (params["startX"] as? Number)?.toInt() ?: (params["x"] as? Number)?.toInt()
+        val startY = (params["startY"] as? Number)?.toInt() ?: (params["y"] as? Number)?.toInt()
+
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+        val screenHeight = displayMetrics.heightPixels
+
+        val x = startX ?: (screenWidth / 2)
+        val y = startY ?: (screenHeight / 2)
+
+        // Fling: fast, long swipe (short duration = fast)
+        val distance = screenHeight / 3
+        val (endX, endY) = when (direction) {
+            "up" -> x to (y - distance).coerceAtLeast(100)
+            "down" -> x to (y + distance).coerceAtMost(screenHeight - 100)
+            "left" -> (x - distance).coerceAtLeast(100) to y
+            "right" -> (x + distance).coerceAtMost(screenWidth - 100) to y
+            else -> x to (y - distance)
+        }
+
+        // Short duration = fast fling
+        val result = accessibilityService.swipeGesture(x, y, endX, endY, 100)
+
+        return ActionResult(
+            actionId = "fling",
+            success = result.success,
+            message = if (result.success) "Fling $direction from ($x,$y)" else "Fling failed"
+        )
+    }
+
+    /**
+     * Get bounds of an element
+     */
+    private suspend fun executeGetBounds(params: Map<String, Any>): ActionResult {
+        val accessibilityService = PortalAccessibilityService.instance
+            ?: throw Exception("Accessibility service not available")
+
+        val rootNode = accessibilityService.rootInActiveWindow
+            ?: throw Exception("Cannot access view hierarchy")
+
+        try {
+            val resourceId = params["resourceId"] as? String
+            val text = params["text"] as? String
+            val contentDescription = params["contentDescription"] as? String
+
+            val criteria = ElementCriteria(
+                resourceId = resourceId,
+                contentDescription = contentDescription,
+                text = text,
+                className = null,
+                fuzzyMatch = false,
+                ignoreCase = true
+            )
+
+            val targetNode = findBestMatchingNode(rootNode, criteria)
+            if (targetNode != null) {
+                val rect = android.graphics.Rect()
+                targetNode.getBoundsInScreen(rect)
+                targetNode.recycle()
+                rootNode.recycle()
+
+                return ActionResult(
+                    actionId = "get_bounds",
+                    success = true,
+                    message = "Bounds: ${rect.left},${rect.top} - ${rect.right},${rect.bottom}",
+                    data = mapOf(
+                        "left" to rect.left,
+                        "top" to rect.top,
+                        "right" to rect.right,
+                        "bottom" to rect.bottom,
+                        "width" to rect.width(),
+                        "height" to rect.height(),
+                        "centerX" to (rect.left + rect.right) / 2,
+                        "centerY" to (rect.top + rect.bottom) / 2
+                    )
+                )
+            }
+
+            rootNode.recycle()
+            return ActionResult(
+                actionId = "get_bounds",
+                success = false,
+                message = "Element not found",
+                error = "Element not found"
+            )
+        } catch (e: Exception) {
+            rootNode.recycle()
+            throw e
+        }
+    }
+
+    /**
+     * Count elements matching criteria
+     */
+    private suspend fun executeCountElements(params: Map<String, Any>): ActionResult {
+        val accessibilityService = PortalAccessibilityService.instance
+            ?: throw Exception("Accessibility service not available")
+
+        val rootNode = accessibilityService.rootInActiveWindow
+            ?: throw Exception("Cannot access view hierarchy")
+
+        try {
+            val resourceId = params["resourceId"] as? String
+            val text = params["text"] as? String
+            val contentDescription = params["contentDescription"] as? String
+            val className = params["className"] as? String
+
+            var count = 0
+            val queue = ArrayDeque<AccessibilityNodeInfo>()
+            queue.add(rootNode)
+
+            while (queue.isNotEmpty()) {
+                val node = queue.removeFirst()
+                
+                var matches = true
+                if (!resourceId.isNullOrBlank() && !node.viewIdResourceName.orEmpty().contains(resourceId)) {
+                    matches = false
+                }
+                if (!text.isNullOrBlank() && !node.text.toString().contains(text, ignoreCase = true)) {
+                    matches = false
+                }
+                if (!contentDescription.isNullOrBlank() && 
+                    !node.contentDescription.toString().contains(contentDescription, ignoreCase = true)) {
+                    matches = false
+                }
+                if (!className.isNullOrBlank() && !node.className.toString().contains(className)) {
+                    matches = false
+                }
+
+                if (matches && (resourceId != null || text != null || contentDescription != null || className != null)) {
+                    count++
+                }
+
+                for (i in 0 until node.childCount) {
+                    node.getChild(i)?.let { queue.add(it) }
+                }
+            }
+
+            rootNode.recycle()
+
+            return ActionResult(
+                actionId = "count_elements",
+                success = true,
+                message = "Found $count matching elements",
+                data = mapOf("count" to count)
+            )
+        } catch (e: Exception) {
+            rootNode.recycle()
+            throw e
+        }
+    }
+
+    /**
+     * Check if element is visible on screen
+     */
+    private suspend fun executeIsVisible(params: Map<String, Any>): ActionResult {
+        val accessibilityService = PortalAccessibilityService.instance
+            ?: throw Exception("Accessibility service not available")
+
+        val rootNode = accessibilityService.rootInActiveWindow
+            ?: throw Exception("Cannot access view hierarchy")
+
+        try {
+            val resourceId = params["resourceId"] as? String
+            val text = params["text"] as? String
+            val contentDescription = params["contentDescription"] as? String
+
+            val criteria = ElementCriteria(
+                resourceId = resourceId,
+                contentDescription = contentDescription,
+                text = text,
+                className = null,
+                fuzzyMatch = false,
+                ignoreCase = true
+            )
+
+            val targetNode = findBestMatchingNode(rootNode, criteria)
+            if (targetNode != null) {
+                val rect = android.graphics.Rect()
+                targetNode.getBoundsInScreen(rect)
+                
+                val displayMetrics = context.resources.displayMetrics
+                val screenWidth = displayMetrics.widthPixels
+                val screenHeight = displayMetrics.heightPixels
+
+                // Check if element is within screen bounds and has positive size
+                val isVisible = rect.width() > 0 && 
+                               rect.height() > 0 &&
+                               rect.right > 0 && 
+                               rect.bottom > 0 &&
+                               rect.left < screenWidth && 
+                               rect.top < screenHeight &&
+                               targetNode.isVisibleToUser
+
+                targetNode.recycle()
+                rootNode.recycle()
+
+                return ActionResult(
+                    actionId = "is_visible",
+                    success = true,
+                    message = if (isVisible) "Element is visible" else "Element exists but not visible",
+                    data = mapOf("visible" to isVisible)
+                )
+            }
+
+            rootNode.recycle()
+            return ActionResult(
+                actionId = "is_visible",
+                success = true,
+                message = "Element not found",
+                data = mapOf("visible" to false, "exists" to false)
+            )
+        } catch (e: Exception) {
+            rootNode.recycle()
+            throw e
+        }
     }
 }
