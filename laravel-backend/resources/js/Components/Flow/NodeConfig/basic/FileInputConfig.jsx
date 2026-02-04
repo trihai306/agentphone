@@ -161,16 +161,39 @@ export function FileInputConfig({ data, updateData, updateMultipleData, isDark }
                                         </span>
                                     </div>
                                 </div>
-                                {/* File list preview */}
-                                <div className={`space-y-1 max-h-32 overflow-y-auto ${isDark ? 'scrollbar-dark' : ''}`}>
+                                {/* File list preview with thumbnails */}
+                                <div className={`space-y-2 max-h-48 overflow-y-auto ${isDark ? 'scrollbar-dark' : ''}`}>
                                     {filesArray.slice(0, 5).map((file, idx) => (
-                                        <div key={file.id || idx} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-100'}`}>
-                                            <span className={`text-xs truncate flex-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                                {file.name}
-                                            </span>
-                                            <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                {file.type}
-                                            </span>
+                                        <div key={file.id || idx} className={`flex items-center gap-3 px-2 py-2 rounded-lg ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-100'}`}>
+                                            {/* Thumbnail or Icon */}
+                                            {file.type === 'image' && file.url ? (
+                                                <img
+                                                    src={file.url}
+                                                    alt={file.name}
+                                                    className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                                                />
+                                            ) : (
+                                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-violet-500/20' : 'bg-violet-50'}`}>
+                                                    {file.type === 'video' ? (
+                                                        <svg className="w-5 h-5 text-violet-500" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                                                        </svg>
+                                                    ) : (
+                                                        <svg className="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                        </svg>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {/* File info */}
+                                            <div className="flex-1 min-w-0">
+                                                <p className={`text-xs font-medium truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                    {file.name}
+                                                </p>
+                                                <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                    {file.type}
+                                                </span>
+                                            </div>
                                         </div>
                                     ))}
                                     {filesArray.length > 5 && (

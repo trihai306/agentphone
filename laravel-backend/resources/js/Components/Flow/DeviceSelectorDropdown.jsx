@@ -61,7 +61,7 @@ export default function DeviceSelectorDropdown({
                         <svg className="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                         </svg>
-                        {t('flows.editor.devices.online', 'Online Devices')}
+                        {t('flows.editor.devices.all', 'All Devices')}
                         <span className={`ml-auto px-2 py-0.5 rounded-full text-[10px] font-bold ${devices.length > 0
                             ? 'bg-emerald-500/20 text-emerald-400'
                             : 'bg-gray-500/20 text-gray-500'
@@ -70,7 +70,7 @@ export default function DeviceSelectorDropdown({
                         </span>
                     </h3>
                     <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        {t('flows.editor.devices.subtitle_online', 'Select and verify connection')}
+                        {t('flows.editor.devices.subtitle', 'Select device and verify connection')}
                     </p>
                 </div>
             </div>
@@ -95,7 +95,7 @@ export default function DeviceSelectorDropdown({
                         <svg className="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                         </svg>
-                        <p className="text-sm font-medium">{t('flows.editor.devices.no_online', 'No devices online')}</p>
+                        <p className="text-sm font-medium">{t('flows.editor.devices.no_devices', 'No devices')}</p>
                         <p className="text-xs mt-1 opacity-70">{t('flows.editor.devices.connect_hint', 'Connect your Android device')}</p>
                     </div>
                 ) : (

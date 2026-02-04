@@ -76,11 +76,11 @@ class FlowController extends Controller
 
         $user = Auth::user();
 
-        // Get ONLINE devices only (socket_connected = true)
-        // When user selects device, we ping to verify it's still online
+        // Get ALL devices (not just online)
+        // When user selects device, we ping to verify it's still online via socket
         $devices = $user->devices()
             ->where('status', 'active')
-            ->where('socket_connected', true) // Only online devices
+            ->orderBy('socket_connected', 'desc') // Online devices first
             ->orderBy('last_active_at', 'desc')
             ->get()
             ->map(fn($device) => [
