@@ -162,7 +162,7 @@ export const deviceApi = {
      * More accurate than Redis/DB check
      */
     verifyOnline: async (deviceId) => {
-        return apiService.post('/devices/verify-online', { device_id: deviceId });
+        return apiService.post('/api/devices/verify-online', { device_id: deviceId });
     },
 };
 
