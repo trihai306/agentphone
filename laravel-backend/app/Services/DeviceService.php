@@ -190,19 +190,12 @@ class DeviceService
 
     /**
      * Request element inspection from device
+     * Note: We skip Redis check because device was verified via ping when selected
      */
     public function requestElementInspection(Device $device, int $userId): bool
     {
-        // Use Redis presence check for accurate real-time online status
-        // DB socket_connected can be outdated if not synced properly
-        if (!$this->presenceService->isOnline($device->user_id, $device->device_id)) {
-            \Log::info('Device not online in Redis for inspection', [
-                'device_id' => $device->device_id,
-                'user_id' => $device->user_id,
-            ]);
-            return false;
-        }
-
+        // Just broadcast - device was verified via ping when selected
+        // If it's offline now, frontend will timeout gracefully
         broadcast(new InspectElementsRequest($device->device_id, $userId));
         return true;
     }
@@ -217,13 +210,10 @@ class DeviceService
 
     /**
      * Request accessibility check from device
+     * Note: Skip online check - device was verified via ping
      */
     public function requestAccessibilityCheck(Device $device, int $userId): bool
     {
-        if (!$device->socket_connected) {
-            return false;
-        }
-
         broadcast(new CheckAccessibilityRequest($device->device_id, $userId));
         return true;
     }
@@ -368,11 +358,7 @@ class DeviceService
      */
     public function sendQuickActionToDevice(Device $device, array $action, int $userId): bool
     {
-        if (!$this->presenceService->isOnline($device->user_id, $device->device_id)) {
-            return false;
-        }
-
-        // Broadcast quick action event to device channel
+        // Just broadcast - device was verified via ping
         broadcast(new \App\Events\DeviceQuickAction($device->device_id, $userId, $action));
         return true;
     }
