@@ -19,8 +19,8 @@ class DevicePresenceService
     private const KEY_ONLINE_DEVICES = 'device:online:%d'; // %d = user_id
     private const KEY_DEVICE_INFO = 'device:info:%s';       // %s = device_id
 
-    // TTL in seconds (60s - devices auto-expire if no refresh)
-    private const PRESENCE_TTL = 60;
+    // TTL in seconds (180s = 3 minutes - devices auto-expire if no refresh/reconnect)
+    private const PRESENCE_TTL = 180;
 
     /**
      * Mark a device as online
