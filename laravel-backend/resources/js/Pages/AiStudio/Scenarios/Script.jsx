@@ -39,11 +39,14 @@ export default function Script({ scenario, currentCredits = 0, videoModels = [],
                 output_type: scenario.output_type
             });
 
-            if (!parseResponse.success) {
-                throw new Error(parseResponse.error || 'Không thể phân tích kịch bản');
+            // apiService wraps response with {success, data: response.data}
+            // Backend returns {success, data: {scenes, ...}}
+            // So actual backend response is at parseResponse.data (wrapper) -> parseResponse.data.success (backend success) -> parseResponse.data.data.scenes (scenes)
+            if (!parseResponse.success || !parseResponse.data?.success) {
+                throw new Error(parseResponse.data?.error || parseResponse.error || 'Không thể phân tích kịch bản');
             }
 
-            const scenes = parseResponse.data.scenes || [];
+            const scenes = parseResponse.data.data?.scenes || parseResponse.data.scenes || [];
             const models = scenario.output_type === 'video' ? videoModels : imageModels;
             const defaultModel = models[0]?.id || 'kling-1.5-pro';
 
