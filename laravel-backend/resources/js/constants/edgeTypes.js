@@ -19,11 +19,13 @@ export const defaultEdgeOptions = {
         height: 20,
     },
     // Default delay of 2 seconds between nodes
+    // Format matches EdgeDelayPopover: { mode, fixedMs, minMs, maxMs }
     data: {
         delay: {
-            enabled: true,
-            duration: 2000, // milliseconds
-            type: 'fixed',
+            mode: 'fixed',
+            fixedMs: 2000,  // 2 seconds default
+            minMs: 1000,
+            maxMs: 3000,
         },
     },
 };
