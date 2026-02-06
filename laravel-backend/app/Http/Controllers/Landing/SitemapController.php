@@ -1,19 +1,16 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Landing;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Response;
 
 class SitemapController extends Controller
 {
-    /**
-     * Generate XML sitemap for public pages
-     */
     public function index(): Response
     {
         $baseUrl = config('app.url', 'https://clickai.vn');
 
-        // Define public pages with their priorities and change frequencies
         $pages = [
             ['url' => '/', 'priority' => '1.0', 'changefreq' => 'weekly'],
             ['url' => '/features', 'priority' => '0.9', 'changefreq' => 'weekly'],

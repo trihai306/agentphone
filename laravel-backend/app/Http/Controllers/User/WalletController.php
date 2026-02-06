@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\User;
 
+use App\Http\Controllers\Controller;
 use App\Services\WalletService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,9 +15,6 @@ class WalletController extends Controller
     ) {
     }
 
-    /**
-     * Trang quản lý ví và lịch sử giao dịch
-     */
     public function index(Request $request)
     {
         $user = Auth::user();

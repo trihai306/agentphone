@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\User;
 
+use App\Http\Controllers\Controller;
 use App\Models\ErrorReport;
 use App\Models\ErrorReportResponse;
 use Illuminate\Http\Request;
@@ -11,9 +12,6 @@ use Inertia\Response;
 
 class ErrorReportController extends Controller
 {
-    /**
-     * Display the list of user's error reports
-     */
     public function index(Request $request): Response
     {
         $user = $request->user();
@@ -29,7 +27,6 @@ class ErrorReportController extends Controller
 
         $reports = $query->paginate(10);
 
-        // Get counts for each status
         $statusCounts = [
             'all' => ErrorReport::forUser($user)->count(),
             'pending' => ErrorReport::forUser($user)->byStatus('pending')->count(),
@@ -49,9 +46,6 @@ class ErrorReportController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new error report
-     */
     public function create(): Response
     {
         return Inertia::render('ErrorReports/Create', [
@@ -60,9 +54,6 @@ class ErrorReportController extends Controller
         ]);
     }
 
-    /**
-     * Store a new error report
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -92,9 +83,6 @@ class ErrorReportController extends Controller
             ->with('success', 'Báo cáo lỗi đã được gửi thành công! Chúng tôi sẽ xem xét sớm nhất.');
     }
 
-    /**
-     * Display a specific error report
-     */
     public function show(Request $request, ErrorReport $errorReport): Response
     {
         $this->authorize('view', $errorReport);
@@ -109,9 +97,6 @@ class ErrorReportController extends Controller
         ]);
     }
 
-    /**
-     * Add a response to an error report
-     */
     public function addResponse(Request $request, ErrorReport $errorReport)
     {
         $this->authorize('respond', $errorReport);
@@ -121,7 +106,7 @@ class ErrorReportController extends Controller
             'attachments' => 'nullable|array',
         ]);
 
-        $response = ErrorReportResponse::create([
+        ErrorReportResponse::create([
             'error_report_id' => $errorReport->id,
             'user_id' => $request->user()->id,
             'message' => $validated['message'],
@@ -132,13 +117,10 @@ class ErrorReportController extends Controller
         return back()->with('success', 'Phản hồi đã được gửi thành công!');
     }
 
-    /**
-     * Upload screenshot for error report
-     */
     public function uploadScreenshot(Request $request)
     {
         $request->validate([
-            'screenshot' => 'required|image|mimes:jpg,jpeg,png,gif,webp|max:5120', // 5MB max
+            'screenshot' => 'required|image|mimes:jpg,jpeg,png,gif,webp|max:5120',
         ]);
 
         $path = $request->file('screenshot')->store('error-reports/screenshots', 'public');

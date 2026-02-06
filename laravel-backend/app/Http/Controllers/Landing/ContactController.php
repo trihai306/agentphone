@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Landing;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -22,7 +23,6 @@ class ContactController extends Controller
         ]);
 
         // TODO: Send email or store in database
-        // For now, just return success
 
         return redirect()->route('contact')->with('success', 'Thank you for contacting us! We will get back to you soon.');
     }

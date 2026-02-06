@@ -1,34 +1,35 @@
 <?php
 
-use App\Http\Controllers\AboutController;
 use App\Http\Controllers\AiCreditController;
 use App\Http\Controllers\AiGenerationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
-use App\Http\Controllers\ContactController;
-use App\Http\Controllers\CustomFieldController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\DesignSystemController;
-use App\Http\Controllers\ErrorReportController;
 use App\Http\Controllers\FlowController;
-use App\Http\Controllers\FeaturesController;
-use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\Landing\AboutController;
+use App\Http\Controllers\Landing\ContactController;
+use App\Http\Controllers\Landing\DesignSystemController;
+use App\Http\Controllers\Landing\FeaturesController;
+use App\Http\Controllers\Landing\LandingController;
+use App\Http\Controllers\Landing\PricingController;
+use App\Http\Controllers\Landing\SitemapController;
 use App\Http\Controllers\MediaController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\LandingController;
-use App\Http\Controllers\PackageController;
-use App\Http\Controllers\PricingController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\TopupController;
-use App\Http\Controllers\UserDeviceController;
-use App\Http\Controllers\WorkflowJobController;
 use App\Http\Controllers\MarketplaceController;
-use App\Http\Controllers\WalletController;
-use App\Http\Controllers\WithdrawalController;
-use App\Http\Controllers\UserBankAccountController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\WorkflowJobController;
+use App\Http\Controllers\User\CustomFieldController;
+use App\Http\Controllers\User\DashboardController;
+use App\Http\Controllers\User\ErrorReportController;
+use App\Http\Controllers\User\LocaleController;
+use App\Http\Controllers\User\NotificationController;
+use App\Http\Controllers\User\PackageController;
+use App\Http\Controllers\User\ProfileController;
+use App\Http\Controllers\User\TopupController;
+use App\Http\Controllers\User\UserBankAccountController;
+use App\Http\Controllers\User\UserDeviceController;
+use App\Http\Controllers\User\WalletController;
+use App\Http\Controllers\User\WithdrawalController;
 use Illuminate\Support\Facades\Route;
 
 // Locale Route (available for all users)
@@ -36,7 +37,7 @@ Route::post('/locale/{locale}', [LocaleController::class, 'setLocale'])->name('l
 Route::get('/locale/{locale}', [LocaleController::class, 'setLocaleGet'])->name('locale.set.get');
 
 // SEO Routes
-Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 // Landing Pages
 Route::get('/', [LandingController::class, 'index'])->name('landing');

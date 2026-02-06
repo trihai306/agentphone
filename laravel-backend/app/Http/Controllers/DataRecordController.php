@@ -3,11 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\DataCollection;
-use App\Models\DataRecord;
+use App\Services\DataRecordService;
 use Illuminate\Http\Request;
 
 class DataRecordController extends Controller
 {
+    public function __construct(
+        protected DataRecordService $dataRecordService
+    ) {
+    }
+
     /**
      * Store a new record in collection
      */
@@ -15,47 +20,10 @@ class DataRecordController extends Controller
     {
         $this->authorize('update', $dataCollection);
 
-        // Validate against collection schema
-        $rules = [];
-        foreach ($dataCollection->schema as $field) {
-            $fieldName = "data.{$field['name']}";
-            $fieldRules = [];
-
-            if ($field['required'] ?? false) {
-                $fieldRules[] = 'required';
-            } else {
-                $fieldRules[] = 'nullable';
-            }
-
-            switch ($field['type']) {
-                case 'email':
-                    $fieldRules[] = 'email';
-                    break;
-                case 'number':
-                    $fieldRules[] = 'numeric';
-                    break;
-                case 'date':
-                    $fieldRules[] = 'date';
-                    break;
-                case 'boolean':
-                    $fieldRules[] = 'boolean';
-                    break;
-                case 'select':
-                    if (isset($field['options'])) {
-                        $fieldRules[] = 'in:' . implode(',', $field['options']);
-                    }
-                    break;
-            }
-
-            $rules[$fieldName] = implode('|', $fieldRules);
-        }
-
+        $rules = $this->dataRecordService->buildValidationRules($dataCollection);
         $validated = $request->validate($rules);
 
-        $record = $dataCollection->records()->create([
-            'data' => $validated['data'],
-            'status' => 'active',
-        ]);
+        $this->dataRecordService->createRecord($dataCollection, $validated['data']);
 
         return back()->with('success', 'Record added successfully!');
     }
@@ -67,48 +35,16 @@ class DataRecordController extends Controller
     {
         $this->authorize('update', $dataCollection);
 
-        $dataRecord = $dataCollection->records()->findOrFail($record);
+        $dataRecord = $this->dataRecordService->getRecord($dataCollection, $record);
 
-        // Validate against schema
-        $rules = [];
-        foreach ($dataCollection->schema as $field) {
-            $fieldName = "data.{$field['name']}";
-            $fieldRules = [];
-
-            if ($field['required'] ?? false) {
-                $fieldRules[] = 'required';
-            } else {
-                $fieldRules[] = 'nullable';
-            }
-
-            switch ($field['type']) {
-                case 'email':
-                    $fieldRules[] = 'email';
-                    break;
-                case 'number':
-                    $fieldRules[] = 'numeric';
-                    break;
-                case 'date':
-                    $fieldRules[] = 'date';
-                    break;
-                case 'boolean':
-                    $fieldRules[] = 'boolean';
-                    break;
-                case 'select':
-                    if (isset($field['options'])) {
-                        $fieldRules[] = 'in:' . implode(',', $field['options']);
-                    }
-                    break;
-            }
-
-            $rules[$fieldName] = implode('|', $fieldRules);
+        if (!$dataRecord) {
+            abort(404);
         }
 
+        $rules = $this->dataRecordService->buildValidationRules($dataCollection);
         $validated = $request->validate($rules);
 
-        $dataRecord->update([
-            'data' => $validated['data'],
-        ]);
+        $this->dataRecordService->updateRecord($dataRecord, $validated['data']);
 
         return back()->with('success', 'Record updated successfully!');
     }
@@ -120,8 +56,13 @@ class DataRecordController extends Controller
     {
         $this->authorize('update', $dataCollection);
 
-        $dataRecord = $dataCollection->records()->findOrFail($record);
-        $dataRecord->delete();
+        $dataRecord = $this->dataRecordService->getRecord($dataCollection, $record);
+
+        if (!$dataRecord) {
+            abort(404);
+        }
+
+        $this->dataRecordService->deleteRecord($dataRecord);
 
         return back()->with('success', 'Record deleted successfully!');
     }
@@ -138,8 +79,8 @@ class DataRecordController extends Controller
             'ids.*' => 'exists:data_records,id',
         ]);
 
-        $dataCollection->records()->whereIn('id', $validated['ids'])->delete();
+        $deleted = $this->dataRecordService->bulkDeleteRecords($dataCollection, $validated['ids']);
 
-        return back()->with('success', count($validated['ids']) . ' records deleted successfully!');
+        return back()->with('success', "{$deleted} records deleted successfully!");
     }
 }

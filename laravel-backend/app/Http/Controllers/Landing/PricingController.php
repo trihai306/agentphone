@@ -1,16 +1,15 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Landing;
 
+use App\Http\Controllers\Controller;
 use App\Models\ServicePackage;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class PricingController extends Controller
 {
     public function index()
     {
-        // Lấy tất cả gói dịch vụ active, sắp xếp theo priority và giá
         $packages = ServicePackage::active()
             ->ordered()
             ->get()

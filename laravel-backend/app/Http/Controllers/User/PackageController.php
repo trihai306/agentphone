@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\User;
 
+use App\Http\Controllers\Controller;
 use App\Models\ServicePackage;
+use App\Models\Transaction;
 use App\Models\UserServicePackage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -10,29 +12,23 @@ use Inertia\Inertia;
 
 class PackageController extends Controller
 {
-    /**
-     * Hiển thị danh sách gói dịch vụ cho user
-     */
     public function index()
     {
         $user = Auth::user();
 
-        // Lấy tất cả gói dịch vụ active
         $packages = ServicePackage::active()
             ->ordered()
             ->get()
             ->map(fn($pkg) => $this->formatPackage($pkg));
 
-        // Lấy gói của user đang sử dụng (CHỈ lấy những gói service package thực sự, bỏ qua topup records)
         $myPackages = UserServicePackage::with('servicePackage')
             ->where('user_id', $user->id)
-            ->whereNotNull('service_package_id') // Exclude topup records
+            ->whereNotNull('service_package_id')
             ->whereIn('status', ['active', 'pending', 'expired'])
             ->orderByDesc('created_at')
             ->get()
             ->map(fn($userPkg) => $this->formatUserPackage($userPkg));
 
-        // Tính stats
         $stats = $this->calculateUserStats($user);
 
         return Inertia::render('Packages/Index', [
@@ -42,9 +38,6 @@ class PackageController extends Controller
         ]);
     }
 
-    /**
-     * Hiển thị chi tiết một gói
-     */
     public function show(ServicePackage $package)
     {
         if (!$package->is_active) {
@@ -56,9 +49,6 @@ class PackageController extends Controller
         ]);
     }
 
-    /**
-     * Trang đăng ký gói mới
-     */
     public function subscribe(ServicePackage $package)
     {
         if (!$package->is_active) {
@@ -67,13 +57,11 @@ class PackageController extends Controller
 
         $user = Auth::user();
 
-        // Kiểm tra xem user đã có gói này chưa
         $existingPackage = UserServicePackage::where('user_id', $user->id)
             ->where('service_package_id', $package->id)
             ->where('status', 'active')
             ->first();
 
-        // Get user's wallet balance
         $wallet = $user->wallets()->where('currency', 'VND')->first();
         $balance = $wallet ? $wallet->balance : 0;
 
@@ -85,9 +73,6 @@ class PackageController extends Controller
         ]);
     }
 
-    /**
-     * Xử lý đăng ký gói
-     */
     public function processSubscription(Request $request, ServicePackage $package)
     {
         $request->validate([
@@ -97,7 +82,6 @@ class PackageController extends Controller
         $user = Auth::user();
         $paymentMethod = $request->input('payment_method');
 
-        // Handle wallet payment
         if ($paymentMethod === 'wallet') {
             $wallet = $user->wallets()->where('currency', 'VND')->first();
 
@@ -107,25 +91,22 @@ class PackageController extends Controller
                 ]);
             }
 
-            // Deduct from wallet
             $wallet->balance -= $package->price;
             $wallet->save();
 
-            // Create transaction record
-            \App\Models\Transaction::create([
+            Transaction::create([
                 'user_id' => $user->id,
                 'wallet_id' => $wallet->id,
-                'type' => \App\Models\Transaction::TYPE_WITHDRAWAL,
+                'type' => Transaction::TYPE_WITHDRAWAL,
                 'amount' => $package->price,
                 'final_amount' => $package->price,
-                'status' => \App\Models\Transaction::STATUS_COMPLETED,
+                'status' => Transaction::STATUS_COMPLETED,
                 'payment_method' => 'wallet',
                 'user_note' => "Thanh toán gói {$package->name}",
                 'completed_at' => now(),
             ]);
 
-            // Create and activate user package immediately
-            $userPackage = UserServicePackage::create([
+            UserServicePackage::create([
                 'user_id' => $user->id,
                 'service_package_id' => $package->id,
                 'status' => UserServicePackage::STATUS_ACTIVE,
@@ -142,7 +123,6 @@ class PackageController extends Controller
                 ->with('success', 'Đã kích hoạt gói dịch vụ thành công!');
         }
 
-        // For other payment methods, create pending package
         $userPackage = UserServicePackage::create([
             'user_id' => $user->id,
             'service_package_id' => $package->id,
@@ -157,9 +137,6 @@ class PackageController extends Controller
         return redirect()->route('packages.payment', $userPackage->id);
     }
 
-    /**
-     * Trang quản lý gói của user
-     */
     public function manage(UserServicePackage $userPackage)
     {
         $this->authorize('view', $userPackage);
@@ -169,9 +146,6 @@ class PackageController extends Controller
         ]);
     }
 
-    /**
-     * Hủy gói
-     */
     public function cancel(Request $request, UserServicePackage $userPackage)
     {
         $this->authorize('cancel', $userPackage);
@@ -186,16 +160,11 @@ class PackageController extends Controller
             ->with('success', 'Gói dịch vụ đã được hủy thành công.');
     }
 
-    /**
-     * Trang thanh toán
-     */
     public function payment(UserServicePackage $userPackage)
     {
         $this->authorize('view', $userPackage);
 
         $user = Auth::user();
-
-        // Get user's main wallet
         $wallet = $user->wallets()->where('currency', 'VND')->first();
         $balance = $wallet ? $wallet->balance : 0;
 
@@ -207,9 +176,6 @@ class PackageController extends Controller
         ]);
     }
 
-    /**
-     * Lấy thông tin ngân hàng
-     */
     private function getBankInfo(): array
     {
         return [
@@ -220,9 +186,6 @@ class PackageController extends Controller
         ];
     }
 
-    /**
-     * Format package data cho frontend
-     */
     private function formatPackage(ServicePackage $package): array
     {
         return [
@@ -251,9 +214,6 @@ class PackageController extends Controller
         ];
     }
 
-    /**
-     * Format user package data cho frontend
-     */
     private function formatUserPackage(UserServicePackage $userPackage): array
     {
         return [
@@ -275,12 +235,8 @@ class PackageController extends Controller
         ];
     }
 
-    /**
-     * Tính toán stats cho user
-     */
     private function calculateUserStats($user): array
     {
-        // Base query - only real service packages (exclude topup records)
         $baseQuery = fn() => UserServicePackage::where('user_id', $user->id)
             ->whereNotNull('service_package_id');
 
@@ -292,17 +248,14 @@ class PackageController extends Controller
             ->where('status', 'active')
             ->sum('credits_remaining');
 
-        // Tính tổng thiết bị được phép từ các gói active
         $maxDevices = (clone $baseQuery)()
             ->with('servicePackage')
             ->where('status', 'active')
             ->get()
             ->sum(fn($pkg) => $pkg->servicePackage?->max_devices ?? 0);
 
-        // Giả sử user có devices relationship
         $usedDevices = $user->devices?->count() ?? 0;
 
-        // Tính số ngày còn lại của gói gần hết hạn nhất
         $nearestExpiry = (clone $baseQuery)()
             ->where('status', 'active')
             ->whereNotNull('expires_at')
@@ -320,12 +273,9 @@ class PackageController extends Controller
         ];
     }
 
-    /**
-     * Lấy danh sách phương thức thanh toán
-     */
     private function getPaymentMethods($walletBalance = 0, $packagePrice = 0): array
     {
-        $methods = [
+        return [
             [
                 'id' => 'wallet',
                 'name' => 'Số dư ví',
@@ -359,7 +309,5 @@ class PackageController extends Controller
                 'description' => 'Thanh toán qua ví ZaloPay',
             ],
         ];
-
-        return $methods;
     }
 }

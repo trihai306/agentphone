@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\User;
 
+use App\Http\Controllers\Controller;
 use App\Models\SystemNotification;
 use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
@@ -13,11 +14,9 @@ class NotificationController extends Controller
 {
     public function __construct(
         private NotificationService $notificationService
-    ) {}
+    ) {
+    }
 
-    /**
-     * Display all notifications for the user
-     */
     public function index(Request $request): Response
     {
         $user = $request->user();
@@ -31,9 +30,6 @@ class NotificationController extends Controller
         ]);
     }
 
-    /**
-     * Show a single notification
-     */
     public function show(Request $request, int $id): Response|RedirectResponse
     {
         $user = $request->user();
@@ -48,7 +44,6 @@ class NotificationController extends Controller
                 ->with('error', 'Notification not found');
         }
 
-        // Mark as read when viewing
         $this->notificationService->markAsRead($id, $user);
 
         return Inertia::render('Notifications/Show', [
@@ -56,9 +51,6 @@ class NotificationController extends Controller
         ]);
     }
 
-    /**
-     * Mark a notification as read
-     */
     public function markAsRead(Request $request, int $id): RedirectResponse
     {
         $user = $request->user();
@@ -72,9 +64,6 @@ class NotificationController extends Controller
         return back()->with('success', 'Notification marked as read');
     }
 
-    /**
-     * Mark all notifications as read
-     */
     public function markAllAsRead(Request $request): RedirectResponse
     {
         $user = $request->user();
@@ -84,14 +73,10 @@ class NotificationController extends Controller
         return back()->with('success', "{$count} notifications marked as read");
     }
 
-    /**
-     * Delete/dismiss a notification for the user
-     */
     public function destroy(Request $request, int $id): RedirectResponse
     {
         $user = $request->user();
 
-        // For users, we just mark as read (soft delete behavior)
         $success = $this->notificationService->markAsRead($id, $user);
 
         if (!$success) {
@@ -101,13 +86,8 @@ class NotificationController extends Controller
         return back()->with('success', 'Notification removed');
     }
 
-    /**
-     * Partial reload for notifications data (for Inertia partial reloads)
-     * This is useful when WebSocket triggers a refresh
-     */
     public function refresh(Request $request): RedirectResponse
     {
-        // Simply redirect back - Inertia will reload shared props including notifications
         return back();
     }
 }

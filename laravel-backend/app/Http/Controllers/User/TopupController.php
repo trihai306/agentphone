@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\User;
 
+use App\Http\Controllers\Controller;
 use App\Models\UserServicePackage;
 use App\Services\NotificationService;
 use App\Services\TopupService;
@@ -16,9 +17,6 @@ class TopupController extends Controller
     ) {
     }
 
-    /**
-     * Trang chọn gói nạp tiền
-     */
     public function index()
     {
         $user = Auth::user();
@@ -34,9 +32,6 @@ class TopupController extends Controller
         ]);
     }
 
-    /**
-     * Trang thanh toán
-     */
     public function checkout(Request $request)
     {
         $request->validate([
@@ -56,9 +51,6 @@ class TopupController extends Controller
         ]);
     }
 
-    /**
-     * Xử lý nạp tiền
-     */
     public function process(Request $request)
     {
         $request->validate([
@@ -75,15 +67,11 @@ class TopupController extends Controller
 
         $topup = $this->topupService->createTopupOrder($user, $package, $request->payment_method);
 
-        // Notify admins
         $this->notifyAdminsNewTopup($user, $topup, $package);
 
         return redirect()->route('topup.payment', $topup->id);
     }
 
-    /**
-     * Trang hiển thị thông tin thanh toán
-     */
     public function payment(UserServicePackage $topup)
     {
         $this->authorize('view', $topup);
@@ -109,9 +97,6 @@ class TopupController extends Controller
         ]);
     }
 
-    /**
-     * Lịch sử nạp tiền
-     */
     public function history()
     {
         $user = Auth::user();
@@ -122,9 +107,6 @@ class TopupController extends Controller
         ]);
     }
 
-    /**
-     * Mua Xu từ ví (1 Xu = 100 VND)
-     */
     public function purchaseXu(Request $request)
     {
         $validated = $request->validate([
@@ -141,14 +123,10 @@ class TopupController extends Controller
             ]);
         }
 
-        // Note: Xu is virtual representation of wallet balance
         return redirect()->route('topup.index')
             ->with('success', "Số dư ví của bạn tương đương {$xu} Xu.");
     }
 
-    /**
-     * Notify admins about new topup request
-     */
     protected function notifyAdminsNewTopup($user, UserServicePackage $topup, array $package): void
     {
         $amountFormatted = number_format($package['price'], 0, ',', '.');
