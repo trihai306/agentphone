@@ -18,6 +18,14 @@ export const defaultEdgeOptions = {
         width: 20,
         height: 20,
     },
+    // Default delay of 2 seconds between nodes
+    data: {
+        delay: {
+            enabled: true,
+            duration: 2000, // milliseconds
+            type: 'fixed',
+        },
+    },
 };
 
 export default { edgeTypes, defaultEdgeOptions };
