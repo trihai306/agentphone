@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo, lazy, Suspense } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 
@@ -41,12 +41,8 @@ import { useNodeCreation } from '@/hooks/useNodeCreation';
 import { useLoopOperations } from '@/hooks/useLoopOperations';
 import { deviceApi, flowApi, recordingApi } from '@/services/api';
 
-// Flow components
+// Flow components - Regular imports (always needed)
 import NodeConfigPanel from '@/Components/Flow/NodeConfigPanel';
-import LoopSubFlowModal from '@/Components/Flow/LoopSubFlowModal';
-import AINodeConfigModal from '@/Components/Flow/AINodeConfigModal';
-import LiveRecordingPanel from '@/Components/Flow/LiveRecordingPanel';
-import WorkflowPreviewModal from '@/Components/Flow/WorkflowPreviewModal';
 import EdgeDelayPopover from '@/Components/Flow/EdgeDelayPopover';
 import DebugEventPanel from '@/Components/Flow/DebugEventPanel';
 import RecordingPanel from '@/Components/Flow/RecordingPanel';
@@ -58,6 +54,21 @@ import ExecutionLogPanel from '@/Components/Flow/ExecutionLogPanel';
 import EditorToolbar from '@/Components/Flow/EditorToolbar';
 import ClearConfirmModal from '@/Components/Flow/ClearConfirmModal';
 import { MouseDragProvider } from '@/Components/Flow/MouseDragProvider';
+
+// Lazy-loaded modals (heavy components, loaded only when needed)
+const LoopSubFlowModal = lazy(() => import('@/Components/Flow/LoopSubFlowModal'));
+const AINodeConfigModal = lazy(() => import('@/Components/Flow/AINodeConfigModal'));
+const WorkflowPreviewModal = lazy(() => import('@/Components/Flow/WorkflowPreviewModal'));
+const LiveRecordingPanel = lazy(() => import('@/Components/Flow/LiveRecordingPanel'));
+
+// Simple loading fallback for lazy modals
+const ModalLoader = () => (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-xl">
+            <div className="animate-spin w-8 h-8 border-3 border-violet-500 border-t-transparent rounded-full mx-auto" />
+        </div>
+    </div>
+);
 
 // nodeTypes, edgeTypes, defaultEdgeOptions are imported from constants/
 
@@ -72,9 +83,9 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
     const { addToast } = useToast();
     const { t } = useTranslation();
 
-    // Theme utilities
-    const themeClasses = getEditorClasses(isDark);
-    const reactFlowTheme = getReactFlowTheme(isDark);
+    // Theme utilities - MEMOIZED for performance (Phase 6)
+    const themeClasses = useMemo(() => getEditorClasses(isDark), [isDark]);
+    const reactFlowTheme = useMemo(() => getReactFlowTheme(isDark), [isDark]);
 
     // ===== Phase 2 Custom Hooks =====
     // Device management
@@ -1563,81 +1574,97 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
             )}
 
             {/* Live Recording Panel - Real-time sync from Android APK */}
-            <LiveRecordingPanel
-                userId={props.auth?.user?.id}
-                onImportNodes={(importedNodes, importedEdges) => {
-                    // Add imported nodes to canvas
-                    const lastNode = nodes[nodes.length - 1];
-                    const offsetY = lastNode ? lastNode.position.y + 150 : 100;
+            {auth?.user?.id && (
+                <Suspense fallback={<ModalLoader />}>
+                    <LiveRecordingPanel
+                        userId={props.auth?.user?.id}
+                        onImportNodes={(importedNodes, importedEdges) => {
+                            // Add imported nodes to canvas
+                            const lastNode = nodes[nodes.length - 1];
+                            const offsetY = lastNode ? lastNode.position.y + 150 : 100;
 
-                    const positionedNodes = importedNodes.map((node, index) => ({
-                        ...node,
-                        position: {
-                            x: node.position.x + 200,
-                            y: node.position.y + offsetY,
-                        },
-                    }));
+                            const positionedNodes = importedNodes.map((node, index) => ({
+                                ...node,
+                                position: {
+                                    x: node.position.x + 200,
+                                    y: node.position.y + offsetY,
+                                },
+                            }));
 
-                    setNodes(prev => [...prev, ...positionedNodes]);
-                    if (importedEdges?.length > 0) {
-                        setEdges(prev => [...prev, ...importedEdges]);
-                    }
+                            setNodes(prev => [...prev, ...positionedNodes]);
+                            if (importedEdges?.length > 0) {
+                                setEdges(prev => [...prev, ...importedEdges]);
+                            }
 
-                    // Connect to last existing node if any
-                    if (lastNode && positionedNodes.length > 0) {
-                        setEdges(prev => [...prev, {
-                            id: `edge-import-${Date.now()}`,
-                            source: lastNode.id,
-                            target: positionedNodes[0].id,
-                            type: 'animated',
-                        }]);
-                    }
+                            // Connect to last existing node if any
+                            if (lastNode && positionedNodes.length > 0) {
+                                setEdges(prev => [...prev, {
+                                    id: `edge-import-${Date.now()}`,
+                                    source: lastNode.id,
+                                    target: positionedNodes[0].id,
+                                    type: 'animated',
+                                }]);
+                            }
 
-                    debouncedSave(nodes.concat(positionedNodes), edges, viewport);
-                }}
-            />
+                            debouncedSave(nodes.concat(positionedNodes), edges, viewport);
+                        }}
+                    />
+                </Suspense>
+            )}
 
-            {/* Loop Sub-Flow Editor Modal */}
-            <LoopSubFlowModal
-                isOpen={modals.loopSubFlow.isOpen}
-                onClose={() => closeModal('loopSubFlow')}
-                loopNode={nodes.find(n => n.id === modals.loopSubFlow.nodeId)}
-                onSaveSubFlow={(nodeId, subFlow) => {
-                    setNodes(prev => prev.map(node =>
-                        node.id === nodeId
-                            ? { ...node, data: { ...node.data, subFlow } }
-                            : node
-                    ));
-                    debouncedSave(nodes, edges, viewport);
-                }}
-                selectedDevice={selectedDevice}
-                userId={props.auth?.user?.id}
-            />
+            {/* Loop Sub-Flow Editor Modal - Lazy loaded */}
+            {modals.loopSubFlow.isOpen && (
+                <Suspense fallback={<ModalLoader />}>
+                    <LoopSubFlowModal
+                        isOpen={modals.loopSubFlow.isOpen}
+                        onClose={() => closeModal('loopSubFlow')}
+                        loopNode={nodes.find(n => n.id === modals.loopSubFlow.nodeId)}
+                        onSaveSubFlow={(nodeId, subFlow) => {
+                            setNodes(prev => prev.map(node =>
+                                node.id === nodeId
+                                    ? { ...node, data: { ...node.data, subFlow } }
+                                    : node
+                            ));
+                            debouncedSave(nodes, edges, viewport);
+                        }}
+                        selectedDevice={selectedDevice}
+                        userId={props.auth?.user?.id}
+                    />
+                </Suspense>
+            )}
 
-            {/* AI Config Modal */}
-            <AINodeConfigModal
-                isOpen={modals.aiConfig.isOpen}
-                onClose={() => closeModal(MODAL_TYPES.AI_CONFIG)}
-                nodeData={nodes.find(n => n.id === modals.aiConfig.nodeId)?.data || {}}
-                onSave={(newConfig) => {
-                    const nodeId = modals.aiConfig.nodeId;
-                    setNodes(prev => prev.map(node =>
-                        node.id === nodeId
-                            ? { ...node, data: { ...node.data, ...newConfig } }
-                            : node
-                    ));
-                    closeModal(MODAL_TYPES.AI_CONFIG);
-                    debouncedSave(nodes, edges, viewport);
-                }}
-            />
+            {/* AI Config Modal - Lazy loaded */}
+            {modals.aiConfig.isOpen && (
+                <Suspense fallback={<ModalLoader />}>
+                    <AINodeConfigModal
+                        isOpen={modals.aiConfig.isOpen}
+                        onClose={() => closeModal(MODAL_TYPES.AI_CONFIG)}
+                        nodeData={nodes.find(n => n.id === modals.aiConfig.nodeId)?.data || {}}
+                        onSave={(newConfig) => {
+                            const nodeId = modals.aiConfig.nodeId;
+                            setNodes(prev => prev.map(node =>
+                                node.id === nodeId
+                                    ? { ...node, data: { ...node.data, ...newConfig } }
+                                    : node
+                            ));
+                            closeModal(MODAL_TYPES.AI_CONFIG);
+                            debouncedSave(nodes, edges, viewport);
+                        }}
+                    />
+                </Suspense>
+            )}
 
-            {/* Workflow Preview Modal */}
-            <WorkflowPreviewModal
-                isOpen={modals.preview.isOpen}
-                onClose={() => closeModal('preview')}
-                nodes={nodes}
-                workflowName={flowName}
-            />
+            {/* Workflow Preview Modal - Lazy loaded */}
+            {modals.preview.isOpen && (
+                <Suspense fallback={<ModalLoader />}>
+                    <WorkflowPreviewModal
+                        isOpen={modals.preview.isOpen}
+                        onClose={() => closeModal('preview')}
+                        nodes={nodes}
+                        workflowName={flowName}
+                    />
+                </Suspense>
+            )}
 
             {/* Debug Panel for APK Events */}
             <DebugEventPanel
