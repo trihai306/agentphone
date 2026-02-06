@@ -11,7 +11,7 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
     const { notifications: notificationData } = usePage().props;
     const unreadCount = notificationData?.unread_count || 0;
 
-    // Simplified navigation - 5 main sections
+    // Navigation sections - professional compact layout
     const navSections = [
         {
             title: t('navigation.main', { defaultValue: 'Chính' }),
@@ -31,18 +31,22 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
                 { href: '/data-collections', icon: 'database', label: t('navigation.data_collections'), active: url?.startsWith('/data-collections') },
             ]
         },
-    ];
-
-    // Compact resources & finance section (bottom area)
-    const compactItems = [
-        { href: '/ai-studio', icon: 'ai', label: 'AI', active: url?.startsWith('/ai-studio') },
-        { href: '/ai-credits', icon: 'credits', label: 'Credits', active: url?.startsWith('/ai-credits') },
-        { href: '/marketplace', icon: 'shop', label: 'Market', active: url?.startsWith('/marketplace') },
-        { href: '/media', icon: 'media', label: 'Media', active: url?.startsWith('/media') },
-        { href: '/wallet', icon: 'wallet', label: 'Ví', active: url === '/wallet' },
-        { href: '/topup', icon: 'plus', label: 'Nạp', active: url?.startsWith('/topup') },
-        { href: '/withdraw', icon: 'withdraw', label: 'Rút', active: url?.startsWith('/withdraw') },
-        { href: '/packages', icon: 'package', label: 'Gói', active: url?.startsWith('/packages') },
+        {
+            title: t('navigation.resources', { defaultValue: 'Tài nguyên' }),
+            items: [
+                { href: '/ai-studio', icon: 'ai', label: t('navigation.ai_studio', { defaultValue: 'AI Studio' }), active: url?.startsWith('/ai-studio'), highlight: true },
+                { href: '/marketplace', icon: 'shop', label: t('navigation.marketplace', { defaultValue: 'Marketplace' }), active: url?.startsWith('/marketplace') },
+                { href: '/media', icon: 'media', label: t('navigation.media'), active: url?.startsWith('/media') },
+            ]
+        },
+        {
+            title: t('navigation.finance', { defaultValue: 'Tài chính' }),
+            items: [
+                { href: '/wallet', icon: 'wallet', label: t('navigation.wallet', { defaultValue: 'Ví tiền' }), active: url === '/wallet' },
+                { href: '/ai-credits', icon: 'credits', label: t('navigation.ai_credits', { defaultValue: 'Nạp Credit' }), active: url?.startsWith('/ai-credits') },
+                { href: '/packages', icon: 'package', label: t('navigation.packages', { defaultValue: 'Gói dịch vụ' }), active: url?.startsWith('/packages') },
+            ]
+        },
     ];
 
     // Quick access items for collapsed mode
@@ -131,41 +135,6 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
                         </div>
                     ))}
 
-                    {/* Compact Resources & Finance Grid */}
-                    {!collapsed && (
-                        <div className={`pt-3 mt-2 border-t ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
-                            <p className={`px-2 mb-2 text-[10px] font-semibold uppercase tracking-wider ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                {t('navigation.resources_finance', { defaultValue: 'Tài nguyên & Tài chính' })}
-                            </p>
-                            <div className="grid grid-cols-4 gap-1 px-1">
-                                {compactItems.map((item, index) => (
-                                    <Link
-                                        key={index}
-                                        href={item.href}
-                                        className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all text-center ${item.active
-                                                ? 'bg-gradient-to-br from-violet-500/20 to-purple-500/20 text-violet-400'
-                                                : isDark
-                                                    ? 'hover:bg-white/5 text-gray-400 hover:text-white'
-                                                    : 'hover:bg-gray-100 text-gray-500 hover:text-gray-900'
-                                            }`}
-                                    >
-                                        <span className="text-base mb-0.5">
-                                            {item.icon === 'ai' && '✨'}
-                                            {item.icon === 'credits' && '⚡'}
-                                            {item.icon === 'shop' && '🛒'}
-                                            {item.icon === 'media' && '📷'}
-                                            {item.icon === 'wallet' && '💰'}
-                                            {item.icon === 'plus' && '➕'}
-                                            {item.icon === 'withdraw' && '💸'}
-                                            {item.icon === 'package' && '📦'}
-                                        </span>
-                                        <span className="text-[9px] font-medium truncate w-full">{item.label}</span>
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
                     {/* Quick Access */}
                     <div className={`pt-4 border-t ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
                         {!collapsed && (
@@ -191,7 +160,7 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
                 </nav>
 
                 {/* Collapse Toggle */}
-                <div className={`hidden lg:block px-3 py-2 border-t ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
+                < div className={`hidden lg:block px-3 py-2 border-t ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
                     <button
                         onClick={() => setCollapsed(!collapsed)}
                         className={`w-full flex items-center justify-center p-2 rounded-xl transition-all ${isDark
@@ -209,6 +178,6 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
                 {/* User Menu */}
                 <UserMenu user={user} collapsed={collapsed} />
             </div>
-        </aside>
+        </aside >
     );
 }
