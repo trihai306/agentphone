@@ -180,6 +180,257 @@ export default function NodePropertiesPanel({
                     </div>
                 )}
 
+                {/* ========== NODE-SPECIFIC CONFIG SECTIONS ========== */}
+
+                {/* Helper for updating node data */}
+                {(() => {
+                    const nodeType = selectedNode.data?.eventType || selectedNode.type;
+
+                    const updateField = (field, value) => {
+                        setNodes((nds) =>
+                            nds.map((n) =>
+                                n.id === selectedNode.id
+                                    ? { ...n, data: { ...n.data, [field]: value } }
+                                    : n
+                            )
+                        );
+                    };
+
+                    const ConfigSection = ({ title, children }) => (
+                        <div className={`border-t pt-4 ${isDark ? 'border-[#2a2a2a]' : 'border-gray-200'}`}>
+                            <label className={`block text-xs font-semibold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                {title}
+                            </label>
+                            <div className="space-y-3">
+                                {children}
+                            </div>
+                        </div>
+                    );
+
+                    const TextField = ({ label, field, placeholder }) => (
+                        <div>
+                            <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{label}</label>
+                            <input
+                                type="text"
+                                value={selectedNode.data?.[field] || ''}
+                                onChange={(e) => updateField(field, e.target.value)}
+                                placeholder={placeholder}
+                                className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-gray-600' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`}
+                            />
+                        </div>
+                    );
+
+                    const NumberField = ({ label, field, placeholder, min = 0 }) => (
+                        <div>
+                            <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{label}</label>
+                            <input
+                                type="number"
+                                value={selectedNode.data?.[field] || ''}
+                                onChange={(e) => updateField(field, parseInt(e.target.value) || 0)}
+                                placeholder={placeholder}
+                                min={min}
+                                className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-gray-600' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`}
+                            />
+                        </div>
+                    );
+
+                    const SelectField = ({ label, field, options }) => (
+                        <div>
+                            <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{label}</label>
+                            <select
+                                value={selectedNode.data?.[field] || options[0]?.value}
+                                onChange={(e) => updateField(field, e.target.value)}
+                                className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
+                            >
+                                {options.map(opt => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                            </select>
+                        </div>
+                    );
+
+                    const CheckboxField = ({ label, field }) => (
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={selectedNode.data?.[field] || false}
+                                onChange={(e) => updateField(field, e.target.checked)}
+                                className="w-4 h-4 rounded border-gray-300 text-indigo-500 focus:ring-indigo-500"
+                            />
+                            <span className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{label}</span>
+                        </label>
+                    );
+
+                    // =====================================================
+                    // ELEMENT INSPECTION NODES
+                    // =====================================================
+                    if (['count_elements', 'get_bounds', 'is_visible', 'get_text'].includes(nodeType)) {
+                        return (
+                            <ConfigSection title="Element Selector">
+                                <TextField label="Text" field="text" placeholder="Element text..." />
+                                <TextField label="Resource ID" field="resourceId" placeholder="com.app:id/button" />
+                                <TextField label="Content Description" field="contentDescription" placeholder="Button label" />
+                                <TextField label="Class Name" field="className" placeholder="android.widget.Button" />
+                                {['get_text', 'count_elements'].includes(nodeType) && (
+                                    <TextField label="Output Variable" field="outputVariable" placeholder="{{result}}" />
+                                )}
+                                {nodeType === 'is_visible' && (
+                                    <NumberField label="Timeout (ms)" field="timeout" placeholder="5000" />
+                                )}
+                            </ConfigSection>
+                        );
+                    }
+
+                    // =====================================================
+                    // WAIT CONDITION NODES
+                    // =====================================================
+                    if (nodeType === 'wait_for_text') {
+                        return (
+                            <ConfigSection title="Wait for Text">
+                                <TextField label="Text to Wait For" field="waitText" placeholder="Loading complete..." />
+                                <NumberField label="Timeout (ms)" field="timeout" placeholder="30000" />
+                                <NumberField label="Check Interval (ms)" field="interval" placeholder="500" />
+                                <CheckboxField label="Case Sensitive" field="caseSensitive" />
+                            </ConfigSection>
+                        );
+                    }
+
+                    if (nodeType === 'wait_for_activity') {
+                        return (
+                            <ConfigSection title="Wait for Activity">
+                                <TextField label="Activity Name" field="activityName" placeholder="MainActivity" />
+                                <NumberField label="Timeout (ms)" field="timeout" placeholder="30000" />
+                            </ConfigSection>
+                        );
+                    }
+
+                    if (nodeType === 'wait_for_package') {
+                        return (
+                            <ConfigSection title="Wait for App">
+                                <TextField label="Package Name" field="packageName" placeholder="com.example.app" />
+                                <NumberField label="Timeout (ms)" field="timeout" placeholder="30000" />
+                            </ConfigSection>
+                        );
+                    }
+
+                    if (nodeType === 'wait_idle') {
+                        return (
+                            <ConfigSection title="Wait Idle">
+                                <NumberField label="Timeout (ms)" field="timeout" placeholder="10000" />
+                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                    Wait for UI to become idle (no animations/updates)
+                                </p>
+                            </ConfigSection>
+                        );
+                    }
+
+                    // =====================================================
+                    // TEXT OPERATION NODES
+                    // =====================================================
+                    if (['clear_text', 'select_all'].includes(nodeType)) {
+                        return (
+                            <ConfigSection title="Target Element">
+                                <TextField label="Text" field="text" placeholder="Element text..." />
+                                <TextField label="Resource ID" field="resourceId" placeholder="com.app:id/input" />
+                            </ConfigSection>
+                        );
+                    }
+
+                    if (nodeType === 'append_text') {
+                        return (
+                            <ConfigSection title="Append Text">
+                                <TextField label="Target Element Text" field="text" placeholder="Element text..." />
+                                <TextField label="Target Resource ID" field="resourceId" placeholder="com.app:id/input" />
+                                <TextField label="Text to Append" field="appendValue" placeholder="Additional text..." />
+                            </ConfigSection>
+                        );
+                    }
+
+                    // =====================================================
+                    // ADVANCED GESTURE NODES
+                    // =====================================================
+                    if (nodeType === 'drag_drop') {
+                        return (
+                            <ConfigSection title="Drag & Drop">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <NumberField label="Start X" field="startX" placeholder="0" />
+                                    <NumberField label="Start Y" field="startY" placeholder="0" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <NumberField label="End X" field="endX" placeholder="0" />
+                                    <NumberField label="End Y" field="endY" placeholder="0" />
+                                </div>
+                                <NumberField label="Duration (ms)" field="duration" placeholder="500" />
+                            </ConfigSection>
+                        );
+                    }
+
+                    if (nodeType === 'pinch_zoom') {
+                        return (
+                            <ConfigSection title="Pinch Zoom">
+                                <SelectField
+                                    label="Direction"
+                                    field="direction"
+                                    options={[
+                                        { value: 'in', label: 'Zoom In' },
+                                        { value: 'out', label: 'Zoom Out' },
+                                    ]}
+                                />
+                                <NumberField label="Scale Factor" field="scale" placeholder="2" />
+                                <div className="grid grid-cols-2 gap-2">
+                                    <NumberField label="Center X" field="centerX" placeholder="540" />
+                                    <NumberField label="Center Y" field="centerY" placeholder="960" />
+                                </div>
+                            </ConfigSection>
+                        );
+                    }
+
+                    if (nodeType === 'fling') {
+                        return (
+                            <ConfigSection title="Fling">
+                                <SelectField
+                                    label="Direction"
+                                    field="direction"
+                                    options={[
+                                        { value: 'up', label: 'Up' },
+                                        { value: 'down', label: 'Down' },
+                                        { value: 'left', label: 'Left' },
+                                        { value: 'right', label: 'Right' },
+                                    ]}
+                                />
+                                <NumberField label="Velocity" field="velocity" placeholder="5000" />
+                                <div className="grid grid-cols-2 gap-2">
+                                    <NumberField label="Start X" field="startX" placeholder="540" />
+                                    <NumberField label="Start Y" field="startY" placeholder="960" />
+                                </div>
+                            </ConfigSection>
+                        );
+                    }
+
+                    // =====================================================
+                    // SYSTEM ACTIONS (no config needed - just info)
+                    // =====================================================
+                    if (['recents', 'notifications', 'quick_settings'].includes(nodeType)) {
+                        return (
+                            <ConfigSection title="System Action">
+                                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                    {nodeType === 'recents' && 'Opens the recent apps screen'}
+                                    {nodeType === 'notifications' && 'Opens the notification panel'}
+                                    {nodeType === 'quick_settings' && 'Opens the quick settings panel'}
+                                </p>
+                                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${isDark ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-emerald-50 border border-emerald-100'}`}>
+                                    <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    <span className={`text-xs ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>No configuration needed</span>
+                                </div>
+                            </ConfigSection>
+                        );
+                    }
+
+                    return null;
+                })()}
+
                 {/* Element Details Section */}
                 {selectedNode.data?.isRecorded && (
                     <ElementDetailsSection selectedNode={selectedNode} isDark={isDark} />
