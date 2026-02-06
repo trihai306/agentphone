@@ -216,7 +216,7 @@ export default function NodeConfigPanel({
                 )}
 
                 {/* Tap/Click/Text Input config */}
-                {['tap', 'click', 'long_press', 'text_input', 'focus'].includes(nodeType) && (
+                {['tap', 'click', 'double_tap', 'long_tap', 'long_press', 'text_input', 'focus'].includes(nodeType) && (
                     <TapActionConfig
                         data={nodeData}
                         updateData={updateData}
