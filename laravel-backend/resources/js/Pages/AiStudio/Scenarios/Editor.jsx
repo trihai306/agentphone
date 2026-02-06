@@ -55,6 +55,80 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
         });
     };
 
+    // AI Image Generation
+    const [generatingImageIndex, setGeneratingImageIndex] = useState(null);
+
+    const handleGenerateImage = async (index) => {
+        const scene = scenes[index];
+        if (!scene?.prompt) {
+            showToast('Vui lòng nhập prompt trước', 'error');
+            return;
+        }
+
+        setGeneratingImageIndex(index);
+        try {
+            // Start generation
+            const genResponse = await fetch('/ai-studio/generate/image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                },
+                body: JSON.stringify({
+                    model: 'gemini-imagen-3',
+                    prompt: scene.prompt,
+                    width: 1280,
+                    height: 720,
+                }),
+            });
+
+            const genData = await genResponse.json();
+            if (!genData.success) {
+                throw new Error(genData.error || 'Không thể tạo ảnh');
+            }
+
+            const generationId = genData.generation?.id;
+            if (!generationId) throw new Error('Invalid generation response');
+
+            showToast('Đang tạo ảnh... Vui lòng đợi', 'info');
+
+            // Poll for completion
+            let attempts = 0;
+            const maxAttempts = 60; // 3 minutes max
+            const pollInterval = setInterval(async () => {
+                attempts++;
+                try {
+                    const statusRes = await fetch(`/ai-studio/generations/${generationId}/status`);
+                    const statusData = await statusRes.json();
+
+                    if (statusData.status === 'completed' && statusData.output_url) {
+                        clearInterval(pollInterval);
+                        handleUpdateScene(index, {
+                            source_image: statusData.output_url,
+                            source_image_name: 'AI Generated',
+                        });
+                        setGeneratingImageIndex(null);
+                        showToast('Đã tạo ảnh thành công!', 'success');
+                    } else if (statusData.status === 'failed') {
+                        clearInterval(pollInterval);
+                        setGeneratingImageIndex(null);
+                        showToast('Tạo ảnh thất bại: ' + (statusData.error || 'Unknown error'), 'error');
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(pollInterval);
+                        setGeneratingImageIndex(null);
+                        showToast('Tạo ảnh quá lâu, vui lòng thử lại', 'error');
+                    }
+                } catch (e) {
+                    console.error('Polling error:', e);
+                }
+            }, 3000); // Poll every 3 seconds
+
+        } catch (error) {
+            showToast('Lỗi: ' + error.message, 'error');
+            setGeneratingImageIndex(null);
+        }
+    };
+
     const themeClasses = {
         textPrimary: isDark ? 'text-white' : 'text-slate-900',
         textSecondary: isDark ? 'text-slate-300' : 'text-slate-600',
@@ -277,9 +351,40 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
                                         <label className={`block text-sm font-bold mb-2 ${themeClasses.textMuted}`}>
                                             Ảnh tham chiếu (tùy chọn)
                                         </label>
-                                        <p className={`text-xs mb-3 ${themeClasses.textMuted}`}>
-                                            Thêm ảnh để AI tạo video chính xác hơn với phong cách của bạn
-                                        </p>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <p className={`text-xs ${themeClasses.textMuted}`}>
+                                                Thêm ảnh để AI tạo video chính xác hơn
+                                            </p>
+                                            <button
+                                                onClick={() => handleGenerateImage(activeSceneIndex)}
+                                                disabled={generatingImageIndex !== null || !activeScene?.prompt}
+                                                className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all
+                                                    ${generatingImageIndex === activeSceneIndex
+                                                        ? 'bg-violet-600/30 text-violet-300 cursor-wait'
+                                                        : activeScene?.prompt
+                                                            ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:shadow-lg hover:shadow-violet-500/30'
+                                                            : 'bg-slate-600/30 text-slate-400 cursor-not-allowed'
+                                                    }
+                                                `}
+                                            >
+                                                {generatingImageIndex === activeSceneIndex ? (
+                                                    <>
+                                                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                        </svg>
+                                                        Đang tạo...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                                                        </svg>
+                                                        Tạo ảnh với AI
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
 
                                         {(activeScene.source_image || activeScene.source_image_path) ? (
                                             <div className="relative group">
