@@ -216,10 +216,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/scenario-builder/{scenario}', [\App\Http\Controllers\AiScenarioController::class, 'builderEdit'])->name('scenario.builder.edit');
         Route::get('/scenarios', [\App\Http\Controllers\AiScenarioController::class, 'index'])->name('scenarios.index');
         Route::get('/scenarios/create', [\App\Http\Controllers\AiScenarioController::class, 'create'])->name('scenarios.create');
+        Route::post('/scenarios/create-draft', [\App\Http\Controllers\AiScenarioController::class, 'createDraft'])->name('scenarios.create-draft');
         Route::post('/scenarios/parse', [\App\Http\Controllers\AiScenarioController::class, 'parseScript'])->name('scenarios.parse');
         Route::post('/scenarios/estimate', [\App\Http\Controllers\AiScenarioController::class, 'estimateCredits'])->name('scenarios.estimate');
         Route::post('/scenarios', [\App\Http\Controllers\AiScenarioController::class, 'store'])->name('scenarios.store');
         Route::get('/scenarios/{scenario}', [\App\Http\Controllers\AiScenarioController::class, 'show'])->name('scenarios.show');
+        Route::get('/scenarios/{scenario}/script', [\App\Http\Controllers\AiScenarioController::class, 'scriptEditor'])->name('scenarios.script');
+        Route::get('/scenarios/{scenario}/images', [\App\Http\Controllers\AiScenarioController::class, 'imagesEditor'])->name('scenarios.images');
+        Route::get('/scenarios/{scenario}/edit', [\App\Http\Controllers\AiScenarioController::class, 'editor'])->name('scenarios.edit');
         Route::get('/scenarios/{scenario}/status', [\App\Http\Controllers\AiScenarioController::class, 'checkStatus'])->name('scenarios.status');
         Route::post('/scenarios/{scenario}/generate', [\App\Http\Controllers\AiScenarioController::class, 'generateAll'])->name('scenarios.generate');
         Route::patch('/scenarios/{scenario}/scenes/{scene}', [\App\Http\Controllers\AiScenarioController::class, 'updateScene'])->name('scenarios.scenes.update');

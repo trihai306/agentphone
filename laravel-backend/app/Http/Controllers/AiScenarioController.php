@@ -45,13 +45,13 @@ class AiScenarioController extends Controller
     }
 
     /**
-     * Scenario Builder Page - Professional Visual Editor
+     * Scenario Builder Page - Start page for multi-page flow
      */
     public function builder()
     {
         $user = Auth::user();
 
-        // Get templates
+        // Get templates for template selection
         $templates = \App\Models\ScenarioTemplate::where('is_public', true)
             ->orderBy('category')
             ->orderBy('usage_count', 'desc')
@@ -65,10 +65,8 @@ class AiScenarioController extends Controller
                 'thumbnail_url' => $t->thumbnail,
             ]);
 
-        return Inertia::render('AiStudio/ScenarioBuilder', [
+        return Inertia::render('AiStudio/Scenarios/Start', [
             'currentCredits' => $user->ai_credits,
-            'videoModels' => $this->generationService->getAvailableModels('video'),
-            'imageModels' => $this->generationService->getAvailableModels('image'),
             'templates' => $templates,
         ]);
     }
@@ -106,6 +104,110 @@ class AiScenarioController extends Controller
             'imageModels' => $this->generationService->getAvailableModels('image'),
             'templates' => $templates,
             'scenario' => $this->formatScenario($scenario),
+        ]);
+    }
+
+    /**
+     * Create a draft scenario (Step 1 of multi-page flow)
+     * Returns scenario ID to redirect to next page
+     */
+    public function createDraft(Request $request)
+    {
+        $request->validate([
+            'output_type' => 'required|in:image,video',
+            'creation_method' => 'required|in:script,images,template',
+            'template_id' => 'nullable|exists:scenario_templates,id',
+        ]);
+
+        $user = Auth::user();
+
+        $scenario = AiScenario::create([
+            'user_id' => $user->id,
+            'title' => 'Untitled Scenario',
+            'output_type' => $request->input('output_type'),
+            'status' => AiScenario::STATUS_DRAFT,
+            'is_draft' => true,
+            'metadata' => [
+                'creation_method' => $request->input('creation_method'),
+            ],
+            'template_id' => $request->input('template_id'),
+        ]);
+
+        // Determine redirect based on creation method
+        $redirectRoute = match ($request->input('creation_method')) {
+            'script' => route('ai-studio.scenarios.script', $scenario),
+            'images' => route('ai-studio.scenarios.images', $scenario),
+            'template' => route('ai-studio.scenarios.edit', $scenario),
+            default => route('ai-studio.scenarios.script', $scenario),
+        };
+
+        return response()->json([
+            'success' => true,
+            'scenario_id' => $scenario->id,
+            'redirect_url' => $redirectRoute,
+        ]);
+    }
+
+    /**
+     * Script Editor Page - Enter and parse script
+     */
+    public function scriptEditor(AiScenario $scenario)
+    {
+        $user = Auth::user();
+
+        if ($scenario->user_id !== $user->id) {
+            abort(403);
+        }
+
+        $scenario->load(['scenes' => fn($q) => $q->orderBy('order')]);
+
+        return Inertia::render('AiStudio/Scenarios/Script', [
+            'scenario' => $this->formatScenario($scenario),
+            'currentCredits' => $user->ai_credits,
+            'videoModels' => $this->generationService->getAvailableModels('video'),
+            'imageModels' => $this->generationService->getAvailableModels('image'),
+        ]);
+    }
+
+    /**
+     * Images Editor Page - Upload and parse images
+     */
+    public function imagesEditor(AiScenario $scenario)
+    {
+        $user = Auth::user();
+
+        if ($scenario->user_id !== $user->id) {
+            abort(403);
+        }
+
+        $scenario->load(['scenes' => fn($q) => $q->orderBy('order')]);
+
+        return Inertia::render('AiStudio/Scenarios/Images', [
+            'scenario' => $this->formatScenario($scenario),
+            'currentCredits' => $user->ai_credits,
+            'videoModels' => $this->generationService->getAvailableModels('video'),
+            'imageModels' => $this->generationService->getAvailableModels('image'),
+        ]);
+    }
+
+    /**
+     * Scene Editor Page - Edit scenes in timeline
+     */
+    public function editor(AiScenario $scenario)
+    {
+        $user = Auth::user();
+
+        if ($scenario->user_id !== $user->id) {
+            abort(403);
+        }
+
+        $scenario->load(['scenes' => fn($q) => $q->orderBy('order')]);
+
+        return Inertia::render('AiStudio/Scenarios/Editor', [
+            'scenario' => $this->formatScenario($scenario),
+            'currentCredits' => $user->ai_credits,
+            'videoModels' => $this->generationService->getAvailableModels('video'),
+            'imageModels' => $this->generationService->getAvailableModels('image'),
         ]);
     }
 
