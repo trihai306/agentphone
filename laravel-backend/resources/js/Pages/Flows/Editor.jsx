@@ -61,11 +61,19 @@ const AINodeConfigModal = lazy(() => import('@/Components/Flow/AINodeConfigModal
 const WorkflowPreviewModal = lazy(() => import('@/Components/Flow/WorkflowPreviewModal'));
 const LiveRecordingPanel = lazy(() => import('@/Components/Flow/LiveRecordingPanel'));
 
-// Simple loading fallback for lazy modals
+// Premium loading fallback for lazy modals
 const ModalLoader = () => (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-xl">
-            <div className="animate-spin w-8 h-8 border-3 border-violet-500 border-t-transparent rounded-full mx-auto" />
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="bg-white/10 dark:bg-white/5 backdrop-blur-xl rounded-2xl p-8 shadow-2xl border border-white/20">
+            <div className="relative w-12 h-12 mx-auto">
+                {/* Outer ring */}
+                <div className="absolute inset-0 rounded-full border-2 border-violet-500/20" />
+                {/* Spinning gradient ring */}
+                <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-violet-500 border-r-indigo-500 animate-spin" />
+                {/* Inner pulse */}
+                <div className="absolute inset-2 rounded-full bg-gradient-to-br from-violet-500/30 to-indigo-500/30 animate-pulse" />
+            </div>
+            <p className="text-sm text-white/70 mt-4 text-center">Loading...</p>
         </div>
     </div>
 );
