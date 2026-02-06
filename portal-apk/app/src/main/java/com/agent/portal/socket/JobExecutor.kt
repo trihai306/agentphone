@@ -321,6 +321,11 @@ class JobExecutor(context: Context) {
                     ActionType.MEDIA_PLAY_PAUSE -> executePressKey(mapOf("key" to "MEDIA_PLAY_PAUSE"))
                     ActionType.MEDIA_NEXT -> executePressKey(mapOf("key" to "MEDIA_NEXT"))
                     ActionType.MEDIA_PREVIOUS -> executePressKey(mapOf("key" to "MEDIA_PREVIOUS"))
+                    // Wait Conditions
+                    ActionType.WAIT_FOR_TEXT -> executeWaitForText(action.params)
+                    ActionType.WAIT_FOR_ACTIVITY -> executeWaitForActivity(action.params)
+                    ActionType.WAIT_FOR_PACKAGE -> executeWaitForPackage(action.params)
+                    ActionType.WAIT_IDLE -> executeWaitIdle(action.params)
                     ActionType.CUSTOM -> executeCustom(action.params, jobParams)
                 }
 
