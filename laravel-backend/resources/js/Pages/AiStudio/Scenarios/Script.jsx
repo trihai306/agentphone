@@ -33,8 +33,11 @@ export default function Script({ scenario, currentCredits = 0, videoModels = [],
 
         setParsing(true);
         try {
-            // Parse script with AI
-            const parseResponse = await aiStudioApi.parseScenario(script, scenario.output_type);
+            // Parse script with AI - send as object with script and output_type
+            const parseResponse = await aiStudioApi.parseScenario({
+                script: script,
+                output_type: scenario.output_type
+            });
 
             if (!parseResponse.success) {
                 throw new Error(parseResponse.error || 'Không thể phân tích kịch bản');
