@@ -11,3 +11,7 @@ export { AssertConfig } from './AssertConfig';
 export { ElementCheckConfig } from './ElementCheckConfig';
 export { WaitForElementConfig } from './WaitForElementConfig';
 export { RepeatClickConfig } from './RepeatClickConfig';
+export { GestureConfig } from './GestureConfig';
+export { TextOperationsConfig } from './TextOperationsConfig';
+export { ElementInspectionConfig } from './ElementInspectionConfig';
+export { SystemMediaConfig } from './SystemMediaConfig';

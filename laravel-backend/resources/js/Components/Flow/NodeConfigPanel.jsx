@@ -29,6 +29,7 @@ import {
     LoopConfig,
     DataSourceConfig,
     ProbabilityConfig,
+    WaitConditionsConfig,
 } from './NodeConfig/logic';
 
 import {
@@ -41,6 +42,10 @@ import {
     ElementCheckConfig,
     WaitForElementConfig,
     RepeatClickConfig,
+    GestureConfig,
+    TextOperationsConfig,
+    ElementInspectionConfig,
+    SystemMediaConfig,
 } from './NodeConfig/actions';
 
 /**
@@ -347,6 +352,64 @@ export default function NodeConfigPanel({
                     />
                 )}
 
+                {/* Gesture Actions (drag_drop, pinch_zoom, fling) */}
+                {['drag_drop', 'pinch_zoom', 'fling'].includes(nodeType) && (
+                    <GestureConfig
+                        data={nodeData}
+                        updateData={updateData}
+                        updateMultipleData={updateMultipleData}
+                        isDark={isDark}
+                        nodeType={nodeType}
+                        selectedDevice={selectedDevice}
+                        userId={userId}
+                    />
+                )}
+
+                {/* Text Operations (clear_text, append_text, select_all, get_text) */}
+                {['clear_text', 'append_text', 'select_all', 'get_text'].includes(nodeType) && (
+                    <TextOperationsConfig
+                        data={nodeData}
+                        updateData={updateData}
+                        updateMultipleData={updateMultipleData}
+                        isDark={isDark}
+                        nodeType={nodeType}
+                        selectedDevice={selectedDevice}
+                        userId={userId}
+                    />
+                )}
+
+                {/* Element Inspection (get_bounds, is_visible, count_elements) */}
+                {['get_bounds', 'is_visible', 'count_elements'].includes(nodeType) && (
+                    <ElementInspectionConfig
+                        data={nodeData}
+                        updateData={updateData}
+                        updateMultipleData={updateMultipleData}
+                        isDark={isDark}
+                        nodeType={nodeType}
+                        selectedDevice={selectedDevice}
+                        userId={userId}
+                    />
+                )}
+
+                {/* Wait Conditions (wait_for_text, wait_for_activity, wait_for_package, wait_idle) */}
+                {['wait_for_text', 'wait_for_activity', 'wait_for_package', 'wait_idle'].includes(nodeType) && (
+                    <WaitConditionsConfig
+                        data={nodeData}
+                        updateData={updateData}
+                        isDark={isDark}
+                        nodeType={nodeType}
+                    />
+                )}
+
+                {/* System & Media Actions */}
+                {['recents', 'notifications', 'quick_settings', 'volume_up', 'volume_down', 'media_play_pause'].includes(nodeType) && (
+                    <SystemMediaConfig
+                        data={nodeData}
+                        updateData={updateData}
+                        isDark={isDark}
+                        nodeType={nodeType}
+                    />
+                )}
 
                 {/* Universal: Error Handling Options */}
                 {!['input', 'output', 'start', 'end', 'condition', 'loop', 'data_source'].includes(nodeType) && (
