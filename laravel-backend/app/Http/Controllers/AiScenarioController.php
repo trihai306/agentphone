@@ -125,6 +125,7 @@ class AiScenarioController extends Controller
             'user_id' => $user->id,
             'title' => 'Untitled Scenario',
             'script' => '', // Required field, will be populated in next step
+            'model' => 'kling', // Default AI model
             'output_type' => $request->input('output_type'),
             'status' => AiScenario::STATUS_DRAFT,
             'is_draft' => true,
