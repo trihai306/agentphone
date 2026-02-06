@@ -49,7 +49,7 @@ export default function ScenarioBuilder({
     const [showTemplates, setShowTemplates] = useState(false);
     const [showCharacters, setShowCharacters] = useState(false);
     const [draggedScene, setDraggedScene] = useState(null);
-    
+
     // Image upload state
     const [uploadedImages, setUploadedImages] = useState([]);
     const [dragOverUpload, setDragOverUpload] = useState(false);
@@ -227,7 +227,7 @@ export default function ScenarioBuilder({
             // Handle nested response structure
             const responseData = response.data || response;
             const scenesData = responseData.data?.scenes || responseData.scenes;
-            
+
             if (response.success && scenesData) {
                 const parsedScenes = scenesData.map((scene, index) => ({
                     ...scene,
@@ -526,7 +526,7 @@ export default function ScenarioBuilder({
                 setScenario(response.scenario);
                 return response.scenario.id;
             }
-            
+
             return null;
         } catch (error) {
             console.error('Save error:', error);
@@ -540,7 +540,7 @@ export default function ScenarioBuilder({
             try {
                 const response = await aiStudioApi.getScenarioStatus(scenarioId);
                 const responseData = response.data || response;
-                
+
                 if (responseData.success && responseData.scenario) {
                     setScenario(responseData.scenario);
                     setScenes(responseData.scenario.scenes);
@@ -599,7 +599,7 @@ export default function ScenarioBuilder({
                             </Link>
                             <div>
                                 <h1 className={`text-xl sm:text-2xl font-bold ${themeClasses.textPrimary}`}>
-                                    {step === 'start' ? '✨ Tạo Kịch Bản Mới' : title || 'Scenario Builder'}
+                                    {step === 'start' ? 'Tạo Kịch Bản Mới' : title || 'Scenario Builder'}
                                 </h1>
                                 <p className={`text-sm ${themeClasses.textMuted}`}>
                                     Tạo video/ảnh chuyên nghiệp theo kịch bản
@@ -611,7 +611,7 @@ export default function ScenarioBuilder({
                         <div className="flex items-center gap-3">
                             <div className={`px-4 py-2 rounded-xl ${isDark ? 'bg-violet-600/20 border border-violet-500/30' : 'bg-violet-100 border border-violet-200'}`}>
                                 <span className={`text-sm font-bold ${isDark ? 'text-violet-300' : 'text-violet-700'}`}>
-                                    ✨ {currentCredits.toLocaleString()} credits
+                                    {currentCredits.toLocaleString()} credits
                                 </span>
                             </div>
 
@@ -622,7 +622,7 @@ export default function ScenarioBuilder({
                                         disabled={saving}
                                         className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 text-white border border-white/10' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'}`}
                                     >
-                                        {saving ? '...' : '💾 Lưu nháp'}
+                                        {saving ? '...' : 'Lưu nháp'}
                                     </button>
                                     {step === 'editor' && (
                                         <button
@@ -630,7 +630,7 @@ export default function ScenarioBuilder({
                                             disabled={generating || scenes.length === 0}
                                             className="px-6 py-2 rounded-xl text-sm font-bold bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all disabled:opacity-50"
                                         >
-                                            🚀 Tạo ({estimatedCredits} credits)
+                                            Tạo ({estimatedCredits} credits)
                                         </button>
                                     )}
                                 </>
@@ -641,11 +641,11 @@ export default function ScenarioBuilder({
                     {/* Step Progress */}
                     <div className={`flex items-center justify-center gap-2 p-3 mb-6 rounded-2xl ${themeClasses.cardBg} border`}>
                         {[
-                            { key: 'start', label: 'Bắt đầu', icon: '🎯' },
-                            { key: 'script', label: 'Kịch bản', icon: '📝', alt: 'images' },
-                            { key: 'editor', label: 'Chỉnh sửa', icon: '🎬' },
-                            { key: 'generating', label: 'Đang tạo', icon: '⚡' },
-                            { key: 'preview', label: 'Xem kết quả', icon: '🎉' },
+                            { key: 'start', label: 'Bắt đầu', num: '1' },
+                            { key: 'script', label: 'Kịch bản', num: '2', alt: 'images' },
+                            { key: 'editor', label: 'Chỉnh sửa', num: '3' },
+                            { key: 'generating', label: 'Đang tạo', num: '4' },
+                            { key: 'preview', label: 'Xem kết quả', num: '5' },
                         ].map((s, i, arr) => {
                             const currentStep = step === 'images' ? 'script' : step; // Treat 'images' as same level as 'script'
                             const currentIndex = arr.findIndex(x => x.key === currentStep);
@@ -660,7 +660,11 @@ export default function ScenarioBuilder({
                                             ? isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-600'
                                             : isDark ? 'bg-white/5 text-slate-500' : 'bg-slate-100 text-slate-400'
                                         }`}>
-                                        {isCompleted ? '✓' : s.icon}
+                                        {isCompleted ? (
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        ) : s.num}
                                     </div>
                                     <span className={`ml-2 text-xs font-medium hidden sm:inline ${isActive ? themeClasses.textPrimary : themeClasses.textMuted}`}>
                                         {s.label}
@@ -690,8 +694,10 @@ export default function ScenarioBuilder({
                                         : 'bg-gradient-to-br from-violet-50 to-indigo-50 border-violet-200 hover:border-violet-400'
                                         }`}
                                 >
-                                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-3xl mb-6 shadow-lg group-hover:scale-110 transition-transform">
-                                        ✍️
+                                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform">
+                                        <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
                                     </div>
                                     <h3 className={`text-xl font-bold mb-2 ${themeClasses.textPrimary}`}>
                                         Viết Kịch Bản
@@ -709,8 +715,10 @@ export default function ScenarioBuilder({
                                         : 'bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200 hover:border-emerald-400'
                                         }`}
                                 >
-                                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 flex items-center justify-center text-3xl mb-6 shadow-lg group-hover:scale-110 transition-transform">
-                                        📸
+                                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform">
+                                        <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
                                     </div>
                                     <h3 className={`text-xl font-bold mb-2 ${themeClasses.textPrimary}`}>
                                         Từ Ảnh Có Sẵn
@@ -728,8 +736,10 @@ export default function ScenarioBuilder({
                                         : 'bg-gradient-to-br from-cyan-50 to-blue-50 border-cyan-200 hover:border-cyan-400'
                                         }`}
                                 >
-                                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-600 to-blue-600 flex items-center justify-center text-3xl mb-6 shadow-lg group-hover:scale-110 transition-transform">
-                                        📚
+                                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-600 to-blue-600 flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform">
+                                        <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                                        </svg>
                                     </div>
                                     <h3 className={`text-xl font-bold mb-2 ${themeClasses.textPrimary}`}>
                                         Chọn Template
@@ -746,8 +756,8 @@ export default function ScenarioBuilder({
                                     </label>
                                     <div className="grid grid-cols-2 gap-4">
                                         {[
-                                            { type: 'video', icon: '🎬', label: 'Video', desc: 'Tạo video từ kịch bản' },
-                                            { type: 'image', icon: '🖼️', label: 'Hình ảnh', desc: 'Tạo series ảnh' },
+                                            { type: 'video', label: 'Video', desc: 'Tạo video từ kịch bản', iconPath: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' },
+                                            { type: 'image', label: 'Hình ảnh', desc: 'Tạo series ảnh', iconPath: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
                                         ].map((opt) => (
                                             <button
                                                 key={opt.type}
@@ -761,7 +771,9 @@ export default function ScenarioBuilder({
                                                         : 'bg-white border-slate-200 hover:border-slate-300'
                                                     }`}
                                             >
-                                                <span className="text-2xl">{opt.icon}</span>
+                                                <svg className={`w-6 h-6 ${outputType === opt.type ? (isDark ? 'text-violet-400' : 'text-violet-600') : (isDark ? 'text-slate-400' : 'text-slate-500')}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={opt.iconPath} />
+                                                </svg>
                                                 <div className={`mt-2 font-semibold ${themeClasses.textPrimary}`}>{opt.label}</div>
                                                 <div className={`text-xs ${themeClasses.textMuted}`}>{opt.desc}</div>
                                             </button>
@@ -781,7 +793,7 @@ export default function ScenarioBuilder({
                                 <div className="flex items-center justify-between mb-6">
                                     <div>
                                         <h2 className={`text-xl font-bold ${themeClasses.textPrimary}`}>
-                                            📸 Upload Ảnh
+                                            Upload Ảnh
                                         </h2>
                                         <p className={`text-sm ${themeClasses.textMuted}`}>
                                             Upload tối đa 10 ảnh, AI sẽ phân tích và tạo kịch bản video
@@ -798,15 +810,14 @@ export default function ScenarioBuilder({
                                     onDragOver={(e) => { e.preventDefault(); setDragOverUpload(true); }}
                                     onDragLeave={() => setDragOverUpload(false)}
                                     onClick={() => imageInputRef.current?.click()}
-                                    className={`relative border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
-                                        dragOverUpload
-                                            ? isDark
-                                                ? 'border-emerald-500 bg-emerald-500/10'
-                                                : 'border-emerald-400 bg-emerald-50'
-                                            : isDark
-                                                ? 'border-white/20 hover:border-white/40 bg-white/5'
-                                                : 'border-slate-200 hover:border-slate-400 bg-slate-50'
-                                    }`}
+                                    className={`relative border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${dragOverUpload
+                                        ? isDark
+                                            ? 'border-emerald-500 bg-emerald-500/10'
+                                            : 'border-emerald-400 bg-emerald-50'
+                                        : isDark
+                                            ? 'border-white/20 hover:border-white/40 bg-white/5'
+                                            : 'border-slate-200 hover:border-slate-400 bg-slate-50'
+                                        }`}
                                 >
                                     <input
                                         ref={imageInputRef}
@@ -816,8 +827,11 @@ export default function ScenarioBuilder({
                                         onChange={(e) => handleImageSelect(e.target.files)}
                                         className="hidden"
                                     />
-                                    <div className={`w-16 h-16 mx-auto rounded-2xl mb-4 flex items-center justify-center text-3xl ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
-                                        {dragOverUpload ? '📥' : '📷'}
+                                    <div className={`w-16 h-16 mx-auto rounded-2xl mb-4 flex items-center justify-center ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
+                                        <svg className={`w-8 h-8 ${isDark ? 'text-white' : 'text-slate-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={dragOverUpload ? 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12' : 'M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z'} />
+                                            {!dragOverUpload && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />}
+                                        </svg>
                                     </div>
                                     <p className={`text-lg font-semibold mb-2 ${themeClasses.textPrimary}`}>
                                         {dragOverUpload ? 'Thả ảnh vào đây!' : 'Kéo thả ảnh hoặc click để chọn'}
@@ -861,11 +875,11 @@ export default function ScenarioBuilder({
                                                         onClick={(e) => { e.stopPropagation(); handleRemoveImage(img.id); }}
                                                         className="absolute top-2 right-2 w-6 h-6 rounded-full bg-rose-500 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                                                     >
-                                                        ✕
+                                                        ×
                                                     </button>
                                                     {/* Drag handle overlay */}
                                                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                                        <span className="text-white text-2xl opacity-0 group-hover:opacity-70 transition-opacity">⋮⋮</span>
+                                                        <span className="text-white text-xs opacity-0 group-hover:opacity-70 transition-opacity font-bold">DRAG</span>
                                                     </div>
                                                 </div>
                                             ))}
@@ -896,7 +910,7 @@ export default function ScenarioBuilder({
                                                 Đang phân tích...
                                             </span>
                                         ) : (
-                                            `✨ Phân tích ${uploadedImages.length} ảnh`
+                                            `Phân tích ${uploadedImages.length} ảnh`
                                         )}
                                     </button>
                                 </div>
@@ -943,7 +957,7 @@ Cảnh 2: Một cô gái trẻ tỉnh dậy, vươn vai và mỉm cười rạng
 Cảnh 3: Cô ấy cầm ly cà phê, đi ra ban công ngắm nhìn thành phố.
 Cảnh 4: Close-up sản phẩm với logo thương hiệu.
 
-💡 Mẹo: Mô tả càng chi tiết, kết quả càng chính xác!`}
+Mẹo: Mô tả càng chi tiết, kết quả càng chính xác!`}
                                         rows={12}
                                         className={`w-full px-4 py-4 rounded-xl border-2 text-sm resize-none transition-all focus:outline-none focus:ring-4 ${isDark
                                             ? 'bg-black/30 border-white/10 text-white placeholder-slate-500 focus:border-violet-500/50 focus:ring-violet-500/10'
@@ -955,7 +969,7 @@ Cảnh 4: Close-up sản phẩm với logo thương hiệu.
                                             {script.length.toLocaleString()} ký tự
                                         </span>
                                         <span className={`text-xs font-medium ${script.length >= 20 ? 'text-emerald-500' : themeClasses.textMuted}`}>
-                                            {script.length >= 20 ? '✓ Đủ độ dài' : 'Tối thiểu 20 ký tự'}
+                                            {script.length >= 20 ? 'Đủ độ dài' : 'Tối thiểu 20 ký tự'}
                                         </span>
                                     </div>
                                 </div>
@@ -983,7 +997,7 @@ Cảnh 4: Close-up sản phẩm với logo thương hiệu.
                                                 Đang phân tích...
                                             </span>
                                         ) : (
-                                            '✨ Phân tích với AI'
+                                            'Phân tích với AI'
                                         )}
                                     </button>
                                 </div>
@@ -1001,7 +1015,7 @@ Cảnh 4: Close-up sản phẩm với logo thương hiệu.
                                 <div className={`sticky top-24 p-4 rounded-2xl ${themeClasses.cardBg} border`}>
                                     <div className="flex items-center justify-between mb-4">
                                         <h3 className={`font-bold ${themeClasses.textPrimary}`}>
-                                            🎬 Timeline ({scenes.length} cảnh)
+                                            Timeline ({scenes.length} cảnh)
                                         </h3>
                                         <button
                                             onClick={handleAddScene}
@@ -1066,7 +1080,9 @@ Cảnh 4: Close-up sản phẩm với logo thương hiệu.
 
                                                     {/* Drag handle */}
                                                     <div className={`opacity-0 group-hover:opacity-50 ${themeClasses.textMuted}`}>
-                                                        ⋮⋮
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                                        </svg>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1082,7 +1098,7 @@ Cảnh 4: Close-up sản phẩm với logo thương hiệu.
                                         {/* Scene Header */}
                                         <div className="flex items-center justify-between mb-6">
                                             <h3 className={`text-xl font-bold ${themeClasses.textPrimary}`}>
-                                                🎬 Cảnh {activeSceneIndex + 1}
+                                                Cảnh {activeSceneIndex + 1}
                                             </h3>
                                             <div className="flex items-center gap-2">
                                                 <button
@@ -1106,7 +1122,7 @@ Cảnh 4: Close-up sản phẩm với logo thương hiệu.
                                                 {/* Description */}
                                                 <div>
                                                     <label className={`block text-sm font-bold mb-2 ${themeClasses.textMuted}`}>
-                                                        📝 Mô tả cảnh
+                                                        Mô tả cảnh
                                                     </label>
                                                     <textarea
                                                         value={scenes[activeSceneIndex]?.description || ''}
@@ -1124,7 +1140,7 @@ Cảnh 4: Close-up sản phẩm với logo thương hiệu.
                                                 <div>
                                                     <div className="flex items-center justify-between mb-2">
                                                         <label className={`text-sm font-bold ${themeClasses.textMuted}`}>
-                                                            ✨ Prompt cho AI
+                                                            Prompt cho AI
                                                         </label>
                                                         <button
                                                             onClick={() => handleGeneratePrompt(activeSceneIndex)}
@@ -1186,7 +1202,7 @@ Cảnh 4: Close-up sản phẩm với logo thương hiệu.
                                                                 onClick={() => handleUpdateScene(activeSceneIndex, { source_image: null, source_image_preview: null })}
                                                                 className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                                                             >
-                                                                ✕
+                                                                ×
                                                             </button>
                                                         </div>
                                                     ) : (
@@ -1202,7 +1218,10 @@ Cảnh 4: Close-up sản phẩm với logo thương hiệu.
                                                             />
                                                             <div className="text-center p-6">
                                                                 <div className={`w-12 h-12 mx-auto rounded-xl mb-3 flex items-center justify-center text-2xl ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
-                                                                    📷
+                                                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                    </svg>
                                                                 </div>
                                                                 <p className={`text-sm font-medium ${themeClasses.textPrimary}`}>
                                                                     Click để upload ảnh
@@ -1252,7 +1271,9 @@ Cảnh 4: Close-up sản phẩm với logo thương hiệu.
                             <div className={`p-8 rounded-3xl ${themeClasses.cardBg} border`}>
                                 {/* Animated Icon */}
                                 <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-2xl shadow-violet-500/40 animate-pulse">
-                                    <span className="text-4xl">⚡</span>
+                                    <svg className="w-12 h-12 text-violet-500 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
                                 </div>
 
                                 <h2 className={`text-2xl font-bold mb-2 ${themeClasses.textPrimary}`}>
@@ -1350,7 +1371,7 @@ Cảnh 4: Close-up sản phẩm với logo thương hiệu.
                                     onClick={() => router.visit('/ai-studio/scenario-builder')}
                                     className="px-6 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg"
                                 >
-                                    ✨ Tạo kịch bản mới
+                                    Tạo kịch bản mới
                                 </button>
                             </div>
                         </div>
@@ -1363,8 +1384,8 @@ Cảnh 4: Close-up sản phẩm với logo thương hiệu.
                         <div className={`w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl ${isDark ? 'bg-[#111]' : 'bg-white'} shadow-2xl`}>
                             <div className="p-6 border-b" style={{ borderColor: isDark ? '#222' : '#e2e8f0' }}>
                                 <div className="flex items-center justify-between">
-                                    <h3 className={`text-xl font-bold ${themeClasses.textPrimary}`}>📚 Chọn Template</h3>
-                                    <button onClick={() => setShowTemplates(false)} className={themeClasses.textMuted}>✕</button>
+                                    <h3 className={`text-xl font-bold ${themeClasses.textPrimary}`}>Chọn Template</h3>
+                                    <button onClick={() => setShowTemplates(false)} className={themeClasses.textMuted}>×</button>
                                 </div>
                             </div>
                             <div className="p-6 overflow-y-auto max-h-[60vh]">
