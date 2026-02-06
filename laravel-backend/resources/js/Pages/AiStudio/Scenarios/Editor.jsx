@@ -21,6 +21,40 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
     const models = scenario?.output_type === 'video' ? videoModels : imageModels;
     const estimatedCredits = scenes.length * (scenario?.output_type === 'video' ? 10 : 2);
 
+    // Image upload handler
+    const handleImageUpload = async (index, file) => {
+        if (!file) return;
+
+        // Validate file
+        if (!file.type.startsWith('image/')) {
+            showToast('Chỉ chấp nhận file ảnh', 'error');
+            return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+            showToast('Ảnh phải nhỏ hơn 10MB', 'error');
+            return;
+        }
+
+        // Convert to base64 for preview and upload
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            handleUpdateScene(index, {
+                source_image: e.target.result,
+                source_image_name: file.name
+            });
+            showToast('Đã thêm ảnh tham chiếu', 'success');
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleRemoveImage = (index) => {
+        handleUpdateScene(index, {
+            source_image: null,
+            source_image_name: null,
+            source_image_path: null
+        });
+    };
+
     const themeClasses = {
         textPrimary: isDark ? 'text-white' : 'text-slate-900',
         textSecondary: isDark ? 'text-slate-300' : 'text-slate-600',
@@ -236,6 +270,64 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
                                             rows={3}
                                             className={`w-full px-4 py-3 rounded-xl border-2 text-sm resize-none ${themeClasses.inputBg} focus:outline-none focus:ring-2 focus:ring-violet-500/50`}
                                         />
+                                    </div>
+
+                                    {/* Reference Image Upload */}
+                                    <div className="mb-6">
+                                        <label className={`block text-sm font-bold mb-2 ${themeClasses.textMuted}`}>
+                                            Ảnh tham chiếu (tùy chọn)
+                                        </label>
+                                        <p className={`text-xs mb-3 ${themeClasses.textMuted}`}>
+                                            Thêm ảnh để AI tạo video chính xác hơn với phong cách của bạn
+                                        </p>
+
+                                        {(activeScene.source_image || activeScene.source_image_path) ? (
+                                            <div className="relative group">
+                                                <img
+                                                    src={activeScene.source_image || activeScene.source_image_path}
+                                                    alt="Ảnh tham chiếu"
+                                                    className="w-full h-48 object-cover rounded-xl border-2 border-violet-500/30"
+                                                />
+                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 rounded-xl transition-all flex items-center justify-center gap-3">
+                                                    <label className="px-4 py-2 bg-white/20 rounded-lg text-white text-sm font-medium cursor-pointer hover:bg-white/30 transition-all">
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            className="hidden"
+                                                            onChange={(e) => handleImageUpload(activeSceneIndex, e.target.files[0])}
+                                                        />
+                                                        Đổi ảnh
+                                                    </label>
+                                                    <button
+                                                        onClick={() => handleRemoveImage(activeSceneIndex)}
+                                                        className="px-4 py-2 bg-rose-500/80 rounded-lg text-white text-sm font-medium hover:bg-rose-500 transition-all"
+                                                    >
+                                                        Xóa
+                                                    </button>
+                                                </div>
+                                                <p className={`text-xs mt-2 ${themeClasses.textMuted}`}>
+                                                    {activeScene.source_image_name || 'Ảnh tham chiếu'}
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <label
+                                                className={`flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer transition-all
+                                                    ${isDark ? 'border-white/20 hover:border-violet-500/50 bg-white/5' : 'border-slate-300 hover:border-violet-400 bg-slate-50'}
+                                                `}
+                                            >
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={(e) => handleImageUpload(activeSceneIndex, e.target.files[0])}
+                                                />
+                                                <svg className={`w-10 h-10 mb-2 ${isDark ? 'text-violet-400' : 'text-violet-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                                <p className={`text-sm ${themeClasses.textMuted}`}>Kéo thả hoặc click để tải ảnh</p>
+                                                <p className={`text-xs mt-1 ${themeClasses.textMuted}`}>PNG, JPG tối đa 10MB</p>
+                                            </label>
+                                        )}
                                     </div>
 
                                     {/* Prompt */}
