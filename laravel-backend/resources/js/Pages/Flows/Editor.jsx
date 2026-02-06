@@ -994,7 +994,9 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
     // Handler for media file selection
     const handleMediaFileSelected = useCallback((file) => {
-        updateNodeData(mediaPickerNodeId, {
+        const nodeId = modals.mediaPicker?.nodeId;
+        if (!nodeId) return;
+        updateNodeData(nodeId, {
             selectionType: 'file',
             fileName: file.original_name,
             filePath: file.url,
@@ -1006,11 +1008,13 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
             folderPath: null,
         });
         closeModal('mediaPicker');
-    }, [mediaPickerNodeId, updateNodeData, closeModal]);
+    }, [modals.mediaPicker?.nodeId, updateNodeData, closeModal]);
 
     // Handler for media folder selection (random file from folder)
     const handleMediaFolderSelected = useCallback((folder) => {
-        updateNodeData(mediaPickerNodeId, {
+        const nodeId = modals.mediaPicker?.nodeId;
+        if (!nodeId) return;
+        updateNodeData(nodeId, {
             selectionType: 'folder',
             folderName: folder.name,
             folderPath: folder.path,
@@ -1022,11 +1026,13 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
             fileId: null,
         });
         closeModal('mediaPicker');
-    }, [mediaPickerNodeId, updateNodeData, closeModal]);
+    }, [modals.mediaPicker?.nodeId, updateNodeData, closeModal]);
 
     // Handler for collection selection
     const handleCollectionSelected = useCallback((collection) => {
-        updateNodeData(collectionPickerNodeId, {
+        const nodeId = modals.collectionPicker?.nodeId;
+        if (!nodeId) return;
+        updateNodeData(nodeId, {
             collectionId: collection.id,
             collectionName: collection.name,
             collectionIcon: collection.icon,
@@ -1036,7 +1042,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
             label: collection.name,
         });
         closeModal('collectionPicker');
-    }, [collectionPickerNodeId, updateNodeData, closeModal]);
+    }, [modals.collectionPicker?.nodeId, updateNodeData, closeModal]);
 
     const onDrop = useCallback((event) => {
         event.preventDefault();
