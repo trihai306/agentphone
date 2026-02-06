@@ -228,6 +228,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/scenarios/{scenario}/generate', [\App\Http\Controllers\AiScenarioController::class, 'generateAll'])->name('scenarios.generate');
         Route::patch('/scenarios/{scenario}/scenes/{scene}', [\App\Http\Controllers\AiScenarioController::class, 'updateScene'])->name('scenarios.scenes.update');
         Route::post('/scenarios/{scenario}/scenes/{scene}/retry', [\App\Http\Controllers\AiScenarioController::class, 'retryScene'])->name('scenarios.scenes.retry');
+        Route::patch('/scenarios/{scenario}', [\App\Http\Controllers\AiScenarioController::class, 'update'])->name('scenarios.update');
         Route::delete('/scenarios/{scenario}', [\App\Http\Controllers\AiScenarioController::class, 'destroy'])->name('scenarios.destroy');
 
         // Scenario Templates

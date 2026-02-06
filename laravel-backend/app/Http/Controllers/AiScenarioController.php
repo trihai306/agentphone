@@ -352,6 +352,59 @@ class AiScenarioController extends Controller
     }
 
     /**
+     * Update an existing scenario with parsed scenes
+     */
+    public function update(Request $request, AiScenario $scenario)
+    {
+        $this->authorize('update', $scenario);
+
+        $request->validate([
+            'script' => 'required|string|min:10|max:10000',
+            'title' => 'nullable|string|max:255',
+            'model' => 'required|string',
+            'scenes' => 'required|array|min:1|max:10',
+            'scenes.*.order' => 'required|integer|min:1',
+            'scenes.*.description' => 'required|string',
+            'scenes.*.prompt' => 'required|string',
+            'scenes.*.duration' => 'nullable|integer|min:4|max:15',
+        ]);
+
+        try {
+            // Update scenario fields
+            $scenario->update([
+                'script' => $request->input('script'),
+                'title' => $request->input('title') ?: 'Untitled Scenario',
+                'model' => $request->input('model'),
+                'is_draft' => false,
+                'status' => AiScenario::STATUS_PARSED,
+            ]);
+
+            // Delete old scenes and create new ones
+            $scenario->scenes()->delete();
+
+            foreach ($request->input('scenes') as $sceneData) {
+                $scenario->scenes()->create([
+                    'order' => $sceneData['order'],
+                    'description' => $sceneData['description'],
+                    'prompt' => $sceneData['prompt'],
+                    'duration' => $sceneData['duration'] ?? 5,
+                    'status' => 'pending',
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'scenario' => $this->formatScenario($scenario->fresh(['scenes'])),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
      * Show scenario detail
      */
     public function show(AiScenario $scenario)

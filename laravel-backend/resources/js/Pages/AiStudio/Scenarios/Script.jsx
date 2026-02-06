@@ -47,9 +47,9 @@ export default function Script({ scenario, currentCredits = 0, videoModels = [],
             const models = scenario.output_type === 'video' ? videoModels : imageModels;
             const defaultModel = models[0]?.id || 'kling-1.5-pro';
 
-            // Save scenario with scenes
-            const saveResponse = await fetch('/ai-studio/scenarios', {
-                method: 'POST',
+            // Save scenario with parsed scenes (UPDATE existing draft)
+            const saveResponse = await fetch(`/ai-studio/scenarios/${scenario.id}`, {
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
