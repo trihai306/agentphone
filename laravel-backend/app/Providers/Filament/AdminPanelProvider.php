@@ -90,11 +90,10 @@ class AdminPanelProvider extends PanelProvider
             ->authGuard('web')
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
-            ->topNavigation() // Menu hiển thị ở header thay vì sidebar
+            ->sidebarCollapsibleOnDesktop()
             ->maxContentWidth('full')
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->plugins([
-                DebuggerPlugin::make(),
             ])
             ->renderHook(
                 PanelsRenderHook::BODY_END,
