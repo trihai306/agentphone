@@ -681,113 +681,80 @@ export default function ElementPickerModal({
 
     return (
         <>
-            {/* Backdrop - Transparent, just for click-to-close */}
-            <div
-                className="fixed inset-0 z-[9999]"
-                onClick={onClose}
-            />
+            {/* Backdrop */}
+            <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-            {/* Modal Container - On top of backdrop */}
+            {/* Modal */}
             <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 pointer-events-none">
                 <div
-                    className={`w-full max-w-6xl h-full max-h-[90vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col pointer-events-auto ${isDark ? 'bg-[#0f0f0f]' : 'bg-white'}`}
-                    style={{
-                        boxShadow: '0 25px 100px rgba(0, 0, 0, 0.5)',
-                        border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`
-                    }}
+                    className={`w-full max-w-6xl h-full max-h-[90vh] rounded-2xl overflow-hidden flex flex-col pointer-events-auto transition-all ${isDark ? 'bg-[#111113] ring-1 ring-white/[0.08]' : 'bg-white ring-1 ring-black/[0.08]'}`}
+                    style={{ boxShadow: isDark ? '0 25px 80px rgba(0,0,0,0.7)' : '0 25px 80px rgba(0,0,0,0.15)' }}
                     onClick={e => e.stopPropagation()}
                 >
                     {/* Header */}
-                    <div className={`px-6 py-4 border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-violet-500/30 to-purple-500/30' : 'bg-gradient-to-br from-violet-100 to-purple-100'}`}>
-                                    <span className="text-2xl">🔍</span>
-                                </div>
-                                <div>
-                                    <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                        Element Inspector
-                                    </h2>
-                                    <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                        {isChunking
-                                            ? `Loading... ${elements.length + textElements.length} elements (chunk ${chunkProgress.current}/${chunkProgress.total})`
-                                            : `${elements.length + textElements.length} elements • ${packageName || 'Đang chờ kết nối...'}`
-                                        }
-                                    </p>
-                                </div>
+                    <div className={`px-5 py-3 border-b ${isDark ? 'border-white/[0.06]' : 'border-gray-100'} flex items-center justify-between`}>
+                        <div className="flex items-center gap-3">
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isDark ? 'bg-violet-500/15' : 'bg-violet-50'}`}>
+                                <svg className={`w-[18px] h-[18px] ${isDark ? 'text-violet-400' : 'text-violet-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
                             </div>
-
-                            <div className="flex items-center gap-3">
-                                <button
-                                    onClick={requestElements}
-                                    disabled={loading}
-                                    className={`px-5 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-2 transition-all ${loading
-                                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                        : 'bg-gradient-to-r from-violet-500 to-purple-600 text-white hover:shadow-lg hover:shadow-violet-500/30 hover:scale-105'
-                                        }`}
-                                >
-                                    {loading ? (
-                                        <>
-                                            <span className="animate-spin">⏳</span>
-                                            Scanning...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <span>🔄</span>
-                                            Refresh
-                                        </>
-                                    )}
-                                </button>
-
-                                <button
-                                    onClick={onClose}
-                                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
+                            <div>
+                                <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Element Inspector</h2>
+                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                    {isChunking
+                                        ? `Loading… ${elements.length + textElements.length} elements (${chunkProgress.current}/${chunkProgress.total})`
+                                        : `${elements.length + textElements.length} elements${packageName ? ` · ${packageName}` : ''}`
+                                    }
+                                </p>
                             </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={requestElements}
+                                disabled={loading}
+                                className={`h-9 px-4 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all ${loading
+                                    ? isDark ? 'bg-white/5 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    : 'bg-violet-600 text-white hover:bg-violet-500 active:scale-[0.97]'
+                                    }`}
+                            >
+                                {loading ? (
+                                    <><svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Scanning…</>
+                                ) : (
+                                    <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> Scan</>
+                                )}
+                            </button>
+                            <button onClick={onClose} className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${isDark ? 'hover:bg-white/[0.06]' : 'hover:bg-gray-100'}`}>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
                         </div>
                     </div>
 
                     {/* Main Content - Split View */}
                     <div className="flex-1 flex overflow-hidden">
                         {/* Left: Device Preview */}
-                        <div className={`w-80 flex-shrink-0 border-r ${isDark ? 'border-white/10 bg-[#0a0a0a]' : 'border-gray-200 bg-gray-50'} p-4 flex flex-col`}>
-                            <h3 className={`text-xs font-bold uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                📱 Device Preview
-                            </h3>
+                        <div className={`w-[340px] flex-shrink-0 border-r ${isDark ? 'border-white/[0.06] bg-[#0c0c0e]' : 'border-gray-100 bg-gray-50/50'} p-4 flex flex-col`}>
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className={`text-[11px] font-semibold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Device Preview</h3>
+                                {screenshotData && <span className={`text-[10px] font-mono ${isDark ? 'text-emerald-500/70' : 'text-emerald-600/70'}`}>{screenDimensions.width}×{screenDimensions.height}</span>}
+                            </div>
 
-                            {/* Device Frame with Screenshot */}
+                            {/* Device Frame */}
                             <div className="flex-1 flex items-center justify-center">
                                 <div
-                                    className={`relative rounded-3xl overflow-hidden ${isDark ? 'bg-[#1a1a1a]' : 'bg-white'}`}
-                                    style={{
-                                        width: '240px',
-                                        height: '520px',
-                                        boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
-                                        border: `3px solid ${isDark ? '#2a2a2a' : '#e5e7eb'}`
-                                    }}
+                                    className={`relative rounded-[24px] overflow-hidden ${isDark ? 'bg-[#1a1a1c]' : 'bg-white'}`}
+                                    style={{ width: '280px', height: '580px', boxShadow: isDark ? '0 8px 40px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.06)' : '0 8px 40px rgba(0,0,0,0.12), inset 0 0 0 1px rgba(0,0,0,0.06)' }}
                                 >
-                                    {/* Notch */}
-                                    <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-20 h-5 rounded-b-2xl ${isDark ? 'bg-[#0a0a0a]' : 'bg-gray-900'} z-20`} />
+                                    {/* Dynamic Island */}
+                                    <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-[72px] h-[22px] rounded-full bg-black z-20" />
 
-                                    {/* Screen Content - Full area for screenshot */}
-                                    <div
-                                        className="absolute rounded-2xl overflow-hidden"
-                                        style={{
-                                            left: '4px',
-                                            right: '4px',
-                                            top: '24px',
-                                            bottom: '24px',
-                                        }}
-                                    >
+                                    {/* Screen Content */}
+                                    <div className="absolute rounded-[20px] overflow-hidden" style={{ left: '3px', right: '3px', top: '26px', bottom: '20px' }}>
                                         {/* Real Screenshot */}
                                         {screenshotData ? (() => {
-                                            // Container display dimensions
-                                            const containerWidth = 232;
-                                            const containerHeight = 472;
+                                            const containerWidth = 274;
+                                            const containerHeight = 534;
 
                                             // Handle image load to get actual dimensions
                                             const handleImageLoad = (e) => {
@@ -865,32 +832,30 @@ export default function ElementPickerModal({
                                                                 elHeight = b.height * scaleY;
                                                             }
 
+                                                            const dotColor = el.isEditable ? '#3b82f6' : el.isCheckable ? '#22c55e' : el.isScrollable ? '#f59e0b' : '#8b5cf6';
                                                             return (
                                                                 <div
                                                                     key={idx}
-                                                                    className="absolute cursor-pointer transition-all z-10"
-                                                                    style={{
-                                                                        left: `${elLeft + elWidth / 2 - 8}px`,
-                                                                        top: `${elTop + elHeight / 2 - 8}px`,
-                                                                    }}
+                                                                    className="absolute cursor-pointer z-10 group/dot"
+                                                                    style={{ left: `${elLeft + elWidth / 2 - 5}px`, top: `${elTop + elHeight / 2 - 5}px` }}
                                                                     onMouseEnter={() => setHoveredElement(idx)}
                                                                     onMouseLeave={() => setHoveredElement(null)}
                                                                     onClick={() => onSelect(el)}
                                                                 >
-                                                                    {/* Tiny Index Number - no background */}
-                                                                    <span
-                                                                        className={`text-[7px] font-black transition-all ${isHovered ? 'scale-150' : ''}`}
-                                                                        style={{
-                                                                            color: '#ff3b30',
-                                                                            textShadow: '0 0 3px #fff, 0 0 5px #fff, 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff'
-                                                                        }}
-                                                                    >
-                                                                        {idx + 1}
-                                                                    </span>
+                                                                    {/* Dot marker */}
+                                                                    <div className="relative w-[10px] h-[10px]">
+                                                                        <div className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ backgroundColor: dotColor }} />
+                                                                        <div className={`relative w-full h-full rounded-full ring-1 ring-white/80 shadow-sm transition-transform ${isHovered ? 'scale-[2]' : ''}`} style={{ backgroundColor: dotColor }} />
+                                                                    </div>
+                                                                    {/* Hover tooltip */}
                                                                     {isHovered && (
-                                                                        <div className={`absolute -top-5 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded text-[7px] font-medium whitespace-nowrap shadow-lg z-40 ${isDark ? 'bg-black/90 text-white' : 'bg-white/95 text-gray-900'}`}>
-                                                                            {getElementName(el).substring(0, 25)}
-                                                                        </div>
+                                                                        <>
+                                                                            {/* Bounding box */}
+                                                                            <div className="absolute pointer-events-none" style={{ left: `${-elLeft - elWidth / 2 + 5 + elLeft}px`, top: `${-elTop - elHeight / 2 + 5 + elTop}px`, width: `${elWidth}px`, height: `${elHeight}px`, border: `1.5px solid ${dotColor}`, borderRadius: '4px', backgroundColor: `${dotColor}15` }} />
+                                                                            <div className={`absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-1 rounded-md text-[9px] font-medium whitespace-nowrap shadow-lg z-40 ${isDark ? 'bg-gray-900 text-white ring-1 ring-white/10' : 'bg-white text-gray-900 ring-1 ring-black/10'}`}>
+                                                                                {getElementName(el).substring(0, 30)}
+                                                                            </div>
+                                                                        </>
                                                                     )}
                                                                 </div>
                                                             );
@@ -899,152 +864,85 @@ export default function ElementPickerModal({
                                                 </div>
                                             );
                                         })() : (
-                                            // Placeholder when no screenshot
-                                            <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-800 to-gray-900">
+                                            <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-900 to-gray-950">
                                                 {loading ? (
-                                                    <div className="text-center">
-                                                        <div className="w-12 h-12 border-3 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mb-3 mx-auto" style={{ borderWidth: '3px' }} />
-                                                        <p className="text-xs text-gray-400">Capturing...</p>
-                                                    </div>
+                                                    <div className="text-center"><div className="w-10 h-10 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mb-3 mx-auto" /><p className="text-[11px] text-gray-500">Capturing…</p></div>
                                                 ) : (
-                                                    <div className="text-center text-gray-500">
-                                                        <span className="text-4xl block mb-2">📱</span>
-                                                        <p className="text-xs">Click Refresh để scan</p>
+                                                    <div className="text-center">
+                                                        <svg className="w-10 h-10 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                                        <p className="text-[11px] text-gray-500">Click Scan để bắt đầu</p>
                                                     </div>
                                                 )}
                                             </div>
                                         )}
                                     </div>
-
                                     {/* Home Indicator */}
-                                    <div className={`absolute bottom-2 left-1/2 -translate-x-1/2 w-24 h-1 rounded-full ${isDark ? 'bg-gray-600' : 'bg-gray-400'}`} />
+                                    <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-[100px] h-[4px] rounded-full bg-gray-600" />
                                 </div>
                             </div>
 
-                            {/* Screenshot Info */}
-                            {screenshotData && (
-                                <div className={`mt-3 px-3 py-2 rounded-xl text-center ${isDark ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-emerald-50 border border-emerald-200'}`}>
-                                    <span className={`text-xs font-medium ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                                        ✅ Screenshot • {screenDimensions.width}×{screenDimensions.height}
-                                    </span>
-                                </div>
-                            )}
-
                             {/* Legend */}
-                            <div className={`mt-3 p-3 rounded-xl ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
-                                <p className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    Legend
-                                </p>
-                                <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                                    <div className="flex items-center gap-1.5">
-                                        <div className="w-3 h-3 rounded border-2 border-violet-500/50 bg-violet-500/20" />
-                                        <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Clickable</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <div className="w-3 h-3 rounded border-2 border-blue-500/50 bg-blue-500/20" />
-                                        <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Editable</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <div className="w-3 h-3 rounded border-2 border-green-500/50 bg-green-500/20" />
-                                        <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Checkable</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <div className="w-3 h-3 rounded border-2 border-amber-500/50 bg-amber-500/20" />
-                                        <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>Scrollable</span>
-                                    </div>
-                                </div>
+                            <div className="mt-3 flex items-center justify-center gap-4">
+                                {[{ c: 'bg-violet-500', l: 'Clickable' }, { c: 'bg-blue-500', l: 'Input' }, { c: 'bg-emerald-500', l: 'Check' }, { c: 'bg-amber-500', l: 'Scroll' }].map(i => <div key={i.l} className="flex items-center gap-1.5"><div className={`w-2 h-2 rounded-full ${i.c}`} /><span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{i.l}</span></div>)}
                             </div>
                         </div>
 
                         {/* Right: Element List */}
                         <div className="flex-1 flex flex-col overflow-hidden">
-                            {/* Toolbar */}
-                            <div className={`px-4 py-3 border-b ${isDark ? 'border-white/10' : 'border-gray-100'} flex items-center gap-3`}>
+                            {/* Search + Categories */}
+                            <div className={`px-4 py-2.5 border-b ${isDark ? 'border-white/[0.06]' : 'border-gray-100'}`}>
                                 {/* Search */}
-                                <div className="flex-1 relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">🔍</span>
+                                <div className="relative mb-2.5">
+                                    <svg className={`absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                                     <input
                                         type="text"
-                                        placeholder="Tìm kiếm element..."
+                                        placeholder="Tìm element…"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-sm ${isDark ? 'bg-[#1a1a1a] text-white placeholder-gray-600 border-white/10' : 'bg-gray-50 text-gray-900 placeholder-gray-400 border-gray-200'} border focus:outline-none focus:ring-2 focus:ring-violet-500/50`}
+                                        className={`w-full pl-9 pr-12 py-2 rounded-lg text-xs ${isDark ? 'bg-white/[0.04] text-white placeholder-gray-600 ring-1 ring-white/[0.06] focus:ring-violet-500/50' : 'bg-gray-50 text-gray-900 placeholder-gray-400 ring-1 ring-gray-200 focus:ring-violet-500/50'} focus:outline-none transition-all`}
                                     />
+                                    <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold tabular-nums ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{filteredElements.length}</span>
                                 </div>
-
-                                {/* Stats */}
-                                <div className={`px-4 py-2 rounded-xl ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
-                                    <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                        {filteredElements.length}
-                                    </span>
-                                    <span className={`text-xs ml-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                        elements
-                                    </span>
+                                {/* Categories */}
+                                <div className="flex items-center gap-1 overflow-x-auto">
+                                    {Object.entries(categories).map(([key, cat]) => (
+                                        <button
+                                            key={key}
+                                            onClick={() => setSelectedCategory(key)}
+                                            className={`px-2.5 py-1 rounded-md text-[11px] font-medium whitespace-nowrap flex items-center gap-1.5 transition-all ${selectedCategory === key
+                                                ? 'bg-violet-600 text-white'
+                                                : isDark ? 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.04]' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                                                }`}
+                                        >
+                                            <span>{cat.label}</span>
+                                            <span className={`text-[9px] tabular-nums ${selectedCategory === key ? 'text-white/60' : isDark ? 'text-gray-600' : 'text-gray-400'}`}>{cat.count}</span>
+                                        </button>
+                                    ))}
                                 </div>
-                            </div>
-
-                            {/* Categories */}
-                            <div className={`px-4 py-2 border-b ${isDark ? 'border-white/10' : 'border-gray-100'} flex items-center gap-2 overflow-x-auto`}>
-                                {Object.entries(categories).map(([key, cat]) => (
-                                    <button
-                                        key={key}
-                                        onClick={() => setSelectedCategory(key)}
-                                        className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap flex items-center gap-1.5 transition-all ${selectedCategory === key
-                                            ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/30'
-                                            : isDark
-                                                ? 'bg-white/5 text-gray-400 hover:bg-white/10'
-                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                            }`}
-                                    >
-                                        <span>{cat.icon}</span>
-                                        <span>{cat.label}</span>
-                                        <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${selectedCategory === key
-                                            ? 'bg-white/20'
-                                            : isDark ? 'bg-white/10' : 'bg-gray-200'
-                                            }`}>
-                                            {cat.count}
-                                        </span>
-                                    </button>
-                                ))}
                             </div>
 
                             {/* Element List */}
-                            <div className="flex-1 overflow-y-auto p-4">
+                            <div className="flex-1 overflow-y-auto p-3">
                                 {error && (
-                                    <div className={`p-4 rounded-xl mb-4 flex items-center gap-3 ${isDark ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-red-50 text-red-600 border border-red-200'}`}>
-                                        <span className="text-xl">⚠️</span>
-                                        <div>
-                                            <p className="font-medium">Lỗi</p>
-                                            <p className="text-sm opacity-80">{error}</p>
-                                        </div>
+                                    <div className={`p-3 rounded-lg mb-3 flex items-center gap-2.5 text-sm ${isDark ? 'bg-red-500/10 text-red-400 ring-1 ring-red-500/20' : 'bg-red-50 text-red-600 ring-1 ring-red-200'}`}>
+                                        <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                        <span>{error}</span>
                                     </div>
                                 )}
 
                                 {loading && (
-                                    <div className="flex flex-col items-center justify-center py-12">
-                                        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 animate-pulse bg-gradient-to-br from-violet-500/20 to-purple-500/20">
-                                            <span className="text-3xl animate-bounce">📱</span>
-                                        </div>
-                                        <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                            Đang scan thiết bị...
-                                        </p>
-                                        <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                            Vui lòng đợi trong giây lát
-                                        </p>
+                                    <div className="flex flex-col items-center justify-center py-16">
+                                        <div className="w-10 h-10 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mb-4" />
+                                        <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Đang scan thiết bị…</p>
+                                        <p className={`text-xs mt-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>Vui lòng đợi trong giây lát</p>
                                     </div>
                                 )}
 
                                 {!loading && allElements.length === 0 && !error && (
-                                    <div className="flex flex-col items-center justify-center py-12">
-                                        <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-4 bg-gradient-to-br from-gray-500/10 to-gray-500/5">
-                                            <span className="text-4xl">📱</span>
-                                        </div>
-                                        <p className={`font-medium mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                            Chưa có dữ liệu
-                                        </p>
-                                        <p className={`text-sm text-center max-w-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                            Click "Refresh" để scan màn hình thiết bị và hiển thị các elements
-                                        </p>
+                                    <div className="flex flex-col items-center justify-center py-16">
+                                        <svg className={`w-12 h-12 mb-3 ${isDark ? 'text-gray-700' : 'text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" /></svg>
+                                        <p className={`text-sm font-medium mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>Chưa có dữ liệu</p>
+                                        <p className={`text-xs text-center max-w-[200px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>Click "Scan" để scan màn hình thiết bị</p>
                                     </div>
                                 )}
 
@@ -1071,31 +969,30 @@ export default function ElementPickerModal({
                                                         onMouseEnter={() => setHoveredElement(`parent-${idx}`)}
                                                         onMouseLeave={() => setHoveredElement(null)}
                                                         className={`w-full p-3 text-left transition-all ${selectedElement === parent
-                                                            ? 'bg-violet-500/20 ring-2 ring-violet-500'
+                                                            ? 'bg-violet-500/15 ring-1 ring-violet-500/30'
                                                             : isHovered
-                                                                ? 'bg-violet-500/10'
+                                                                ? 'bg-violet-500/8'
                                                                 : ''
                                                             }`}
                                                     >
-                                                        <div className="flex items-center gap-3">
-                                                            {/* Index number instead of emoji */}
-                                                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm ${parent.isEditable
-                                                                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                                                                : 'bg-violet-500/20 text-violet-400 border border-violet-500/30'
+                                                        <div className="flex items-center gap-2.5">
+                                                            <div className={`w-7 h-7 rounded-md flex items-center justify-center text-[11px] font-bold ${parent.isEditable
+                                                                ? 'bg-blue-500/15 text-blue-400'
+                                                                : 'bg-violet-500/15 text-violet-400'
                                                                 }`}>
                                                                 {idx + 1}
                                                             </div>
                                                             <div className="flex-1 min-w-0">
                                                                 <div className="flex items-center gap-2">
-                                                                    <p className={`font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                                                    <p className={`text-xs font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                                                         {getElementName(parent)}
                                                                     </p>
-                                                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-violet-500/30 text-violet-300 font-bold">
-                                                                        CLICKABLE
+                                                                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${parent.isEditable ? 'bg-blue-500/15 text-blue-400' : 'bg-violet-500/15 text-violet-300'}`}>
+                                                                        {parent.isEditable ? 'INPUT' : 'TAP'}
                                                                     </span>
                                                                 </div>
-                                                                <div className="flex items-center gap-2 mt-1">
-                                                                    <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                                <div className="flex items-center gap-2 mt-0.5">
+                                                                    <span className={`text-[10px] font-mono ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
                                                                         {parent.className}
                                                                     </span>
                                                                     {parent.bounds && (
@@ -1105,19 +1002,17 @@ export default function ElementPickerModal({
                                                                     )}
                                                                 </div>
                                                             </div>
-                                                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isHovered ? 'bg-violet-500 text-white' : isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
-                                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                                </svg>
-                                                            </div>
+                                                            <svg className={`w-3 h-3 ${isHovered ? 'text-violet-400' : isDark ? 'text-gray-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+                                                            </svg>
                                                         </div>
                                                     </button>
 
                                                     {/* Children with text (for identification) */}
                                                     {children.length > 0 && (
-                                                        <div className={`border-t ${isDark ? 'border-white/5 bg-[#0a0a0a]' : 'border-gray-100 bg-gray-50'} px-3 py-2`}>
-                                                            <p className={`text-[9px] font-bold uppercase tracking-wider mb-1.5 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                                                📝 Child Text (for identification)
+                                                        <div className={`border-t ${isDark ? 'border-white/[0.04] bg-white/[0.02]' : 'border-gray-100 bg-gray-50'} px-3 py-2`}>
+                                                            <p className={`text-[9px] font-semibold uppercase tracking-wider mb-1.5 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                                                                Child Text
                                                             </p>
                                                             <div className="flex flex-wrap gap-1.5">
                                                                 {children.slice(0, 5).map((child, cidx) => {
@@ -1167,91 +1062,56 @@ export default function ElementPickerModal({
                                                     onClick={() => setSelectedElement(el)}
                                                     onMouseEnter={() => setHoveredElement(idx)}
                                                     onMouseLeave={() => setHoveredElement(null)}
-                                                    className={`w-full p-4 rounded-xl text-left transition-all border ${selectedElement === el
-                                                        ? `ring-2 ring-violet-500 ${colors.bg} ${colors.border}`
+                                                    className={`w-full p-3 rounded-lg text-left transition-all ${selectedElement === el
+                                                        ? `ring-1 ring-violet-500 ${isDark ? 'bg-violet-500/10' : 'bg-violet-50'}`
                                                         : isHovered
-                                                            ? `${colors.bg} ${colors.border} scale-[1.02] shadow-lg`
-                                                            : isDark
-                                                                ? 'bg-[#1a1a1a] border-white/5 hover:border-white/10'
-                                                                : 'bg-gray-50 border-gray-100 hover:border-gray-200'
+                                                            ? isDark ? 'bg-white/[0.04]' : 'bg-gray-50'
+                                                            : isDark ? 'bg-transparent hover:bg-white/[0.03]' : 'bg-transparent hover:bg-gray-50'
                                                         }`}
                                                 >
-                                                    <div className="flex items-start gap-3">
-                                                        {/* Index number badge - matches screenshot overlay */}
-                                                        <span
-                                                            className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold shadow-sm"
-                                                            style={{ minWidth: '24px' }}
-                                                        >
+                                                    <div className="flex items-start gap-2.5">
+                                                        {/* Index dot */}
+                                                        <div className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${el.isEditable
+                                                            ? 'bg-blue-500/15 text-blue-400'
+                                                            : el.isCheckable ? 'bg-emerald-500/15 text-emerald-400'
+                                                                : el.isScrollable ? 'bg-amber-500/15 text-amber-400'
+                                                                    : 'bg-violet-500/15 text-violet-400'
+                                                            }`}>
                                                             {idx + 1}
-                                                        </span>
-                                                        {/* Show cropped icon image if available, else emoji */}
+                                                        </div>
                                                         {el.image ? (
                                                             <img
                                                                 src={`data:image/png;base64,${el.image}`}
                                                                 alt={el.label || 'Icon'}
-                                                                className="w-10 h-10 rounded-xl object-contain flex-shrink-0 bg-black/20"
+                                                                className="w-8 h-8 rounded-md object-contain flex-shrink-0 bg-black/20"
                                                             />
-                                                        ) : (
-                                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${colors.bg}`}>
-                                                                <span className="text-lg">{getElementIcon(el)}</span>
-                                                            </div>
-                                                        )}
+                                                        ) : null}
                                                         <div className="flex-1 min-w-0">
-                                                            <p className={`font-semibold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                                            <p className={`text-xs font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                                                 {getElementName(el)}
                                                             </p>
-                                                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                                                {/* Type badge - object/text/accessibility */}
+                                                            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                                                                 {el.type === 'object' && (
-                                                                    <span className="text-[10px] px-2 py-0.5 rounded-md font-medium bg-emerald-500/20 text-emerald-400">
-                                                                        🎯 {el.label || 'Object'}
-                                                                    </span>
+                                                                    <span className="text-[9px] px-1.5 py-0.5 rounded font-semibold bg-emerald-500/15 text-emerald-400">{el.label || 'Object'}</span>
                                                                 )}
                                                                 {el.type === 'text' && (
-                                                                    <span className="text-[10px] px-2 py-0.5 rounded-md font-medium bg-teal-500/20 text-teal-400">
-                                                                        📝 OCR
-                                                                    </span>
+                                                                    <span className="text-[9px] px-1.5 py-0.5 rounded font-semibold bg-teal-500/15 text-teal-400">OCR</span>
                                                                 )}
                                                                 {el._source === 'ocr' && el.type !== 'object' && el.type !== 'text' && (
-                                                                    <span className="text-[10px] px-2 py-0.5 rounded-md font-medium bg-cyan-500/20 text-cyan-400">
-                                                                        👁️ Visual
-                                                                    </span>
+                                                                    <span className="text-[9px] px-1.5 py-0.5 rounded font-semibold bg-cyan-500/15 text-cyan-400">Visual</span>
                                                                 )}
-                                                                {/* Clickable/Editable/Scrollable badges */}
-                                                                {el.isClickable && (
-                                                                    <span className="text-[10px] px-2 py-0.5 rounded-md font-medium bg-violet-500/20 text-violet-400">
-                                                                        👆 Clickable
-                                                                    </span>
-                                                                )}
-                                                                {el.isEditable && (
-                                                                    <span className="text-[10px] px-2 py-0.5 rounded-md font-medium bg-blue-500/20 text-blue-400">
-                                                                        ✏️ Editable
-                                                                    </span>
-                                                                )}
-                                                                {el.isScrollable && (
-                                                                    <span className="text-[10px] px-2 py-0.5 rounded-md font-medium bg-amber-500/20 text-amber-400">
-                                                                        📜 Scrollable
-                                                                    </span>
-                                                                )}
-                                                                <span className={`text-[10px] px-2 py-0.5 rounded-md font-medium ${isDark ? 'bg-white/10 text-gray-400' : 'bg-gray-200 text-gray-600'}`}>
-                                                                    {el.className}
-                                                                </span>
-                                                                {el.bounds && (
-                                                                    <span className={`text-[10px] px-2 py-0.5 rounded-md ${isDark ? 'bg-white/5 text-gray-500' : 'bg-gray-100 text-gray-400'}`}>
-                                                                        {el.bounds.width}×{el.bounds.height}
-                                                                    </span>
-                                                                )}
-                                                                {/* Percentage coordinates (cross-device compatible) */}
+                                                                {el.isClickable && <span className="text-[9px] px-1.5 py-0.5 rounded font-semibold bg-violet-500/15 text-violet-400">Tap</span>}
+                                                                {el.isEditable && <span className="text-[9px] px-1.5 py-0.5 rounded font-semibold bg-blue-500/15 text-blue-400">Input</span>}
+                                                                {el.isScrollable && <span className="text-[9px] px-1.5 py-0.5 rounded font-semibold bg-amber-500/15 text-amber-400">Scroll</span>}
+                                                                <span className={`text-[9px] font-mono ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{el.className}</span>
+                                                                {el.bounds && <span className={`text-[9px] font-mono ${isDark ? 'text-gray-700' : 'text-gray-300'}`}>{el.bounds.width}×{el.bounds.height}</span>}
                                                                 {(el.xPercent !== undefined && el.yPercent !== undefined) && (
-                                                                    <span className={`text-[10px] px-2 py-0.5 rounded-md font-medium ${isDark ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
-                                                                        📍 {el.xPercent.toFixed(1)}%, {el.yPercent.toFixed(1)}%
-                                                                    </span>
+                                                                    <span className={`text-[9px] font-mono ${isDark ? 'text-emerald-500/60' : 'text-emerald-600/60'}`}>{el.xPercent.toFixed(1)}%,{el.yPercent.toFixed(1)}%</span>
                                                                 )}
                                                             </div>
-                                                            {/* Show contentDescription if available (helps identify elements) */}
                                                             {el.contentDescription && (
-                                                                <p className={`text-[11px] mt-1.5 truncate ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                                                                    💬 "{el.contentDescription}"
+                                                                <p className={`text-[10px] mt-1 truncate italic ${isDark ? 'text-emerald-500/70' : 'text-emerald-600/70'}`}>
+                                                                    "{el.contentDescription}"
                                                                 </p>
                                                             )}
                                                             {el.resourceId && (
@@ -1264,8 +1124,7 @@ export default function ElementPickerModal({
                                                                 const children = getChildrenWithText(el);
                                                                 if (children.length === 0) return null;
                                                                 return (
-                                                                    <div className="flex flex-wrap gap-1 mt-2" onClick={(e) => e.stopPropagation()}>
-                                                                        <span className={`text-[9px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>📝</span>
+                                                                    <div className="flex flex-wrap gap-1 mt-1.5" onClick={(e) => e.stopPropagation()}>
                                                                         {children.map((child, cidx) => (
                                                                             <button
                                                                                 key={cidx}
@@ -1289,11 +1148,9 @@ export default function ElementPickerModal({
                                                                 );
                                                             })()}
                                                         </div>
-                                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${isHovered ? 'bg-violet-500 text-white' : isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                            </svg>
-                                                        </div>
+                                                        <svg className={`w-3 h-3 flex-shrink-0 ${isHovered ? 'text-violet-400' : isDark ? 'text-gray-700' : 'text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+                                                        </svg>
                                                     </div>
                                                 </button>
                                             );
@@ -1303,126 +1160,79 @@ export default function ElementPickerModal({
                             </div>
                         </div>
 
-                        {/* Right: Element Detail Panel (when element selected) */}
                         {selectedElement && (
-                            <div className={`w-80 flex-shrink-0 border-l ${isDark ? 'border-white/10 bg-[#0a0a0a]' : 'border-gray-200 bg-gray-50'} flex flex-col overflow-y-auto`}>
+                            <div className={`w-72 flex-shrink-0 border-l ${isDark ? 'border-white/[0.06] bg-[#0c0c0e]' : 'border-gray-100 bg-gray-50/50'} flex flex-col overflow-y-auto`}>
                                 {/* Detail Header */}
-                                <div className={`px-4 py-3 border-b ${isDark ? 'border-white/10' : 'border-gray-200'} flex items-center justify-between`}>
-                                    <h3 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                        📋 Element Details
-                                    </h3>
-                                    <button
-                                        onClick={() => setSelectedElement(null)}
-                                        className={`w-6 h-6 rounded-lg flex items-center justify-center ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-200'}`}
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
+                                <div className={`px-3 py-2.5 border-b ${isDark ? 'border-white/[0.06]' : 'border-gray-100'} flex items-center justify-between`}>
+                                    <h3 className={`text-[11px] font-semibold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Details</h3>
+                                    <button onClick={() => setSelectedElement(null)} className={`w-6 h-6 rounded-md flex items-center justify-center ${isDark ? 'hover:bg-white/[0.06]' : 'hover:bg-gray-200'}`}>
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>
                                     </button>
                                 </div>
 
                                 {/* Detail Content */}
-                                <div className="p-4 space-y-4 flex-1 overflow-y-auto">
+                                <div className="p-3 space-y-3 flex-1 overflow-y-auto">
                                     {/* Element Name */}
                                     <div>
-                                        <label className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                            Element Name
-                                        </label>
-                                        <p className={`text-sm font-semibold mt-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                            {getElementName(selectedElement)}
-                                        </p>
+                                        <label className={`text-[9px] font-semibold uppercase tracking-wider ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>Element</label>
+                                        <p className={`text-xs font-semibold mt-0.5 ${isDark ? 'text-white' : 'text-gray-900'}`}>{getElementName(selectedElement)}</p>
                                     </div>
 
-                                    {/* ===== SELECTOR STRATEGY SECTION ===== */}
+                                    {/* Selector Strategy */}
                                     {(() => {
                                         const confidence = getConfidenceScore(selectedElement);
                                         const selectors = generateUiSelector(selectedElement, selectorStrategy);
-
                                         return (
-                                            <div className={`p-3 rounded-xl border ${isDark ? 'bg-gradient-to-br from-violet-500/10 to-purple-500/5 border-violet-500/20' : 'bg-gradient-to-br from-violet-50 to-purple-50 border-violet-200'}`}>
-                                                {/* Confidence Score */}
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <label className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
-                                                        🎯 Selector Confidence
-                                                    </label>
-                                                    <div className={`flex items-center gap-2 px-2 py-1 rounded-lg ${confidence.level === 'high' ? 'bg-emerald-500/20 text-emerald-400' :
-                                                        confidence.level === 'medium' ? 'bg-amber-500/20 text-amber-400' :
-                                                            'bg-red-500/20 text-red-400'
-                                                        }`}>
-                                                        <span className="text-sm">{
-                                                            confidence.level === 'high' ? '🟢' :
-                                                                confidence.level === 'medium' ? '🟡' : '🔴'
-                                                        }</span>
-                                                        <span className="text-xs font-bold">{confidence.score}%</span>
+                                            <div className={`p-2.5 rounded-lg ${isDark ? 'bg-white/[0.03] ring-1 ring-white/[0.06]' : 'bg-white ring-1 ring-gray-200'}`}>
+                                                {/* Confidence */}
+                                                <div className="flex items-center justify-between mb-2.5">
+                                                    <span className={`text-[9px] font-semibold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Confidence</span>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <div className={`w-1.5 h-1.5 rounded-full ${confidence.level === 'high' ? 'bg-emerald-500' : confidence.level === 'medium' ? 'bg-amber-500' : 'bg-red-500'}`} />
+                                                        <span className={`text-[10px] font-bold ${confidence.level === 'high' ? 'text-emerald-400' : confidence.level === 'medium' ? 'text-amber-400' : 'text-red-400'}`}>{confidence.score}%</span>
                                                     </div>
                                                 </div>
-                                                <p className={`text-[10px] mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                    {confidence.reason}
-                                                </p>
+                                                <p className={`text-[9px] mb-2.5 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{confidence.reason}</p>
 
-                                                {/* Strategy Options */}
-                                                <div className="mb-3">
-                                                    <label className={`text-[9px] font-bold uppercase tracking-wider block mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                        Selector Strategy
-                                                    </label>
-                                                    <div className="grid grid-cols-2 gap-1.5">
-                                                        {[
-                                                            { value: 'smart', label: '🧠 Smart', desc: 'Auto-select best' },
-                                                            { value: 'id', label: '🏷️ ID', desc: 'Resource ID' },
-                                                            { value: 'text', label: '📝 Text', desc: 'Text match' },
-                                                            { value: 'icon', label: '🖼️ Icon', desc: 'Visual match' },
-                                                        ].map(opt => (
-                                                            <button
-                                                                key={opt.value}
-                                                                onClick={() => setSelectorStrategy(opt.value)}
-                                                                className={`px-2 py-1.5 rounded-lg text-left transition-all ${selectorStrategy === opt.value
-                                                                    ? 'bg-violet-500 text-white shadow-lg'
-                                                                    : isDark
-                                                                        ? 'bg-white/5 text-gray-400 hover:bg-white/10'
-                                                                        : 'bg-white text-gray-600 hover:bg-gray-50'
-                                                                    }`}
-                                                            >
-                                                                <span className="text-[11px] font-semibold block">{opt.label}</span>
-                                                                <span className={`text-[8px] ${selectorStrategy === opt.value ? 'text-white/70' : isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                                                    {opt.desc}
-                                                                </span>
-                                                            </button>
-                                                        ))}
-                                                    </div>
+                                                {/* Strategy */}
+                                                <div className="flex gap-1 mb-2.5">
+                                                    {[
+                                                        { value: 'smart', label: 'Smart' },
+                                                        { value: 'id', label: 'ID' },
+                                                        { value: 'text', label: 'Text' },
+                                                        { value: 'icon', label: 'Icon' },
+                                                    ].map(opt => (
+                                                        <button
+                                                            key={opt.value}
+                                                            onClick={() => setSelectorStrategy(opt.value)}
+                                                            className={`flex-1 py-1 rounded-md text-[10px] font-semibold transition-all ${selectorStrategy === opt.value
+                                                                ? 'bg-violet-600 text-white'
+                                                                : isDark ? 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.04]' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                                                                }`}
+                                                        >
+                                                            {opt.label}
+                                                        </button>
+                                                    ))}
                                                 </div>
 
-                                                {/* UiSelector Preview */}
+                                                {/* Generated Selectors */}
                                                 {selectors && selectors.length > 0 && (
                                                     <div>
-                                                        <label className={`text-[9px] font-bold uppercase tracking-wider block mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                            📋 Generated Selectors
-                                                        </label>
-                                                        <div className="space-y-1.5">
+                                                        <label className={`text-[9px] font-semibold uppercase tracking-wider block mb-1.5 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>Selectors</label>
+                                                        <div className="space-y-1">
                                                             {selectors.slice(0, 3).map((sel, idx) => (
-                                                                <div
-                                                                    key={idx}
-                                                                    className={`p-2 rounded-lg text-[10px] font-mono ${idx === 0
-                                                                        ? isDark ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-emerald-50 border border-emerald-200 text-emerald-600'
-                                                                        : isDark ? 'bg-white/5 text-gray-400' : 'bg-white text-gray-500'
-                                                                        }`}
-                                                                >
-                                                                    <div className="flex items-center justify-between mb-1">
-                                                                        <span className={`text-[8px] uppercase font-bold ${idx === 0 ? 'text-emerald-400' : isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                                                            {idx === 0 ? '⭐ PRIMARY' : idx === 1 ? 'FALLBACK 1' : 'FALLBACK 2'} • {sel.type}
+                                                                <div key={idx} className={`p-1.5 rounded-md text-[9px] font-mono ${idx === 0
+                                                                    ? isDark ? 'bg-emerald-500/8 ring-1 ring-emerald-500/15 text-emerald-400' : 'bg-emerald-50 ring-1 ring-emerald-200 text-emerald-600'
+                                                                    : isDark ? 'bg-white/[0.02] text-gray-500' : 'bg-white text-gray-500'
+                                                                    }`}>
+                                                                    <div className="flex items-center justify-between mb-0.5">
+                                                                        <span className={`text-[8px] uppercase font-bold ${idx === 0 ? (isDark ? 'text-emerald-500' : 'text-emerald-600') : isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                                                                            {idx === 0 ? 'PRIMARY' : `FALLBACK ${idx}`} · {sel.type}
                                                                         </span>
-                                                                        <span className={`text-[8px] px-1.5 py-0.5 rounded ${sel.confidence >= 80 ? 'bg-emerald-500/20 text-emerald-400' :
-                                                                            sel.confidence >= 50 ? 'bg-amber-500/20 text-amber-400' :
-                                                                                'bg-red-500/20 text-red-400'
-                                                                            }`}>
-                                                                            {sel.confidence}%
-                                                                        </span>
+                                                                        <span className={`text-[8px] font-bold ${sel.confidence >= 80 ? 'text-emerald-400' : sel.confidence >= 50 ? 'text-amber-400' : 'text-red-400'}`}>{sel.confidence}%</span>
                                                                     </div>
-                                                                    <code className="block break-all">{sel.uiSelector}</code>
-                                                                    {sel.xpath && (
-                                                                        <code className={`block break-all mt-1 text-[9px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                                                            XPath: {sel.xpath}
-                                                                        </code>
-                                                                    )}
+                                                                    <code className="block break-all leading-relaxed">{sel.uiSelector}</code>
+                                                                    {sel.xpath && <code className={`block break-all mt-0.5 text-[8px] ${isDark ? 'text-gray-700' : 'text-gray-400'}`}>XPath: {sel.xpath}</code>}
                                                                 </div>
                                                             ))}
                                                         </div>
@@ -1435,160 +1245,83 @@ export default function ElementPickerModal({
                                     {/* Resource ID */}
                                     {selectedElement.resourceId && (
                                         <div>
-                                            <label className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                Resource ID
-                                            </label>
-                                            <p className={`text-xs font-mono mt-1 p-2 rounded-lg break-all ${isDark ? 'bg-white/5 text-violet-400' : 'bg-violet-50 text-violet-600'}`}>
-                                                {selectedElement.resourceId}
-                                            </p>
+                                            <label className={`text-[9px] font-semibold uppercase tracking-wider ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>Resource ID</label>
+                                            <p className={`text-[10px] font-mono mt-0.5 p-1.5 rounded-md break-all ${isDark ? 'bg-white/[0.03] text-violet-400' : 'bg-violet-50 text-violet-600'}`}>{selectedElement.resourceId}</p>
                                         </div>
                                     )}
 
                                     {/* Text Content */}
                                     {selectedElement.text && (
                                         <div>
-                                            <label className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                Text Content
-                                            </label>
-                                            <p className={`text-sm mt-1 p-2 rounded-lg ${isDark ? 'bg-white/5 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}>
-                                                "{selectedElement.text}"
-                                            </p>
+                                            <label className={`text-[9px] font-semibold uppercase tracking-wider ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>Text</label>
+                                            <p className={`text-xs mt-0.5 p-1.5 rounded-md ${isDark ? 'bg-white/[0.03] text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}>"{selectedElement.text}"</p>
                                         </div>
                                     )}
 
                                     {/* Content Description */}
                                     {selectedElement.contentDescription && (
                                         <div>
-                                            <label className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                Content Description
-                                            </label>
-                                            <p className={`text-xs mt-1 p-2 rounded-lg ${isDark ? 'bg-white/5 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
-                                                {selectedElement.contentDescription}
-                                            </p>
+                                            <label className={`text-[9px] font-semibold uppercase tracking-wider ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>Description</label>
+                                            <p className={`text-xs mt-0.5 p-1.5 rounded-md ${isDark ? 'bg-white/[0.03] text-blue-400' : 'bg-blue-50 text-blue-600'}`}>{selectedElement.contentDescription}</p>
                                         </div>
                                     )}
 
                                     {/* Class Name */}
                                     <div>
-                                        <label className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                            Class Name
-                                        </label>
-                                        <p className={`text-xs font-mono mt-1 p-2 rounded-lg ${isDark ? 'bg-white/5 text-gray-400' : 'bg-gray-100 text-gray-600'}`}>
-                                            {selectedElement.className || 'Unknown'}
-                                        </p>
+                                        <label className={`text-[9px] font-semibold uppercase tracking-wider ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>Class</label>
+                                        <p className={`text-[10px] font-mono mt-0.5 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>{selectedElement.className || 'Unknown'}</p>
                                     </div>
 
-                                    {/* Bounds / Coordinates */}
+                                    {/* Bounds */}
                                     {selectedElement.bounds && (
                                         <div>
-                                            <label className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                Bounds & Coordinates
-                                            </label>
-                                            <div className={`mt-1 p-3 rounded-lg space-y-2 ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
-                                                <div className="grid grid-cols-2 gap-2 text-xs">
-                                                    <div>
-                                                        <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>Left:</span>
-                                                        <span className={`ml-1 font-mono ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>{selectedElement.bounds.left}</span>
-                                                    </div>
-                                                    <div>
-                                                        <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>Top:</span>
-                                                        <span className={`ml-1 font-mono ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>{selectedElement.bounds.top}</span>
-                                                    </div>
-                                                    <div>
-                                                        <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>Width:</span>
-                                                        <span className={`ml-1 font-mono ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>{selectedElement.bounds.width}</span>
-                                                    </div>
-                                                    <div>
-                                                        <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>Height:</span>
-                                                        <span className={`ml-1 font-mono ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>{selectedElement.bounds.height}</span>
-                                                    </div>
-                                                </div>
-                                                <div className={`pt-2 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-                                                    <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Center: </span>
-                                                    <span className={`text-xs font-mono ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`}>
-                                                        ({Math.round(selectedElement.bounds.left + selectedElement.bounds.width / 2)}, {Math.round(selectedElement.bounds.top + selectedElement.bounds.height / 2)})
-                                                    </span>
-                                                </div>
+                                            <label className={`text-[9px] font-semibold uppercase tracking-wider ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>Bounds</label>
+                                            <div className={`mt-0.5 grid grid-cols-4 gap-1 text-[10px] font-mono`}>
+                                                {[{ l: 'L', v: selectedElement.bounds.left }, { l: 'T', v: selectedElement.bounds.top }, { l: 'W', v: selectedElement.bounds.width }, { l: 'H', v: selectedElement.bounds.height }].map(b => <div key={b.l} className={`p-1 rounded text-center ${isDark ? 'bg-white/[0.03]' : 'bg-gray-100'}`}><span className={isDark ? 'text-gray-600' : 'text-gray-400'}>{b.l}</span> <span className={isDark ? 'text-amber-400' : 'text-amber-600'}>{b.v}</span></div>)}
                                             </div>
+                                            <p className={`text-[9px] font-mono mt-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
+                                                Center: <span className={isDark ? 'text-cyan-400' : 'text-cyan-600'}>({Math.round(selectedElement.bounds.left + selectedElement.bounds.width / 2)}, {Math.round(selectedElement.bounds.top + selectedElement.bounds.height / 2)})</span>
+                                            </p>
                                         </div>
                                     )}
 
                                     {/* Properties */}
                                     <div>
-                                        <label className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                            Properties
-                                        </label>
-                                        <div className="mt-2 flex flex-wrap gap-1.5">
-                                            {selectedElement.isClickable && (
-                                                <span className="px-2 py-1 rounded-md text-[10px] font-medium bg-violet-500/20 text-violet-400 border border-violet-500/30">
-                                                    👆 Clickable
-                                                </span>
-                                            )}
-                                            {selectedElement.isEditable && (
-                                                <span className="px-2 py-1 rounded-md text-[10px] font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                                                    ✏️ Editable
-                                                </span>
-                                            )}
-                                            {selectedElement.isScrollable && (
-                                                <span className="px-2 py-1 rounded-md text-[10px] font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                                                    📜 Scrollable
-                                                </span>
-                                            )}
-                                            {selectedElement.isCheckable && (
-                                                <span className="px-2 py-1 rounded-md text-[10px] font-medium bg-green-500/20 text-green-400 border border-green-500/30">
-                                                    ☑️ Checkable {selectedElement.isChecked ? '(Checked)' : ''}
-                                                </span>
-                                            )}
-                                            {selectedElement.isFocusable && (
-                                                <span className="px-2 py-1 rounded-md text-[10px] font-medium bg-pink-500/20 text-pink-400 border border-pink-500/30">
-                                                    🎯 Focusable
-                                                </span>
-                                            )}
-                                            {selectedElement.isEnabled === false && (
-                                                <span className="px-2 py-1 rounded-md text-[10px] font-medium bg-red-500/20 text-red-400 border border-red-500/30">
-                                                    🚫 Disabled
-                                                </span>
-                                            )}
+                                        <label className={`text-[9px] font-semibold uppercase tracking-wider ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>Properties</label>
+                                        <div className="mt-1 flex flex-wrap gap-1">
+                                            {selectedElement.isClickable && <span className="text-[9px] px-1.5 py-0.5 rounded font-semibold bg-violet-500/15 text-violet-400">Clickable</span>}
+                                            {selectedElement.isEditable && <span className="text-[9px] px-1.5 py-0.5 rounded font-semibold bg-blue-500/15 text-blue-400">Editable</span>}
+                                            {selectedElement.isScrollable && <span className="text-[9px] px-1.5 py-0.5 rounded font-semibold bg-amber-500/15 text-amber-400">Scrollable</span>}
+                                            {selectedElement.isCheckable && <span className="text-[9px] px-1.5 py-0.5 rounded font-semibold bg-emerald-500/15 text-emerald-400">Checkable{selectedElement.isChecked ? ' ✓' : ''}</span>}
+                                            {selectedElement.isFocusable && <span className="text-[9px] px-1.5 py-0.5 rounded font-semibold bg-pink-500/15 text-pink-400">Focusable</span>}
+                                            {selectedElement.isEnabled === false && <span className="text-[9px] px-1.5 py-0.5 rounded font-semibold bg-red-500/15 text-red-400">Disabled</span>}
                                             {!selectedElement.isClickable && !selectedElement.isEditable && !selectedElement.isScrollable && !selectedElement.isCheckable && (
-                                                <span className="px-2 py-1 rounded-md text-[10px] font-medium bg-gray-500/20 text-gray-400 border border-gray-500/30">
-                                                    📦 Static
-                                                </span>
+                                                <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${isDark ? 'bg-white/[0.04] text-gray-500' : 'bg-gray-100 text-gray-500'}`}>Static</span>
                                             )}
                                         </div>
                                     </div>
 
-                                    {/* Package Name */}
+                                    {/* Package */}
                                     {packageName && (
                                         <div>
-                                            <label className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                Package
-                                            </label>
-                                            <p className={`text-[10px] font-mono mt-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                                {packageName}
-                                            </p>
+                                            <label className={`text-[9px] font-semibold uppercase tracking-wider ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>Package</label>
+                                            <p className={`text-[9px] font-mono mt-0.5 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{packageName}</p>
                                         </div>
                                     )}
                                 </div>
 
                                 {/* Select Button */}
-                                <div className={`p-4 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+                                <div className={`p-3 border-t ${isDark ? 'border-white/[0.06]' : 'border-gray-100'}`}>
                                     {(() => {
                                         const conf = getConfidenceScore(selectedElement);
                                         return (
                                             <button
-                                                onClick={() => {
-                                                    onSelect(buildSelectorOutput(selectedElement));
-                                                    setSelectedElement(null);
-                                                }}
-                                                className="w-full py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-violet-500 to-purple-600 text-white hover:shadow-lg hover:shadow-violet-500/30 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                                                onClick={() => { onSelect(buildSelectorOutput(selectedElement)); setSelectedElement(null); }}
+                                                className="w-full py-2.5 rounded-lg font-semibold text-xs bg-violet-600 text-white hover:bg-violet-500 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                                             >
-                                                <span>✓ Chọn Element này</span>
-                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${conf.level === 'high' ? 'bg-emerald-400/30' :
-                                                    conf.level === 'medium' ? 'bg-amber-400/30' :
-                                                        'bg-red-400/30'
-                                                    }`}>
-                                                    {conf.level === 'high' ? '🟢' : conf.level === 'medium' ? '🟡' : '🔴'} {conf.score}%
-                                                </span>
+                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" /></svg>
+                                                Chọn Element
+                                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${conf.level === 'high' ? 'bg-emerald-500/30' : conf.level === 'medium' ? 'bg-amber-500/30' : 'bg-red-500/30'}`}>{conf.score}%</span>
                                             </button>
                                         );
                                     })()}
@@ -1598,19 +1331,12 @@ export default function ElementPickerModal({
                     </div>
 
                     {/* Footer */}
-                    <div className={`px-6 py-3 border-t ${isDark ? 'border-white/10 bg-white/5' : 'border-gray-100 bg-gray-50'} flex items-center justify-between`}>
+                    <div className={`px-5 py-2 border-t ${isDark ? 'border-white/[0.06]' : 'border-gray-100'} flex items-center justify-between`}>
                         <div className="flex items-center gap-2">
-                            <span className="text-xl">💡</span>
-                            <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Hover vào element để highlight, click để chọn
-                            </span>
+                            <svg className={`w-3.5 h-3.5 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <span className={`text-[11px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>Hover để highlight, click để chọn</span>
                         </div>
-                        <button
-                            onClick={onClose}
-                            className={`px-5 py-2 rounded-xl text-sm font-medium ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
-                        >
-                            Đóng
-                        </button>
+                        <button onClick={onClose} className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors ${isDark ? 'text-gray-500 hover:bg-white/[0.04]' : 'text-gray-400 hover:bg-gray-100'}`}>Đóng</button>
                     </div>
                 </div>
             </div>
