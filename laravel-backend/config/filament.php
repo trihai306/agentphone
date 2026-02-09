@@ -18,15 +18,16 @@ return [
 
         'echo' => [
             'broadcaster' => 'pusher',
-            'key' => env('PUSHER_APP_KEY'),
+            'key' => env('VITE_PUSHER_APP_KEY', env('PUSHER_APP_KEY')),
             'cluster' => env('PUSHER_APP_CLUSTER', 'mt1'),
-            'wsHost' => env('PUSHER_HOST'),
-            'wsPort' => env('PUSHER_PORT', 443),
-            'wssPort' => env('PUSHER_PORT', 443),
+            'wsHost' => env('VITE_PUSHER_HOST', env('PUSHER_HOST')),
+            'wsPort' => (int) env('VITE_PUSHER_PORT', env('PUSHER_PORT', 443)),
+            'wssPort' => (int) env('VITE_PUSHER_PORT', env('PUSHER_PORT', 443)),
             'authEndpoint' => '/broadcasting/auth',
             'disableStats' => true,
             'encrypted' => true,
-            'forceTLS' => env('PUSHER_SCHEME') === 'https',
+            'forceTLS' => env('VITE_PUSHER_SCHEME', 'https') === 'https',
+            'enabledTransports' => ['ws', 'wss'],
         ],
 
     ],
