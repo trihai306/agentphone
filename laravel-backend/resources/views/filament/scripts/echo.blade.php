@@ -7,11 +7,11 @@
     window.Echo = new Echo({
         broadcaster: 'pusher',
         key: '{{ config("broadcasting.connections.pusher.key") }}',
-        wsHost: '{{ config("broadcasting.connections.pusher.options.host") }}',
-        wsPort: {{ config("broadcasting.connections.pusher.options.port") }},
-        wssPort: {{ config("broadcasting.connections.pusher.options.port") }},
+        wsHost: '{{ config("broadcasting.connections.pusher.client.host") }}',
+        wsPort: {{ config("broadcasting.connections.pusher.client.port") }},
+        wssPort: {{ config("broadcasting.connections.pusher.client.port") }},
         cluster: '{{ config("broadcasting.connections.pusher.options.cluster") }}',
-        forceTLS: {{ config("broadcasting.connections.pusher.options.scheme") === 'https' ? 'true' : 'false' }},
+        forceTLS: {{ config("broadcasting.connections.pusher.client.scheme") === 'https' ? 'true' : 'false' }},
         disableStats: true,
         enabledTransports: ['ws', 'wss'],
         authEndpoint: '/broadcasting/auth',
@@ -19,44 +19,44 @@
 
     // Subscribe to admin notifications channel
     @auth
-    const userId = {{ auth()->id() }};
+        const userId = {{ auth()->id() }};
 
-    // Private channel for this specific user
-    window.Echo.private(`App.Models.User.${userId}`)
-        .listen('.database-notification.created', (notification) => {
-            console.log('Filament notification received:', notification);
-            // Trigger Filament notification refresh
-            if (window.Livewire) {
-                window.Livewire.dispatch('database-notifications-received');
-            }
-        });
+        // Private channel for this specific user
+        window.Echo.private(`App.Models.User.${userId}`)
+            .listen('.database-notification.created', (notification) => {
+                console.log('Filament notification received:', notification);
+                // Trigger Filament notification refresh
+                if (window.Livewire) {
+                    window.Livewire.dispatch('database-notifications-received');
+                }
+            });
 
-    // Admin channel for all admin notifications
-    window.Echo.private('admins')
-        .listen('.admin.notification', (data) => {
-            console.log('Admin notification received:', data);
-            // Show browser notification if permitted
-            if (Notification.permission === 'granted') {
-                new Notification(data.title, {
-                    body: data.message,
-                    icon: '/favicon.ico'
-                });
-            }
-            // Show toast notification using Filament's notification system
-            if (window.Livewire) {
-                window.Livewire.dispatch('notify', {
-                    status: data.type || 'info',
-                    title: data.title,
-                    body: data.message
-                });
-            }
-        });
+        // Admin channel for all admin notifications
+        window.Echo.private('admins')
+            .listen('.admin.notification', (data) => {
+                console.log('Admin notification received:', data);
+                // Show browser notification if permitted
+                if (Notification.permission === 'granted') {
+                    new Notification(data.title, {
+                        body: data.message,
+                        icon: '/favicon.ico'
+                    });
+                }
+                // Show toast notification using Filament's notification system
+                if (window.Livewire) {
+                    window.Livewire.dispatch('notify', {
+                        status: data.type || 'info',
+                        title: data.title,
+                        body: data.message
+                    });
+                }
+            });
 
-    // Request notification permission
-    if (Notification.permission === 'default') {
-        Notification.requestPermission();
-    }
+        // Request notification permission
+        if (Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
 
-    console.log('Laravel Echo initialized for Filament Admin Panel');
+        console.log('Laravel Echo initialized for Filament Admin Panel');
     @endauth
 </script>

@@ -43,6 +43,12 @@ return [
                 'encrypted' => true,
                 'useTLS' => env('PUSHER_SCHEME', 'http') === 'https',
             ],
+            // Client-facing WS config (used by browser, not PHP)
+            'client' => [
+                'host' => env('VITE_PUSHER_HOST', env('PUSHER_HOST', '127.0.0.1')),
+                'port' => (int) env('VITE_PUSHER_PORT', env('PUSHER_PORT', 6001)),
+                'scheme' => env('VITE_PUSHER_SCHEME', env('PUSHER_SCHEME', 'https')),
+            ],
         ],
 
         'ably' => [
