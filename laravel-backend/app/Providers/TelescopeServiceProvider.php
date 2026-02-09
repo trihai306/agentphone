@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+if (!class_exists(\Laravel\Telescope\TelescopeApplicationServiceProvider::class)) {
+    return;
+}
+
 use Illuminate\Support\Facades\Gate;
 use Laravel\Telescope\IncomingEntry;
 use Laravel\Telescope\Telescope;
