@@ -17,6 +17,8 @@ import com.pusher.client.util.HttpChannelAuthorizer
 import com.pusher.client.connection.ConnectionEventListener
 import com.pusher.client.connection.ConnectionState
 import com.pusher.client.connection.ConnectionStateChange
+import com.agent.portal.streaming.ScreenStreamService
+import com.agent.portal.streaming.WebRTCManager
 import kotlinx.coroutines.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import java.lang.ref.WeakReference
@@ -396,6 +398,19 @@ object SocketJobManager {
                     "pusher_internal:subscription_succeeded" -> {
                         Log.w(TAG, "🟢 PUSHER INTERNAL: Subscription confirmed by server!")
                     }
+                    // WebRTC screen streaming events
+                    "stream:start" -> {
+                        Log.i(TAG, "📹 Received stream:start request")
+                        handleStreamStart(event.data ?: "")
+                    }
+                    "stream:stop" -> {
+                        Log.i(TAG, "📹 Received stream:stop request")
+                        handleStreamStop()
+                    }
+                    "webrtc:signal" -> {
+                        Log.i(TAG, "📹 Received webrtc:signal")
+                        handleWebRTCSignal(event.data ?: "")
+                    }
                     else -> {
                         Log.w(TAG, "⚠️ Unhandled event: ${event.eventName}")
                     }
@@ -513,6 +528,34 @@ object SocketJobManager {
             override fun onEvent(event: PusherEvent) {
                 Log.w(TAG, "🏓 EXPLICIT BIND: ping:request received!")
                 handlePingRequest(event.data ?: "")
+            }
+            override fun onSubscriptionSucceeded(channelName: String) {}
+            override fun onAuthenticationFailure(message: String?, e: Exception?) {}
+        })
+
+        // Bind WebRTC streaming events
+        deviceChannel?.bind("stream:start", object : com.pusher.client.channel.PrivateChannelEventListener {
+            override fun onEvent(event: PusherEvent) {
+                Log.i(TAG, "📹 EXPLICIT BIND: stream:start received!")
+                handleStreamStart(event.data ?: "")
+            }
+            override fun onSubscriptionSucceeded(channelName: String) {}
+            override fun onAuthenticationFailure(message: String?, e: Exception?) {}
+        })
+
+        deviceChannel?.bind("stream:stop", object : com.pusher.client.channel.PrivateChannelEventListener {
+            override fun onEvent(event: PusherEvent) {
+                Log.i(TAG, "📹 EXPLICIT BIND: stream:stop received!")
+                handleStreamStop()
+            }
+            override fun onSubscriptionSucceeded(channelName: String) {}
+            override fun onAuthenticationFailure(message: String?, e: Exception?) {}
+        })
+
+        deviceChannel?.bind("webrtc:signal", object : com.pusher.client.channel.PrivateChannelEventListener {
+            override fun onEvent(event: PusherEvent) {
+                Log.i(TAG, "📹 EXPLICIT BIND: webrtc:signal received!")
+                handleWebRTCSignal(event.data ?: "")
             }
             override fun onSubscriptionSucceeded(channelName: String) {}
             override fun onAuthenticationFailure(message: String?, e: Exception?) {}
@@ -2299,6 +2342,96 @@ object SocketJobManager {
                 response.close()
             } catch (e: Exception) {
                 Log.e(TAG, "Error handling accessibility check", e)
+            }
+        }
+    }
+
+    // ================================================================================
+    // WebRTC Screen Streaming Handlers
+    // ================================================================================
+
+    /**
+     * Handle stream:start event - browser wants to view this device's screen
+     * The APK needs to request MediaProjection permission via Activity,
+     * then start ScreenStreamService
+     */
+    private fun handleStreamStart(data: String) {
+        scope.launch {
+            try {
+                val json = org.json.JSONObject(data)
+                val viewerUserId = json.optInt("viewer_user_id", 0)
+
+                if (viewerUserId <= 0) {
+                    Log.e(TAG, "📹 Invalid viewer_user_id in stream:start")
+                    return@launch
+                }
+
+                Log.i(TAG, "📹 Stream requested by userId=$viewerUserId")
+
+                val context = contextRef?.get() ?: run {
+                    Log.e(TAG, "📹 Context not available for streaming")
+                    return@launch
+                }
+
+                // Initialize WebRTC if not already done
+                WebRTCManager.initialize(context)
+
+                // Send notification to user that stream is requested
+                // The actual MediaProjection permission must be requested by an Activity
+                // We'll broadcast an intent to the MainActivity to show the permission dialog
+                val intent = android.content.Intent("com.agent.portal.STREAM_REQUEST").apply {
+                    putExtra("viewer_user_id", viewerUserId)
+                    setPackage(context.packageName)
+                }
+                context.sendBroadcast(intent)
+
+                Log.i(TAG, "📹 Stream request broadcast sent to MainActivity")
+            } catch (e: Exception) {
+                Log.e(TAG, "📹 Error handling stream:start", e)
+            }
+        }
+    }
+
+    /**
+     * Handle stream:stop event - browser wants to stop viewing
+     */
+    private fun handleStreamStop() {
+        scope.launch {
+            try {
+                Log.i(TAG, "📹 Stopping screen stream")
+                val context = contextRef?.get() ?: return@launch
+                ScreenStreamService.stopStreaming(context)
+            } catch (e: Exception) {
+                Log.e(TAG, "📹 Error stopping stream", e)
+            }
+        }
+    }
+
+    /**
+     * Handle webrtc:signal event - signaling data from browser (SDP answer, ICE candidates)
+     */
+    private fun handleWebRTCSignal(data: String) {
+        scope.launch {
+            try {
+                val json = org.json.JSONObject(data)
+                val signalType = json.optString("signal_type", "")
+                val signalData = json.optJSONObject("signal_data") ?: return@launch
+
+                Log.d(TAG, "📹 WebRTC signal received: $signalType")
+
+                when (signalType) {
+                    "sdp-answer" -> {
+                        WebRTCManager.handleSdpAnswer(signalData)
+                    }
+                    "ice-candidate" -> {
+                        WebRTCManager.handleIceCandidate(signalData)
+                    }
+                    else -> {
+                        Log.w(TAG, "📹 Unknown WebRTC signal type: $signalType")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "📹 Error handling WebRTC signal", e)
             }
         }
     }

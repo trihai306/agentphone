@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Permission for recent apps usage stats -->
@@ -150,6 +151,13 @@
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="job_progress" />
+        </service>
+
+        <!-- WebRTC Screen Streaming Service -->
+        <service
+            android:name=".streaming.ScreenStreamService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection">
         </service>
 
         <!-- Touch Capture Overlay Service (for capturing swipes on home screen) -->

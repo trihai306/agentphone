@@ -73,6 +73,9 @@ dependencies {
     // ML Kit Image Labeling for icon classification
     implementation("com.google.mlkit:image-labeling:17.0.8")
 
+    // WebRTC for real-time screen streaming
+    implementation("io.getstream:stream-webrtc-android:1.1.1")
+
     // Testing
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
