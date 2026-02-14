@@ -98,6 +98,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Device online status (quick Redis check)
     Route::get('/devices/online-status', [DeviceController::class, 'getOnlineStatus']);
 
+    // WebRTC screen streaming (browser ↔ APK signaling relay)
+    Route::post('/devices/{device}/stream/start', [\App\Http\Controllers\Api\WebRTCSignalController::class, 'startStream']);
+    Route::post('/devices/{device}/stream/stop', [\App\Http\Controllers\Api\WebRTCSignalController::class, 'stopStream']);
+    Route::post('/webrtc/signal', [\App\Http\Controllers\Api\WebRTCSignalController::class, 'signal']);
+
     // Subscription management
     Route::prefix('subscriptions')->group(function () {
         Route::get('/current', [ServicePackageController::class, 'current']);
