@@ -122,4 +122,55 @@ class WebRTCSignalController extends Controller
             'message' => 'Signal relayed',
         ]);
     }
+
+    /**
+     * Receive MJPEG stream info from APK and broadcast to user
+     *
+     * POST /api/devices/stream/mjpeg-info
+     *
+     * Called by APK when MJPEG server starts — sends local IPs and port.
+     * Frontend auto-receives via Echo and connects without manual IP input.
+     */
+    public function receiveMjpegInfo(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'mode' => 'required|string',
+            'urls' => 'required|array',
+            'port' => 'required|integer',
+        ]);
+
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        // Find the user's active device
+        $device = Device::where('user_id', $user->id)
+            ->where('is_online', true)
+            ->latest('updated_at')
+            ->first();
+
+        if (!$device) {
+            return response()->json(['success' => false, 'message' => 'No active device found'], 404);
+        }
+
+        Log::info("MJPEG: Device {$device->id} reported stream URLs", $validated);
+
+        // Broadcast MJPEG info to user's channel
+        event(new WebRTCSignalToUser(
+            userId: $user->id,
+            deviceId: $device->id,
+            signalType: 'mjpeg-info',
+            signalData: [
+                'urls' => $validated['urls'],
+                'port' => $validated['port'],
+                'mode' => $validated['mode'],
+            ]
+        ));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'MJPEG info broadcast to frontend',
+        ]);
+    }
 }

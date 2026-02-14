@@ -102,6 +102,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/devices/{device}/stream/start', [\App\Http\Controllers\Api\WebRTCSignalController::class, 'startStream']);
     Route::post('/devices/{device}/stream/stop', [\App\Http\Controllers\Api\WebRTCSignalController::class, 'stopStream']);
     Route::post('/webrtc/signal', [\App\Http\Controllers\Api\WebRTCSignalController::class, 'signal']);
+    Route::post('/devices/stream/mjpeg-info', [\App\Http\Controllers\Api\WebRTCSignalController::class, 'receiveMjpegInfo']);
 
     // Subscription management
     Route::prefix('subscriptions')->group(function () {
