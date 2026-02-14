@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { Button } from '@/Components/UI';
 
 /**
  * CollectionPickerModal - Select a Data Collection for workflow
@@ -54,14 +55,15 @@ export default function CollectionPickerModal({ isOpen, onClose, collections = [
                                 Choose a collection to use as data source
                             </p>
                         </div>
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
                             onClick={onClose}
-                            className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-[#252525]' : 'hover:bg-gray-100'}`}
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
-                        </button>
+                        </Button>
                     </div>
 
                     {/* Search */}
@@ -98,10 +100,10 @@ export default function CollectionPickerModal({ isOpen, onClose, collections = [
                                     key={collection.id}
                                     onClick={() => setSelectedId(collection.id)}
                                     className={`text-left p-4 rounded-xl transition-all border-2 ${selectedId === collection.id
-                                            ? 'border-cyan-500 bg-cyan-500/10'
-                                            : isDark
-                                                ? 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#3a3a3a]'
-                                                : 'border-gray-200 bg-white hover:border-gray-300'
+                                        ? 'border-cyan-500 bg-cyan-500/10'
+                                        : isDark
+                                            ? 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-[#3a3a3a]'
+                                            : 'border-gray-200 bg-white hover:border-gray-300'
                                         }`}
                                 >
                                     <div className="flex items-start gap-3">
@@ -167,22 +169,19 @@ export default function CollectionPickerModal({ isOpen, onClose, collections = [
 
                 {/* Footer */}
                 <div className={`px-6 py-4 border-t flex items-center justify-end gap-3 ${isDark ? 'border-[#2a2a2a] bg-[#1a1a1a]' : 'border-gray-200 bg-white'}`}>
-                    <button
+                    <Button
+                        variant="secondary"
                         onClick={onClose}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isDark ? 'hover:bg-[#252525] text-gray-300' : 'hover:bg-gray-100 text-gray-600'}`}
                     >
                         Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                        variant="gradient"
                         onClick={handleSelect}
                         disabled={!selectedId}
-                        className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${selectedId
-                                ? 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white'
-                                : isDark ? 'bg-[#252525] text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            }`}
                     >
                         Select Collection
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

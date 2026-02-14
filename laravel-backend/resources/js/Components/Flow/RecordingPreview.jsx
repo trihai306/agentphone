@@ -1,6 +1,7 @@
 import { memo, useState, useEffect, useCallback, useRef } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@/Components/UI';
 
 /**
  * RecordingPreview - Professional animated slideshow of recorded workflow actions
@@ -167,27 +168,14 @@ function RecordingPreview({ nodes = [], autoPlay = true, loop = true, interval =
             {/* Controls */}
             <div className={`flex items-center justify-center gap-3 mt-4 p-3 rounded-xl ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
                 {/* Previous Button */}
-                <button
-                    onClick={goToPrev}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isDark
-                        ? 'bg-white/10 hover:bg-white/20 text-white'
-                        : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                        }`}
-                >
+                <Button variant="secondary" size="icon-sm" onClick={goToPrev} className="rounded-full">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                </button>
+                </Button>
 
                 {/* Play/Pause Button */}
-                <button
-                    onClick={togglePlayback}
-                    className="w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-105"
-                    style={{
-                        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                        boxShadow: '0 4px 20px rgba(99, 102, 241, 0.4)',
-                    }}
-                >
+                <Button variant="gradient" size="icon-sm" onClick={togglePlayback} className="!w-14 !h-14 rounded-full">
                     {isPlaying ? (
                         <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
@@ -197,34 +185,22 @@ function RecordingPreview({ nodes = [], autoPlay = true, loop = true, interval =
                             <path d="M8 5v14l11-7z" />
                         </svg>
                     )}
-                </button>
+                </Button>
 
                 {/* Next Button */}
-                <button
-                    onClick={goToNext}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isDark
-                        ? 'bg-white/10 hover:bg-white/20 text-white'
-                        : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                        }`}
-                >
+                <Button variant="secondary" size="icon-sm" onClick={goToNext} className="rounded-full">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                </button>
+                </Button>
 
                 {/* Divider */}
                 <div className={`w-px h-6 ${isDark ? 'bg-white/10' : 'bg-gray-300'}`} />
 
                 {/* Speed Button */}
-                <button
-                    onClick={cycleSpeed}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isDark
-                        ? 'bg-white/10 hover:bg-white/20 text-indigo-400'
-                        : 'bg-gray-200 hover:bg-gray-300 text-indigo-600'
-                        }`}
-                >
+                <Button variant="secondary" size="sm" onClick={cycleSpeed}>
                     {playbackSpeed}x
-                </button>
+                </Button>
             </div>
 
             {/* Thumbnails - Horizontal Scroll */}
@@ -319,8 +295,8 @@ function ActionCard({ node, index, total, isDark }) {
                     <div
                         key={i}
                         className={`w-2 h-2 rounded-full transition-all ${i === index % 10
-                                ? 'bg-indigo-500 w-4'
-                                : isDark ? 'bg-white/20' : 'bg-gray-300'
+                            ? 'bg-indigo-500 w-4'
+                            : isDark ? 'bg-white/20' : 'bg-gray-300'
                             }`}
                     />
                 ))}

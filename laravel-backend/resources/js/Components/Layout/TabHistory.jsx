@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { Button } from '@/Components/UI';
 
 /**
  * TabHistory - Browser-like tab history showing recently visited pages
@@ -203,17 +204,16 @@ export default function TabHistory() {
                                 <span className="truncate">{tab.name}</span>
 
                                 {/* Close button */}
-                                <button
+                                <Button
+                                    variant="ghost"
+                                    size="icon-xs"
                                     onClick={(e) => closeTab(e, tab.path)}
-                                    className={`ml-1 p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity ${isDark
-                                        ? 'hover:bg-white/10 text-slate-500 hover:text-white'
-                                        : 'hover:bg-slate-200 text-slate-400 hover:text-slate-700'
-                                        }`}
+                                    className={`ml-1 opacity-0 group-hover:opacity-100 transition-opacity`}
                                 >
                                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
-                                </button>
+                                </Button>
                             </Link>
                         );
                     })}
@@ -221,18 +221,16 @@ export default function TabHistory() {
 
                 {/* Clear all button */}
                 {tabs.length > 1 && (
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={clearAllTabs}
-                        className={`flex-shrink-0 p-1.5 rounded-lg text-xs transition-colors ${isDark
-                            ? 'text-slate-500 hover:text-white hover:bg-white/5'
-                            : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
-                            }`}
                         title="Đóng tất cả tabs"
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
-                    </button>
+                    </Button>
                 )}
             </div>
         </div>

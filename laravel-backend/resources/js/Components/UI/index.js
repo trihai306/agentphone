@@ -34,3 +34,15 @@ export { default as Switch } from './Switch';
 export { default as Checkbox } from './Checkbox';
 export { default as Divider, VerticalDivider } from './Divider';
 export { default as DataList, DataListCard } from './DataList';
+
+// Phase 4 - Professional components
+export { default as ProgressBar, CircularProgress } from './ProgressBar';
+export { default as Timeline, TimelineItem, TimelineContent } from './Timeline';
+export { default as Accordion, AccordionItem, AccordionGroup } from './Accordion';
+export { ToastProvider, useToast } from './Toast';
+export { default as Breadcrumb, BreadcrumbPage } from './Breadcrumb';
+export { default as Stepper } from './Stepper';
+export { default as TagInput, Tag } from './TagInput';
+export { default as SlideOver } from './SlideOver';
+export { default as CommandPalette } from './CommandPalette';
+export { default as MetricCard, MetricCardGrid } from './MetricCard';

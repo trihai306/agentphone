@@ -3,6 +3,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { Button } from '@/Components/UI';
 
 // SVG icon paths (matching sidebar style)
 const ICONS = {
@@ -160,8 +161,8 @@ export default function Create({ campaigns = [] }) {
                                                         }
                                                     }}
                                                     className={`flex items-center gap-4 p-4 rounded-xl border transition-all text-left ${data.campaign_id === campaign.id
-                                                            ? 'border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/30'
-                                                            : isDark ? 'border-white/10 hover:border-white/20 hover:bg-white/5' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                                        ? 'border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/30'
+                                                        : isDark ? 'border-white/10 hover:border-white/20 hover:bg-white/5' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                                                         }`}
                                                 >
                                                     {/* Campaign Icon */}
@@ -200,8 +201,8 @@ export default function Create({ campaigns = [] }) {
 
                                                     {/* Status badge */}
                                                     <div className={`px-2.5 py-1 rounded-lg text-xs font-medium ${campaign.status === 'active'
-                                                            ? 'bg-emerald-500/20 text-emerald-400'
-                                                            : isDark ? 'bg-white/10 text-gray-400' : 'bg-gray-100 text-gray-500'
+                                                        ? 'bg-emerald-500/20 text-emerald-400'
+                                                        : isDark ? 'bg-white/10 text-gray-400' : 'bg-gray-100 text-gray-500'
                                                         }`}>
                                                         {campaign.status === 'active' ? 'Active' : campaign.status}
                                                     </div>
@@ -423,42 +424,39 @@ export default function Create({ campaigns = [] }) {
                         {/* Navigation Buttons */}
                         <div className="flex items-center justify-between mt-8">
                             {step > 1 ? (
-                                <button
+                                <Button
                                     type="button"
                                     onClick={prevStep}
-                                    className={`px-6 py-3 rounded-xl font-medium transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
+                                    variant="secondary"
+                                    className="!px-6 !py-3"
                                 >
                                     {t('common.back', 'Quay lại')}
-                                </button>
+                                </Button>
                             ) : <div />}
 
                             {step < totalSteps ? (
-                                <button
+                                <Button
                                     type="button"
                                     onClick={nextStep}
                                     disabled={!canProceed[step]}
-                                    className={`px-8 py-3 rounded-xl font-semibold transition-all ${canProceed[step]
-                                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50'
-                                        : isDark ? 'bg-white/5 text-gray-600 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                        }`}
+                                    variant="gradient"
+                                    className="!px-8 !py-3"
                                 >
                                     {t('common.next', 'Tiếp theo')}
-                                </button>
+                                </Button>
                             ) : (
-                                <button
+                                <Button
                                     type="submit"
                                     disabled={processing || !canProceed[step]}
-                                    className={`px-8 py-3 rounded-xl font-semibold transition-all ${canProceed[step] && !processing
-                                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50'
-                                        : isDark ? 'bg-white/5 text-gray-600 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                        }`}
+                                    variant="gradient"
+                                    className="!px-8 !py-3"
                                 >
                                     {processing ? t('common.creating', 'Đang tạo...') : (
                                         <>
                                             {t('tasks.create_and_pay', 'Tạo & Thanh toán')} {formatVND(totalCost)} VNĐ
                                         </>
                                     )}
-                                </button>
+                                </Button>
                             )}
                         </div>
                     </form>

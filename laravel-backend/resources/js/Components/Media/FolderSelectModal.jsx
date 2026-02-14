@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@/Components/UI';
 
 export default function FolderSelectModal({
     isOpen,
@@ -107,24 +108,24 @@ export default function FolderSelectModal({
                         <button
                             onClick={() => setSelectedFolder('/')}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${selectedFolder === '/'
-                                    ? isDark
-                                        ? 'bg-violet-600/20 border border-violet-500/30'
-                                        : 'bg-violet-50 border border-violet-200'
-                                    : isDark
-                                        ? 'hover:bg-[#2a2a2a] border border-transparent'
-                                        : 'hover:bg-gray-50 border border-transparent'
+                                ? isDark
+                                    ? 'bg-violet-600/20 border border-violet-500/30'
+                                    : 'bg-violet-50 border border-violet-200'
+                                : isDark
+                                    ? 'hover:bg-[#2a2a2a] border border-transparent'
+                                    : 'hover:bg-gray-50 border border-transparent'
                                 }`}
                         >
                             <svg className={`w-5 h-5 flex-shrink-0 ${selectedFolder === '/'
-                                    ? isDark ? 'text-violet-400' : 'text-violet-600'
-                                    : isDark ? 'text-gray-500' : 'text-gray-400'
+                                ? isDark ? 'text-violet-400' : 'text-violet-600'
+                                : isDark ? 'text-gray-500' : 'text-gray-400'
                                 }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                             </svg>
                             <div className="flex-1 min-w-0">
                                 <p className={`font-medium ${selectedFolder === '/'
-                                        ? isDark ? 'text-violet-300' : 'text-violet-700'
-                                        : isDark ? 'text-white' : 'text-gray-900'
+                                    ? isDark ? 'text-violet-300' : 'text-violet-700'
+                                    : isDark ? 'text-white' : 'text-gray-900'
                                     }`}>
                                     {t('media.root_folder', 'Thư mục gốc')}
                                 </p>
@@ -148,23 +149,23 @@ export default function FolderSelectModal({
                                 key={folder}
                                 onClick={() => setSelectedFolder('/' + folder)}
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${selectedFolder === '/' + folder
-                                        ? isDark
-                                            ? 'bg-violet-600/20 border border-violet-500/30'
-                                            : 'bg-violet-50 border border-violet-200'
-                                        : isDark
-                                            ? 'hover:bg-[#2a2a2a] border border-transparent'
-                                            : 'hover:bg-gray-50 border border-transparent'
+                                    ? isDark
+                                        ? 'bg-violet-600/20 border border-violet-500/30'
+                                        : 'bg-violet-50 border border-violet-200'
+                                    : isDark
+                                        ? 'hover:bg-[#2a2a2a] border border-transparent'
+                                        : 'hover:bg-gray-50 border border-transparent'
                                     }`}
                             >
                                 <svg className={`w-5 h-5 flex-shrink-0 ${selectedFolder === '/' + folder
-                                        ? isDark ? 'text-violet-400' : 'text-violet-600'
-                                        : isDark ? 'text-gray-500' : 'text-gray-400'
+                                    ? isDark ? 'text-violet-400' : 'text-violet-600'
+                                    : isDark ? 'text-gray-500' : 'text-gray-400'
                                     }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                                 </svg>
                                 <span className={`flex-1 font-medium truncate ${selectedFolder === '/' + folder
-                                        ? isDark ? 'text-violet-300' : 'text-violet-700'
-                                        : isDark ? 'text-white' : 'text-gray-900'
+                                    ? isDark ? 'text-violet-300' : 'text-violet-700'
+                                    : isDark ? 'text-white' : 'text-gray-900'
                                     }`}>
                                     {folder}
                                 </span>
@@ -190,8 +191,8 @@ export default function FolderSelectModal({
                                     autoFocus
                                     disabled={creating}
                                     className={`w-full px-3 py-2 rounded-lg text-sm border focus:outline-none focus:ring-2 ${isDark
-                                            ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-gray-500 focus:border-violet-500 focus:ring-violet-500/20'
-                                            : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-violet-400 focus:ring-violet-400/20'
+                                        ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-gray-500 focus:border-violet-500 focus:ring-violet-500/20'
+                                        : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-violet-400 focus:ring-violet-400/20'
                                         }`}
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter') handleCreateFolder();
@@ -209,8 +210,8 @@ export default function FolderSelectModal({
                                         }}
                                         disabled={creating}
                                         className={`flex-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${isDark
-                                                ? 'text-gray-400 hover:text-white hover:bg-[#2a2a2a]'
-                                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                            ? 'text-gray-400 hover:text-white hover:bg-[#2a2a2a]'
+                                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                                             }`}
                                     >
                                         {t('common.cancel', 'Hủy')}
@@ -219,10 +220,10 @@ export default function FolderSelectModal({
                                         onClick={handleCreateFolder}
                                         disabled={!newFolderName.trim() || creating}
                                         className={`flex-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${!newFolderName.trim() || creating
-                                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                                : isDark
-                                                    ? 'bg-violet-600 text-white hover:bg-violet-500'
-                                                    : 'bg-violet-500 text-white hover:bg-violet-600'
+                                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                            : isDark
+                                                ? 'bg-violet-600 text-white hover:bg-violet-500'
+                                                : 'bg-violet-500 text-white hover:bg-violet-600'
                                             }`}
                                     >
                                         {creating ? (
@@ -243,8 +244,8 @@ export default function FolderSelectModal({
                             <button
                                 onClick={() => setShowNewFolder(true)}
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all border border-dashed ${isDark
-                                        ? 'border-[#2a2a2a] text-gray-500 hover:text-white hover:border-[#3a3a3a] hover:bg-[#1a1a1a]'
-                                        : 'border-gray-300 text-gray-500 hover:text-gray-900 hover:border-gray-400 hover:bg-gray-50'
+                                    ? 'border-[#2a2a2a] text-gray-500 hover:text-white hover:border-[#3a3a3a] hover:bg-[#1a1a1a]'
+                                    : 'border-gray-300 text-gray-500 hover:text-gray-900 hover:border-gray-400 hover:bg-gray-50'
                                     }`}
                             >
                                 <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -260,26 +261,12 @@ export default function FolderSelectModal({
 
                 {/* Footer */}
                 <div className={`px-6 py-4 flex items-center justify-end gap-3 border-t ${isDark ? 'border-[#2a2a2a]' : 'border-gray-100'}`}>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${isDark
-                                ? 'text-gray-400 hover:text-white hover:bg-[#2a2a2a]'
-                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                            }`}
-                    >
+                    <Button variant="secondary" onClick={onClose}>
                         {t('common.cancel', 'Hủy')}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={handleConfirm}
-                        className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-lg ${isDark
-                                ? 'bg-violet-600 text-white hover:bg-violet-500 shadow-violet-500/25'
-                                : 'bg-violet-500 text-white hover:bg-violet-600 shadow-violet-500/25'
-                            }`}
-                    >
+                    </Button>
+                    <Button variant="gradient" onClick={handleConfirm}>
                         💾 {t('media.save_here', 'Lưu vào đây')}
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, Head } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import AppLayout from '../../Layouts/AppLayout';
+import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import ConfirmModal from '@/Components/UI/ConfirmModal';
+import { Button } from '@/Components/UI';
 
 const statusColors = {
     draft: { bg: 'bg-gray-500/10', text: 'text-gray-400', key: 'draft' },
@@ -103,15 +104,19 @@ export default function Index({ campaigns, stats }) {
                                 </p>
                             </div>
                         </div>
-                        <Link
+                        <Button
+                            variant="gradient"
                             href="/campaigns/create"
-                            className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25 hover:scale-[1.02] transition-all"
+                            as="Link"
+                            className="bg-gradient-to-r from-emerald-500 to-teal-600 shadow-emerald-500/25"
+                            icon={
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                            }
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
                             {t('campaigns.create_campaign')}
-                        </Link>
+                        </Button>
                     </div>
 
                     {/* Stats */}
@@ -247,32 +252,39 @@ export default function Index({ campaigns, stats }) {
                                         {/* Actions */}
                                         <div className="flex gap-2">
                                             {campaign.status === 'active' ? (
-                                                <button
+                                                <Button
+                                                    variant="secondary"
+                                                    size="sm"
                                                     onClick={() => handlePause(campaign)}
-                                                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${isDark ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' : 'bg-amber-100 text-amber-600 hover:bg-amber-200'}`}
+                                                    className={`flex-1 ${isDark ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' : 'bg-amber-100 text-amber-600 hover:bg-amber-200'}`}
                                                 >
                                                     ⏸ {t('campaigns.actions.pause')}
-                                                </button>
+                                                </Button>
                                             ) : (
-                                                <button
+                                                <Button
+                                                    variant="gradient"
+                                                    size="sm"
                                                     onClick={() => handleRun(campaign)}
-                                                    className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 transition-all"
+                                                    className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600"
                                                 >
                                                     ▶ {t('campaigns.actions.run')}
-                                                </button>
+                                                </Button>
                                             )}
-                                            <Link
+                                            <Button
+                                                variant="secondary"
+                                                size="sm"
                                                 href={`/campaigns/${campaign.id}`}
-                                                className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${isDark ? 'bg-white/5 text-gray-400 hover:bg-white/10' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                                                as="Link"
                                             >
                                                 {t('campaigns.details')}
-                                            </Link>
-                                            <button
+                                            </Button>
+                                            <Button
+                                                variant="danger-ghost"
+                                                size="icon-sm"
                                                 onClick={() => handleDelete(campaign)}
-                                                className={`px-3 py-2.5 rounded-xl transition-all ${isDark ? 'text-red-400 hover:bg-red-500/20' : 'text-red-500 hover:bg-red-50'}`}
                                             >
                                                 🗑
-                                            </button>
+                                            </Button>
                                         </div>
                                     </div>
                                 );
@@ -360,15 +372,19 @@ export default function Index({ campaigns, stats }) {
 
                                 {/* CTA */}
                                 <div className="text-center">
-                                    <Link
+                                    <Button
+                                        variant="gradient"
                                         href="/campaigns/create"
-                                        className="inline-flex items-center gap-2.5 px-8 py-3.5 text-sm font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all"
+                                        as="Link"
+                                        className="bg-gradient-to-r from-emerald-500 to-teal-600 shadow-emerald-500/25"
+                                        icon={
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                            </svg>
+                                        }
                                     >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                        </svg>
                                         {t('campaigns.create_first')}
-                                    </Link>
+                                    </Button>
                                 </div>
                             </div>
                         </div>

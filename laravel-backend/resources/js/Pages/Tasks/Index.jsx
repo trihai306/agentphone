@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { Button } from '@/Components/UI';
 
 export default function Index({ tasks = { data: [] }, filters: rawFilters = {}, stats = {} }) {
     const { t } = useTranslation();
@@ -109,24 +110,31 @@ export default function Index({ tasks = { data: [] }, filters: rawFilters = {}, 
                                 </p>
                             </div>
                             <div className="flex items-center gap-3">
-                                <Link
+                                <Button
+                                    variant="secondary"
                                     href="/tasks/my"
-                                    className={`flex items-center gap-2 px-5 py-3 text-sm font-medium rounded-2xl ${isDark ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'} transition-all`}
+                                    as="Link"
+                                    icon={
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                        </svg>
+                                    }
                                 >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                    </svg>
                                     {t('tasks.my_tasks', 'Nhiệm vụ của tôi')}
-                                </Link>
-                                <Link
+                                </Button>
+                                <Button
+                                    variant="gradient"
                                     href="/tasks/create"
-                                    className="flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xl shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-105 transition-all"
+                                    as="Link"
+                                    className="bg-gradient-to-r from-emerald-600 to-teal-600 shadow-emerald-500/25"
+                                    icon={
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                        </svg>
+                                    }
                                 >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                    </svg>
                                     {t('tasks.create', 'Tạo nhiệm vụ')}
-                                </Link>
+                                </Button>
                             </div>
                         </div>
 
@@ -143,12 +151,14 @@ export default function Index({ tasks = { data: [] }, filters: rawFilters = {}, 
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className={`w-full pl-14 pr-32 py-4 text-base bg-transparent ${isDark ? 'text-white placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'} focus:outline-none`}
                                 />
-                                <button
+                                <Button
                                     type="submit"
-                                    className="absolute right-2 px-6 py-2.5 text-sm font-semibold rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:shadow-lg transition-all"
+                                    variant="gradient"
+                                    size="sm"
+                                    className="absolute right-2 bg-gradient-to-r from-emerald-600 to-teal-600"
                                 >
                                     {t('common.search', 'Tìm kiếm')}
-                                </button>
+                                </Button>
                             </div>
                         </form>
 
@@ -300,15 +310,19 @@ export default function Index({ tasks = { data: [] }, filters: rawFilters = {}, 
                             <p className={`text-sm mb-8 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
                                 {t('tasks.be_first', 'Hãy là người đầu tiên tạo nhiệm vụ!')}
                             </p>
-                            <Link
+                            <Button
+                                variant="gradient"
                                 href="/tasks/create"
-                                className="inline-flex items-center gap-2 px-8 py-3 text-sm font-semibold rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white"
+                                as="Link"
+                                className="bg-gradient-to-r from-emerald-600 to-teal-600"
+                                icon={
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                }
                             >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
                                 {t('tasks.create_first', 'Tạo nhiệm vụ đầu tiên')}
-                            </Link>
+                            </Button>
                         </div>
                     )}
 

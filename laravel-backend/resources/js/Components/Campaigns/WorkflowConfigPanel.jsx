@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { Button } from '@/Components/UI';
 
 const EXECUTION_MODES = [
     { value: 'once', icon: '🟢', label: 'Chạy 1 lần', color: 'emerald' },
@@ -47,15 +48,9 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                                 {workflow.name}
                             </p>
                         </div>
-                        <button
-                            onClick={onClose}
-                            className={`p-2 rounded-lg transition-colors ${isDark
-                                ? 'hover:bg-gray-800 text-gray-400'
-                                : 'hover:bg-gray-100 text-gray-600'
-                                }`}
-                        >
+                        <Button variant="ghost" size="icon-xs" onClick={onClose}>
                             ✕
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
@@ -406,21 +401,12 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                 {/* Footer */}
                 <div className={`px-6 py-4 border-t flex items-center justify-end gap-3 ${isDark ? 'border-gray-700 bg-gray-900/50' : 'border-gray-200 bg-gray-50'
                     }`}>
-                    <button
-                        onClick={onClose}
-                        className={`px-5 py-2.5 rounded-xl font-medium transition-colors ${isDark
-                            ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                    >
+                    <Button variant="secondary" onClick={onClose}>
                         Hủy
-                    </button>
-                    <button
-                        onClick={handleSave}
-                        className="px-5 py-2.5 rounded-xl font-medium bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg"
-                    >
+                    </Button>
+                    <Button variant="gradient" onClick={handleSave}>
                         ✓ Lưu
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

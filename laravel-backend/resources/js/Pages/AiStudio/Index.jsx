@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, router, usePage } from '@inertiajs/react';
+import { Link, router, usePage, Head } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { aiStudioApi } from '@/services/api';
-import AppLayout from '../../Layouts/AppLayout';
+import AppLayout from '@/Layouts/AppLayout';
 import { useToast } from '@/Components/Layout/ToastProvider';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
 import { useTheme } from '@/Contexts/ThemeContext';
@@ -1019,10 +1019,10 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                         </p>
                                         <button
                                             onClick={() => textareaRef.current?.focus()}
-                                            className={`mt-5 px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${isDark 
-                                                ? 'bg-violet-600/20 text-violet-400 hover:bg-violet-600/30 border border-violet-500/30' 
+                                            className={`mt-5 px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${isDark
+                                                ? 'bg-violet-600/20 text-violet-400 hover:bg-violet-600/30 border border-violet-500/30'
                                                 : 'bg-violet-100 text-violet-700 hover:bg-violet-200 border border-violet-200'
-                                            }`}
+                                                }`}
                                         >
                                             ✨ Bắt đầu tạo
                                         </button>

@@ -1,5 +1,6 @@
-import { usePage, router, Link } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
+import { usePage, router, Link, Head } from '@inertiajs/react';
+import { Alert } from '@/Components/UI';
+import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 
@@ -60,9 +61,7 @@ export default function Index({ reports, currentStatus, statusCounts, statuses, 
 
                     {/* Flash */}
                     {flash?.success && (
-                        <div className={`mb-6 p-4 rounded-lg ${isDark ? 'bg-emerald-900/20 text-emerald-400' : 'bg-emerald-50 text-emerald-700'}`}>
-                            {flash.success}
-                        </div>
+                        <Alert type="success" className="mb-6">{flash.success}</Alert>
                     )}
 
                     {/* Status Filter */}

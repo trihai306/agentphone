@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@/Components/UI';
 
 export default function UserMenu({ user, collapsed = false }) {
     const { theme } = useTheme();
@@ -64,16 +65,18 @@ export default function UserMenu({ user, collapsed = false }) {
                                 {t('navigation.profile', { defaultValue: 'Profile' })}
                             </Link>
                             <div className={`border-t my-1 ${isDark ? 'border-[#1a1a1a]' : 'border-gray-100'}`} />
-                            <button
+                            <Button
+                                variant="danger-ghost"
                                 onClick={handleLogout}
-                                className={`flex items-center w-full px-3.5 py-2.5 text-sm transition-all ${isDark ? 'text-red-400 hover:bg-red-900/20' : 'text-red-600 hover:bg-red-50'
-                                    }`}
+                                className={`w-full justify-start px-3.5 py-2.5 ${isDark ? 'text-red-400 hover:bg-red-900/20' : 'text-red-600 hover:bg-red-50'}`}
+                                icon={
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                }
                             >
-                                <svg className="w-4 h-4 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                </svg>
                                 {t('auth.logout', { defaultValue: 'Logout' })}
-                            </button>
+                            </Button>
                         </div>
                     </>
                 )}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link, router } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
+import { Link, router, Head } from '@inertiajs/react';
+import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
 import FolderSelectModal from '@/Components/Media/FolderSelectModal';

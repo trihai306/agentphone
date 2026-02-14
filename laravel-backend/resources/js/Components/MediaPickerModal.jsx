@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { mediaApi } from '@/services/api';
+import { Button } from '@/Components/UI';
 
 /**
  * MediaPickerModal - Reusable modal for selecting files or folders from user's media library
@@ -149,12 +150,14 @@ export default function MediaPickerModal({
                             </h2>
                             {/* Breadcrumb */}
                             <div className="flex items-center gap-2 mt-1">
-                                <button
+                                <Button
+                                    variant="link"
+                                    size="xs"
                                     onClick={() => setCurrentFolder(null)}
-                                    className={`text-sm ${isDark ? 'text-cyan-400 hover:text-cyan-300' : 'text-cyan-600 hover:text-cyan-700'}`}
+                                    className={isDark ? 'text-cyan-400 hover:text-cyan-300' : 'text-cyan-600 hover:text-cyan-700'}
                                 >
                                     Thư viện
-                                </button>
+                                </Button>
                                 {currentFolder && (
                                     <>
                                         <span className={isDark ? 'text-gray-600' : 'text-gray-400'}>/</span>
@@ -165,14 +168,15 @@ export default function MediaPickerModal({
                                 )}
                             </div>
                         </div>
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
                             onClick={onClose}
-                            className={`p-2 rounded-lg transition-all ${isDark ? 'hover:bg-[#252525] text-gray-400 hover:text-white' : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'}`}
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
-                        </button>
+                        </Button>
                     </div>
 
                     {/* Search */}
@@ -338,34 +342,32 @@ export default function MediaPickerModal({
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <button
+                        <Button
+                            variant="secondary"
                             onClick={onClose}
-                            className={`px-4 py-2.5 rounded-xl font-medium transition-all ${isDark ? 'bg-[#1a1a1a] hover:bg-[#252525] text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
                         >
                             Hủy
-                        </button>
+                        </Button>
 
                         {/* Select Folder Button */}
                         {currentFolder && allowFolderSelection && !selectedFile && (
-                            <button
+                            <Button
+                                variant="gradient"
                                 onClick={handleSelectFolder}
-                                className="px-6 py-2.5 rounded-xl font-medium transition-all bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/30 hover:scale-105"
+                                className="from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-amber-500/30"
                             >
                                 Chọn Folder (Random)
-                            </button>
+                            </Button>
                         )}
 
                         {/* Select File Button */}
-                        <button
+                        <Button
+                            variant="gradient"
                             onClick={handleSelectFile}
                             disabled={!selectedFile}
-                            className={`px-6 py-2.5 rounded-xl font-medium transition-all ${selectedFile
-                                ? 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white shadow-lg shadow-cyan-500/30 hover:scale-105'
-                                : `${isDark ? 'bg-[#252525] text-gray-600' : 'bg-gray-200 text-gray-400'} cursor-not-allowed`
-                                }`}
                         >
                             Chọn File
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>

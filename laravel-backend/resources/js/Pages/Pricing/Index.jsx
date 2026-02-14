@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import LandingLayout from '../../Layouts/LandingLayout';
-import SeoHead, { schemas } from '../../Components/SeoHead';
+import LandingLayout from '@/Layouts/LandingLayout';
+import SeoHead, { schemas } from '@/Components/SeoHead';
 
 export default function Index({ packages = [], auth }) {
     const { t } = useTranslation();
@@ -144,8 +144,8 @@ export default function Index({ packages = [], auth }) {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                                 </svg>
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Chưa có gói dịch vụ nào</h3>
-                            <p className="text-gray-600 dark:text-gray-400">Vui lòng quay lại sau.</p>
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t('pricing.no_packages', { defaultValue: 'Chưa có gói dịch vụ nào' })}</h3>
+                            <p className="text-gray-600 dark:text-gray-400">{t('pricing.come_back_later', { defaultValue: 'Vui lòng quay lại sau.' })}</p>
                         </div>
                     )}
                 </div>
@@ -156,10 +156,10 @@ export default function Index({ packages = [], auth }) {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                            So sánh tính năng
+                            {t('pricing.compare_features', { defaultValue: 'So sánh tính năng' })}
                         </h2>
                         <p className="text-xl text-gray-600 dark:text-gray-400">
-                            Xem chi tiết tính năng của từng gói
+                            {t('pricing.compare_desc', { defaultValue: 'Xem chi tiết tính năng của từng gói' })}
                         </p>
                     </div>
 
@@ -173,10 +173,10 @@ export default function Index({ packages = [], auth }) {
             <div className="bg-gray-50 dark:bg-gray-900 py-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-                        <TrustItem icon="users" value="10,000+" label="Người dùng tin tưởng" />
-                        <TrustItem icon="devices" value="50,000+" label="Thiết bị được quản lý" />
-                        <TrustItem icon="uptime" value="99.9%" label="Uptime đảm bảo" />
-                        <TrustItem icon="support" value="24/7" label="Hỗ trợ kỹ thuật" />
+                        <TrustItem icon="users" value="10,000+" label={t('pricing.trust_users', { defaultValue: 'Người dùng tin tưởng' })} />
+                        <TrustItem icon="devices" value="50,000+" label={t('pricing.trust_devices', { defaultValue: 'Thiết bị được quản lý' })} />
+                        <TrustItem icon="uptime" value="99.9%" label={t('pricing.trust_uptime', { defaultValue: 'Uptime đảm bảo' })} />
+                        <TrustItem icon="support" value="24/7" label={t('pricing.trust_support', { defaultValue: 'Hỗ trợ kỹ thuật' })} />
                     </div>
                 </div>
             </div>
@@ -186,7 +186,7 @@ export default function Index({ packages = [], auth }) {
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-                            Câu hỏi thường gặp
+                            {t('pricing.faq_title', { defaultValue: 'Câu hỏi thường gặp' })}
                         </h2>
                     </div>
                     <div className="space-y-4">
@@ -219,17 +219,17 @@ export default function Index({ packages = [], auth }) {
                 <div className="absolute inset-0 bg-black/20"></div>
                 <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
-                        Bắt đầu miễn phí ngay hôm nay
+                        {t('pricing.cta_title', { defaultValue: 'Bắt đầu miễn phí ngay hôm nay' })}
                     </h2>
                     <p className="text-xl text-white/90 mb-8">
-                        Tham gia cùng hàng ngàn người dùng đang quản lý thiết bị một cách thông minh
+                        {t('pricing.cta_desc', { defaultValue: 'Tham gia cùng hàng ngàn người dùng đang quản lý thiết bị một cách thông minh' })}
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Link
                             href="/register"
                             className="inline-flex items-center px-8 py-4 bg-white text-purple-600 font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:bg-gray-50 transition-all duration-300 transform hover:-translate-y-1"
                         >
-                            <span>Dùng thử 14 ngày miễn phí</span>
+                            <span>{t('pricing.free_trial_cta', { defaultValue: 'Dùng thử 14 ngày miễn phí' })}</span>
                             <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                             </svg>
@@ -241,7 +241,7 @@ export default function Index({ packages = [], auth }) {
                             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                             </svg>
-                            <span>Liên hệ tư vấn</span>
+                            <span>{t('pricing.contact_cta', { defaultValue: 'Liên hệ tư vấn' })}</span>
                         </Link>
                     </div>
                 </div>

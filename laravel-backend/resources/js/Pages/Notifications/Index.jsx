@@ -1,14 +1,17 @@
-import { usePage, router } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
+import { Head, usePage, router } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
+import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import {
     PageHeader,
     GlassCard,
     EmptyStateCard,
     Button,
+    Alert,
 } from '@/Components/UI';
 
 export default function Index({ notifications, unreadCount }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const { flash } = usePage().props;
     const isDark = theme === 'dark';
@@ -26,17 +29,18 @@ export default function Index({ notifications, unreadCount }) {
     };
 
     return (
-        <AppLayout title="Notifications">
+        <AppLayout title={t('notifications.title', 'Notifications')}>
+            <Head title={t('notifications.title', 'Notifications')} />
             <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
                 <div className="max-w-[900px] mx-auto px-6 py-6">
                     {/* Header */}
                     <PageHeader
-                        title="Notifications"
-                        subtitle={unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
+                        title={t('notifications.title', 'Notifications')}
+                        subtitle={unreadCount > 0 ? `${unreadCount} ${t('notifications.unread', 'unread')}` : t('notifications.all_caught_up', 'All caught up')}
                         actions={
                             notifications.length > 0 && (
                                 <Button variant="ghost" onClick={handleMarkAllAsRead}>
-                                    Mark all read
+                                    {t('notifications.mark_all_read', 'Mark all read')}
                                 </Button>
                             )
                         }
@@ -44,9 +48,9 @@ export default function Index({ notifications, unreadCount }) {
 
                     {/* Flash */}
                     {flash?.success && (
-                        <div className={`mb-6 p-4 rounded-lg ${isDark ? 'bg-emerald-900/20 text-emerald-400' : 'bg-emerald-50 text-emerald-700'}`}>
+                        <Alert type="success" className="mb-6">
                             {flash.success}
-                        </div>
+                        </Alert>
                     )}
 
                     {/* Notifications */}
@@ -57,8 +61,8 @@ export default function Index({ notifications, unreadCount }) {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                                 </svg>
                             }
-                            title="No notifications"
-                            description="You're all caught up"
+                            title={t('notifications.no_notifications', 'No notifications')}
+                            description={t('notifications.all_caught_up', "You're all caught up")}
                         />
                     ) : (
                         <GlassCard gradient="gray" hover={false} className="p-0">
@@ -90,7 +94,7 @@ export default function Index({ notifications, unreadCount }) {
                                                                 <button
                                                                     onClick={() => handleMarkAsRead(notification.id)}
                                                                     className={`p-1.5 rounded-md ${isDark ? 'text-gray-500 hover:text-white hover:bg-[#2a2a2a]' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
-                                                                    title="Mark as read"
+                                                                    title={t('notifications.mark_as_read', 'Mark as read')}
                                                                 >
                                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -100,7 +104,7 @@ export default function Index({ notifications, unreadCount }) {
                                                             <button
                                                                 onClick={() => handleDelete(notification.id)}
                                                                 className={`p-1.5 rounded-md ${isDark ? 'text-gray-500 hover:text-red-400 hover:bg-red-900/20' : 'text-gray-400 hover:text-red-600 hover:bg-red-50'}`}
-                                                                title="Delete"
+                                                                title={t('common.delete', 'Delete')}
                                                             >
                                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -113,7 +117,7 @@ export default function Index({ notifications, unreadCount }) {
                                                             href={notification.action_url}
                                                             className={`inline-block mt-2 text-sm ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}
                                                         >
-                                                            {notification.action_text || 'View details'} →
+                                                            {notification.action_text || t('notifications.view_details', 'View details')} →
                                                         </a>
                                                     )}
                                                 </div>

@@ -3,6 +3,7 @@ import { useForm, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useToast } from '@/Components/Layout/ToastProvider';
+import { Button } from '@/Components/UI';
 import { DndContext, DragOverlay, closestCenter, useDraggable, useDroppable, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -334,11 +335,11 @@ function ModalHeader({ data, step, onClose, isDark }) {
                             </div>
                         ))}
                     </div>
-                    <button onClick={onClose} className={`p-2 rounded-lg transition-all ${isDark ? 'hover:bg-[#252525]' : 'hover:bg-gray-100'}`}>
+                    <Button variant="ghost" size="icon-sm" onClick={onClose}>
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>
@@ -350,25 +351,22 @@ function ModalFooter({ step, setStep, nextStep, handleSubmit, processing, onClos
     const { t } = useTranslation();
     return (
         <div className={`px-6 py-4 border-t ${isDark ? 'border-[#2a2a2a] bg-[#141414]' : 'border-gray-200 bg-white'} flex justify-between`}>
-            <button
+            <Button
+                variant="secondary"
                 onClick={() => step > 1 ? setStep(step - 1) : onClose()}
-                className={`px-5 py-2.5 rounded-xl font-medium transition-all ${isDark ? 'bg-[#1a1a1a] hover:bg-[#252525] text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
             >
                 {step === 1 ? t('data_collections.wizard.cancel') : t('data_collections.wizard.back')}
-            </button>
+            </Button>
 
             {step < 3 ? (
-                <button
-                    onClick={nextStep}
-                    className="px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-xl font-medium shadow-lg shadow-cyan-500/30 flex items-center gap-2 transition-all hover:scale-105"
-                >
+                <Button variant="gradient" onClick={nextStep}>
                     {t('data_collections.wizard.next')} <span className="text-lg">→</span>
-                </button>
+                </Button>
             ) : (
-                <button
+                <Button
+                    variant="gradient"
                     onClick={handleSubmit}
                     disabled={processing}
-                    className="px-6 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl font-medium shadow-lg shadow-green-500/30 flex items-center gap-2 transition-all hover:scale-105 disabled:opacity-50"
                 >
                     {processing ? (
                         <>
@@ -381,7 +379,7 @@ function ModalFooter({ step, setStep, nextStep, handleSubmit, processing, onClos
                     ) : (
                         <>{t('data_collections.wizard.create_collection')}</>
                     )}
-                </button>
+                </Button>
             )}
         </div>
     );
@@ -805,14 +803,11 @@ function FieldConfigPanel({ field, updateField, removeField, onClose, isDark }) 
                         </p>
                     </div>
                 </div>
-                <button
-                    onClick={onClose}
-                    className={`p-1.5 rounded-lg transition-all ${isDark ? 'hover:bg-[#252525]' : 'hover:bg-gray-200'}`}
-                >
+                <Button variant="ghost" size="icon-xs" onClick={onClose}>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                </button>
+                </Button>
             </div>
 
             <div className="space-y-4">
@@ -889,15 +884,16 @@ function FieldConfigPanel({ field, updateField, removeField, onClose, isDark }) 
             </div>
 
             {/* Delete Button */}
-            <button
+            <Button
+                variant="danger-ghost"
+                className="w-full mt-4"
                 onClick={() => removeField(field.id)}
-                className={`w-full mt-4 px-4 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${isDark ? 'bg-red-900/20 text-red-400 hover:bg-red-900/40' : 'bg-red-50 text-red-600 hover:bg-red-100'}`}
             >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
                 Delete Column
-            </button>
+            </Button>
         </div>
     );
 }

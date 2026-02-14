@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/Components/UI';
 
 // Inline SVG Icons
 const XMarkIcon = ({ className }) => (
@@ -143,12 +144,9 @@ export default function ImportRecordingModal({
                                 </p>
                             </div>
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="p-2 rounded-xl hover:bg-white/5 transition-colors"
-                        >
-                            <XMarkIcon className="w-5 h-5 text-gray-400" />
-                        </button>
+                        <Button variant="ghost" size="icon-xs" onClick={onClose}>
+                            <XMarkIcon className="w-5 h-5" />
+                        </Button>
                     </div>
 
                     {/* Import Mode Selection */}
@@ -229,20 +227,17 @@ export default function ImportRecordingModal({
 
                     {/* Footer */}
                     <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/5 bg-white/2">
-                        <button
-                            onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors"
-                        >
+                        <Button variant="secondary" onClick={onClose}>
                             Cancel
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                            variant="gradient"
                             onClick={handleImport}
                             disabled={isLoading || previewNodes.length === 0}
-                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white font-medium hover:from-violet-500 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
                             <DocumentArrowDownIcon className="w-4 h-4" />
                             Import {previewNodes.length} Nodes
-                        </button>
+                        </Button>
                     </div>
                 </motion.div>
             </motion.div>

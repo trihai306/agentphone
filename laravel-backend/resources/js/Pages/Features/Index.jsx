@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import LandingLayout from '../../Layouts/LandingLayout';
-import SeoHead from '../../Components/SeoHead';
+import LandingLayout from '@/Layouts/LandingLayout';
+import SeoHead from '@/Components/SeoHead';
 
 export default function Index({ features }) {
     const { t } = useTranslation();

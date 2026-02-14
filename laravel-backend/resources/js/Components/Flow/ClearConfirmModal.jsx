@@ -7,6 +7,7 @@
 import React from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@/Components/UI';
 
 export default function ClearConfirmModal({
     isOpen,
@@ -52,18 +53,12 @@ export default function ClearConfirmModal({
                 </div>
                 {/* Actions */}
                 <div className={`px-6 py-4 flex gap-3 border-t ${isDark ? 'border-[#2a2a2a]' : 'border-gray-200'}`}>
-                    <button
-                        onClick={onClose}
-                        className={`flex-1 py-2.5 rounded-lg font-medium text-sm transition-colors ${isDark ? 'bg-[#252525] hover:bg-[#2a2a2a] text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
-                    >
+                    <Button variant="secondary" className="flex-1" onClick={onClose}>
                         Cancel
-                    </button>
-                    <button
-                        onClick={onConfirm}
-                        className="flex-1 py-2.5 rounded-lg font-medium text-sm bg-red-500 hover:bg-red-600 text-white transition-colors"
-                    >
+                    </Button>
+                    <Button variant="danger" className="flex-1" onClick={onConfirm}>
                         Delete All
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

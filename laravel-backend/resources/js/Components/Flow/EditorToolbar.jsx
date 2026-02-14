@@ -12,6 +12,7 @@ import ThemeToggle from '@/Components/ThemeToggle';
 import DeviceSelectorDropdown from './DeviceSelectorDropdown';
 import { deviceApi, flowApi } from '@/services/api';
 import { MODAL_TYPES } from '@/hooks/useModalManager';
+import { Button } from '@/Components/UI';
 
 export default function EditorToolbar({
     // Flow metadata
@@ -198,20 +199,12 @@ export default function EditorToolbar({
 
                 {/* Execution Controls */}
                 {!isRunning && !isPaused && (
-                    <button
+                    <Button
                         onClick={async () => {
-                            // If device selected, run on device
                             if (selectedDevice) {
                                 setTestRunning(true);
-
-                                // Run the workflow directly (no accessibility check needed)
                                 try {
-                                    console.log('🚀 Starting test-run...', {
-                                        flowId: flow.id,
-                                        deviceId: selectedDevice.id,
-                                        deviceName: selectedDevice.name
-                                    });
-                                    // Set all action nodes to 'pending' state for visual feedback
+                                    console.log('🚀 Starting test-run...', { flowId: flow.id, deviceId: selectedDevice.id, deviceName: selectedDevice.name });
                                     setNodes(currentNodes =>
                                         currentNodes.map(node => ({
                                             ...node,
@@ -223,10 +216,7 @@ export default function EditorToolbar({
                                             }
                                         }))
                                     );
-
-                                    const result = await flowApi.testRun(flow.id, {
-                                        device_id: selectedDevice.device_id,  // Use device_id UUID, not database id
-                                    });
+                                    const result = await flowApi.testRun(flow.id, { device_id: selectedDevice.device_id });
                                     if (result.success) {
                                         addToast(t('flows.editor.run.success', { device: selectedDevice.name, count: result.data.data?.actions_count }), 'success');
                                     }
@@ -237,12 +227,11 @@ export default function EditorToolbar({
                                     setTestRunning(false);
                                 }
                             } else {
-                                // No device - run local simulation
                                 startExecution();
                             }
                         }}
                         disabled={nodes.length === 0 || testRunning}
-                        className={`h-8 px-2.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed ${isDark ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}
+                        className={`h-8 !px-2.5 !text-xs !rounded-md ${isDark ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}
                     >
                         {testRunning ? (
                             <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -255,59 +244,59 @@ export default function EditorToolbar({
                             </svg>
                         )}
                         <span className="hidden sm:inline">{selectedDevice ? `${selectedDevice.name.substring(0, 8)}` : 'Run'}</span>
-                    </button>
+                    </Button>
                 )}
 
                 {isRunning && (
                     <>
-                        <button
+                        <Button
                             onClick={pauseExecution}
-                            className="h-9 px-4 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-sm font-semibold rounded-lg transition-all flex items-center gap-2 border border-amber-500/30"
+                            className="h-9 !px-4 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 !text-sm border border-amber-500/30"
                         >
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                             </svg>
                             Pause
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             onClick={stopExecution}
-                            className="h-9 px-4 bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm font-semibold rounded-lg transition-all flex items-center gap-2 border border-red-500/30"
+                            className="h-9 !px-4 bg-red-500/20 hover:bg-red-500/30 text-red-400 !text-sm border border-red-500/30"
                         >
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
                             </svg>
                             {t('flows.editor.toolbar.stop')}
-                        </button>
+                        </Button>
                     </>
                 )}
 
                 {isPaused && (
                     <>
-                        <button
+                        <Button
                             onClick={resumeExecution}
-                            className="h-9 px-4 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-sm font-semibold rounded-lg transition-all flex items-center gap-2 border border-emerald-500/30"
+                            className="h-9 !px-4 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 !text-sm border border-emerald-500/30"
                         >
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                             </svg>
                             {t('flows.editor.toolbar.resume')}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             onClick={stopExecution}
-                            className="h-9 px-4 bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm font-semibold rounded-lg transition-all flex items-center gap-2 border border-red-500/30"
+                            className="h-9 !px-4 bg-red-500/20 hover:bg-red-500/30 text-red-400 !text-sm border border-red-500/30"
                         >
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
                             </svg>
                             {t('flows.editor.toolbar.stop')}
-                        </button>
+                        </Button>
                     </>
                 )}
 
                 {(isCompleted || hasError) && (
-                    <button
+                    <Button
                         onClick={resetExecution}
-                        className={`h-9 px-4 text-sm font-semibold rounded-lg transition-all flex items-center gap-2 border ${isCompleted
+                        className={`h-9 !px-4 !text-sm border ${isCompleted
                             ? 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border-emerald-500/30'
                             : 'bg-red-500/20 hover:bg-red-500/30 text-red-400 border-red-500/30'
                             }`}
@@ -316,7 +305,7 @@ export default function EditorToolbar({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                         {t('flows.editor.toolbar.reset')}
-                    </button>
+                    </Button>
                 )}
 
                 {/* Preview Button */}
@@ -377,13 +366,13 @@ export default function EditorToolbar({
                 </button>
 
                 {/* Deploy Button - compact */}
-                <button className={`h-8 px-2.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'}`}>
+                <Button className={`h-8 !px-2.5 !text-xs !rounded-md ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'}`}>
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span className="hidden sm:inline">{t('flows.editor.toolbar.deploy')}</span>
-                </button>
+                </Button>
 
                 {/* Language Switcher */}
                 <div className="relative">

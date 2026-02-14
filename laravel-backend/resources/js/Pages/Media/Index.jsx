@@ -1,10 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, Head } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import AppLayout from '../../Layouts/AppLayout';
+import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useToast } from '@/Components/Layout/ToastProvider';
+import { Button, SearchInput } from '@/Components/UI';
 import MediaSidebar from '@/Components/Media/MediaSidebar';
 import MediaDetailPanel from '@/Components/Media/MediaDetailPanel';
 import MediaContextMenu from '@/Components/Media/MediaContextMenu';
@@ -254,34 +255,27 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                         <div className="flex items-center gap-3">
                             {/* Bulk Delete */}
                             {selectedItems.length > 0 && (
-                                <button
+                                <Button
+                                    variant="danger"
+                                    size="sm"
                                     onClick={handleBulkDelete}
-                                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all ${isDark
-                                        ? 'bg-red-900/30 text-red-400 hover:bg-red-900/50'
-                                        : 'bg-red-50 text-red-600 hover:bg-red-100'
-                                        }`}
+                                    icon={
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    }
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
                                     {t('common.delete')} ({selectedItems.length})
-                                </button>
+                                </Button>
                             )}
 
                             {/* Search */}
-                            <div className="relative">
-                                <svg className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                                <input
-                                    type="text"
+                            <div className="w-48">
+                                <SearchInput
                                     placeholder={t('common.search', 'Tìm kiếm...')}
                                     defaultValue={filters?.search}
                                     onKeyDown={(e) => e.key === 'Enter' && applyFilter('search', e.target.value)}
-                                    className={`w-48 pl-10 pr-4 py-2 rounded-lg text-sm ${isDark
-                                        ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-gray-500 focus:border-gray-500'
-                                        : 'bg-gray-100 border-transparent text-gray-900 placeholder-gray-400 focus:bg-gray-50'
-                                        } border focus:outline-none transition-all`}
+                                    size="sm"
                                 />
                             </div>
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useToast } from '@/Components/Layout/ToastProvider';
+import { Button } from '@/Components/UI';
 import { flowApi } from '@/services/api';
 
 /**
@@ -116,13 +117,9 @@ export default function BatchJobModal({
                                 </p>
                             </div>
                         </div>
-                        <button
-                            onClick={onClose}
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center
-                                ${isDark ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
-                        >
+                        <Button variant="ghost" size="icon-xs" onClick={onClose}>
                             ✕
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
@@ -288,24 +285,16 @@ export default function BatchJobModal({
                         {selectedDevices.length} device(s) selected
                     </p>
                     <div className="flex gap-3">
-                        <button
-                            onClick={onClose}
-                            className={`px-4 py-2.5 rounded-lg text-sm font-medium
-                                ${isDark ? 'bg-white/5 text-gray-300 hover:bg-white/10' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                        >
+                        <Button variant="secondary" onClick={onClose}>
                             Cancel
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                            variant="gradient"
                             onClick={handleSubmit}
                             disabled={isSubmitting || selectedDevices.length === 0}
-                            className={`px-6 py-2.5 rounded-lg text-sm font-medium text-white transition-all
-                                ${selectedDevices.length > 0
-                                    ? 'bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700'
-                                    : 'bg-gray-500 cursor-not-allowed'
-                                }`}
                         >
                             {isSubmitting ? 'Creating...' : `Run on ${selectedDevices.length} Device(s)`}
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>

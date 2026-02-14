@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
+import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/Components/Layout/ToastProvider';
@@ -55,21 +55,21 @@ export default function Index({
         const xu = toXu(amount);
 
         if (amount < 10000) {
-            addToast('Số tiền tối thiểu là 10,000 VND', 'error');
+            addToast(t('topup.min_amount_error', 'Số tiền tối thiểu là 10,000 VND'), 'error');
             return;
         }
 
         if (amount > walletBalance) {
-            addToast('Số dư ví không đủ', 'error');
+            addToast(t('topup.insufficient_balance', 'Số dư ví không đủ'), 'error');
             return;
         }
 
         const confirmed = await showConfirm({
-            title: 'Xác Nhận Mua Xu',
-            message: `Bạn sẽ chi ${formatCurrency(amount)} để nhận ${formatNumber(xu)} Xu. Xác nhận?`,
+            title: t('topup.confirm_buy_xu', 'Xác Nhận Mua Xu'),
+            message: `${t('topup.will_spend', 'Bạn sẽ chi')} ${formatCurrency(amount)} ${t('topup.to_receive', 'để nhận')} ${formatNumber(xu)} Xu. ${t('topup.confirm_question', 'Xác nhận?')}`,
             type: 'info',
-            confirmText: 'Xác Nhận',
-            cancelText: 'Hủy',
+            confirmText: t('common.confirm', 'Xác Nhận'),
+            cancelText: t('common.cancel', 'Hủy'),
         });
 
         if (!confirmed) return;
@@ -78,10 +78,10 @@ export default function Index({
         router.post('/topup/purchase-xu', { amount }, {
             preserveScroll: true,
             onSuccess: () => {
-                addToast('Đã mua Xu thành công!', 'success');
+                addToast(t('topup.xu_purchase_success', 'Đã mua Xu thành công!'), 'success');
                 setCustomXuAmount('');
             },
-            onError: (errors) => addToast(errors.message || 'Có lỗi xảy ra', 'error'),
+            onError: (errors) => addToast(errors.message || t('common.error', 'Có lỗi xảy ra'), 'error'),
             onFinish: () => setProcessing(false),
         });
     };
@@ -89,16 +89,16 @@ export default function Index({
     // Handle AI Credits purchase from wallet
     const handleCreditPurchase = async (pkg) => {
         if (walletBalance < pkg.price) {
-            addToast('Số dư ví không đủ', 'warning');
+            addToast(t('topup.insufficient_balance', 'Số dư ví không đủ'), 'warning');
             return;
         }
 
         const confirmed = await showConfirm({
-            title: 'Xác Nhận Mua Credits',
-            message: `Bạn sẽ chi ${pkg.formatted_price} để nhận ${formatNumber(pkg.credits)} Credits. Xác nhận?`,
+            title: t('topup.confirm_buy_credits', 'Xác Nhận Mua Credits'),
+            message: `${t('topup.will_spend', 'Bạn sẽ chi')} ${pkg.formatted_price} ${t('topup.to_receive', 'để nhận')} ${formatNumber(pkg.credits)} Credits. ${t('topup.confirm_question', 'Xác nhận?')}`,
             type: 'info',
-            confirmText: 'Mua Ngay',
-            cancelText: 'Hủy',
+            confirmText: t('topup.buy_now', 'Mua Ngay'),
+            cancelText: t('common.cancel', 'Hủy'),
         });
 
         if (!confirmed) return;
@@ -118,21 +118,21 @@ export default function Index({
         const credits = toCredits(amount);
 
         if (amount < 10000) {
-            addToast('Số tiền tối thiểu là 10,000 VND', 'error');
+            addToast(t('topup.min_amount_error', 'Số tiền tối thiểu là 10,000 VND'), 'error');
             return;
         }
 
         if (amount > walletBalance) {
-            addToast('Số dư ví không đủ', 'error');
+            addToast(t('topup.insufficient_balance', 'Số dư ví không đủ'), 'error');
             return;
         }
 
         const confirmed = await showConfirm({
-            title: 'Xác Nhận Mua Credits',
-            message: `Bạn sẽ chi ${formatCurrency(amount)} để nhận ${formatNumber(credits)} Credits. Xác nhận?`,
+            title: t('topup.confirm_buy_credits', 'Xác Nhận Mua Credits'),
+            message: `${t('topup.will_spend', 'Bạn sẽ chi')} ${formatCurrency(amount)} ${t('topup.to_receive', 'để nhận')} ${formatNumber(credits)} Credits. ${t('topup.confirm_question', 'Xác nhận?')}`,
             type: 'info',
-            confirmText: 'Xác Nhận',
-            cancelText: 'Hủy',
+            confirmText: t('common.confirm', 'Xác Nhận'),
+            cancelText: t('common.cancel', 'Hủy'),
         });
 
         if (!confirmed) return;
@@ -141,18 +141,18 @@ export default function Index({
         router.post('/ai-credits/purchase-custom', { amount, credits }, {
             preserveScroll: true,
             onSuccess: () => {
-                addToast('Đã mua Credits thành công!', 'success');
+                addToast(t('topup.credits_purchase_success', 'Đã mua Credits thành công!'), 'success');
                 setCustomCreditAmount('');
             },
-            onError: (errors) => addToast(errors.message || 'Có lỗi xảy ra', 'error'),
+            onError: (errors) => addToast(errors.message || t('common.error', 'Có lỗi xảy ra'), 'error'),
             onFinish: () => setProcessing(false),
         });
     };
 
     const tabs = [
-        { id: 'wallet', label: 'Nạp Ví', icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', color: 'emerald' },
-        { id: 'xu', label: 'Mua Xu', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', color: 'amber' },
-        { id: 'credits', label: 'Mua Credits', icon: 'M13 10V3L4 14h7v7l9-11h-7z', color: 'purple' },
+        { id: 'wallet', label: t('topup.tab_wallet', 'Nạp Ví'), icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', color: 'emerald' },
+        { id: 'xu', label: t('topup.tab_xu', 'Mua Xu'), icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', color: 'amber' },
+        { id: 'credits', label: t('topup.tab_credits', 'Mua Credits'), icon: 'M13 10V3L4 14h7v7l9-11h-7z', color: 'purple' },
     ];
 
     const packageColors = [
@@ -185,10 +185,10 @@ export default function Index({
                             </div>
                             <div>
                                 <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    Nạp Tiền & Mua Xu/Credits
+                                    {t('topup.page_title', 'Nạp Tiền & Mua Xu/Credits')}
                                 </h1>
                                 <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                    Nạp tiền vào ví, mua Xu cho Nhiệm Vụ hoặc Credits cho AI Studio
+                                    {t('topup.page_description', 'Nạp tiền vào ví, mua Xu cho Nhiệm Vụ hoặc Credits cho AI Studio')}
                                 </p>
                             </div>
                         </div>
@@ -202,7 +202,7 @@ export default function Index({
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            Lịch sử
+                            {t('topup.history', 'Lịch sử')}
                         </Link>
                     </div>
 
@@ -216,7 +216,7 @@ export default function Index({
                                     <svg className={`w-5 h-5 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                                     </svg>
-                                    <span className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Ví tiền</span>
+                                    <span className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('topup.wallet_balance', 'Ví tiền')}</span>
                                 </div>
                                 <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                     {formatCurrency(walletBalance)}
@@ -232,7 +232,7 @@ export default function Index({
                                     <svg className={`w-5 h-5 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <span className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Xu (Nhiệm Vụ)</span>
+                                    <span className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('topup.xu_tasks', 'Xu (Nhiệm Vụ)')}</span>
                                 </div>
                                 <p className={`text-2xl font-bold ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
                                     {formatNumber(currentXu)} Xu
@@ -270,11 +270,11 @@ export default function Index({
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id
-                                        ? `bg-gradient-to-r ${tab.color === 'emerald' ? 'from-emerald-500 to-teal-500' :
-                                            tab.color === 'amber' ? 'from-amber-500 to-orange-500' :
-                                                'from-purple-500 to-violet-600'
-                                        } text-white shadow-lg`
-                                        : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                                    ? `bg-gradient-to-r ${tab.color === 'emerald' ? 'from-emerald-500 to-teal-500' :
+                                        tab.color === 'amber' ? 'from-amber-500 to-orange-500' :
+                                            'from-purple-500 to-violet-600'
+                                    } text-white shadow-lg`
+                                    : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                                     }`}
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -289,7 +289,7 @@ export default function Index({
                     {activeTab === 'wallet' && (
                         <div>
                             <h2 className={`text-xl font-semibold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                Chọn gói nạp tiền
+                                {t('topup.choose_package', 'Chọn gói nạp tiền')}
                             </h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                                 {creditPackages.map((pkg, index) => {
@@ -302,16 +302,16 @@ export default function Index({
                                             onClick={() => handleWalletTopup(pkg)}
                                             disabled={processing}
                                             className={`group relative overflow-hidden text-left rounded-2xl border transition-all duration-300 hover:scale-[1.02] disabled:opacity-60 ${pkg.popular
-                                                    ? `bg-gradient-to-br ${color.from} ${color.to} border-transparent shadow-xl ${color.shadow}`
-                                                    : isDark
-                                                        ? 'bg-white/5 border-white/10 hover:bg-white/10'
-                                                        : 'bg-white border-gray-200 hover:border-gray-300 shadow-lg'
+                                                ? `bg-gradient-to-br ${color.from} ${color.to} border-transparent shadow-xl ${color.shadow}`
+                                                : isDark
+                                                    ? 'bg-white/5 border-white/10 hover:bg-white/10'
+                                                    : 'bg-white border-gray-200 hover:border-gray-300 shadow-lg'
                                                 }`}
                                         >
                                             {pkg.popular && (
                                                 <div className="absolute top-4 right-4">
                                                     <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full bg-white/20 text-white backdrop-blur-sm">
-                                                        PHỔ BIẾN
+                                                        {t('topup.popular', 'PHỔ BIẾN')}
                                                     </span>
                                                 </div>
                                             )}
@@ -356,7 +356,7 @@ export default function Index({
                                                 <div className={`mt-4 pt-4 border-t ${pkg.popular ? 'border-white/20' : isDark ? 'border-white/10' : 'border-gray-100'}`}>
                                                     <div className="flex justify-between items-center">
                                                         <span className={`text-sm ${pkg.popular ? 'text-white/70' : isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                            Nhận được
+                                                            {t('topup.you_receive', 'Nhận được')}
                                                         </span>
                                                         <span className={`text-lg font-bold ${pkg.popular ? 'text-white' : isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
                                                             {formatCurrency(pkg.price + (pkg.bonus || 0))}
@@ -371,7 +371,7 @@ export default function Index({
                                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                                             </svg>
-                                                            <span className="text-sm font-medium">Đang xử lý...</span>
+                                                            <span className="text-sm font-medium">{t('common.processing', 'Đang xử lý...')}</span>
                                                         </div>
                                                     </div>
                                                 )}
@@ -384,10 +384,10 @@ export default function Index({
                             {/* Payment Methods */}
                             <div className={`mt-8 p-6 rounded-2xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200 shadow-lg'}`}>
                                 <h3 className={`text-sm font-medium uppercase tracking-wider mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    Phương thức thanh toán
+                                    {t('topup.payment_methods', 'Phương thức thanh toán')}
                                 </h3>
                                 <div className="flex flex-wrap gap-4">
-                                    {['Chuyển khoản ngân hàng', 'MoMo', 'VNPay', 'ZaloPay'].map((method, i) => (
+                                    {[t('topup.bank_transfer', 'Chuyển khoản ngân hàng'), 'MoMo', 'VNPay', 'ZaloPay'].map((method, i) => (
                                         <div key={i} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
                                             <svg className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -404,17 +404,17 @@ export default function Index({
                         <div>
                             <div className={`p-8 rounded-2xl border mb-8 ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200 shadow-lg'}`}>
                                 <h2 className={`text-xl font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    Mua Xu từ Ví
+                                    {t('topup.buy_xu_from_wallet', 'Mua Xu từ Ví')}
                                 </h2>
                                 <p className={`text-sm mb-6 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                    Xu dùng để thanh toán cho Nhiệm Vụ • 1 Xu = 100đ
+                                    {t('topup.xu_description', 'Xu dùng để thanh toán cho Nhiệm Vụ • 1 Xu = 100đ')}
                                 </p>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {/* Input */}
                                     <div>
                                         <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                            Số tiền (VND)
+                                            {t('topup.amount_vnd', 'Số tiền (VND)')}
                                         </label>
                                         <input
                                             type="number"
@@ -428,7 +428,7 @@ export default function Index({
                                                 } focus:ring-2 focus:ring-amber-500 focus:border-transparent`}
                                             placeholder="100,000"
                                         />
-                                        <p className="text-xs text-gray-500 mt-1">Tối thiểu: 10,000 VND</p>
+                                        <p className="text-xs text-gray-500 mt-1">{t('topup.min_10k', 'Tối thiểu: 10,000 VND')}</p>
 
                                         {/* Quick amounts */}
                                         <div className="flex flex-wrap gap-2 mt-3">
@@ -450,13 +450,13 @@ export default function Index({
                                     {/* Result */}
                                     <div className={`rounded-xl p-6 ${isDark ? 'bg-amber-500/10' : 'bg-amber-50'}`}>
                                         <div className={`text-sm mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                            Bạn sẽ nhận được
+                                            {t('topup.you_will_receive', 'Bạn sẽ nhận được')}
                                         </div>
                                         <div className={`text-4xl font-bold ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
                                             {formatNumber(toXu(parseFloat(customXuAmount) || 0))} Xu
                                         </div>
                                         <div className="text-xs text-gray-500 mt-2">
-                                            Tỷ lệ: 100 VND = 1 Xu
+                                            {t('topup.xu_rate', 'Tỷ lệ: 100 VND = 1 Xu')}
                                         </div>
                                     </div>
                                 </div>
@@ -466,21 +466,21 @@ export default function Index({
                                     onClick={handleXuPurchase}
                                     disabled={!customXuAmount || parseFloat(customXuAmount) < 10000 || parseFloat(customXuAmount) > walletBalance || processing}
                                     className={`w-full mt-6 py-4 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${isDark
-                                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-lg hover:shadow-amber-500/25'
-                                            : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-lg'
+                                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-lg hover:shadow-amber-500/25'
+                                        : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-lg'
                                         }`}
                                 >
                                     <span className="flex items-center justify-center gap-2">
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        {processing ? 'Đang xử lý...' : 'Mua Xu Ngay'}
+                                        {processing ? t('common.processing', 'Đang xử lý...') : t('topup.buy_xu_now', 'Mua Xu Ngay')}
                                     </span>
                                 </button>
 
                                 {customXuAmount && parseFloat(customXuAmount) > walletBalance && (
                                     <div className={`mt-4 p-4 rounded-xl text-sm ${isDark ? 'bg-red-500/10 text-red-400' : 'bg-red-50 text-red-600'}`}>
-                                        Số dư ví không đủ. Vui lòng nạp thêm tiền.
+                                        {t('topup.insufficient_balance_message', 'Số dư ví không đủ. Vui lòng nạp thêm tiền.')}
                                     </div>
                                 )}
                             </div>
@@ -488,12 +488,12 @@ export default function Index({
                             {/* Info */}
                             <div className={`p-6 rounded-2xl border ${isDark ? 'bg-amber-500/5 border-amber-500/20' : 'bg-amber-50 border-amber-100'}`}>
                                 <h4 className={`font-semibold mb-2 ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>
-                                    Xu dùng để làm gì?
+                                    {t('topup.xu_info_title', 'Xu dùng để làm gì?')}
                                 </h4>
                                 <ul className={`text-sm space-y-2 ${isDark ? 'text-amber-300/70' : 'text-amber-600/80'}`}>
-                                    <li>• Thanh toán thưởng cho người nhận Nhiệm Vụ</li>
-                                    <li>• Mua các gói dịch vụ trên Marketplace</li>
-                                    <li>• Chi phí khi tạo và đăng Nhiệm Vụ</li>
+                                    <li>• {t('topup.xu_info_1', 'Thanh toán thưởng cho người nhận Nhiệm Vụ')}</li>
+                                    <li>• {t('topup.xu_info_2', 'Mua các gói dịch vụ trên Marketplace')}</li>
+                                    <li>• {t('topup.xu_info_3', 'Chi phí khi tạo và đăng Nhiệm Vụ')}</li>
                                 </ul>
                             </div>
                         </div>
@@ -504,17 +504,17 @@ export default function Index({
                             {/* Custom Amount */}
                             <div className={`p-8 rounded-2xl border mb-8 ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200 shadow-lg'}`}>
                                 <h2 className={`text-xl font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    Mua Credits Tùy Chỉnh
+                                    {t('topup.buy_custom_credits', 'Mua Credits Tùy Chỉnh')}
                                 </h2>
                                 <p className={`text-sm mb-6 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                    Credits dùng cho AI Studio (tạo ảnh, video) • 500đ = 1 Credit
+                                    {t('topup.credits_description', 'Credits dùng cho AI Studio (tạo ảnh, video) • 500đ = 1 Credit')}
                                 </p>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {/* Input */}
                                     <div>
                                         <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                            Số tiền (VND)
+                                            {t('topup.amount_vnd', 'Số tiền (VND)')}
                                         </label>
                                         <input
                                             type="number"
@@ -528,7 +528,7 @@ export default function Index({
                                                 } focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                                             placeholder="100,000"
                                         />
-                                        <p className="text-xs text-gray-500 mt-1">Tối thiểu: 10,000 VND</p>
+                                        <p className="text-xs text-gray-500 mt-1">{t('topup.min_10k', 'Tối thiểu: 10,000 VND')}</p>
 
                                         {/* Quick amounts */}
                                         <div className="flex flex-wrap gap-2 mt-3">
@@ -550,13 +550,13 @@ export default function Index({
                                     {/* Result */}
                                     <div className={`rounded-xl p-6 ${isDark ? 'bg-purple-500/10' : 'bg-purple-50'}`}>
                                         <div className={`text-sm mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                            Bạn sẽ nhận được
+                                            {t('topup.you_will_receive', 'Bạn sẽ nhận được')}
                                         </div>
                                         <div className={`text-4xl font-bold ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
                                             {formatNumber(toCredits(parseFloat(customCreditAmount) || 0))} Credits
                                         </div>
                                         <div className="text-xs text-gray-500 mt-2">
-                                            Tỷ lệ: 500 VND = 1 Credit
+                                            {t('topup.credit_rate', 'Tỷ lệ: 500 VND = 1 Credit')}
                                         </div>
                                     </div>
                                 </div>
@@ -566,21 +566,21 @@ export default function Index({
                                     onClick={handleCustomCreditPurchase}
                                     disabled={!customCreditAmount || parseFloat(customCreditAmount) < 10000 || parseFloat(customCreditAmount) > walletBalance || processing}
                                     className={`w-full mt-6 py-4 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${isDark
-                                            ? 'bg-gradient-to-r from-purple-500 to-violet-600 text-white hover:shadow-lg hover:shadow-purple-500/25'
-                                            : 'bg-gradient-to-r from-purple-500 to-violet-600 text-white hover:shadow-lg'
+                                        ? 'bg-gradient-to-r from-purple-500 to-violet-600 text-white hover:shadow-lg hover:shadow-purple-500/25'
+                                        : 'bg-gradient-to-r from-purple-500 to-violet-600 text-white hover:shadow-lg'
                                         }`}
                                 >
                                     <span className="flex items-center justify-center gap-2">
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                         </svg>
-                                        {processing ? 'Đang xử lý...' : 'Mua Credits Ngay'}
+                                        {processing ? t('common.processing', 'Đang xử lý...') : t('topup.buy_credits_now', 'Mua Credits Ngay')}
                                     </span>
                                 </button>
 
                                 {customCreditAmount && parseFloat(customCreditAmount) > walletBalance && (
                                     <div className={`mt-4 p-4 rounded-xl text-sm ${isDark ? 'bg-red-500/10 text-red-400' : 'bg-red-50 text-red-600'}`}>
-                                        Số dư ví không đủ. Vui lòng nạp thêm tiền.
+                                        {t('topup.insufficient_balance_message', 'Số dư ví không đủ. Vui lòng nạp thêm tiền.')}
                                     </div>
                                 )}
                             </div>
@@ -589,15 +589,15 @@ export default function Index({
                             {aiCreditPackages.length > 0 && (
                                 <>
                                     <h2 className={`text-lg font-semibold mb-5 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                        Hoặc chọn gói có sẵn
+                                        {t('topup.or_choose_package', 'Hoặc chọn gói có sẵn')}
                                     </h2>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                                         {aiCreditPackages.map((pkg) => (
                                             <div
                                                 key={pkg.id}
                                                 className={`relative p-6 rounded-2xl border transition-all hover:scale-[1.02] ${pkg.is_featured
-                                                        ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
-                                                        : isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200 shadow-lg'
+                                                    ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
+                                                    : isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200 shadow-lg'
                                                     }`}
                                             >
                                                 {pkg.badge && (
@@ -633,11 +633,11 @@ export default function Index({
                                                     onClick={() => handleCreditPurchase(pkg)}
                                                     disabled={processing || walletBalance < pkg.price}
                                                     className={`w-full py-3 rounded-xl font-medium transition-all disabled:opacity-50 ${pkg.is_featured
-                                                            ? isDark ? 'bg-black text-white' : 'bg-white text-black'
-                                                            : 'bg-gradient-to-r from-purple-500 to-violet-600 text-white'
+                                                        ? isDark ? 'bg-black text-white' : 'bg-white text-black'
+                                                        : 'bg-gradient-to-r from-purple-500 to-violet-600 text-white'
                                                         }`}
                                                 >
-                                                    {processing ? 'Đang xử lý...' : 'Mua Ngay'}
+                                                    {processing ? t('common.processing', 'Đang xử lý...') : t('topup.buy_now', 'Mua Ngay')}
                                                 </button>
                                             </div>
                                         ))}
@@ -648,12 +648,12 @@ export default function Index({
                             {/* Info */}
                             <div className={`p-6 rounded-2xl border ${isDark ? 'bg-purple-500/5 border-purple-500/20' : 'bg-purple-50 border-purple-100'}`}>
                                 <h4 className={`font-semibold mb-2 ${isDark ? 'text-purple-400' : 'text-purple-700'}`}>
-                                    Credits dùng để làm gì?
+                                    {t('topup.credits_info_title', 'Credits dùng để làm gì?')}
                                 </h4>
                                 <ul className={`text-sm space-y-2 ${isDark ? 'text-purple-300/70' : 'text-purple-600/80'}`}>
-                                    <li>• 🖼️ Tạo ảnh AI: ~10-50 credits/ảnh</li>
-                                    <li>• 🎬 Tạo video AI: ~100-500 credits/video</li>
-                                    <li>• ✨ Sử dụng các model AI cao cấp</li>
+                                    <li>• 🖼️ {t('topup.credits_info_1', 'Tạo ảnh AI: ~10-50 credits/ảnh')}</li>
+                                    <li>• 🎬 {t('topup.credits_info_2', 'Tạo video AI: ~100-500 credits/video')}</li>
+                                    <li>• ✨ {t('topup.credits_info_3', 'Sử dụng các model AI cao cấp')}</li>
                                 </ul>
                             </div>
                         </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@/Components/UI';
 
 export default function CreateFolderModal({
     isOpen,
@@ -122,12 +123,12 @@ export default function CreateFolderModal({
                             placeholder={t('media.folder_name_placeholder', 'Ví dụ: Photos 2024')}
                             disabled={isSubmitting}
                             className={`w-full px-4 py-3 rounded-xl text-sm transition-all border focus:outline-none focus:ring-2 ${error
-                                    ? isDark
-                                        ? 'border-red-500/50 focus:ring-red-500/20 focus:border-red-500'
-                                        : 'border-red-300 focus:ring-red-500/20 focus:border-red-500'
-                                    : isDark
-                                        ? 'bg-[#0d0d0d] border-[#2a2a2a] text-white placeholder-gray-500 focus:border-gray-500 focus:ring-gray-500/20'
-                                        : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-gray-400 focus:ring-gray-400/20'
+                                ? isDark
+                                    ? 'border-red-500/50 focus:ring-red-500/20 focus:border-red-500'
+                                    : 'border-red-300 focus:ring-red-500/20 focus:border-red-500'
+                                : isDark
+                                    ? 'bg-[#0d0d0d] border-[#2a2a2a] text-white placeholder-gray-500 focus:border-gray-500 focus:ring-gray-500/20'
+                                    : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-gray-400 focus:ring-gray-400/20'
                                 }`}
                         />
                         {error && (
@@ -139,28 +140,17 @@ export default function CreateFolderModal({
 
                     {/* Footer */}
                     <div className={`px-6 py-4 flex items-center justify-end gap-3 border-t ${isDark ? 'border-[#2a2a2a]' : 'border-gray-100'}`}>
-                        <button
-                            type="button"
+                        <Button
+                            variant="secondary"
                             onClick={onClose}
                             disabled={isSubmitting}
-                            className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${isDark
-                                    ? 'text-gray-400 hover:text-white hover:bg-[#2a2a2a]'
-                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                                }`}
                         >
                             {t('common.cancel', 'Hủy')}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="submit"
+                            variant="gradient"
                             disabled={isSubmitting || !name.trim()}
-                            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${isSubmitting || !name.trim()
-                                    ? isDark
-                                        ? 'bg-[#2a2a2a] text-gray-500 cursor-not-allowed'
-                                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                    : isDark
-                                        ? 'bg-white text-black hover:bg-gray-100'
-                                        : 'bg-gray-900 text-white hover:bg-gray-800'
-                                }`}
                         >
                             {isSubmitting ? (
                                 <span className="flex items-center gap-2">
@@ -173,7 +163,7 @@ export default function CreateFolderModal({
                             ) : (
                                 t('common.create', 'Tạo')
                             )}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>

@@ -1,5 +1,6 @@
 import { memo, useState } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { Button } from '@/Components/UI';
 import RecordingPreview from './RecordingPreview';
 
 /**
@@ -73,17 +74,11 @@ function WorkflowPreviewModal({ isOpen, onClose, nodes = [], workflowName = 'Wor
                         </div>
                     </div>
 
-                    <button
-                        onClick={onClose}
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isDark
-                            ? 'hover:bg-white/10 text-gray-400 hover:text-white'
-                            : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'
-                            }`}
-                    >
+                    <Button variant="ghost" size="icon-xs" onClick={onClose}>
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                    </button>
+                    </Button>
                 </div>
 
                 {/* Content */}
@@ -125,15 +120,9 @@ function WorkflowPreviewModal({ isOpen, onClose, nodes = [], workflowName = 'Wor
                         </span>
                     </div>
 
-                    <button
-                        onClick={onClose}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${isDark
-                            ? 'bg-white/5 hover:bg-white/10 text-gray-300'
-                            : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                            }`}
-                    >
+                    <Button variant="secondary" onClick={onClose}>
                         Close
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

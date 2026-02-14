@@ -1,5 +1,6 @@
-import { useForm, Link } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
+import { Head, useForm } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
+import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import {
     PageHeader,
@@ -7,10 +8,13 @@ import {
     Input,
     Select,
     Button,
-    DataList,
+    Breadcrumb,
+    Divider,
+    Alert,
 } from '@/Components/UI';
 
 export default function Edit({ device }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     const { data, setData, put, processing, errors } = useForm({
@@ -26,19 +30,30 @@ export default function Edit({ device }) {
     };
 
     const statusOptions = [
-        { value: 'active', label: 'Active' },
-        { value: 'inactive', label: 'Inactive' },
+        { value: 'active', label: t('devices.status.online') },
+        { value: 'inactive', label: t('devices.status.offline') },
         { value: 'maintenance', label: 'Maintenance' },
     ];
 
     return (
-        <AppLayout title="Edit Device">
+        <AppLayout title={t('devices.edit_device', { defaultValue: 'Edit Device' })}>
+            <Head title={t('devices.edit_device', { defaultValue: 'Edit Device' })} />
+
             <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
                 <div className="max-w-[600px] mx-auto px-6 py-6">
+                    {/* Breadcrumb */}
+                    <Breadcrumb
+                        items={[
+                            { label: t('devices.title'), href: '/devices' },
+                            { label: device.name || t('devices.edit_device', { defaultValue: 'Edit Device' }) },
+                        ]}
+                        className="mb-4"
+                    />
+
                     {/* Header */}
                     <PageHeader
-                        title="Edit Device"
-                        subtitle="Update device information"
+                        title={t('devices.edit_device', { defaultValue: 'Edit Device' })}
+                        subtitle={t('devices.update_description', { defaultValue: 'Update device information' })}
                         backHref="/devices"
                     />
 
@@ -46,20 +61,15 @@ export default function Edit({ device }) {
                     <GlassCard gradient="gray" hover={false}>
                         <form onSubmit={handleSubmit} className="space-y-5">
                             {/* Device ID (Read-only) */}
-                            <div>
-                                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    Device ID
-                                </label>
-                                <div className={`px-4 py-2.5 rounded-lg text-sm font-mono ${isDark ? 'bg-[#222] text-gray-400' : 'bg-gray-50 text-gray-500'}`}>
-                                    {device.device_id}
-                                </div>
-                                <p className={`text-xs mt-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                    Device ID cannot be changed
-                                </p>
-                            </div>
+                            <Input
+                                label={t('devices.device_id', { defaultValue: 'Device ID' })}
+                                value={device.device_id}
+                                disabled
+                                hint={t('devices.device_id_hint', { defaultValue: 'Device ID cannot be changed' })}
+                            />
 
                             <Input
-                                label="Device Name"
+                                label={t('devices.device_name', { defaultValue: 'Device Name' })}
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
                                 placeholder="e.g., My Phone"
@@ -67,53 +77,50 @@ export default function Edit({ device }) {
                             />
 
                             <Input
-                                label="Model"
+                                label={t('devices.model', { defaultValue: 'Model' })}
                                 value={data.model}
                                 onChange={(e) => setData('model', e.target.value)}
                                 placeholder="e.g., Samsung Galaxy S21"
                             />
 
                             <Input
-                                label="OS Version"
+                                label={t('devices.os_version', { defaultValue: 'OS Version' })}
                                 value={data.android_version}
                                 onChange={(e) => setData('android_version', e.target.value)}
                                 placeholder="e.g., 12.0"
                             />
 
                             <Select
-                                label="Status"
+                                label={t('common.status', { defaultValue: 'Status' })}
                                 value={data.status}
                                 onChange={(e) => setData('status', e.target.value)}
                                 options={statusOptions}
                             />
 
                             {/* Last Active (Read-only) */}
-                            <div>
-                                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    Last Active
-                                </label>
-                                <div className={`px-4 py-2.5 rounded-lg text-sm ${isDark ? 'bg-[#222] text-gray-400' : 'bg-gray-50 text-gray-500'}`}>
-                                    {device.last_active_at ? new Date(device.last_active_at).toLocaleString() : 'Never'}
-                                </div>
-                            </div>
+                            <Input
+                                label={t('devices.last_active', { defaultValue: 'Last Active' })}
+                                value={device.last_active_at ? new Date(device.last_active_at).toLocaleString() : 'Never'}
+                                disabled
+                            />
 
-                            <div className={`flex items-center justify-end gap-3 pt-6 border-t ${isDark ? 'border-[#2a2a2a]' : 'border-gray-100'}`}>
+                            <Divider />
+
+                            <div className="flex items-center justify-end gap-3">
                                 <Button href="/devices" variant="ghost">
-                                    Cancel
+                                    {t('common.cancel')}
                                 </Button>
                                 <Button type="submit" disabled={processing}>
-                                    {processing ? 'Saving...' : 'Save Changes'}
+                                    {processing ? t('common.saving', { defaultValue: 'Saving...' }) : t('common.save_changes', { defaultValue: 'Save Changes' })}
                                 </Button>
                             </div>
                         </form>
                     </GlassCard>
 
-                    {/* Info */}
-                    <div className={`mt-4 p-4 rounded-lg ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-50'}`}>
-                        <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Created: {new Date(device.created_at).toLocaleString()} • Updated: {new Date(device.updated_at).toLocaleString()}
-                        </p>
-                    </div>
+                    {/* Info footer */}
+                    <Alert type="info" className="mt-4">
+                        {t('common.created', { defaultValue: 'Created' })}: {new Date(device.created_at).toLocaleString()} • {t('common.updated', { defaultValue: 'Updated' })}: {new Date(device.updated_at).toLocaleString()}
+                    </Alert>
                 </div>
             </div>
         </AppLayout>

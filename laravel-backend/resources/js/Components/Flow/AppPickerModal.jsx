@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@/Components/UI';
 
 /**
  * AppPickerModal - Select installed app from connected device
@@ -106,27 +107,20 @@ export default function AppPickerModal({
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <button
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
                                     onClick={() => onRequestApps?.(deviceId)}
                                     disabled={loading}
-                                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${loading
-                                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                        : isDark
-                                            ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
-                                            : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
-                                        }`}
                                 >
                                     {loading ? '⏳' : '🔄'} {t('common.refresh', 'Refresh')}
-                                </button>
+                                </Button>
 
-                                <button
-                                    onClick={onClose}
-                                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
-                                >
+                                <Button variant="ghost" size="icon-xs" onClick={onClose}>
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
-                                </button>
+                                </Button>
                             </div>
                         </div>
 
@@ -158,15 +152,13 @@ export default function AppPickerModal({
                             <div className="flex flex-col items-center justify-center py-12">
                                 <span className="text-4xl mb-3">⚠️</span>
                                 <p className={`text-sm ${isDark ? 'text-red-400' : 'text-red-500'}`}>{error}</p>
-                                <button
+                                <Button
+                                    variant="secondary"
                                     onClick={() => onRequestApps?.(deviceId)}
-                                    className={`mt-4 px-4 py-2 rounded-lg text-sm font-medium ${isDark
-                                        ? 'bg-white/10 hover:bg-white/20 text-white'
-                                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                                        }`}
+                                    className="mt-4"
                                 >
                                     {t('common.try_again', 'Try Again')}
-                                </button>
+                                </Button>
                             </div>
                         ) : filteredApps.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-12">

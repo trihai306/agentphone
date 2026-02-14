@@ -8,6 +8,7 @@ import ImportCSVModal from '@/Components/DataCollections/ImportCSVModal';
 import CreateDropdownMenu, { QUICK_TEMPLATES } from '@/Components/DataCollections/CreateDropdownMenu';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
 import { useToast } from '@/Components/Layout/ToastProvider';
+import { Button, SearchInput } from '@/Components/UI';
 
 export default function Index({ collections, stats }) {
     const { t } = useTranslation();
@@ -295,19 +296,11 @@ export default function Index({ collections, stats }) {
                     <div className={`flex items-center justify-between gap-4 p-4 rounded-2xl backdrop-blur-xl border mb-6 ${isDark ? 'bg-white/5 border-white/10' : 'bg-white/80 border-gray-200/50 shadow-lg shadow-gray-200/30'
                         }`}>
                         {/* Search */}
-                        <div className="relative flex-1 max-w-md">
-                            <svg className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                            <input
-                                type="text"
+                        <div className="flex-1 max-w-md">
+                            <SearchInput
                                 placeholder={t('data_collections.search_placeholder')}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className={`w-full pl-12 pr-4 py-3 rounded-xl text-sm ${isDark
-                                    ? 'bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-blue-500/50 focus:bg-white/10'
-                                    : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white'
-                                    } border focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all`}
                             />
                         </div>
 
@@ -570,33 +563,37 @@ export default function Index({ collections, stats }) {
 
                                                     {/* Quick Actions - appears on hover */}
                                                     <div className={`flex items-center gap-1 transition-opacity ${hoveredCard === collection.id ? 'opacity-100' : 'opacity-0'}`}>
-                                                        <button
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon-xs"
                                                             onClick={(e) => handleExport(collection.id, e)}
-                                                            className={`p-2 rounded-lg transition-all ${isDark ? 'hover:bg-blue-500/20 text-gray-400 hover:text-blue-400' : 'hover:bg-blue-50 text-gray-400 hover:text-blue-500'}`}
+                                                            className={isDark ? 'hover:bg-blue-500/20 text-gray-400 hover:text-blue-400' : 'hover:bg-blue-50 text-gray-400 hover:text-blue-500'}
                                                             title={t('data_collections.export')}
                                                         >
                                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                                             </svg>
-                                                        </button>
-                                                        <button
+                                                        </Button>
+                                                        <Button
+                                                            variant="success-ghost"
+                                                            size="icon-xs"
                                                             onClick={(e) => handleDuplicate(collection, e)}
-                                                            className={`p-2 rounded-lg transition-all ${isDark ? 'hover:bg-emerald-500/20 text-gray-400 hover:text-emerald-400' : 'hover:bg-emerald-50 text-gray-400 hover:text-emerald-500'}`}
                                                             title={t('data_collections.duplicate')}
                                                         >
                                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                                             </svg>
-                                                        </button>
-                                                        <button
+                                                        </Button>
+                                                        <Button
+                                                            variant="danger-ghost"
+                                                            size="icon-xs"
                                                             onClick={(e) => handleDelete(collection.id, e)}
-                                                            className={`p-2 rounded-lg transition-all ${isDark ? 'hover:bg-red-500/20 text-gray-400 hover:text-red-400' : 'hover:bg-red-50 text-gray-400 hover:text-red-500'}`}
                                                             title={t('common.delete')}
                                                         >
                                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                             </svg>
-                                                        </button>
+                                                        </Button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -644,9 +641,9 @@ export default function Index({ collections, stats }) {
                                             <div className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{collection.fields_count || 0} {t('data_collections.fields')}</div>
                                             <div className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{collection.total_records || 0} {t('data_collections.records')}</div>
                                             <div className={`text-sm ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>{formatDate(collection.updated_at)}</div>
-                                            <button onClick={(e) => handleDelete(collection.id, e)} className={`p-2 rounded-lg ${isDark ? 'hover:bg-red-500/20 text-gray-500 hover:text-red-400' : 'hover:bg-red-50 text-gray-400 hover:text-red-500'}`}>
+                                            <Button variant="danger-ghost" size="icon-xs" onClick={(e) => handleDelete(collection.id, e)}>
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                            </button>
+                                            </Button>
                                         </Link>
                                     );
                                 })}
@@ -671,15 +668,18 @@ export default function Index({ collections, stats }) {
                                             t('data_collections.empty_description')}
                                 </p>
                                 {!searchTerm && filterBy === 'all' && (
-                                    <button
+                                    <Button
+                                        variant="gradient"
                                         onClick={() => setShowCreateModal(true)}
-                                        className="inline-flex items-center gap-2.5 px-6 py-3 text-sm font-semibold rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 hover:scale-[1.02] transition-all"
+                                        className="bg-gradient-to-r from-blue-500 to-cyan-500 shadow-blue-500/30"
+                                        icon={
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                            </svg>
+                                        }
                                     >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                        </svg>
                                         {t('data_collections.create_collection')}
-                                    </button>
+                                    </Button>
                                 )}
                             </div>
                         </div>

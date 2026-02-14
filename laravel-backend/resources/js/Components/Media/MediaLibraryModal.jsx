@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useToast } from '@/Components/Layout/ToastProvider';
+import { Button } from '@/Components/UI';
 
 /**
  * MediaLibraryModal - Reusable media picker modal
@@ -328,15 +329,11 @@ export default function MediaLibraryModal({
                         </label>
 
                         {/* Close Button */}
-                        <button
-                            onClick={onClose}
-                            className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-[#1a1a1a] text-gray-400' : 'hover:bg-gray-100 text-gray-500'
-                                }`}
-                        >
+                        <Button variant="ghost" size="icon-sm" onClick={onClose}>
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
@@ -667,18 +664,16 @@ export default function MediaLibraryModal({
                                 </div>
 
                                 {/* Copy URL */}
-                                <button
+                                <Button
+                                    variant="secondary"
+                                    className="w-full"
                                     onClick={() => copyUrl(activeItem.url)}
-                                    className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${isDark
-                                        ? 'bg-[#1a1a1a] text-gray-300 hover:text-white hover:bg-[#222]'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                        }`}
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                     </svg>
                                     {t('media.copy_url', 'Sao chép URL')}
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     )}
@@ -693,29 +688,16 @@ export default function MediaLibraryModal({
                         }
                     </div>
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={onClose}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${isDark
-                                ? 'text-gray-400 hover:text-white hover:bg-[#1a1a1a]'
-                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                                }`}
-                        >
+                        <Button variant="secondary" onClick={onClose}>
                             {t('common.cancel', 'Hủy')}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                            variant="gradient"
                             onClick={handleConfirm}
                             disabled={selectedItems.length === 0}
-                            className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${selectedItems.length > 0
-                                ? isDark
-                                    ? 'bg-violet-600 text-white hover:bg-violet-500'
-                                    : 'bg-violet-600 text-white hover:bg-violet-700'
-                                : isDark
-                                    ? 'bg-[#1a1a1a] text-gray-600 cursor-not-allowed'
-                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                }`}
                         >
                             {t('common.select', 'Chọn')} {selectedItems.length > 0 && `(${selectedItems.length})`}
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>

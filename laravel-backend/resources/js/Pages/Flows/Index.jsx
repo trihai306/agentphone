@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, Head } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import AppLayout from '../../Layouts/AppLayout';
+import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { Modal, ModalFooter, Input, Textarea, Button, SearchInput } from '@/Components/UI';
 
 export default function Index({ flows = { data: [] } }) {
     const { t } = useTranslation();
@@ -129,16 +130,18 @@ export default function Index({ flows = { data: [] } }) {
                                 </div>
                             </div>
                         </div>
-                        <button
+                        <Button
+                            variant="gradient"
                             onClick={() => setShowCreateModal(true)}
-                            className="group relative flex items-center gap-2.5 px-6 py-3 text-sm font-semibold rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/40 hover:scale-[1.02] transition-all duration-200"
+                            icon={
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                            }
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
                             New Workflow
                             <kbd className="hidden lg:inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded bg-white/20 ml-1">N</kbd>
-                        </button>
+                        </Button>
                     </div>
 
                     {/* Stats Cards */}
@@ -178,19 +181,11 @@ export default function Index({ flows = { data: [] } }) {
                     {/* Toolbar */}
                     <div className={`flex items-center justify-between gap-4 p-4 rounded-2xl backdrop-blur-xl border mb-6 ${isDark ? 'bg-white/5 border-white/10' : 'bg-white/80 border-gray-200/50 shadow-lg shadow-gray-200/30'
                         }`}>
-                        <div className="relative flex-1 max-w-md">
-                            <svg className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                            <input
-                                type="text"
+                        <div className="flex-1 max-w-md">
+                            <SearchInput
                                 placeholder="Search workflows..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className={`w-full pl-12 pr-4 py-3 rounded-xl text-sm ${isDark
-                                    ? 'bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-violet-500/50 focus:bg-white/10'
-                                    : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-violet-500 focus:bg-white'
-                                    } border focus:outline-none focus:ring-2 focus:ring-violet-500/20 transition-all`}
                             />
                         </div>
 
@@ -408,15 +403,17 @@ export default function Index({ flows = { data: [] } }) {
                                     {searchQuery ? `No results for "${searchQuery}"` : 'Build powerful automations to control your devices with our visual flow editor'}
                                 </p>
                                 {!searchQuery && (
-                                    <button
+                                    <Button
+                                        variant="gradient"
                                         onClick={() => setShowCreateModal(true)}
-                                        className="inline-flex items-center gap-2.5 px-6 py-3 text-sm font-semibold rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/40 hover:scale-[1.02] transition-all"
+                                        icon={
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                            </svg>
+                                        }
                                     >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                        </svg>
                                         Create Workflow
-                                    </button>
+                                    </Button>
                                 )}
                             </div>
                         </div>
@@ -443,58 +440,40 @@ export default function Index({ flows = { data: [] } }) {
                 </div>
 
                 {/* Create Modal */}
-                {showCreateModal && (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowCreateModal(false)}>
-                        <div className={`w-full max-w-md rounded-2xl overflow-hidden ${isDark ? 'bg-zinc-900' : 'bg-white'} shadow-2xl`} onClick={(e) => e.stopPropagation()}>
-                            {/* Modal Header with Gradient */}
-                            <div className="relative h-20 bg-gradient-to-r from-violet-500 to-purple-600 flex items-end p-6">
-                                <h2 className="text-xl font-bold text-white">Create New Workflow</h2>
-                                <button onClick={() => setShowCreateModal(false)} className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/20 text-white/80 hover:text-white transition-all">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <form onSubmit={handleCreate} className="p-6 space-y-5">
-                                <div>
-                                    <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                        Workflow Name <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newFlowName}
-                                        onChange={(e) => setNewFlowName(e.target.value)}
-                                        required
-                                        autoFocus
-                                        placeholder="e.g., Morning Routine"
-                                        className={`w-full px-4 py-3 rounded-xl text-sm ${isDark ? 'bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-violet-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-violet-500'
-                                            } border focus:outline-none focus:ring-2 focus:ring-violet-500/20 transition-all`}
-                                    />
-                                </div>
-                                <div>
-                                    <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Description</label>
-                                    <textarea
-                                        value={newFlowDescription}
-                                        onChange={(e) => setNewFlowDescription(e.target.value)}
-                                        rows={3}
-                                        placeholder="What does this workflow do?"
-                                        className={`w-full px-4 py-3 rounded-xl text-sm resize-none ${isDark ? 'bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-violet-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-violet-500'
-                                            } border focus:outline-none focus:ring-2 focus:ring-violet-500/20 transition-all`}
-                                    />
-                                </div>
-                                <div className="flex items-center gap-3 pt-2">
-                                    <button type="button" onClick={() => setShowCreateModal(false)} className={`flex-1 px-4 py-3 text-sm font-medium rounded-xl transition-all ${isDark ? 'text-gray-400 hover:text-white hover:bg-white/5' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'}`}>
-                                        Cancel
-                                    </button>
-                                    <button type="submit" disabled={creating || !newFlowName} className="flex-1 px-4 py-3 text-sm font-semibold rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
-                                        {creating ? 'Creating...' : 'Create Workflow'}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
+                <Modal
+                    isOpen={showCreateModal}
+                    onClose={() => setShowCreateModal(false)}
+                    title="Create New Workflow"
+                    size="md"
+                    footer={
+                        <ModalFooter
+                            cancelText="Cancel"
+                            confirmText={creating ? 'Creating...' : 'Create Workflow'}
+                            onCancel={() => setShowCreateModal(false)}
+                            onConfirm={handleCreate}
+                            isLoading={creating}
+                        />
+                    }
+                >
+                    <form onSubmit={handleCreate} className="space-y-5">
+                        <Input
+                            label="Workflow Name *"
+                            value={newFlowName}
+                            onChange={(e) => setNewFlowName(e.target.value)}
+                            required
+                            autoFocus
+                            placeholder="e.g., Morning Routine"
+                        />
+                        <Textarea
+                            label="Description"
+                            value={newFlowDescription}
+                            onChange={(e) => setNewFlowDescription(e.target.value)}
+                            rows={3}
+                            resize="none"
+                            placeholder="What does this workflow do?"
+                        />
+                    </form>
+                </Modal>
             </div>
         </AppLayout>
     );

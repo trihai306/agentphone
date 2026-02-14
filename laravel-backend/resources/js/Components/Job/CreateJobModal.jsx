@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { router } from '@inertiajs/react';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { Button } from '@/Components/UI';
 
 /**
  * CreateJobModal - Modal tạo job với multi-workflow và repeat
@@ -115,7 +116,7 @@ export default function CreateJobModal({ isOpen, onClose, devices = [], flows = 
                                 <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Chọn thiết bị, kịch bản và số lần chạy</p>
                             </div>
                         </div>
-                        <button onClick={onClose} className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}>✕</button>
+                        <Button variant="ghost" size="icon-sm" onClick={onClose}>✕</Button>
                     </div>
 
                     {/* Content */}
@@ -277,17 +278,14 @@ export default function CreateJobModal({ isOpen, onClose, devices = [], flows = 
                         </div>
 
                         <div className="flex gap-2">
-                            <button onClick={onClose} className={`px-4 py-2 rounded-xl text-sm font-medium ${isDark ? 'text-gray-400 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-100'}`}>Hủy</button>
-                            <button
+                            <Button variant="ghost" onClick={onClose}>Hủy</Button>
+                            <Button
+                                variant="gradient"
                                 onClick={handleSubmit}
                                 disabled={!selectedDevice || selectedFlows.length === 0 || isSubmitting}
-                                className={`px-6 py-2 rounded-xl text-sm font-bold text-white flex items-center gap-2
-                                    ${selectedDevice && selectedFlows.length > 0
-                                        ? 'bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 shadow-lg shadow-violet-500/25'
-                                        : 'bg-gray-400 cursor-not-allowed'}`}
                             >
                                 {isSubmitting ? 'Đang tạo...' : `🚀 Chạy ${repeatCount > 1 ? `(${repeatCount}x)` : ''}`}
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>

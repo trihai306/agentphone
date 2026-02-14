@@ -1,5 +1,6 @@
-import { router } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
+import { Head, router } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
+import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import {
     PageHeader,
@@ -9,6 +10,7 @@ import {
 } from '@/Components/UI';
 
 export default function Show({ notification }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
@@ -29,12 +31,13 @@ export default function Show({ notification }) {
     };
 
     return (
-        <AppLayout title="Notification">
+        <AppLayout title={t('notifications.detail', 'Notification')}>
+            <Head title={t('notifications.detail', 'Notification')} />
             <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
                 <div className="max-w-[600px] mx-auto px-6 py-6">
                     {/* Header */}
                     <PageHeader
-                        title="Notification"
+                        title={t('notifications.detail', 'Notification')}
                         backHref="/notifications"
                     />
 
@@ -57,7 +60,7 @@ export default function Show({ notification }) {
                         {notification.action_url && (
                             <div className="mt-6">
                                 <Button href={notification.action_url}>
-                                    {notification.action_text || 'View Details'} →
+                                    {notification.action_text || t('notifications.view_details', 'View Details')} →
                                 </Button>
                             </div>
                         )}
@@ -67,7 +70,7 @@ export default function Show({ notification }) {
                                 {new Date(notification.created_at).toLocaleString()}
                             </span>
                             <Button variant="danger" size="sm" onClick={handleDelete}>
-                                Delete
+                                {t('common.delete', 'Delete')}
                             </Button>
                         </div>
                     </GlassCard>

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Link, router, usePage } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
+import { Link, router, usePage, Head } from '@inertiajs/react';
+import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { Button } from '@/Components/UI';
 
 export default function Create({ flows = [], devices = [], dataCollections = [] }) {
     const { theme } = useTheme();
@@ -42,12 +43,9 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
                 <div className="relative max-w-5xl mx-auto px-6 py-12">
                     {/* Header - Simpler */}
                     <div className="text-center mb-12">
-                        <Link
-                            href="/jobs"
-                            className={`inline-flex items-center gap-2 text-sm mb-6 ${isDark ? 'text-gray-500 hover:text-white' : 'text-gray-400 hover:text-gray-900'}`}
-                        >
+                        <Button variant="link" href="/jobs" as="Link" className={isDark ? 'text-gray-500 hover:text-white' : 'text-gray-400 hover:text-gray-900'}>
                             ← Quay lại danh sách
-                        </Link>
+                        </Button>
                         <h1 className={`text-4xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             Chạy Workflow 🚀
                         </h1>
@@ -131,9 +129,9 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
                                         <p className={`text-sm mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                                             Mở app CLICKAI trên điện thoại
                                         </p>
-                                        <Link href="/devices" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-500 text-white text-sm font-medium hover:bg-violet-600">
+                                        <Button variant="primary" size="sm" href="/devices" as="Link">
                                             Xem hướng dẫn →
-                                        </Link>
+                                        </Button>
                                     </div>
                                 )}
                             </div>
@@ -205,9 +203,9 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
                                         <p className={`text-sm mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                                             Ghi hình thao tác để tạo workflow đầu tiên
                                         </p>
-                                        <Link href="/flows" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-500 text-white text-sm font-medium hover:bg-violet-600">
+                                        <Button variant="primary" size="sm" href="/flows" as="Link">
                                             Tạo workflow →
-                                        </Link>
+                                        </Button>
                                     </div>
                                 )}
                             </div>
@@ -216,8 +214,8 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
 
                     {/* Submit Area */}
                     <div className={`rounded-3xl p-8 text-center ${selectedDevice && selectedFlow
-                            ? 'bg-gradient-to-r from-violet-500/20 to-purple-500/20 border-2 border-violet-500/50'
-                            : isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
+                        ? 'bg-gradient-to-r from-violet-500/20 to-purple-500/20 border-2 border-violet-500/50'
+                        : isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
 
                         {selectedDevice && selectedFlow ? (
                             <>
@@ -237,30 +235,16 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
                                     </div>
                                 </div>
 
-                                <button
+                                <Button
+                                    variant="gradient"
+                                    size="lg"
                                     onClick={handleSubmit}
                                     disabled={isSubmitting}
-                                    className="px-12 py-5 rounded-2xl text-xl font-bold text-white transition-all
-                                        bg-gradient-to-r from-violet-500 to-purple-600 
-                                        hover:from-violet-600 hover:to-purple-700
-                                        shadow-2xl shadow-violet-500/40 hover:shadow-violet-500/60
-                                        hover:scale-105 active:scale-95
-                                        disabled:opacity-50 disabled:cursor-not-allowed"
+                                    loading={isSubmitting}
+                                    className="px-12 py-5 text-xl bg-gradient-to-r from-violet-500 to-purple-600 shadow-2xl shadow-violet-500/40 hover:shadow-violet-500/60 hover:scale-105 active:scale-95"
                                 >
-                                    {isSubmitting ? (
-                                        <span className="flex items-center gap-3">
-                                            <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                            </svg>
-                                            Đang khởi tạo...
-                                        </span>
-                                    ) : (
-                                        <span className="flex items-center gap-3">
-                                            🚀 Bắt Đầu Chạy
-                                        </span>
-                                    )}
-                                </button>
+                                    {isSubmitting ? 'Đang khởi tạo...' : '🚀 Bắt Đầu Chạy'}
+                                </Button>
                             </>
                         ) : (
                             <div className={`${isDark ? 'text-gray-500' : 'text-gray-400'}`}>

@@ -12,6 +12,7 @@ import ReactFlow, {
     useReactFlow,
 } from 'reactflow';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { Button } from '@/Components/UI';
 import SmartActionNode from './SmartActionNode';
 import GlassConditionNode from './GlassConditionNode';
 import AnimatedEdge from './AnimatedEdge';
@@ -321,25 +322,12 @@ function LoopSubFlowModal({ isOpen, onClose, loopNode, onSaveSubFlow, selectedDe
                                 </span>
                             </div>
                         )}
-                        <button
-                            onClick={onClose}
-                            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${isDark
-                                ? 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10'
-                                : 'bg-gray-100 hover:bg-gray-200 text-gray-600 border border-gray-200'
-                                }`}
-                        >
+                        <Button variant="secondary" onClick={onClose}>
                             Cancel
-                        </button>
-                        <button
-                            onClick={handleSave}
-                            className="px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:scale-105"
-                            style={{
-                                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                                boxShadow: '0 4px 16px rgba(99, 102, 241, 0.4)',
-                            }}
-                        >
+                        </Button>
+                        <Button variant="gradient" onClick={handleSave}>
                             💾 Save
-                        </button>
+                        </Button>
                     </div>
                 </div>
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Button } from '@/Components/UI';
 
 /**
  * Popover component for configuring edge delay time
@@ -43,8 +44,8 @@ export default function EdgeDelayPopover({
     return (
         <div
             className={`fixed z-[9999] border rounded-xl shadow-2xl p-4 min-w-[280px] ${isDark
-                    ? 'bg-gray-900 border-gray-700'
-                    : 'bg-white border-gray-200'
+                ? 'bg-gray-900 border-gray-700'
+                : 'bg-white border-gray-200'
                 }`}
             style={{
                 left: position?.x || 100,
@@ -60,13 +61,9 @@ export default function EdgeDelayPopover({
                     <span>⏱️</span>
                     Delay Time
                 </h3>
-                <button
-                    onClick={onClose}
-                    className={`transition-colors ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
-                        }`}
-                >
+                <Button variant="ghost" size="icon-xs" onClick={onClose}>
                     ✕
-                </button>
+                </Button>
             </div>
 
             {/* Mode Selection */}
@@ -80,10 +77,10 @@ export default function EdgeDelayPopover({
                         key={option.value}
                         onClick={() => setMode(option.value)}
                         className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${mode === option.value
-                                ? 'bg-indigo-500 text-white'
-                                : isDark
-                                    ? 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-indigo-500 text-white'
+                            : isDark
+                                ? 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             }`}
                     >
                         {option.label}
@@ -105,8 +102,8 @@ export default function EdgeDelayPopover({
                         value={fixedMs}
                         onChange={(e) => setFixedMs(e.target.value)}
                         className={`w-full border rounded-lg px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none ${isDark
-                                ? 'bg-gray-800 border-gray-600 text-white'
-                                : 'bg-gray-50 border-gray-300 text-gray-900'
+                            ? 'bg-gray-800 border-gray-600 text-white'
+                            : 'bg-gray-50 border-gray-300 text-gray-900'
                             }`}
                     />
                 </div>
@@ -128,8 +125,8 @@ export default function EdgeDelayPopover({
                             onChange={(e) => setMinMs(e.target.value)}
                             placeholder="Min"
                             className={`flex-1 border rounded-lg px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none ${isDark
-                                    ? 'bg-gray-800 border-gray-600 text-white'
-                                    : 'bg-gray-50 border-gray-300 text-gray-900'
+                                ? 'bg-gray-800 border-gray-600 text-white'
+                                : 'bg-gray-50 border-gray-300 text-gray-900'
                                 }`}
                         />
                         <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>—</span>
@@ -142,8 +139,8 @@ export default function EdgeDelayPopover({
                             onChange={(e) => setMaxMs(e.target.value)}
                             placeholder="Max"
                             className={`flex-1 border rounded-lg px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none ${isDark
-                                    ? 'bg-gray-800 border-gray-600 text-white'
-                                    : 'bg-gray-50 border-gray-300 text-gray-900'
+                                ? 'bg-gray-800 border-gray-600 text-white'
+                                : 'bg-gray-50 border-gray-300 text-gray-900'
                                 }`}
                         />
                     </div>
@@ -165,21 +162,12 @@ export default function EdgeDelayPopover({
 
             {/* Actions */}
             <div className="flex gap-2">
-                <button
-                    onClick={onClose}
-                    className={`flex-1 px-4 py-2 rounded-lg text-sm transition-colors ${isDark
-                            ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
-                >
+                <Button variant="secondary" className="flex-1" onClick={onClose}>
                     Cancel
-                </button>
-                <button
-                    onClick={handleSave}
-                    className="flex-1 px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm hover:bg-indigo-600 transition-colors"
-                >
+                </Button>
+                <Button variant="gradient" className="flex-1" onClick={handleSave}>
                     Apply
-                </button>
+                </Button>
             </div>
         </div>
     );

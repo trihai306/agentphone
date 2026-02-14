@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from '@inertiajs/react';
 import { aiStudioApi } from '@/services/api';
+import { Button } from '@/Components/UI';
 
 /**
  * Jobs Queue Panel - Shows active generations, scenarios, and recent history
@@ -217,16 +218,13 @@ export default function JobsQueuePanel({
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Close Button */}
-                        <button
-                            onClick={() => setSelectedMedia(null)}
-                            className={`absolute top-4 right-4 z-10 p-2 rounded-xl transition-all ${isDark
-                                ? 'bg-black/50 text-white hover:bg-black/70'
-                                : 'bg-white/90 text-slate-600 hover:bg-white shadow-lg'}`}
+                        <Button variant="ghost" size="icon-sm" onClick={() => setSelectedMedia(null)}
+                            className="absolute top-4 right-4 z-10"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
-                        </button>
+                        </Button>
 
                         {/* Media */}
                         <div className={`flex items-center justify-center min-h-[400px] max-h-[60vh] ${isDark ? 'bg-[#0a0a0a]' : 'bg-slate-50'}`}>

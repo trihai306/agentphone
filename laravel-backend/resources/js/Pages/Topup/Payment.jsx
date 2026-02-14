@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link, router } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
+import { Head, Link, router } from '@inertiajs/react';
+import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 
@@ -40,6 +40,7 @@ export default function Payment({ topup = {}, package: pkg = {}, paymentMethods 
 
     return (
         <AppLayout title={t('topup.payment')}>
+            <Head title={t('topup.payment')} />
             <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
                 <div className="max-w-[900px] mx-auto px-6 py-6">
                     {/* Header */}

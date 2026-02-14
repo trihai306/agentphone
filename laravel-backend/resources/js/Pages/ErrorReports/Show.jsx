@@ -1,5 +1,6 @@
-import { useForm, usePage, Link } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
+import { useForm, usePage, Link, Head } from '@inertiajs/react';
+import { Alert } from '@/Components/UI';
+import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
@@ -85,9 +86,7 @@ export default function Show({ report, statuses, types, severities }) {
                     </div>
 
                     {flash?.success && (
-                        <div className={`mb-6 p-3 rounded-lg ${isDark ? 'bg-emerald-900/20 text-emerald-400' : 'bg-emerald-50 text-emerald-700'}`}>
-                            {flash.success}
-                        </div>
+                        <Alert type="success" className="mb-6">{flash.success}</Alert>
                     )}
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

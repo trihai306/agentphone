@@ -1,9 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
-import { router } from '@inertiajs/react';
+import { router, Head } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import AppLayout from '../../Layouts/AppLayout';
+import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import WorkflowConfigPanel from '@/Components/Campaigns/WorkflowConfigPanel';
+import { Button } from '@/Components/UI';
 
 // Quick Start Templates
 const TEMPLATES = [
@@ -631,19 +632,22 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                         📱 Chọn Thiết Bị ({selectedDevices.length}/{devices.length} thiết bị)
                                     </label>
                                     <div className="flex gap-2">
-                                        <button
+                                        <Button
+                                            variant="secondary"
+                                            size="xs"
                                             onClick={selectAllDevices}
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-medium ${isDark ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30' : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'}`}
+                                            className={isDark ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30' : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'}
                                         >
                                             ✓ Chọn tất cả
-                                        </button>
+                                        </Button>
                                         {selectedDevices.length > 0 && (
-                                            <button
+                                            <Button
+                                                variant="secondary"
+                                                size="xs"
                                                 onClick={clearDevices}
-                                                className={`px-3 py-1.5 rounded-lg text-xs font-medium ${isDark ? 'bg-white/10 text-gray-400 hover:bg-white/15' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                                             >
                                                 Bỏ chọn
-                                            </button>
+                                            </Button>
                                         )}
                                     </div>
                                 </div>
@@ -865,12 +869,14 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                                         <p className={`text-xs ${isDark ? 'text-violet-400/70' : 'text-violet-600'}`}>Comments, media, v.v. dùng lặp trong mỗi job</p>
                                                     </div>
                                                 </div>
-                                                <button
+                                                <Button
+                                                    variant="secondary"
+                                                    size="xs"
                                                     onClick={addDataPool}
-                                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium ${isDark ? 'bg-violet-500/20 text-violet-300 hover:bg-violet-500/30' : 'bg-violet-100 text-violet-600 hover:bg-violet-200'}`}
+                                                    className={isDark ? 'bg-violet-500/20 text-violet-300 hover:bg-violet-500/30' : 'bg-violet-100 text-violet-600 hover:bg-violet-200'}
                                                 >
                                                     + Thêm Pool
-                                                </button>
+                                                </Button>
                                             </div>
 
                                             {dataPools.length === 0 ? (
@@ -1216,32 +1222,32 @@ export default function Create({ dataCollections = [], workflows = [], devices =
 
                     {/* Navigation */}
                     <div className="flex items-center justify-between mt-6">
-                        <button
+                        <Button
+                            variant="ghost"
                             onClick={() => step > 1 ? setStep(step - 1) : setShowTemplates(true)}
-                            className={`px-6 py-2.5 rounded-xl font-medium ${isDark ? 'text-gray-400 hover:bg-white/5' : 'text-gray-500 hover:bg-gray-100'}`}
                         >
                             {step > 1 ? '← Quay lại' : '← Chọn template khác'}
-                        </button>
+                        </Button>
 
                         {step < 4 ? (
-                            <button
+                            <Button
+                                variant="gradient"
                                 onClick={() => setStep(step + 1)}
                                 disabled={!canProceed()}
-                                className={`px-6 py-2.5 rounded-xl font-medium text-white transition-all
-                                    ${canProceed()
-                                        ? 'bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg hover:shadow-xl'
-                                        : 'bg-gray-400 cursor-not-allowed'}`}
+                                className="bg-gradient-to-r from-emerald-500 to-teal-600"
                             >
                                 Tiếp theo →
-                            </button>
+                            </Button>
                         ) : (
-                            <button
+                            <Button
+                                variant="gradient"
                                 onClick={handleSubmit}
                                 disabled={isSubmitting || !canProceed()}
-                                className="px-8 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg hover:shadow-xl"
+                                loading={isSubmitting}
+                                className="bg-gradient-to-r from-emerald-500 to-teal-600"
                             >
                                 {isSubmitting ? 'Đang tạo...' : '🚀 Tạo Campaign'}
-                            </button>
+                            </Button>
                         )}
                     </div>
                 </div>
@@ -1328,12 +1334,13 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                             <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                 {selectedRecordIds.length} records sẽ được chạy
                             </span>
-                            <button
+                            <Button
+                                variant="gradient"
                                 onClick={() => setShowRecordPicker(false)}
-                                className="px-6 py-2 rounded-xl font-medium text-white bg-gradient-to-r from-cyan-500 to-teal-600"
+                                className="bg-gradient-to-r from-cyan-500 to-teal-600"
                             >
                                 Xác nhận
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>

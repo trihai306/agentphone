@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { router } from '@inertiajs/react';
+import { router, Head } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import AppLayout from '../../Layouts/AppLayout';
+import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useToast } from '@/Components/Layout/ToastProvider';
 import {
@@ -61,6 +61,7 @@ export default function StoragePlans({ currentPlan, plans, usage }) {
 
     return (
         <AppLayout title="Gói lưu trữ">
+            <Head title="Gói lưu trữ" />
             <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
                 <div className="max-w-[1200px] mx-auto px-6 py-8">
                     {/* Header */}

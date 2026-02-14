@@ -3,6 +3,7 @@ import { router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useToast } from '@/Components/Layout/ToastProvider';
+import { Button } from '@/Components/UI';
 
 // Auto-detect field type from sample values
 function detectFieldType(values) {
@@ -235,14 +236,15 @@ export default function ImportCSVModal({ isOpen, onClose }) {
                             </p>
                         </div>
                     </div>
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={handleClose}
-                        className={`p-2 rounded-xl transition-all ${isDark ? 'hover:bg-[#252525]' : 'hover:bg-gray-200'}`}
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                    </button>
+                    </Button>
                 </div>
 
                 {/* Content */}
@@ -256,10 +258,10 @@ export default function ImportCSVModal({ isOpen, onClose }) {
                                 onDrop={handleDrop}
                                 onClick={() => fileInputRef.current?.click()}
                                 className={`cursor-pointer border-2 border-dashed rounded-2xl p-12 text-center transition-all ${dragOver
-                                        ? 'border-cyan-500 bg-cyan-500/10 scale-[1.01]'
-                                        : isDark
-                                            ? 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-cyan-600 hover:bg-cyan-900/10'
-                                            : 'border-gray-300 bg-white hover:border-cyan-500 hover:bg-cyan-50'
+                                    ? 'border-cyan-500 bg-cyan-500/10 scale-[1.01]'
+                                    : isDark
+                                        ? 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-cyan-600 hover:bg-cyan-900/10'
+                                        : 'border-gray-300 bg-white hover:border-cyan-500 hover:bg-cyan-50'
                                     }`}
                             >
                                 <input
@@ -372,18 +374,18 @@ export default function ImportCSVModal({ isOpen, onClose }) {
 
                 {/* Footer */}
                 <div className={`px-6 py-4 border-t flex justify-between ${isDark ? 'border-[#2a2a2a] bg-[#141414]' : 'border-gray-200 bg-white'}`}>
-                    <button
+                    <Button
+                        variant="secondary"
                         onClick={() => step === 1 ? handleClose() : setStep(1)}
-                        className={`px-5 py-2.5 rounded-xl font-medium transition-all ${isDark ? 'bg-[#1a1a1a] hover:bg-[#252525] text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
                     >
                         {step === 1 ? t('data_collections.wizard.cancel') : t('data_collections.wizard.back')}
-                    </button>
+                    </Button>
 
                     {step === 2 && (
-                        <button
+                        <Button
+                            variant="gradient"
                             onClick={handleImport}
                             disabled={processing || !collectionName.trim()}
-                            className="px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-xl font-medium shadow-lg shadow-cyan-500/30 flex items-center gap-2 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {processing ? (
                                 <>
@@ -396,7 +398,7 @@ export default function ImportCSVModal({ isOpen, onClose }) {
                             ) : (
                                 <>📥 {t('data_collections.csv.import_button', { count: csvData?.rows?.length || 0 })}</>
                             )}
-                        </button>
+                        </Button>
                     )}
                 </div>
             </div>

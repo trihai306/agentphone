@@ -1,8 +1,10 @@
-import { Link, router } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
+import { Head, Link, router } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
+import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 
 export default function Show({ package: pkg = {} }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
@@ -14,7 +16,8 @@ export default function Show({ package: pkg = {} }) {
     const handleSubscribe = () => router.visit(`/packages/${pkg.id}/subscribe`);
 
     return (
-        <AppLayout title={pkg.name || 'Package Details'}>
+        <AppLayout title={pkg.name || t('packages.details', 'Package Details')}>
+            <Head title={pkg.name || t('packages.details', 'Package Details')} />
             <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
                 <div className="max-w-[900px] mx-auto px-6 py-6">
                     {/* Header */}
@@ -50,7 +53,7 @@ export default function Show({ package: pkg = {} }) {
                                     </span>
                                     {pkg.duration_days && (
                                         <span className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                            / {pkg.duration_days} days
+                                            / {pkg.duration_days} {t('packages.days', 'days')}
                                         </span>
                                     )}
                                 </div>
@@ -77,7 +80,7 @@ export default function Show({ package: pkg = {} }) {
                                             <p className={`text-xl font-bold ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
                                                 {pkg.credits.toLocaleString()}
                                             </p>
-                                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Credits</p>
+                                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('packages.credits', 'Credits')}</p>
                                         </div>
                                     )}
                                     {pkg.max_devices && (
@@ -85,7 +88,7 @@ export default function Show({ package: pkg = {} }) {
                                             <p className={`text-xl font-bold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
                                                 {pkg.max_devices === -1 ? '∞' : pkg.max_devices}
                                             </p>
-                                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Devices</p>
+                                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('packages.devices', 'Devices')}</p>
                                         </div>
                                     )}
                                     {pkg.duration_days && (
@@ -93,7 +96,7 @@ export default function Show({ package: pkg = {} }) {
                                             <p className={`text-xl font-bold ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
                                                 {pkg.duration_days}
                                             </p>
-                                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Days</p>
+                                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('packages.days', 'Days')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -103,14 +106,14 @@ export default function Show({ package: pkg = {} }) {
                                     className={`w-full py-3 text-sm font-medium rounded-lg ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'
                                         }`}
                                 >
-                                    Subscribe Now
+                                    {t('packages.subscribe_now', 'Subscribe Now')}
                                 </button>
                             </div>
 
                             {/* Features */}
                             {pkg.features?.length > 0 && (
                                 <div className={`p-6 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
-                                    <h2 className={`text-sm font-medium mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Features</h2>
+                                    <h2 className={`text-sm font-medium mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('packages.features', 'Features')}</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         {pkg.features.map((f, i) => (
                                             <div key={i} className="flex items-center gap-2">
@@ -128,17 +131,17 @@ export default function Show({ package: pkg = {} }) {
                         {/* Sidebar */}
                         <div className="space-y-4">
                             <div className={`p-4 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
-                                <h3 className={`text-xs font-medium mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Info</h3>
+                                <h3 className={`text-xs font-medium mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('packages.info', 'Info')}</h3>
                                 <div className="space-y-2">
                                     {pkg.code && (
                                         <div className="flex justify-between">
-                                            <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Code</span>
+                                            <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('packages.code', 'Code')}</span>
                                             <span className={`text-sm font-mono ${isDark ? 'text-white' : 'text-gray-900'}`}>{pkg.code}</span>
                                         </div>
                                     )}
                                     {pkg.type && (
                                         <div className="flex justify-between">
-                                            <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Type</span>
+                                            <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('packages.type_label', 'Type')}</span>
                                             <span className={`text-sm capitalize ${isDark ? 'text-white' : 'text-gray-900'}`}>{pkg.type.replace('_', ' ')}</span>
                                         </div>
                                     )}
@@ -150,10 +153,10 @@ export default function Show({ package: pkg = {} }) {
                                     <svg className={`w-4 h-4 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                     </svg>
-                                    <span className={`text-sm font-medium ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>Money Back Guarantee</span>
+                                    <span className={`text-sm font-medium ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>{t('packages.money_back', 'Money Back Guarantee')}</span>
                                 </div>
                                 <p className={`text-xs ${isDark ? 'text-emerald-300/70' : 'text-emerald-600'}`}>
-                                    7-day refund if not satisfied
+                                    {t('packages.refund_note', '7-day refund if not satisfied')}
                                 </p>
                             </div>
                         </div>

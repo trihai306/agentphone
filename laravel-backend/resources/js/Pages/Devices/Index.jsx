@@ -1,9 +1,18 @@
 import { useState } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import AppLayout from '../../Layouts/AppLayout';
+import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
 import { useTheme } from '@/Contexts/ThemeContext';
+import {
+    Button,
+    SearchInput,
+    PageHeader,
+    MetricCard,
+    MetricCardGrid,
+    Badge,
+    EmptyState,
+} from '@/Components/UI';
 
 export default function Index({ devices }) {
     const { t } = useTranslation();
@@ -53,12 +62,12 @@ export default function Index({ devices }) {
     };
 
     const deviceBrands = {
-        samsung: { color: 'from-blue-500 to-indigo-600', icon: '📱' },
-        xiaomi: { color: 'from-orange-500 to-red-500', icon: '📱' },
-        oppo: { color: 'from-green-500 to-emerald-500', icon: '📱' },
-        vivo: { color: 'from-blue-400 to-cyan-500', icon: '📱' },
-        realme: { color: 'from-yellow-500 to-orange-500', icon: '📱' },
-        default: { color: 'from-violet-500 to-purple-600', icon: '📱' },
+        samsung: { color: 'from-blue-500 to-indigo-600' },
+        xiaomi: { color: 'from-orange-500 to-red-500' },
+        oppo: { color: 'from-green-500 to-emerald-500' },
+        vivo: { color: 'from-blue-400 to-cyan-500' },
+        realme: { color: 'from-yellow-500 to-orange-500' },
+        default: { color: 'from-violet-500 to-purple-600' },
     };
 
     const getDeviceBrand = (model) => {
@@ -70,8 +79,16 @@ export default function Index({ devices }) {
         return deviceBrands.default;
     };
 
+    const deviceIcon = (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+    );
+
     return (
-        <AppLayout title="Devices">
+        <AppLayout title={t('devices.title')}>
+            <Head title={t('devices.title')} />
+
             <div className={`min-h-screen ${isDark ? 'bg-[#09090b]' : 'bg-gradient-to-br from-slate-50 via-white to-slate-100'}`}>
                 {/* Background decoration */}
                 <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -80,97 +97,61 @@ export default function Index({ devices }) {
                 </div>
 
                 <div className="relative max-w-[1400px] mx-auto px-6 py-8">
-                    {/* Hero Header */}
-                    <div className="flex items-start justify-between mb-10">
-                        <div>
-                            <div className="flex items-center gap-4">
-                                <div className="relative w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/25">
-                                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                    </svg>
-                                    {stats.active > 0 && (
-                                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white dark:border-[#09090b]" />
-                                    )}
-                                </div>
-                                <div>
-                                    <h1 className={`text-3xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                        {t('devices.title')}
-                                    </h1>
-                                    <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                        {t('devices.manage_description')}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <a
+                    {/* Page Header */}
+                    <PageHeader
+                        title={t('devices.title')}
+                        subtitle={t('devices.manage_description')}
+                        actions={
+                            <Button
+                                variant="outline"
                                 href="/download/apk"
-                                className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-xl border transition-all ${isDark
-                                    ? 'border-white/10 text-gray-300 hover:bg-white/5 hover:border-white/20'
-                                    : 'border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'
-                                    }`}
                             >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                 </svg>
                                 {t('devices.download_apk')}
-                            </a>
-                        </div>
-                    </div>
+                            </Button>
+                        }
+                    />
 
                     {/* Stats Cards */}
-                    <div className="grid grid-cols-3 gap-5 mb-8">
-                        {[
-                            { label: t('dashboard.stats.total_devices'), value: stats.total, icon: 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z', gradient: 'from-violet-500 to-purple-600', shadow: 'shadow-violet-500/20' },
-                            { label: t('devices.status.online'), value: stats.active, icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', gradient: 'from-emerald-500 to-teal-500', shadow: 'shadow-emerald-500/20', pulse: stats.active > 0 },
-                            { label: t('devices.status.offline'), value: stats.inactive, icon: 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636', gradient: 'from-gray-500 to-gray-600', shadow: 'shadow-gray-500/20' },
-                        ].map((stat, i) => (
-                            <div
-                                key={i}
-                                className={`relative overflow-hidden p-5 rounded-2xl backdrop-blur-xl border transition-all hover:scale-[1.02] ${isDark
-                                    ? 'bg-white/5 border-white/10 hover:border-white/20'
-                                    : 'bg-white/80 border-gray-200/50 hover:border-gray-300 shadow-lg shadow-gray-200/50'
-                                    }`}
-                            >
-                                <div className={`absolute -top-10 -right-10 w-32 h-32 rounded-full blur-2xl bg-gradient-to-br ${stat.gradient} opacity-20`} />
-                                <div className="relative flex items-center justify-between">
-                                    <div>
-                                        <p className={`text-xs font-medium uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                            {stat.label}
-                                        </p>
-                                        <p className={`text-4xl font-bold mt-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                            {stat.value}
-                                        </p>
-                                    </div>
-                                    <div className={`relative w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br ${stat.gradient} ${stat.shadow} shadow-lg`}>
-                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={stat.icon} />
-                                        </svg>
-                                        {stat.pulse && (
-                                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full animate-pulse" />
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    <MetricCardGrid className="mb-8">
+                        <MetricCard
+                            title={t('dashboard.stats.total_devices')}
+                            value={stats.total}
+                            icon={deviceIcon}
+                            color="purple"
+                        />
+                        <MetricCard
+                            title={t('devices.status.online')}
+                            value={stats.active}
+                            icon={
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            }
+                            color="green"
+                        />
+                        <MetricCard
+                            title={t('devices.status.offline')}
+                            value={stats.inactive}
+                            icon={
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                </svg>
+                            }
+                            color="orange"
+                        />
+                    </MetricCardGrid>
 
                     {/* Toolbar */}
                     <div className={`flex items-center justify-between gap-4 p-4 rounded-2xl backdrop-blur-xl border mb-6 ${isDark ? 'bg-white/5 border-white/10' : 'bg-white/80 border-gray-200/50 shadow-lg shadow-gray-200/30'
                         }`}>
-                        <div className="relative flex-1 max-w-md">
-                            <svg className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                            <input
-                                type="text"
+                        <div className="flex-1 max-w-md">
+                            <SearchInput
                                 placeholder={t('devices.search_placeholder')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className={`w-full pl-12 pr-4 py-3 rounded-xl text-sm ${isDark
-                                    ? 'bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-violet-500/50 focus:bg-white/10'
-                                    : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-violet-500 focus:bg-white'
-                                    } border focus:outline-none focus:ring-2 focus:ring-violet-500/20 transition-all`}
                             />
                         </div>
 
@@ -220,13 +201,13 @@ export default function Index({ devices }) {
 
                                                 {/* Status Badge */}
                                                 <div className="absolute top-3 right-3">
-                                                    <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold backdrop-blur-md ${isOnline
-                                                        ? 'bg-emerald-500/20 text-white border border-emerald-400/30'
-                                                        : 'bg-black/20 text-white/80 border border-white/20'
-                                                        }`}>
-                                                        <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-white/50'}`} />
+                                                    <Badge
+                                                        variant={isOnline ? 'success' : 'default'}
+                                                        dot
+                                                        size="sm"
+                                                    >
                                                         {isOnline ? t('devices.status.online') : t('devices.status.offline')}
-                                                    </span>
+                                                    </Badge>
                                                 </div>
 
                                                 {/* Model badge */}
@@ -294,13 +275,13 @@ export default function Index({ devices }) {
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-3">
                                                     <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{device.name || 'Unnamed Device'}</h3>
-                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${isOnline
-                                                        ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
-                                                        : isDark ? 'bg-white/5 text-gray-400 border border-white/10' : 'bg-gray-100 text-gray-500 border border-gray-200'
-                                                        }`}>
-                                                        <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+                                                    <Badge
+                                                        variant={isOnline ? 'success' : 'default'}
+                                                        dot
+                                                        size="sm"
+                                                    >
                                                         {isOnline ? t('devices.status.online') : t('devices.status.offline')}
-                                                    </span>
+                                                    </Badge>
                                                 </div>
                                                 <p className={`text-sm truncate mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>{device.model || 'Unknown model'}</p>
                                             </div>
@@ -317,33 +298,13 @@ export default function Index({ devices }) {
                         )
                     ) : (
                         /* Empty State */
-                        <div className={`relative overflow-hidden rounded-2xl p-16 text-center backdrop-blur-xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white/80 border-gray-200/50 shadow-lg'}`}>
-                            <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full blur-3xl opacity-30 bg-gradient-to-br from-violet-500 to-purple-600`} />
-                            <div className="relative">
-                                <div className="w-20 h-20 mx-auto rounded-2xl flex items-center justify-center bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/30 mb-6">
-                                    <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
-                                <h3 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    {searchQuery ? t('devices.no_results') : t('devices.no_devices')}
-                                </h3>
-                                <p className={`text-sm mb-8 max-w-md mx-auto ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                    {searchQuery ? `No results for "${searchQuery}"` : 'Download the CLICKAI Portal app on your Android device to get started'}
-                                </p>
-                                {!searchQuery && (
-                                    <a
-                                        href="/download/apk"
-                                        className="inline-flex items-center gap-2.5 px-6 py-3 text-sm font-semibold rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/40 hover:scale-[1.02] transition-all"
-                                    >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                        </svg>
-                                        {t('devices.download_apk')}
-                                    </a>
-                                )}
-                            </div>
-                        </div>
+                        <EmptyState
+                            icon={deviceIcon}
+                            title={searchQuery ? t('devices.no_results') : t('devices.no_devices')}
+                            description={searchQuery ? `No results for "${searchQuery}"` : 'Download the CLICKAI Portal app on your Android device to get started'}
+                            actionLabel={!searchQuery ? t('devices.download_apk') : undefined}
+                            actionHref={!searchQuery ? '/download/apk' : undefined}
+                        />
                     )}
 
                     {/* Pagination */}

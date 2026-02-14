@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import AppLayout from '../../Layouts/AppLayout';
+import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useToast } from '@/Components/Layout/ToastProvider';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
@@ -12,6 +12,8 @@ import {
     GlassCardStat,
     Badge,
     Button,
+    Input,
+    Alert,
 } from '@/Components/UI';
 
 export default function AiCreditsIndex({ packages = [], currentCredits = 0, walletBalance = 0 }) {
@@ -117,13 +119,25 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
         maximumFractionDigits: 0,
     }).format(amount);
 
+    const imageIcon = (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+    );
+    const videoIcon = (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+    );
+
     const usageInfo = [
-        { icon: '🖼️', title: t('ai_studio.image_generation'), desc: t('ai_credits.cost_per_image') },
-        { icon: '🎬', title: t('ai_studio.video_generation'), desc: t('ai_credits.cost_per_video') },
+        { icon: imageIcon, title: t('ai_studio.image_generation'), desc: t('ai_credits.cost_per_image') },
+        { icon: videoIcon, title: t('ai_studio.video_generation'), desc: t('ai_credits.cost_per_video') },
     ];
 
     return (
         <AppLayout title={t('ai_credits.title')}>
+            <Head title={t('ai_credits.title')} />
             <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
                 <div className="max-w-[1000px] mx-auto px-6 py-6">
                     {/* Header */}
@@ -164,19 +178,13 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Amount Input */}
                                 <div>
-                                    <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                        {t('ai_credits.custom_amount.amount_label', { defaultValue: 'Số Tiền (VND)' })}
-                                    </label>
-                                    <input
+                                    <Input
+                                        label={t('ai_credits.custom_amount.amount_label', { defaultValue: 'Số Tiền (VND)' })}
                                         type="number"
                                         value={customAmount}
                                         onChange={(e) => setCustomAmount(e.target.value)}
                                         min="10000"
                                         step="10000"
-                                        className={`w-full px-4 py-3 rounded-lg border ${isDark
-                                                ? 'bg-gray-800 border-gray-700 text-white'
-                                                : 'bg-white border-gray-300 text-gray-900'
-                                            } focus:ring-2 focus:ring-violet-500 focus:border-transparent`}
                                         placeholder="100,000"
                                     />
                                     <p className="text-xs text-gray-500 mt-1">
@@ -186,8 +194,8 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
 
                                 {/* Conversion Display */}
                                 <div className={`rounded-lg p-4 ${isDark
-                                        ? 'bg-gradient-to-br from-violet-900/20 to-purple-900/20'
-                                        : 'bg-gradient-to-br from-violet-50 to-purple-50'
+                                    ? 'bg-gradient-to-br from-violet-900/20 to-purple-900/20'
+                                    : 'bg-gradient-to-br from-violet-50 to-purple-50'
                                     }`}>
                                     <div className={`text-sm mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                         {t('ai_credits.custom_amount.will_receive', { defaultValue: 'Bạn sẽ nhận được' })}
@@ -222,14 +230,11 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
 
                             {/* Error Message */}
                             {customAmount && parseFloat(customAmount) > walletBalance && (
-                                <div className={`mt-3 p-3 rounded-lg text-sm ${isDark
-                                        ? 'bg-red-900/20 text-red-400'
-                                        : 'bg-red-50 text-red-600'
-                                    }`}>
+                                <Alert type="error" className="mt-3">
                                     {t('ai_credits.custom_amount.insufficient_balance', {
                                         defaultValue: 'Số dư ví không đủ. Vui lòng nạp thêm tiền.'
                                     })}
-                                </div>
+                                </Alert>
                             )}
                         </GlassCard>
                     </div>
@@ -302,8 +307,8 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
                         <div className="grid grid-cols-2 gap-4 mt-3">
                             {usageInfo.map((item, i) => (
                                 <div key={i} className="flex items-center gap-3">
-                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-100'}`}>
-                                        <span>{item.icon}</span>
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-100'} ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                        {item.icon}
                                     </div>
                                     <div>
                                         <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.title}</p>

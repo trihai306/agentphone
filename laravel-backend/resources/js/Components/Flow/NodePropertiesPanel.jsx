@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { Button } from '@/Components/UI';
 
 /**
  * NodePropertiesPanel - Right sidebar showing selected node properties
@@ -31,14 +32,11 @@ export default function NodePropertiesPanel({
             {/* Header */}
             <div className={`h-12 px-4 flex items-center justify-between border-b ${isDark ? 'border-[#1e1e1e]' : 'border-gray-200'}`}>
                 <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Node Properties</span>
-                <button
-                    onClick={() => setSelectedNode(null)}
-                    className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${isDark ? 'hover:bg-[#1a1a1a] text-gray-500 hover:text-gray-300' : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600'}`}
-                >
+                <Button variant="ghost" size="icon-xs" onClick={() => setSelectedNode(null)}>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                </button>
+                </Button>
             </div>
 
             {/* Content */}
@@ -468,12 +466,9 @@ export default function NodePropertiesPanel({
 
             {/* Delete Button */}
             <div className={`p-4 border-t ${isDark ? 'border-[#1e1e1e]' : 'border-gray-200'}`}>
-                <button
-                    onClick={deleteSelectedNodes}
-                    className="w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-sm font-semibold rounded-lg transition-all border border-red-500/20 hover:border-red-500/40"
-                >
+                <Button variant="danger" onClick={deleteSelectedNodes} className="w-full">
                     Delete Node
-                </button>
+                </Button>
             </div>
         </div>
     );

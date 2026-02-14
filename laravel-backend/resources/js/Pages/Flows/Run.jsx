@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, Head } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import AppLayout from '../../Layouts/AppLayout';
+import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 
 export default function Run({ flow, devices = [], dataSource = null }) {
@@ -61,6 +61,7 @@ export default function Run({ flow, devices = [], dataSource = null }) {
 
     return (
         <AppLayout title={`Run: ${flow.name}`}>
+            <Head title={`Run: ${flow.name}`} />
             <div className={`min-h-screen ${isDark ? 'bg-[#09090b]' : 'bg-gradient-to-br from-slate-50 via-white to-slate-100'}`}>
                 {/* Background decoration */}
                 <div className="fixed inset-0 overflow-hidden pointer-events-none">

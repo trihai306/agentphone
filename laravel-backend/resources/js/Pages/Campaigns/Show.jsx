@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Link, router } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
+import { Link, router, Head } from '@inertiajs/react';
+import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import ConfirmModal from '@/Components/UI/ConfirmModal';
+import { Button } from '@/Components/UI';
 
 const statusConfig = {
     draft: { bg: 'bg-gray-500/10', text: 'text-gray-400', label: 'Nháp', icon: '📝' },
@@ -72,12 +73,9 @@ export default function Show({ campaign }) {
                     {/* Header */}
                     <div className="flex items-start justify-between mb-8">
                         <div className="flex items-center gap-5">
-                            <Link
-                                href="/campaigns"
-                                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 text-gray-400' : 'bg-gray-100 hover:bg-gray-200 text-gray-500'}`}
-                            >
+                            <Button variant="ghost" size="icon" href="/campaigns" as="Link">
                                 ←
-                            </Link>
+                            </Button>
                             <div
                                 className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-lg"
                                 style={{ backgroundColor: `${campaign.color}20` }}
@@ -100,13 +98,13 @@ export default function Show({ campaign }) {
                         </div>
                         <div className="flex gap-3">
                             {campaign.status === 'active' ? (
-                                <button onClick={handlePause} className={`px-5 py-2.5 rounded-xl font-medium ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600'}`}>
+                                <Button variant="secondary" onClick={handlePause} className={isDark ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' : 'bg-amber-100 text-amber-600 hover:bg-amber-200'}>
                                     ⏸ Tạm dừng
-                                </button>
+                                </Button>
                             ) : (
-                                <button onClick={handleRun} className="px-5 py-2.5 rounded-xl font-medium bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg">
+                                <Button variant="gradient" onClick={handleRun} className="bg-gradient-to-r from-emerald-500 to-teal-600">
                                     ▶ Chạy Campaign
-                                </button>
+                                </Button>
                             )}
                         </div>
                     </div>
@@ -204,7 +202,7 @@ export default function Show({ campaign }) {
                         <div className={`rounded-2xl p-6 ${isDark ? 'bg-white/5' : 'bg-white shadow-sm'}`}>
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>📋 Jobs gần đây</h2>
-                                <Link href="/jobs" className={`text-xs ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>Xem tất cả →</Link>
+                                <Button variant="link" size="xs" href="/jobs" as="Link" className={isDark ? 'text-violet-400' : 'text-violet-600'}>Xem tất cả →</Button>
                             </div>
                             {campaign.jobs?.length > 0 ? (
                                 <div className="space-y-2">
@@ -212,8 +210,8 @@ export default function Show({ campaign }) {
                                         <div key={job.id} className={`p-3 rounded-xl flex items-center justify-between ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
                                             <div className="flex items-center gap-2">
                                                 <span className={`w-2 h-2 rounded-full ${job.status === 'completed' ? 'bg-emerald-500' :
-                                                        job.status === 'running' ? 'bg-blue-500 animate-pulse' :
-                                                            job.status === 'failed' ? 'bg-red-500' : 'bg-gray-400'
+                                                    job.status === 'running' ? 'bg-blue-500 animate-pulse' :
+                                                        job.status === 'failed' ? 'bg-red-500' : 'bg-gray-400'
                                                     }`} />
                                                 <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Job #{job.id}</span>
                                             </div>

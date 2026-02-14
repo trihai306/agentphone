@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { aiStudioApi, aiApi } from '@/services/api';
+import { Button } from '@/Components/UI';
 
 /**
  * ScenarioTab - AI Scenario/Script to Scenes Component
@@ -801,12 +802,9 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                     <div className={`p-4 rounded-xl border-2 ${isDark ? 'border-violet-500/30 bg-black/20' : 'border-violet-300 bg-white'}`}>
                                         <div className="flex items-center justify-between mb-4">
                                             <h4 className={`text-sm font-bold ${themeClasses.textPrimary}`}>✨ Thêm nhân vật mới</h4>
-                                            <button
-                                                onClick={() => setShowCharacterForm(false)}
-                                                className={`p-1.5 rounded-lg ${isDark ? 'hover:bg-white/10 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
-                                            >
+                                            <Button variant="ghost" size="icon-xs" onClick={() => setShowCharacterForm(false)}>
                                                 ✕
-                                            </button>
+                                            </Button>
                                         </div>
 
                                         <div className="space-y-3">
@@ -952,16 +950,14 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                             </div>
 
                                             {/* Submit Button */}
-                                            <button
+                                            <Button
+                                                variant="gradient"
+                                                className="w-full"
                                                 onClick={handleAddCharacter}
                                                 disabled={!newCharacter.name.trim()}
-                                                className={`w-full py-3 rounded-xl text-sm font-bold transition-all duration-300 ${newCharacter.name.trim()
-                                                    ? 'bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white shadow-xl shadow-violet-500/40 hover:shadow-2xl hover:shadow-violet-500/50 hover:-translate-y-0.5'
-                                                    : isDark ? 'bg-white/5 text-slate-500 cursor-not-allowed' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                                    }`}
                                             >
                                                 ✨ Thêm vào danh sách
-                                            </button>
+                                            </Button>
                                         </div>
                                     </div>
                                 ) : (
@@ -992,13 +988,12 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
 
                     {/* Parse Button - Enhanced */}
                     <div className="mt-8 max-w-5xl mx-auto">
-                        <button
+                        <Button
+                            variant="gradient"
+                            size="lg"
+                            className="w-full"
                             onClick={handleParse}
                             disabled={parsing || script.length < 10}
-                            className={`w-full py-4 rounded-2xl font-bold text-base transition-all duration-300 ${!parsing && script.length >= 10
-                                ? 'bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white hover:from-violet-500 hover:via-purple-500 hover:to-indigo-500 shadow-xl shadow-violet-500/40 hover:shadow-2xl hover:shadow-violet-500/50 active:scale-[0.99] hover:-translate-y-0.5'
-                                : isDark ? 'bg-white/5 text-slate-500 cursor-not-allowed border border-white/10' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                }`}
                         >
                             {parsing ? (
                                 <span className="flex items-center justify-center gap-3">
@@ -1013,7 +1008,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                     <span className="text-xl">✨</span> Phân tích kịch bản
                                 </span>
                             )}
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )
@@ -1212,25 +1207,21 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
 
                                     {/* Action Buttons */}
                                     <div className="mt-6 space-y-3">
-                                        <button
+                                        <Button
+                                            variant="gradient"
+                                            className="w-full"
                                             onClick={handleGenerate}
                                             disabled={currentCredits < totalCredits}
-                                            className={`w-full py-3.5 rounded-xl font-semibold transition-all ${currentCredits >= totalCredits
-                                                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-500/30'
-                                                : isDark ? 'bg-[#2a2a2a] text-slate-500 cursor-not-allowed' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                                }`}
                                         >
                                             🚀 Tạo {scenes.length} {outputType === 'video' ? 'video' : 'ảnh'}
-                                        </button>
-                                        <button
+                                        </Button>
+                                        <Button
+                                            variant="secondary"
+                                            className="w-full"
                                             onClick={handleReset}
-                                            className={`w-full py-3 rounded-xl font-medium transition-colors ${isDark
-                                                ? 'bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]'
-                                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                                                }`}
                                         >
                                             ← Quay lại
-                                        </button>
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
@@ -1343,15 +1334,9 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                         {/* Actions */}
                         {scenario.status !== 'generating' && (
                             <div className="flex justify-center">
-                                <button
-                                    onClick={handleReset}
-                                    className={`px-8 py-3 rounded-xl font-medium transition-colors ${isDark
-                                        ? 'bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]'
-                                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                                        }`}
-                                >
+                                <Button variant="secondary" onClick={handleReset}>
                                     ✨ Tạo kịch bản mới
-                                </button>
+                                </Button>
                             </div>
                         )}
                     </div>

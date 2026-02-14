@@ -4,6 +4,7 @@ import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { getPageMetadata, ICONS } from '@/Config/pageMetadata';
 import LanguageSwitcher from '../LanguageSwitcher';
+import { Button } from '@/Components/UI';
 
 const notificationStyles = {
     info: { icon: 'text-blue-500', iconPath: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
@@ -50,15 +51,16 @@ export default function Header({ title, userName, setSidebarOpen }) {
                 {/* Left Section */}
                 <div className="flex items-center gap-4 flex-1 min-w-0">
                     {/* Mobile Menu Button */}
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={() => setSidebarOpen(true)}
-                        className={`lg:hidden p-2 rounded-lg transition-all ${isDark ? 'text-gray-400 hover:bg-[#1a1a1a]' : 'text-gray-500 hover:bg-gray-100'
-                            }`}
+                        className="lg:hidden"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
-                    </button>
+                    </Button>
 
                     {/* Page Metadata */}
                     <div className="hidden lg:flex items-center gap-3 flex-1 min-w-0">
@@ -178,21 +180,22 @@ export default function Header({ title, userName, setSidebarOpen }) {
                     </Link>
 
                     {/* Search Button */}
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
-                        className={`hidden md:flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${isDark
-                            ? 'text-gray-500 hover:bg-[#1a1a1a] hover:text-white'
-                            : 'text-gray-400 hover:bg-gray-100 hover:text-gray-900'
-                            }`}
+                        className="hidden md:flex"
+                        icon={
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        }
                     >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
                         <kbd className={`hidden lg:inline-block px-1.5 py-0.5 text-[10px] font-medium rounded ${isDark ? 'bg-[#2a2a2a] text-gray-500' : 'bg-gray-200 text-gray-400'
                             }`}>
                             ⌘K
                         </kbd>
-                    </button>
+                    </Button>
 
                     {/* Contact Support */}
                     <div className="hidden sm:flex items-center gap-1">
@@ -231,12 +234,10 @@ export default function Header({ title, userName, setSidebarOpen }) {
                     <LanguageSwitcher />
 
                     {/* Theme Toggle */}
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={toggleTheme}
-                        className={`p-2 rounded-lg transition-all ${isDark
-                            ? 'text-gray-400 hover:bg-[#1a1a1a] hover:text-white'
-                            : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
-                            }`}
                         aria-label="Toggle theme"
                     >
                         {isDark ? (
@@ -248,16 +249,15 @@ export default function Header({ title, userName, setSidebarOpen }) {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                             </svg>
                         )}
-                    </button>
+                    </Button>
 
                     {/* Notifications */}
                     <div className="relative">
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
                             onClick={() => setShowNotifications(!showNotifications)}
-                            className={`relative p-2 rounded-lg transition-all ${isDark
-                                ? 'text-gray-400 hover:bg-[#1a1a1a] hover:text-white'
-                                : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
-                                }`}
+                            className="relative"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -270,7 +270,7 @@ export default function Header({ title, userName, setSidebarOpen }) {
                                     </span>
                                 </span>
                             )}
-                        </button>
+                        </Button>
 
                         {/* Notifications Dropdown */}
                         {showNotifications && (
@@ -291,13 +291,14 @@ export default function Header({ title, userName, setSidebarOpen }) {
                                             )}
                                         </div>
                                         {notifications.length > 0 && (
-                                            <button
+                                            <Button
+                                                variant="link"
+                                                size="xs"
                                                 onClick={handleMarkAllAsRead}
-                                                className={`text-xs font-medium ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
-                                                    }`}
+                                                className={isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}
                                             >
                                                 {t('notifications.mark_all_read', { defaultValue: 'Mark all read' })}
-                                            </button>
+                                            </Button>
                                         )}
                                     </div>
 
@@ -344,15 +345,15 @@ export default function Header({ title, userName, setSidebarOpen }) {
                                                                         {notification.message}
                                                                     </p>
                                                                 </div>
-                                                                <button
+                                                                <Button
+                                                                    variant="danger-ghost"
+                                                                    size="icon-xs"
                                                                     onClick={(e) => { e.stopPropagation(); handleRemove(notification.id); }}
-                                                                    className={`p-1 rounded transition-colors ${isDark ? 'text-gray-600 hover:text-red-400' : 'text-gray-400 hover:text-red-500'
-                                                                        }`}
                                                                 >
                                                                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                                                     </svg>
-                                                                </button>
+                                                                </Button>
                                                             </div>
                                                         </div>
                                                     );

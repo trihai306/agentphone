@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import AppLayout from '../../Layouts/AppLayout';
+import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 
 export default function Index({ packages = [], myPackages = [], stats = {} }) {
@@ -38,6 +38,7 @@ export default function Index({ packages = [], myPackages = [], stats = {} }) {
 
     return (
         <AppLayout title={t('packages.title')}>
+            <Head title={t('packages.title')} />
             <div className={`min-h-screen ${isDark ? 'bg-[#09090b]' : 'bg-gradient-to-br from-slate-50 via-white to-slate-100'}`}>
                 {/* Background decoration */}
                 <div className="fixed inset-0 overflow-hidden pointer-events-none">

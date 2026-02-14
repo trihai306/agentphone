@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useToast } from '@/Components/Layout/ToastProvider';
+import { Button } from '@/Components/UI';
 import { aiApi } from '@/services/api';
 
 /**
@@ -222,17 +223,11 @@ export default function AINodeConfigModal({ isOpen, onClose, nodeData, onSave })
                             {t('flow.ai.configSubtitle')}
                         </p>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className={`p-2 rounded-xl transition-colors ${isDark
-                            ? 'hover:bg-white/10 text-gray-400 hover:text-white'
-                            : 'hover:bg-black/5 text-gray-500 hover:text-gray-900'
-                            }`}
-                    >
+                    <Button variant="ghost" size="icon-xs" onClick={onClose}>
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                    </button>
+                    </Button>
                 </div>
 
                 {/* Tabs Navigation */}
@@ -314,20 +309,17 @@ export default function AINodeConfigModal({ isOpen, onClose, nodeData, onSave })
                 <div className={`flex items-center justify-between px-8 py-6 border-t ${isDark ? 'border-white/10' : 'border-black/10'
                     }`}>
                     <div className="flex items-center gap-3">
-                        <button
+                        <Button
+                            variant="secondary"
                             onClick={handleTestPrompt}
                             disabled={isTesting || !config.prompt}
-                            className={`px-6 py-3 rounded-xl font-medium transition-all ${isTesting || !config.prompt
-                                ? `opacity-50 cursor-not-allowed ${isDark ? 'bg-white/5' : 'bg-black/5'}`
-                                : `${isDark ? 'bg-white/10 hover:bg-white/20' : 'bg-black/5 hover:bg-black/10'}`
-                                }`}
                         >
                             {isTesting ? (
                                 <>⏳ {t('flow.ai.testing')}</>
                             ) : (
                                 <>🧪 {t('flow.ai.test')}</>
                             )}
-                        </button>
+                        </Button>
                         {estimatedTokens > 0 && (
                             <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                 ~{estimatedTokens} tokens · ${estimatedCost.toFixed(4)}
@@ -336,22 +328,12 @@ export default function AINodeConfigModal({ isOpen, onClose, nodeData, onSave })
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={onClose}
-                            className={`px-6 py-3 rounded-xl font-medium transition-all ${isDark ? 'bg-white/10 hover:bg-white/20' : 'bg-black/5 hover:bg-black/10'
-                                }`}
-                        >
+                        <Button variant="secondary" onClick={onClose}>
                             {t('common.cancel')}
-                        </button>
-                        <button
-                            onClick={handleSave}
-                            className="px-8 py-3 rounded-xl font-bold text-white transition-all hover:scale-105 shadow-lg"
-                            style={{
-                                background: `linear-gradient(135deg, ${currentProvider.color} 0%, ${currentProvider.color}dd 100%)`,
-                            }}
-                        >
+                        </Button>
+                        <Button variant="gradient" onClick={handleSave}>
                             💾 {t('common.save')}
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>

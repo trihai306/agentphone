@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
 import { useToast } from '@/Components/Layout/ToastProvider';
+import { Button } from '@/Components/UI';
 
 export default function Show({ collection, records, filters }) {
     const { t } = useTranslation();
@@ -245,16 +246,11 @@ export default function Show({ collection, records, filters }) {
                 <div className="relative max-w-[1400px] mx-auto px-6 py-8">
                     {/* Header */}
                     <div className="flex items-start gap-4 mb-8">
-                        <Link
-                            href="/data-collections"
-                            className={`p-3 rounded-xl mt-1 transition-all ${isDark
-                                ? 'hover:bg-white/5 text-gray-400'
-                                : 'hover:bg-gray-100 text-gray-500'}`}
-                        >
+                        <Button variant="ghost" size="icon" href="/data-collections" as="Link">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                             </svg>
-                        </Link>
+                        </Button>
 
                         <div className="flex-1">
                             <div className="flex items-center gap-4 mb-2">
@@ -466,27 +462,29 @@ export default function Show({ collection, records, filters }) {
 
                             {/* Actions */}
                             <div className="flex items-center gap-2">
-                                <button
+                                <Button
+                                    variant="ghost"
                                     onClick={handleExport}
-                                    className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl transition-all ${isDark
-                                        ? 'text-gray-300 hover:bg-white/5'
-                                        : 'text-gray-600 hover:bg-gray-100'
-                                        }`}
+                                    icon={
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                        </svg>
+                                    }
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                    </svg>
                                     {t('data_collections.export')}
-                                </button>
-                                <button
+                                </Button>
+                                <Button
+                                    variant="gradient"
                                     onClick={() => setShowAddRow(!showAddRow)}
-                                    className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] transition-all"
+                                    className="bg-gradient-to-r from-blue-500 to-cyan-500 shadow-blue-500/25"
+                                    icon={
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                        </svg>
+                                    }
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                    </svg>
                                     {t('data_collections.add_row')}
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -677,15 +675,18 @@ export default function Show({ collection, records, filters }) {
                                                     {searchQuery ? t('data_collections.try_different_search') : t('data_collections.add_first_record')}
                                                 </p>
                                                 {!searchQuery && (
-                                                    <button
+                                                    <Button
+                                                        variant="gradient"
                                                         onClick={() => setShowAddRow(true)}
-                                                        className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/25"
+                                                        className="bg-gradient-to-r from-blue-500 to-cyan-500 shadow-blue-500/25"
+                                                        icon={
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                            </svg>
+                                                        }
                                                     >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                                        </svg>
                                                         {t('data_collections.add_first_record')}
-                                                    </button>
+                                                    </Button>
                                                 )}
                                             </td>
                                         </tr>
@@ -704,32 +705,35 @@ export default function Show({ collection, records, filters }) {
                             </div>
                             <div className="flex items-center gap-2">
                                 {records.prev_cursor && (
-                                    <button
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
                                         onClick={() => loadMore(records.prev_cursor, 'prev')}
                                         disabled={isLoading}
-                                        className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all disabled:opacity-50 ${isDark
-                                            ? 'text-gray-300 hover:bg-white/5 border border-white/10'
-                                            : 'text-gray-600 hover:bg-gray-100 border border-gray-200'}`}
+                                        icon={
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                            </svg>
+                                        }
                                     >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                        </svg>
                                         {t('common.previous')}
-                                    </button>
+                                    </Button>
                                 )}
                                 {records.has_more && records.next_cursor && (
-                                    <button
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
                                         onClick={() => loadMore(records.next_cursor, 'next')}
                                         disabled={isLoading}
-                                        className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all disabled:opacity-50 ${isDark
-                                            ? 'bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10'
-                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'}`}
+                                        loading={isLoading}
+                                        iconRight={
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        }
                                     >
                                         {isLoading ? t('common.loading') : t('common.next')}
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </button>
+                                    </Button>
                                 )}
                             </div>
                         </div>
@@ -756,43 +760,45 @@ export default function Show({ collection, records, filters }) {
                                 <div className={`w-px h-6 ${isDark ? 'bg-white/10' : 'bg-gray-200'}`} />
 
                                 {/* Bulk Export */}
-                                <button
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
                                     onClick={handleBulkExport}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${isDark
-                                        ? 'text-gray-300 hover:bg-white/5'
-                                        : 'text-gray-700 hover:bg-gray-100'
-                                        }`}
+                                    icon={
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                        </svg>
+                                    }
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                    </svg>
                                     {t('data_collections.export_selected')}
-                                </button>
+                                </Button>
 
                                 {/* Bulk Delete */}
-                                <button
+                                <Button
+                                    variant="danger"
+                                    size="sm"
                                     onClick={handleBulkDelete}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-all"
+                                    className="bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                                    icon={
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    }
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
                                     {t('common.delete')}
-                                </button>
+                                </Button>
 
                                 {/* Clear selection */}
-                                <button
+                                <Button
+                                    variant="ghost"
+                                    size="icon-sm"
                                     onClick={() => setSelectedRecords([])}
-                                    className={`p-2 rounded-lg transition-all ${isDark
-                                        ? 'text-gray-500 hover:bg-white/5'
-                                        : 'text-gray-400 hover:bg-gray-100'
-                                        }`}
                                     title={t('data_collections.clear_selection')}
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     )}

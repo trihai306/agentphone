@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Link, router, usePage } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
+import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 
 export default function Subscribe({ package: pkg = {}, existingPackage = null, paymentMethods = [] }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     const [selectedPayment, setSelectedPayment] = useState('');
@@ -25,7 +27,8 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
     };
 
     return (
-        <AppLayout title={`Subscribe - ${pkg.name}`}>
+        <AppLayout title={`${t('packages.subscribe', 'Subscribe')} - ${pkg.name}`}>
+            <Head title={`${t('packages.subscribe', 'Subscribe')} - ${pkg.name}`} />
             <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
                 <div className="max-w-[900px] mx-auto px-6 py-6">
                     {/* Header */}
@@ -43,7 +46,7 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                                 Subscribe to {pkg.name}
                             </h1>
                             <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                Complete your subscription
+                                {t('packages.complete_subscription', 'Complete your subscription')}
                             </p>
                         </div>
                     </div>
@@ -51,7 +54,7 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                     {/* Warning */}
                     {existingPackage && (
                         <div className={`mb-6 p-4 rounded-lg ${isDark ? 'bg-amber-900/20 text-amber-400' : 'bg-amber-50 text-amber-700'}`}>
-                            You already have an active package. Subscribing will extend your current subscription.
+                            {t('packages.existing_warning', 'You already have an active package. Subscribing will extend your current subscription.')}
                         </div>
                     )}
 
@@ -60,7 +63,7 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                             {/* Package Summary */}
                             <div className="lg:col-span-1 lg:order-2">
                                 <div className={`p-5 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
-                                    <h2 className={`text-sm font-medium mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Package</h2>
+                                    <h2 className={`text-sm font-medium mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('packages.package', 'Package')}</h2>
 
                                     {pkg.badge && (
                                         <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded mb-2 ${isDark ? 'bg-purple-900/30 text-purple-400' : 'bg-purple-100 text-purple-700'}`}>
@@ -74,7 +77,7 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                                     <div className="flex items-baseline gap-1 mb-4">
                                         <span className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatPrice(pkg.price)}</span>
                                         {pkg.duration_days && (
-                                            <span className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>/ {pkg.duration_days} days</span>
+                                            <span className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>/ {pkg.duration_days} {t('packages.days', 'days')}</span>
                                         )}
                                     </div>
 
@@ -98,14 +101,14 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                             {/* Payment Selection */}
                             <div className="lg:col-span-2 lg:order-1 space-y-4">
                                 <div className={`p-5 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
-                                    <h2 className={`text-sm font-medium mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Payment Method</h2>
+                                    <h2 className={`text-sm font-medium mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('packages.payment_method', 'Payment Method')}</h2>
                                     <div className="space-y-2">
                                         {paymentMethods.map((method) => (
                                             <label
                                                 key={method.id}
                                                 className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${selectedPayment === method.id
-                                                        ? isDark ? 'bg-white/5 ring-1 ring-white/20' : 'bg-gray-50 ring-1 ring-gray-200'
-                                                        : isDark ? 'hover:bg-[#222]' : 'hover:bg-gray-50'
+                                                    ? isDark ? 'bg-white/5 ring-1 ring-white/20' : 'bg-gray-50 ring-1 ring-gray-200'
+                                                    : isDark ? 'hover:bg-[#222]' : 'hover:bg-gray-50'
                                                     }`}
                                             >
                                                 <input
@@ -117,8 +120,8 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                                                     className="sr-only"
                                                 />
                                                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedPayment === method.id
-                                                        ? isDark ? 'border-white bg-white' : 'border-gray-900 bg-gray-900'
-                                                        : isDark ? 'border-gray-600' : 'border-gray-300'
+                                                    ? isDark ? 'border-white bg-white' : 'border-gray-900 bg-gray-900'
+                                                    : isDark ? 'border-gray-600' : 'border-gray-300'
                                                     }`}>
                                                     {selectedPayment === method.id && (
                                                         <div className={`w-1.5 h-1.5 rounded-full ${isDark ? 'bg-black' : 'bg-white'}`} />
@@ -137,13 +140,13 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
 
                                 {/* Order Summary */}
                                 <div className={`p-5 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
-                                    <h2 className={`text-sm font-medium mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Order Summary</h2>
+                                    <h2 className={`text-sm font-medium mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('packages.order_summary', 'Order Summary')}</h2>
                                     <div className="flex justify-between mb-2">
                                         <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{pkg.name}</span>
                                         <span className={`text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatPrice(pkg.price)}</span>
                                     </div>
                                     <div className={`pt-3 border-t flex justify-between ${isDark ? 'border-[#2a2a2a]' : 'border-gray-100'}`}>
-                                        <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Total</span>
+                                        <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('packages.total', 'Total')}</span>
                                         <span className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{formatPrice(pkg.price)}</span>
                                     </div>
                                 </div>
@@ -157,7 +160,7 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                                         className="mt-1"
                                     />
                                     <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                        I agree to the Terms of Service and Privacy Policy
+                                        {t('packages.agree_terms', 'I agree to the Terms of Service and Privacy Policy')}
                                     </span>
                                 </label>
 
@@ -167,7 +170,7 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                                         href="/packages"
                                         className={`px-4 py-2 text-sm font-medium rounded-lg ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
                                     >
-                                        Cancel
+                                        {t('common.cancel', 'Cancel')}
                                     </Link>
                                     <button
                                         type="submit"
@@ -175,7 +178,7 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                                         className={`px-6 py-2 text-sm font-medium rounded-lg ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'
                                             } disabled:opacity-50`}
                                     >
-                                        {processing ? 'Processing...' : `Pay ${formatPrice(pkg.price)}`}
+                                        {processing ? t('common.processing', 'Processing...') : `${t('packages.pay', 'Pay')} ${formatPrice(pkg.price)}`}
                                     </button>
                                 </div>
                             </div>

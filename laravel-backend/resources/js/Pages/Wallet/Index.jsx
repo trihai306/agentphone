@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
+import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 
@@ -331,14 +331,14 @@ export default function Index({
                                                 key={index}
                                                 href={link.url || '#'}
                                                 className={`px-3 py-1 text-sm rounded-lg transition-colors ${link.active
-                                                        ? 'bg-violet-600 text-white'
-                                                        : link.url
-                                                            ? isDark
-                                                                ? 'bg-white/5 text-gray-400 hover:bg-white/10'
-                                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                                            : isDark
-                                                                ? 'text-gray-600 cursor-not-allowed'
-                                                                : 'text-gray-300 cursor-not-allowed'
+                                                    ? 'bg-violet-600 text-white'
+                                                    : link.url
+                                                        ? isDark
+                                                            ? 'bg-white/5 text-gray-400 hover:bg-white/10'
+                                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                        : isDark
+                                                            ? 'text-gray-600 cursor-not-allowed'
+                                                            : 'text-gray-300 cursor-not-allowed'
                                                     }`}
                                                 dangerouslySetInnerHTML={{ __html: link.label }}
                                                 preserveState

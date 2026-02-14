@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/Components/Layout/ToastProvider';
+import { Button } from '@/Components/UI';
 
 export default function MediaDetailPanel({
     item,
@@ -66,14 +67,11 @@ export default function MediaDetailPanel({
                 <h3 className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                     {t('media.details', 'Chi tiết')}
                 </h3>
-                <button
-                    onClick={onClose}
-                    className={`p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-[#1a1a1a] text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
-                >
+                <Button variant="ghost" size="icon-xs" onClick={onClose}>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                </button>
+                </Button>
             </div>
 
             {/* Preview */}
@@ -151,12 +149,12 @@ export default function MediaDetailPanel({
                 <button
                     onClick={copyUrl}
                     className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${copying
-                            ? isDark
-                                ? 'bg-emerald-900/30 text-emerald-400'
-                                : 'bg-emerald-50 text-emerald-600'
-                            : isDark
-                                ? 'bg-white text-black hover:bg-gray-100'
-                                : 'bg-gray-900 text-white hover:bg-gray-800'
+                        ? isDark
+                            ? 'bg-emerald-900/30 text-emerald-400'
+                            : 'bg-emerald-50 text-emerald-600'
+                        : isDark
+                            ? 'bg-white text-black hover:bg-gray-100'
+                            : 'bg-gray-900 text-white hover:bg-gray-800'
                         }`}
                 >
                     {copying ? (
@@ -182,8 +180,8 @@ export default function MediaDetailPanel({
                         href={item.url}
                         download={item.original_name}
                         className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${isDark
-                                ? 'bg-[#1a1a1a] text-gray-300 hover:text-white hover:bg-[#222]'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            ? 'bg-[#1a1a1a] text-gray-300 hover:text-white hover:bg-[#222]'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -191,18 +189,16 @@ export default function MediaDetailPanel({
                         </svg>
                         {t('media.download', 'Tải xuống')}
                     </a>
-                    <button
+                    <Button
+                        variant="danger-ghost"
+                        className="flex-1"
                         onClick={() => onDelete(item.id)}
-                        className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${isDark
-                                ? 'bg-red-900/30 text-red-400 hover:bg-red-900/50'
-                                : 'bg-red-50 text-red-600 hover:bg-red-100'
-                            }`}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                         {t('media.delete', 'Xóa')}
-                    </button>
+                    </Button>
                 </div>
 
                 {/* Open in new tab */}
@@ -211,8 +207,8 @@ export default function MediaDetailPanel({
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${isDark
-                            ? 'text-gray-500 hover:text-white'
-                            : 'text-gray-400 hover:text-gray-900'
+                        ? 'text-gray-500 hover:text-white'
+                        : 'text-gray-400 hover:text-gray-900'
                         }`}
                 >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

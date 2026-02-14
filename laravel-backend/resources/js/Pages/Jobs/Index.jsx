@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, Head } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import AppLayout from '../../Layouts/AppLayout';
+import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { Button, SearchInput } from '@/Components/UI';
 
 // Simple debounce implementation
 function useDebounce(callback, delay) {
@@ -208,16 +209,12 @@ export default function Index({ jobs, stats, deviceStats = [], devices = [], flo
                         <div className="flex-1 min-w-0">
                             {/* Search & Filters */}
                             <div className={`flex items-center gap-3 p-3 rounded-xl mb-4 ${isDark ? 'bg-white/5' : 'bg-white/80 shadow'}`}>
-                                <div className="relative flex-1">
-                                    <svg className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                                    <input
-                                        type="text"
+                                <div className="flex-1">
+                                    <SearchInput
                                         value={search}
                                         onChange={handleSearchChange}
                                         placeholder={t('jobs.search_placeholder')}
-                                        className={`w-full pl-10 pr-4 py-2 rounded-lg border-0 ${isDark ? 'bg-white/5 text-white placeholder:text-gray-600' : 'bg-gray-50 text-gray-900 placeholder:text-gray-400'} focus:outline-none focus:ring-2 focus:ring-violet-500/50`}
+                                        size="sm"
                                     />
                                 </div>
                                 <button
@@ -358,24 +355,27 @@ export default function Index({ jobs, stats, deviceStats = [], devices = [], flo
                                                                     </svg>
                                                                 </Link>
                                                                 {['pending', 'queued', 'running'].includes(job.status) && (
-                                                                    <button
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon-xs"
                                                                         onClick={(e) => handleCancel(job.id, e)}
-                                                                        className={`p-1.5 rounded-lg ${isDark ? 'hover:bg-yellow-500/20 text-gray-400 hover:text-yellow-400' : 'hover:bg-yellow-50 text-gray-400 hover:text-yellow-600'}`}
+                                                                        className={isDark ? 'hover:bg-yellow-500/20 text-gray-400 hover:text-yellow-400' : 'hover:bg-yellow-50 text-gray-400 hover:text-yellow-600'}
                                                                     >
                                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
                                                                         </svg>
-                                                                    </button>
+                                                                    </Button>
                                                                 )}
                                                                 {!['running', 'pending', 'queued'].includes(job.status) && (
-                                                                    <button
+                                                                    <Button
+                                                                        variant="danger-ghost"
+                                                                        size="icon-xs"
                                                                         onClick={(e) => handleDelete(job.id, e)}
-                                                                        className={`p-1.5 rounded-lg ${isDark ? 'hover:bg-red-500/20 text-gray-400 hover:text-red-400' : 'hover:bg-red-50 text-gray-400 hover:text-red-500'}`}
                                                                     >
                                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                                         </svg>
-                                                                    </button>
+                                                                    </Button>
                                                                 )}
                                                             </div>
                                                         </td>

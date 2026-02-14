@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
-import LandingLayout from '../../Layouts/LandingLayout';
-import SeoHead, { schemas } from '../../Components/SeoHead';
+import LandingLayout from '@/Layouts/LandingLayout';
+import SeoHead, { schemas } from '@/Components/SeoHead';
 
 export default function Index() {
     const [activeDevices, setActiveDevices] = useState(10247);
@@ -19,188 +19,188 @@ export default function Index() {
     return (
         <LandingLayout>
             <div className="overflow-x-hidden">
-            <SeoHead
-                title="CLICKAI - Nền Tảng Tự Động Hoá Phone Farm"
-                description="Nền tảng No-Code tự động hoá phone farm. Kéo thả workflow, Vision AI nhận diện UI, thao tác như người thật 24/7."
-                keywords="phone farm, tự động hoá, workflow automation, nuôi nick, test key, clickai"
-                url="https://clickai.vn"
-                structuredData={structuredData}
-            />
+                <SeoHead
+                    title="CLICKAI - Nền Tảng Tự Động Hoá Phone Farm"
+                    description="Nền tảng No-Code tự động hoá phone farm. Kéo thả workflow, Vision AI nhận diện UI, thao tác như người thật 24/7."
+                    keywords="phone farm, tự động hoá, workflow automation, nuôi nick, test key, clickai"
+                    url="https://clickai.vn"
+                    structuredData={structuredData}
+                />
 
-            {/* Hero Section */}
-            <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-white dark:bg-gray-950">
-                {/* Background Grid */}
-                <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.05]" style={{
-                    backgroundImage: `linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)`,
-                    backgroundSize: '60px 60px'
-                }}></div>
+                {/* Hero Section */}
+                <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-white dark:bg-gray-950">
+                    {/* Background Grid */}
+                    <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.05]" style={{
+                        backgroundImage: `linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)`,
+                        backgroundSize: '60px 60px'
+                    }}></div>
 
-                {/* Gradient Orbs */}
-                <div className="absolute inset-0 overflow-hidden">
-                    <div className="absolute top-0 left-1/4 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-gradient-to-br from-purple-500/10 to-transparent rounded-full blur-[100px]"></div>
-                    <div className="absolute bottom-0 right-1/4 w-[200px] md:w-[400px] h-[200px] md:h-[400px] bg-gradient-to-tl from-cyan-500/10 to-transparent rounded-full blur-[80px]"></div>
-                </div>
+                    {/* Gradient Orbs */}
+                    <div className="absolute inset-0 overflow-hidden">
+                        <div className="absolute top-0 left-1/4 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-gradient-to-br from-purple-500/10 to-transparent rounded-full blur-[100px]"></div>
+                        <div className="absolute bottom-0 right-1/4 w-[200px] md:w-[400px] h-[200px] md:h-[400px] bg-gradient-to-tl from-cyan-500/10 to-transparent rounded-full blur-[80px]"></div>
+                    </div>
 
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-                    <div className="grid lg:grid-cols-2 gap-16 items-center">
-                        {/* Left Content */}
-                        <div className="text-center lg:text-left space-y-8">
-                            {/* Badge */}
-                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full">
-                                <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-500 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
-                                </span>
-                                <span className="text-xs font-semibold text-purple-600 dark:text-purple-400">NO-CODE AUTOMATION</span>
+                    <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+                        <div className="grid lg:grid-cols-2 gap-16 items-center">
+                            {/* Left Content */}
+                            <div className="text-center lg:text-left space-y-8">
+                                {/* Badge */}
+                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full">
+                                    <span className="relative flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-500 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
+                                    </span>
+                                    <span className="text-xs font-semibold text-purple-600 dark:text-purple-400">NO-CODE AUTOMATION</span>
+                                </div>
+
+                                {/* Title */}
+                                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight">
+                                    Tự Động Hoá
+                                    <span className="block bg-gradient-to-r from-purple-600 to-cyan-500 bg-clip-text text-transparent">
+                                        Phone Farm
+                                    </span>
+                                </h1>
+
+                                {/* Description */}
+                                <p className="text-lg text-gray-600 dark:text-gray-400 max-w-xl">
+                                    Nền tảng <strong>No-Code</strong> kéo thả workflow. Vision AI nhận diện UI, thao tác như người thật 24/7.
+                                </p>
+
+                                {/* CTA Buttons */}
+                                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                                    <Link
+                                        href="/register"
+                                        className="inline-flex items-center justify-center px-6 py-3 font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-xl transition-colors shadow-lg shadow-purple-500/25"
+                                    >
+                                        Dùng Thử Miễn Phí
+                                        <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                        </svg>
+                                    </Link>
+                                    <Link
+                                        href="/features"
+                                        className="inline-flex items-center justify-center px-6 py-3 font-semibold text-gray-700 dark:text-white bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 rounded-xl transition-colors"
+                                    >
+                                        <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                                        </svg>
+                                        Xem Demo
+                                    </Link>
+                                </div>
+
+                                {/* Trust badges */}
+                                <div className="flex flex-wrap gap-4 justify-center lg:justify-start text-sm text-gray-500 dark:text-gray-400">
+                                    <span className="flex items-center gap-1.5">
+                                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        Setup 5 phút
+                                    </span>
+                                    <span className="flex items-center gap-1.5">
+                                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        Không cần code
+                                    </span>
+                                    <span className="flex items-center gap-1.5">
+                                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        14 ngày miễn phí
+                                    </span>
+                                </div>
                             </div>
 
-                            {/* Title */}
-                            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight">
-                                Tự Động Hoá
-                                <span className="block bg-gradient-to-r from-purple-600 to-cyan-500 bg-clip-text text-transparent">
-                                    Phone Farm
-                                </span>
-                            </h1>
+                            {/* Right: Phone Farm Preview */}
+                            <div className="hidden lg:block">
+                                <PhoneFarmPreview />
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
-                            {/* Description */}
-                            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-xl">
-                                Nền tảng <strong>No-Code</strong> kéo thả workflow. Vision AI nhận diện UI, thao tác như người thật 24/7.
+                {/* Stats Section */}
+                <section className="py-16 bg-gray-50 dark:bg-gray-900/50 border-y border-gray-200 dark:border-gray-800">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                            <StatCard number={activeDevices.toLocaleString()} label="Thiết bị đang chạy" />
+                            <StatCard number="99.9%" label="Uptime" />
+                            <StatCard number="1M+" label="Thao tác/ngày" />
+                            <StatCard number="98%" label="Tỷ lệ thành công" />
+                        </div>
+                    </div>
+                </section>
+
+                {/* Features Section */}
+                <section className="py-24 bg-white dark:bg-gray-950">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="text-center mb-16">
+                            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                                Tất Cả Những Gì Bạn Cần
+                            </h2>
+                            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                                Nền tảng tích hợp đầy đủ để tự động hoá mọi tác vụ phone farm
                             </p>
-
-                            {/* CTA Buttons */}
-                            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                                <Link
-                                    href="/register"
-                                    className="inline-flex items-center justify-center px-6 py-3 font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-xl transition-colors shadow-lg shadow-purple-500/25"
-                                >
-                                    Dùng Thử Miễn Phí
-                                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                    </svg>
-                                </Link>
-                                <Link
-                                    href="/features"
-                                    className="inline-flex items-center justify-center px-6 py-3 font-semibold text-gray-700 dark:text-white bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 rounded-xl transition-colors"
-                                >
-                                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                                    </svg>
-                                    Xem Demo
-                                </Link>
-                            </div>
-
-                            {/* Trust badges */}
-                            <div className="flex flex-wrap gap-4 justify-center lg:justify-start text-sm text-gray-500 dark:text-gray-400">
-                                <span className="flex items-center gap-1.5">
-                                    <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    Setup 5 phút
-                                </span>
-                                <span className="flex items-center gap-1.5">
-                                    <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    Không cần code
-                                </span>
-                                <span className="flex items-center gap-1.5">
-                                    <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    14 ngày miễn phí
-                                </span>
-                            </div>
                         </div>
 
-                        {/* Right: Phone Farm Preview */}
-                        <div className="hidden lg:block">
-                            <PhoneFarmPreview />
+                        <div className="grid md:grid-cols-3 gap-8">
+                            <FeatureCard
+                                icon={<PhoneIcon />}
+                                title="Quản Lý Thiết Bị"
+                                description="Điều khiển hàng trăm điện thoại từ một dashboard. Theo dõi real-time, phân nhóm thông minh."
+                            />
+                            <FeatureCard
+                                icon={<WorkflowIcon />}
+                                title="Visual Workflow"
+                                description="Kéo thả tạo kịch bản tự động. Ghi lại thao tác thật, chỉnh sửa linh hoạt."
+                            />
+                            <FeatureCard
+                                icon={<AIIcon />}
+                                title="Vision AI"
+                                description="AI nhận diện UI, thao tác như người thật. Bypass detection hiệu quả."
+                            />
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            {/* Stats Section */}
-            <section className="py-16 bg-gray-50 dark:bg-gray-900/50 border-y border-gray-200 dark:border-gray-800">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                        <StatCard number={activeDevices.toLocaleString()} label="Thiết bị đang chạy" />
-                        <StatCard number="99.9%" label="Uptime" />
-                        <StatCard number="1M+" label="Thao tác/ngày" />
-                        <StatCard number="98%" label="Tỷ lệ thành công" />
+                {/* How It Works */}
+                <section className="py-24 bg-gray-50 dark:bg-gray-900/50">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="text-center mb-16">
+                            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                                Bắt Đầu Trong 3 Bước
+                            </h2>
+                        </div>
+
+                        <div className="grid md:grid-cols-3 gap-8">
+                            <StepCard step="01" title="Cài Agent" description="Tải app lên điện thoại, kết nối tự động trong vài giây." />
+                            <StepCard step="02" title="Tạo Workflow" description="Ghi lại thao tác hoặc kéo thả để xây dựng kịch bản." />
+                            <StepCard step="03" title="Chạy 24/7" description="Lên lịch hoặc chạy ngay. Hệ thống hoạt động liên tục." />
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            {/* Features Section */}
-            <section className="py-24 bg-white dark:bg-gray-950">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                            Tất Cả Những Gì Bạn Cần
+                {/* CTA Section */}
+                <section className="py-24 bg-gradient-to-br from-purple-600 to-indigo-700">
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                        <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
+                            Sẵn Sàng Tự Động Hoá?
                         </h2>
-                        <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                            Nền tảng tích hợp đầy đủ để tự động hoá mọi tác vụ phone farm
+                        <p className="text-lg text-purple-100 mb-8 max-w-2xl mx-auto">
+                            Bắt đầu miễn phí ngay hôm nay. Không cần thẻ tín dụng.
                         </p>
+                        <Link
+                            href="/register"
+                            className="inline-flex items-center px-8 py-4 font-bold text-purple-600 bg-white hover:bg-gray-100 rounded-xl transition-colors shadow-xl"
+                        >
+                            Bắt Đầu Miễn Phí
+                            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                        </Link>
                     </div>
-
-                    <div className="grid md:grid-cols-3 gap-8">
-                        <FeatureCard
-                            icon={<PhoneIcon />}
-                            title="Quản Lý Thiết Bị"
-                            description="Điều khiển hàng trăm điện thoại từ một dashboard. Theo dõi real-time, phân nhóm thông minh."
-                        />
-                        <FeatureCard
-                            icon={<WorkflowIcon />}
-                            title="Visual Workflow"
-                            description="Kéo thả tạo kịch bản tự động. Ghi lại thao tác thật, chỉnh sửa linh hoạt."
-                        />
-                        <FeatureCard
-                            icon={<AIIcon />}
-                            title="Vision AI"
-                            description="AI nhận diện UI, thao tác như người thật. Bypass detection hiệu quả."
-                        />
-                    </div>
-                </div>
-            </section>
-
-            {/* How It Works */}
-            <section className="py-24 bg-gray-50 dark:bg-gray-900/50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                            Bắt Đầu Trong 3 Bước
-                        </h2>
-                    </div>
-
-                    <div className="grid md:grid-cols-3 gap-8">
-                        <StepCard step="01" title="Cài Agent" description="Tải app lên điện thoại, kết nối tự động trong vài giây." />
-                        <StepCard step="02" title="Tạo Workflow" description="Ghi lại thao tác hoặc kéo thả để xây dựng kịch bản." />
-                        <StepCard step="03" title="Chạy 24/7" description="Lên lịch hoặc chạy ngay. Hệ thống hoạt động liên tục." />
-                    </div>
-                </div>
-            </section>
-
-            {/* CTA Section */}
-            <section className="py-24 bg-gradient-to-br from-purple-600 to-indigo-700">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
-                        Sẵn Sàng Tự Động Hoá?
-                    </h2>
-                    <p className="text-lg text-purple-100 mb-8 max-w-2xl mx-auto">
-                        Bắt đầu miễn phí ngay hôm nay. Không cần thẻ tín dụng.
-                    </p>
-                    <Link
-                        href="/register"
-                        className="inline-flex items-center px-8 py-4 font-bold text-purple-600 bg-white hover:bg-gray-100 rounded-xl transition-colors shadow-xl"
-                    >
-                        Bắt Đầu Miễn Phí
-                        <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                        </svg>
-                    </Link>
-                </div>
-            </section>
+                </section>
             </div>
         </LandingLayout>
     );

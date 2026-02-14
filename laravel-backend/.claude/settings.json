@@ -1,0 +1,23 @@
+{
+    "permissions": {
+        "allow": [
+            "Read",
+            "Bash(npm run build)",
+            "Bash(npm run dev)",
+            "Bash(php artisan *)",
+            "Bash(cat *)",
+            "Bash(ls *)",
+            "Bash(find *)",
+            "Bash(grep *)",
+            "Bash(head *)",
+            "Bash(tail *)",
+            "Bash(wc *)"
+        ],
+        "deny": [
+            "Bash(rm -rf /)",
+            "Bash(git push *)",
+            "Bash(php artisan migrate:fresh *)"
+        ]
+    },
+    "teammateMode": "tmux"
+}

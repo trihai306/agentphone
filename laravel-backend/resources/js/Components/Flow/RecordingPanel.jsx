@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@/Components/UI';
 
 /**
  * RecordingPanel - Floating overlay that shows during recording mode
@@ -36,10 +37,10 @@ export default function RecordingPanel({
     // Minimized recording indicator
     if (!showRecordingPanel) {
         return (
-            <button
+            <Button
+                variant="secondary"
                 onClick={() => setShowRecordingPanel(true)}
-                className={`absolute top-4 right-4 z-50 px-4 py-2 rounded-xl shadow-lg border flex items-center gap-2 ${isDark ? 'bg-[#1a1a1a]/95 border-red-500/30' : 'bg-white border-red-200'
-                    }`}
+                className={`absolute top-4 right-4 z-50 ${isDark ? 'border-red-500/30' : 'border-red-200'}`}
             >
                 <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                 <span className={`text-xs font-bold ${isDark ? 'text-red-400' : 'text-red-600'}`}>
@@ -48,7 +49,7 @@ export default function RecordingPanel({
                 <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                     • {recordedNodeCount} actions
                 </span>
-            </button>
+            </Button>
         );
     }
 
@@ -68,14 +69,11 @@ export default function RecordingPanel({
                             {formatDuration(recordingDuration)}
                         </span>
                     </div>
-                    <button
-                        onClick={() => setShowRecordingPanel(false)}
-                        className={`p-1 rounded hover:bg-gray-500/20 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
-                    >
+                    <Button variant="ghost" size="icon-xs" onClick={() => setShowRecordingPanel(false)}>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                    </button>
+                    </Button>
                 </div>
                 <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                     {selectedDevice?.name} • {recordedNodeCount} actions
@@ -125,12 +123,11 @@ export default function RecordingPanel({
             {/* Controls */}
             <div className={`p-3 border-t ${isDark ? 'border-[#2a2a2a]' : 'border-gray-200'}`}>
                 <div className="flex items-center gap-2">
-                    <button
+                    <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={togglePauseRecording}
-                        className={`flex-1 h-8 flex items-center justify-center gap-1 text-xs font-medium rounded-lg transition-colors ${isRecordingPaused
-                            ? isDark ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30' : 'bg-emerald-100 text-emerald-600'
-                            : isDark ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' : 'bg-amber-100 text-amber-600'
-                            }`}
+                        className="flex-1"
                     >
                         {isRecordingPaused ? (
                             <>
@@ -143,28 +140,26 @@ export default function RecordingPanel({
                                 Pause
                             </>
                         )}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={undoLastAction}
                         disabled={recordedActions.length === 0}
-                        className={`h-8 px-3 flex items-center gap-1 text-xs font-medium rounded-lg transition-colors ${recordedActions.length === 0
-                            ? 'opacity-50 cursor-not-allowed'
-                            : ''
-                            } ${isDark ? 'bg-gray-500/20 text-gray-400 hover:bg-gray-500/30' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                     >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                         </svg>
                         Undo
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                        variant="danger"
+                        size="sm"
                         onClick={stopRecording}
-                        className={`h-8 px-4 flex items-center gap-1 text-xs font-medium rounded-lg transition-colors ${isDark ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' : 'bg-red-100 text-red-600 hover:bg-red-200'
-                            }`}
                     >
                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1" /></svg>
                         Stop
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

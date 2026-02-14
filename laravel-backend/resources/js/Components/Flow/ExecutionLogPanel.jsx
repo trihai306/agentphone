@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { Button } from '@/Components/UI';
 import { LogIcon } from './FlowIcons';
 
 /**
@@ -25,14 +26,11 @@ export default function ExecutionLogPanel({
                         {executionLog.length} entries
                     </span>
                 </div>
-                <button
-                    onClick={() => setShowLogPanel(false)}
-                    className={`w-6 h-6 flex items-center justify-center rounded transition-colors ${isDark ? 'hover:bg-[#1a1a1a] text-gray-500 hover:text-gray-300' : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600'}`}
-                >
+                <Button variant="ghost" size="icon-xs" onClick={() => setShowLogPanel(false)}>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
-                </button>
+                </Button>
             </div>
 
             {/* Log Entries */}
@@ -47,9 +45,9 @@ export default function ExecutionLogPanel({
                             {new Date(entry.timestamp).toLocaleTimeString()}
                         </span>
                         <span className={`flex-1 ${entry.type === 'success' ? 'text-emerald-400' :
-                                entry.type === 'error' ? 'text-red-400' :
-                                    entry.type === 'warning' ? 'text-amber-400' :
-                                        isDark ? 'text-gray-300' : 'text-gray-700'
+                            entry.type === 'error' ? 'text-red-400' :
+                                entry.type === 'warning' ? 'text-amber-400' :
+                                    isDark ? 'text-gray-300' : 'text-gray-700'
                             }`}>
                             {entry.message}
                         </span>

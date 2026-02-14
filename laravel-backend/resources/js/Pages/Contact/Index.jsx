@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useForm, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import LandingLayout from '../../Layouts/LandingLayout';
-import SeoHead from '../../Components/SeoHead';
+import LandingLayout from '@/Layouts/LandingLayout';
+import SeoHead from '@/Components/SeoHead';
+import { Alert, Button } from '@/Components/UI';
 
 export default function Index() {
     const { t } = useTranslation();
@@ -69,23 +70,9 @@ export default function Index() {
             {/* Success Message */}
             {showSuccess && (
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 mb-8">
-                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 flex items-start space-x-3 animate-slide-down">
-                        <svg className="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        <div>
-                            <h3 className="font-semibold text-green-900 dark:text-green-100">{t('contact.success_title')}</h3>
-                            <p className="text-sm text-green-700 dark:text-green-300 mt-1">{t('contact.success_message')}</p>
-                        </div>
-                        <button
-                            onClick={() => setShowSuccess(false)}
-                            className="ml-auto text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200"
-                        >
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
-                        </button>
-                    </div>
+                    <Alert type="success" title={t('contact.success_title')} onClose={() => setShowSuccess(false)}>
+                        {t('contact.success_message')}
+                    </Alert>
                 </div>
             )}
 
@@ -191,10 +178,11 @@ export default function Index() {
                                         {errors.message && <p className="mt-2 text-sm text-red-600">{errors.message}</p>}
                                     </div>
 
-                                    <button
+                                    <Button
                                         type="submit"
                                         disabled={processing}
-                                        className="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
+                                        variant="gradient"
+                                        className="w-full !py-4"
                                     >
                                         {processing ? (
                                             <>
@@ -212,7 +200,7 @@ export default function Index() {
                                                 </svg>
                                             </>
                                         )}
-                                    </button>
+                                    </Button>
                                 </form>
                             </div>
                         </div>

@@ -1,8 +1,9 @@
-import { useForm, usePage, router, Link } from '@inertiajs/react';
-import AppLayout from '../../Layouts/AppLayout';
+import { useForm, usePage, router, Link, Head } from '@inertiajs/react';
+import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useState, useRef, useEffect } from 'react';
+import { Button } from '@/Components/UI';
 
 const typeOptions = [
     { value: 'bug', label: 'Bug', icon: '🐛' },
@@ -260,14 +261,13 @@ export default function Create() {
                             >
                                 {t('error_reports.cancel')}
                             </Link>
-                            <button
+                            <Button
                                 type="submit"
                                 disabled={processing}
-                                className={`px-6 py-2 text-sm font-medium rounded-lg ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'
-                                    } disabled:opacity-50`}
+                                className={`!px-6 !py-2 ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'}`}
                             >
                                 {processing ? t('error_reports.submitting') : t('error_reports.submit')}
-                            </button>
+                            </Button>
                         </div>
                     </form>
                 </div>
