@@ -57,6 +57,11 @@ Broadcast::channel('presence-devices.{userId}', function ($user, $userId) {
     return false;
 });
 
+// Private channel for device screen streaming & status events
+Broadcast::channel('devices.{userId}', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
+});
+
 // Private channel for recording session events (workflow sync)
 Broadcast::channel('recording.{userId}', function ($user, $userId) {
     return (int) $user->id === (int) $userId;

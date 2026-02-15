@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\DeviceScreenFrame;
 use App\Events\WebRTCSignalToDevice;
 use App\Events\WebRTCSignalToUser;
 use App\Http\Controllers\Controller;
@@ -172,5 +173,48 @@ class WebRTCSignalController extends Controller
             'success' => true,
             'message' => 'MJPEG info broadcast to frontend',
         ]);
+    }
+
+    /**
+     * Receive screenshot frame from APK and relay to browser via Echo
+     *
+     * POST /api/devices/stream/frame
+     *
+     * Called by APK at ~3fps with compressed JPEG base64.
+     * Broadcasts to user's private channel for live preview.
+     */
+    public function receiveFrame(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'frame' => 'required|string', // base64 JPEG
+            'width' => 'nullable|integer',
+            'height' => 'nullable|integer',
+        ]);
+
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        // Find the user's active device
+        $device = Device::where('user_id', $user->id)
+            ->where('is_online', true)
+            ->latest('updated_at')
+            ->first();
+
+        if (!$device) {
+            return response()->json(['success' => false, 'message' => 'No active device'], 404);
+        }
+
+        // Broadcast frame to user's browser via Echo
+        event(new DeviceScreenFrame(
+            userId: $user->id,
+            deviceId: $device->id,
+            frame: $validated['frame'],
+            width: $validated['width'] ?? 0,
+            height: $validated['height'] ?? 0
+        ));
+
+        return response()->json(['success' => true]);
     }
 }

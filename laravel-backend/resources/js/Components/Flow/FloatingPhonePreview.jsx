@@ -5,17 +5,13 @@ import axios from 'axios';
 /**
  * FloatingPhonePreview — Draggable phone panel showing live device screen
  * 
- * Uses screenshot polling via HttpServerService (/screenshot endpoint)
- * which works through ADB port forwarding without needing MJPEG stream server.
+ * Receives screenshot frames via Echo/Soketi WebSocket relay:
+ * 1. Frontend calls POST /api/devices/{id}/stream/start
+ * 2. Backend broadcasts stream.start to APK via Pusher
+ * 3. APK captures screenshots via AccessibilityService (~3fps)
+ * 4. APK POSTs base64 frames to backend
+ * 5. Backend broadcasts frames via Echo to this component
  */
-
-const SCREENSHOT_URLS = [
-    'http://localhost:8080/screenshot',
-    'http://127.0.0.1:8080/screenshot',
-];
-
-const POLL_INTERVAL = 200; // ~5fps
-
 export default function FloatingPhonePreview({ device, userId }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
@@ -25,13 +21,16 @@ export default function FloatingPhonePreview({ device, userId }) {
     const [size, setSize] = useState({ w: 240, h: 480 });
     const [minimized, setMinimized] = useState(false);
 
-    // Screenshot polling
-    const [screenshotUrl, setScreenshotUrl] = useState('');
+    // Stream state
+    const [frameData, setFrameData] = useState(null);
     const [connected, setConnected] = useState(false);
     const [status, setStatus] = useState('idle'); // idle, connecting, live, error
-    const imgRef = useRef(null);
-    const pollingRef = useRef(null);
-    const activeUrlRef = useRef('');
+    const [fps, setFps] = useState(0);
+    const channelRef = useRef(null);
+    const frameCountRef = useRef(0);
+    const fpsIntervalRef = useRef(null);
+    const lastFrameTimeRef = useRef(0);
+    const streamTimeoutRef = useRef(null);
 
     // Drag state
     const [isDragging, setIsDragging] = useState(false);
@@ -81,83 +80,98 @@ export default function FloatingPhonePreview({ device, userId }) {
         };
     }, [isDragging, isResizing]);
 
-    // ─── Screenshot polling ───────────────────────────────────
-    const probeAndConnect = useCallback(async () => {
+    // ─── Echo stream listener ─────────────────────────────────
+    const startStream = useCallback(() => {
+        if (!device?.id || !userId || !window.Echo) {
+            setStatus('error');
+            return;
+        }
+
         setStatus('connecting');
 
-        // Also trigger stream/start API to ensure APK server is running
-        if (device?.id) {
-            axios.post(`/api/devices/${device.id}/stream/start`).catch(() => { });
-        }
+        // Request APK to start streaming via backend
+        axios.post(`/api/devices/${device.id}/stream/start`).catch((err) => {
+            console.warn('[PhonePreview] stream/start failed:', err.message);
+        });
 
-        for (const url of SCREENSHOT_URLS) {
-            try {
-                const works = await new Promise((resolve) => {
-                    const img = new Image();
-                    const timeout = setTimeout(() => { img.src = ''; resolve(false); }, 3000);
-                    img.onload = () => { clearTimeout(timeout); resolve(true); };
-                    img.onerror = () => { clearTimeout(timeout); resolve(false); };
-                    img.src = `${url}?t=${Date.now()}`;
-                });
-                if (works) {
-                    activeUrlRef.current = url;
-                    setConnected(true);
-                    setStatus('live');
-                    startPolling(url);
-                    return;
-                }
-            } catch (_) { }
-        }
+        // Listen for frames on Echo channel
+        const channelName = `devices.${userId}`;
+        const channel = window.Echo.private(channelName);
+        channelRef.current = channel;
 
-        setStatus('error');
-        setConnected(false);
-    }, [device?.id]);
+        channel.listen('.screen.frame', (data) => {
+            if (data.device_id === device.id || !data.device_id) {
+                setFrameData(`data:image/jpeg;base64,${data.frame}`);
+                setConnected(true);
+                setStatus('live');
+                frameCountRef.current++;
+                lastFrameTimeRef.current = Date.now();
 
-    const startPolling = useCallback((url) => {
-        stopPolling();
-        const poll = () => {
-            if (!imgRef.current) return;
-            const newUrl = `${url}?t=${Date.now()}`;
+                // Reset timeout — if no frame for 5s, show error
+                if (streamTimeoutRef.current) clearTimeout(streamTimeoutRef.current);
+                streamTimeoutRef.current = setTimeout(() => {
+                    setStatus('error');
+                    setConnected(false);
+                }, 5000);
+            }
+        });
 
-            // Create new image to pre-load
-            const preload = new Image();
-            preload.onload = () => {
-                if (imgRef.current) {
-                    imgRef.current.src = newUrl;
-                }
-                pollingRef.current = setTimeout(poll, POLL_INTERVAL);
-            };
-            preload.onerror = () => {
-                setConnected(false);
+        // FPS counter
+        fpsIntervalRef.current = setInterval(() => {
+            setFps(frameCountRef.current);
+            frameCountRef.current = 0;
+        }, 1000);
+
+        // If no frame received within 10s, show error
+        streamTimeoutRef.current = setTimeout(() => {
+            if (status !== 'live') {
                 setStatus('error');
-            };
-            preload.src = newUrl;
-        };
-        poll();
-    }, []);
+            }
+        }, 10000);
 
-    const stopPolling = useCallback(() => {
-        if (pollingRef.current) {
-            clearTimeout(pollingRef.current);
-            pollingRef.current = null;
+    }, [device?.id, userId]);
+
+    const stopStream = useCallback(() => {
+        // Stop listening
+        if (channelRef.current) {
+            channelRef.current.stopListening('.screen.frame');
+            channelRef.current = null;
         }
-    }, []);
+
+        // Stop FPS counter
+        if (fpsIntervalRef.current) {
+            clearInterval(fpsIntervalRef.current);
+            fpsIntervalRef.current = null;
+        }
+
+        // Clear timeout
+        if (streamTimeoutRef.current) {
+            clearTimeout(streamTimeoutRef.current);
+            streamTimeoutRef.current = null;
+        }
+
+        // Tell APK to stop streaming
+        if (device?.id) {
+            axios.post(`/api/devices/${device.id}/stream/stop`).catch(() => { });
+        }
+    }, [device?.id]);
 
     // Start on mount / device change
     useEffect(() => {
         if (!device?.id || minimized) return;
-        probeAndConnect();
-        return () => stopPolling();
+        startStream();
+        return () => stopStream();
     }, [device?.id, minimized]);
 
-    // Cleanup
-    useEffect(() => () => stopPolling(), []);
+    // Cleanup on unmount
+    useEffect(() => () => stopStream(), []);
 
     const handleRetry = () => {
-        stopPolling();
+        stopStream();
         setConnected(false);
+        setFrameData(null);
         setStatus('idle');
-        probeAndConnect();
+        setTimeout(() => startStream(), 200);
     };
 
     if (!device) return null;
@@ -172,8 +186,8 @@ export default function FloatingPhonePreview({ device, userId }) {
                 title="Show device preview"
             >
                 <div className={`relative w-12 h-12 rounded-2xl shadow-2xl border-2 flex items-center justify-center transition-all group-hover:scale-110 ${isDark
-                        ? 'bg-[#1a1a1d] border-white/20 group-hover:border-violet-500/50'
-                        : 'bg-white border-gray-300 group-hover:border-violet-500'
+                    ? 'bg-[#1a1a1d] border-white/20 group-hover:border-violet-500/50'
+                    : 'bg-white border-gray-300 group-hover:border-violet-500'
                     }`}>
                     <svg className="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -209,14 +223,16 @@ export default function FloatingPhonePreview({ device, userId }) {
                 >
                     <div className="flex items-center gap-1.5">
                         <span className={`w-2 h-2 rounded-full ${status === 'live' ? 'bg-emerald-400 animate-pulse'
-                                : status === 'connecting' ? 'bg-yellow-400 animate-pulse'
-                                    : 'bg-gray-600'
+                            : status === 'connecting' ? 'bg-yellow-400 animate-pulse'
+                                : 'bg-gray-600'
                             }`} />
                         <span className="text-[10px] text-white/50 font-medium truncate max-w-[100px]">
                             {device?.name?.split('_').pop() || 'Device'}
                         </span>
                         {status === 'live' && (
-                            <span className="text-[8px] text-emerald-400/60 uppercase font-bold tracking-wider">live</span>
+                            <span className="text-[8px] text-emerald-400/60 uppercase font-bold tracking-wider">
+                                {fps > 0 ? `${fps}fps` : 'live'}
+                            </span>
                         )}
                     </div>
 
@@ -231,7 +247,7 @@ export default function FloatingPhonePreview({ device, userId }) {
                             </svg>
                         </button>
                         <button
-                            onClick={() => { stopPolling(); setMinimized(true); }}
+                            onClick={() => { stopStream(); setMinimized(true); }}
                             className="w-5 h-5 flex items-center justify-center rounded text-white/30 hover:text-white/70 hover:bg-white/10 transition-all"
                             title="Minimize"
                         >
@@ -252,11 +268,13 @@ export default function FloatingPhonePreview({ device, userId }) {
 
                 {/* Screen */}
                 <div className="mx-2 mb-2 rounded-xl overflow-hidden bg-black relative" style={{ height: screenH }}>
-                    <img
-                        ref={imgRef}
-                        alt="Device Screen"
-                        className={`w-full h-full object-contain ${status !== 'live' ? 'hidden' : ''}`}
-                    />
+                    {frameData && status === 'live' && (
+                        <img
+                            src={frameData}
+                            alt="Device Screen"
+                            className="w-full h-full object-contain"
+                        />
+                    )}
 
                     {status !== 'live' && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -264,14 +282,15 @@ export default function FloatingPhonePreview({ device, userId }) {
                                 <>
                                     <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin mb-3" />
                                     <p className="text-white/40 text-[10px]">Connecting...</p>
+                                    <p className="text-white/20 text-[8px] mt-1">Waiting for device stream</p>
                                 </>
                             ) : status === 'error' ? (
                                 <>
                                     <svg className="w-8 h-8 text-white/15 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                     </svg>
-                                    <p className="text-white/30 text-[10px] mb-1">Cannot connect</p>
-                                    <p className="text-white/20 text-[8px] mb-2">Run: adb forward tcp:8080 tcp:8080</p>
+                                    <p className="text-white/30 text-[10px] mb-1">No stream received</p>
+                                    <p className="text-white/20 text-[8px] mb-2">Check device is online & APK running</p>
                                     <button
                                         onClick={handleRetry}
                                         className="px-3 py-1 text-[10px] rounded-lg bg-violet-500/20 text-violet-300 hover:bg-violet-500/30 transition-all"
