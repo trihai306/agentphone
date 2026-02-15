@@ -398,17 +398,17 @@ object SocketJobManager {
                     "pusher_internal:subscription_succeeded" -> {
                         Log.w(TAG, "🟢 PUSHER INTERNAL: Subscription confirmed by server!")
                     }
-                    // WebRTC screen streaming events
-                    "stream:start" -> {
-                        Log.i(TAG, "📹 Received stream:start request")
+                    // WebRTC screen streaming events (dot notation matches Laravel broadcastAs)
+                    "stream.start" -> {
+                        Log.i(TAG, "📹 Received stream.start request")
                         handleStreamStart(event.data ?: "")
                     }
-                    "stream:stop" -> {
-                        Log.i(TAG, "📹 Received stream:stop request")
+                    "stream.stop" -> {
+                        Log.i(TAG, "📹 Received stream.stop request")
                         handleStreamStop()
                     }
-                    "webrtc:signal" -> {
-                        Log.i(TAG, "📹 Received webrtc:signal")
+                    "webrtc.signal" -> {
+                        Log.i(TAG, "📹 Received webrtc.signal")
                         handleWebRTCSignal(event.data ?: "")
                     }
                     else -> {
@@ -533,28 +533,28 @@ object SocketJobManager {
             override fun onAuthenticationFailure(message: String?, e: Exception?) {}
         })
 
-        // Bind WebRTC streaming events
-        deviceChannel?.bind("stream:start", object : com.pusher.client.channel.PrivateChannelEventListener {
+        // Bind WebRTC streaming events (dot notation matches Laravel broadcastAs)
+        deviceChannel?.bind("stream.start", object : com.pusher.client.channel.PrivateChannelEventListener {
             override fun onEvent(event: PusherEvent) {
-                Log.i(TAG, "📹 EXPLICIT BIND: stream:start received!")
+                Log.i(TAG, "📹 EXPLICIT BIND: stream.start received!")
                 handleStreamStart(event.data ?: "")
             }
             override fun onSubscriptionSucceeded(channelName: String) {}
             override fun onAuthenticationFailure(message: String?, e: Exception?) {}
         })
 
-        deviceChannel?.bind("stream:stop", object : com.pusher.client.channel.PrivateChannelEventListener {
+        deviceChannel?.bind("stream.stop", object : com.pusher.client.channel.PrivateChannelEventListener {
             override fun onEvent(event: PusherEvent) {
-                Log.i(TAG, "📹 EXPLICIT BIND: stream:stop received!")
+                Log.i(TAG, "📹 EXPLICIT BIND: stream.stop received!")
                 handleStreamStop()
             }
             override fun onSubscriptionSucceeded(channelName: String) {}
             override fun onAuthenticationFailure(message: String?, e: Exception?) {}
         })
 
-        deviceChannel?.bind("webrtc:signal", object : com.pusher.client.channel.PrivateChannelEventListener {
+        deviceChannel?.bind("webrtc.signal", object : com.pusher.client.channel.PrivateChannelEventListener {
             override fun onEvent(event: PusherEvent) {
-                Log.i(TAG, "📹 EXPLICIT BIND: webrtc:signal received!")
+                Log.i(TAG, "📹 EXPLICIT BIND: webrtc.signal received!")
                 handleWebRTCSignal(event.data ?: "")
             }
             override fun onSubscriptionSucceeded(channelName: String) {}
