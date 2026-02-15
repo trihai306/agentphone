@@ -2385,7 +2385,7 @@ object SocketJobManager {
                     return@launch
                 }
 
-                val token = authToken ?: com.agent.portal.auth.SessionManager.getAccessToken(context)
+                val token = authToken ?: com.agent.portal.auth.SessionManager(context).getToken()
                 if (token.isNullOrEmpty()) {
                     Log.e(TAG, "📹 No auth token for streaming")
                     return@launch
