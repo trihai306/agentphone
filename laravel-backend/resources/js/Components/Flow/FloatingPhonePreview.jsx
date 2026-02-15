@@ -124,20 +124,20 @@ export default function FloatingPhonePreview({ device, userId }) {
         if (connected) return;
         setProbeStatus('probing');
 
-        probeAbortRef.current?.abort();
-        const controller = new AbortController();
-        probeAbortRef.current = controller;
-
+        // Use Image() to probe — browsers allow <img> mixed content (http on https page)
+        // Unlike fetch(), Image() can load http:// from https:// pages
         for (const baseUrl of PROBE_URLS) {
-            if (controller.signal.aborted) break;
+            const streamUrl = `${baseUrl}/stream`;
             try {
-                const resp = await fetch(`${baseUrl}/info`, {
-                    signal: controller.signal,
-                    mode: 'cors',
-                    cache: 'no-cache',
+                const works = await new Promise((resolve) => {
+                    const testImg = new Image();
+                    const timeout = setTimeout(() => { testImg.src = ''; resolve(false); }, 3000);
+                    testImg.onload = () => { clearTimeout(timeout); resolve(true); };
+                    testImg.onerror = () => { clearTimeout(timeout); resolve(false); };
+                    testImg.src = `${baseUrl}/screenshot?t=${Date.now()}`; // single frame endpoint
                 });
-                if (resp.ok) {
-                    const streamUrl = `${baseUrl}/stream`;
+
+                if (works) {
                     setMjpegUrl(streamUrl);
                     setProbeStatus('found');
                     connectMjpeg(streamUrl);
@@ -146,9 +146,10 @@ export default function FloatingPhonePreview({ device, userId }) {
             } catch (_) { }
         }
 
-        if (!controller.signal.aborted) {
-            setProbeStatus('not_found');
-        }
+        // Fallback: try directly connecting img to first URL
+        const fallbackUrl = `${PROBE_URLS[0]}/stream`;
+        setMjpegUrl(fallbackUrl);
+        connectMjpeg(fallbackUrl);
     }, [connected]);
 
     const connectMjpeg = useCallback((url) => {
