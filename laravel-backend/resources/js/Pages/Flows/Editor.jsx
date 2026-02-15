@@ -60,6 +60,7 @@ const LoopSubFlowModal = lazy(() => import('@/Components/Flow/LoopSubFlowModal')
 const AINodeConfigModal = lazy(() => import('@/Components/Flow/AINodeConfigModal'));
 const WorkflowPreviewModal = lazy(() => import('@/Components/Flow/WorkflowPreviewModal'));
 const LiveRecordingPanel = lazy(() => import('@/Components/Flow/LiveRecordingPanel'));
+const FloatingPhonePreview = lazy(() => import('@/Components/Flow/FloatingPhonePreview'));
 
 // Premium loading fallback for lazy modals
 const ModalLoader = () => (
@@ -1433,6 +1434,16 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 stopRecording={stopRecording}
                                 formatDuration={formatDuration}
                             />
+
+                            {/* Floating Phone Preview — Live MJPEG stream */}
+                            {selectedDevice && (
+                                <Suspense fallback={null}>
+                                    <FloatingPhonePreview
+                                        device={selectedDevice}
+                                        userId={auth?.user?.id}
+                                    />
+                                </Suspense>
+                            )}
 
                             <ReactFlow
                                 nodes={nodesWithExecution}
