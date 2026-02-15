@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
+import axios from 'axios';
 
 /**
  * FloatingPhonePreview — Draggable phone-shaped panel showing MJPEG live stream
@@ -8,9 +9,17 @@ import { useTheme } from '@/Contexts/ThemeContext';
  * - Drag to move anywhere on canvas
  * - Resize by dragging bottom-right corner
  * - Minimize to floating icon
+ * - Auto-starts MJPEG stream on device via API
  * - Auto-discovers MJPEG via Echo + localhost probe
  * - Phone-shaped bezel with notch
  */
+
+const PROBE_URLS = [
+    'http://localhost:8080',
+    'http://127.0.0.1:8080',
+    'http://10.0.2.2:8080',
+];
+
 export default function FloatingPhonePreview({ device, userId }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
@@ -23,9 +32,10 @@ export default function FloatingPhonePreview({ device, userId }) {
     // MJPEG
     const [mjpegUrl, setMjpegUrl] = useState('');
     const [connected, setConnected] = useState(false);
-    const [probeStatus, setProbeStatus] = useState('idle'); // idle, probing, found, not_found
+    const [probeStatus, setProbeStatus] = useState('idle'); // idle, starting, probing, found, not_found
     const imgRef = useRef(null);
     const probeAbortRef = useRef(null);
+    const streamStartedRef = useRef(false);
 
     // Drag state
     const [isDragging, setIsDragging] = useState(false);
@@ -90,8 +100,27 @@ export default function FloatingPhonePreview({ device, userId }) {
         };
     }, [isDragging, isResizing]);
 
-    // ─── MJPEG auto-discovery ─────────────────────────────────
-    const probeUrls = useCallback(async (urls) => {
+    // ─── MJPEG: Start stream + auto-discovery ──────────────────
+    const startStream = useCallback(async () => {
+        if (!device?.id || connected) return;
+        setProbeStatus('starting');
+
+        try {
+            // Tell APK to start MJPEG server
+            await axios.post(`/api/devices/${device.id}/stream/start`);
+            streamStartedRef.current = true;
+        } catch (err) {
+            console.warn('FloatingPhonePreview: stream/start failed', err);
+        }
+
+        // Give the APK time to boot the MJPEG server
+        await new Promise(r => setTimeout(r, 2000));
+
+        // Now probe
+        probeForStream();
+    }, [device?.id, connected]);
+
+    const probeForStream = useCallback(async () => {
         if (connected) return;
         setProbeStatus('probing');
 
@@ -99,17 +128,16 @@ export default function FloatingPhonePreview({ device, userId }) {
         const controller = new AbortController();
         probeAbortRef.current = controller;
 
-        for (const url of urls) {
+        for (const baseUrl of PROBE_URLS) {
             if (controller.signal.aborted) break;
-            const infoUrl = url.replace('/stream', '/info');
             try {
-                const resp = await fetch(infoUrl, {
+                const resp = await fetch(`${baseUrl}/info`, {
                     signal: controller.signal,
                     mode: 'cors',
                     cache: 'no-cache',
                 });
                 if (resp.ok) {
-                    const streamUrl = url.endsWith('/stream') ? url : url + '/stream';
+                    const streamUrl = `${baseUrl}/stream`;
                     setMjpegUrl(streamUrl);
                     setProbeStatus('found');
                     connectMjpeg(streamUrl);
@@ -137,36 +165,33 @@ export default function FloatingPhonePreview({ device, userId }) {
         const channel = window.Echo.private(`devices.${userId}`);
         channel.listen('.webrtc.signal', (data) => {
             if (data.signal_type === 'mjpeg-info' && data.device_id === device.id) {
-                const urls = (data.signal_data?.urls || []).map(u => u.endsWith('/stream') ? u : u + '/stream');
-                if (urls.length > 0) probeUrls(urls);
+                const urls = (data.signal_data?.urls || []);
+                if (urls.length > 0) {
+                    const streamUrl = urls[0].endsWith('/stream') ? urls[0] : urls[0] + '/stream';
+                    setMjpegUrl(streamUrl);
+                    setProbeStatus('found');
+                    connectMjpeg(streamUrl);
+                }
             }
         });
         return () => channel.stopListening('.webrtc.signal');
-    }, [device?.id, userId, probeUrls]);
+    }, [device?.id, userId, connectMjpeg]);
 
-    // On mount / device change → probe common URLs
+    // On mount / device change → auto-start stream
     useEffect(() => {
         if (!device?.id || minimized) return;
-        probeUrls([
-            'http://localhost:8080/stream',
-            'http://127.0.0.1:8080/stream',
-            'http://10.0.2.2:8080/stream',
-        ]);
+        streamStartedRef.current = false;
+        startStream();
         return () => probeAbortRef.current?.abort();
     }, [device?.id, minimized]);
 
-    // Retry connection
+    // Retry connection — restart stream + re-probe
     const handleRetry = () => {
         setConnected(false);
         setProbeStatus('idle');
         if (imgRef.current) imgRef.current.src = '';
-        setTimeout(() => {
-            probeUrls([
-                'http://localhost:8080/stream',
-                'http://127.0.0.1:8080/stream',
-                'http://10.0.2.2:8080/stream',
-            ]);
-        }, 300);
+        streamStartedRef.current = false;
+        startStream();
     };
 
     if (!device) return null;
@@ -181,8 +206,8 @@ export default function FloatingPhonePreview({ device, userId }) {
                 title="Show device preview"
             >
                 <div className={`relative w-12 h-12 rounded-2xl shadow-2xl border-2 flex items-center justify-center transition-all group-hover:scale-110 ${isDark
-                        ? 'bg-[#1a1a1d] border-white/20 group-hover:border-violet-500/50'
-                        : 'bg-white border-gray-300 group-hover:border-violet-500'
+                    ? 'bg-[#1a1a1d] border-white/20 group-hover:border-violet-500/50'
+                    : 'bg-white border-gray-300 group-hover:border-violet-500'
                     }`}>
                     <svg className="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -213,8 +238,8 @@ export default function FloatingPhonePreview({ device, userId }) {
         >
             {/* Phone Body */}
             <div className={`rounded-[28px] overflow-hidden border-2 ${isDark
-                    ? 'bg-[#0f0f12] border-white/10'
-                    : 'bg-[#1c1c1e] border-gray-700'
+                ? 'bg-[#0f0f12] border-white/10'
+                : 'bg-[#1c1c1e] border-gray-700'
                 }`}>
                 {/* Top Bar — Drag handle */}
                 <div
@@ -275,10 +300,12 @@ export default function FloatingPhonePreview({ device, userId }) {
                     {/* Connection States */}
                     {!connected && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            {probeStatus === 'probing' ? (
+                            {(probeStatus === 'probing' || probeStatus === 'starting') ? (
                                 <>
                                     <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin mb-3" />
-                                    <p className="text-white/40 text-[10px]">Searching...</p>
+                                    <p className="text-white/40 text-[10px]">
+                                        {probeStatus === 'starting' ? 'Starting stream...' : 'Connecting...'}
+                                    </p>
                                 </>
                             ) : probeStatus === 'not_found' ? (
                                 <>
@@ -291,7 +318,7 @@ export default function FloatingPhonePreview({ device, userId }) {
                                         className="px-3 py-1 text-[10px] rounded-lg bg-violet-500/20 text-violet-300 hover:bg-violet-500/30 transition-all"
                                         data-no-drag
                                     >
-                                        Retry
+                                        Start Stream
                                     </button>
                                 </>
                             ) : (
@@ -299,7 +326,7 @@ export default function FloatingPhonePreview({ device, userId }) {
                                     <svg className="w-10 h-10 text-white/10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                     </svg>
-                                    <p className="text-white/20 text-[10px]">Start stream on device</p>
+                                    <p className="text-white/20 text-[10px]">Waiting for device...</p>
                                 </>
                             )}
                         </div>
