@@ -2358,169 +2358,29 @@ object SocketJobManager {
     private val STREAM_MAX_WIDTH = 360
 
     /**
-     * Handle stream:start event - browser wants to view this device's screen
-     * Uses AccessibilityService for screenshot capture (no MediaProjection needed)
-     * Captures screenshots at ~3fps and POSTs base64 frames to backend API
+     * Handle stream.start event - browser wants to view this device's screen
+     * The browser will poll /screenshot on the APK's HTTP server directly
+     * No heavy capture/relay needed here
      */
     private fun handleStreamStart(data: String) {
         scope.launch {
             try {
                 val json = org.json.JSONObject(data)
                 val viewerUserId = json.optInt("viewer_user_id", 0)
-
-                if (viewerUserId <= 0) {
-                    Log.e(TAG, "📹 Invalid viewer_user_id in stream:start")
-                    return@launch
-                }
-
-                Log.i(TAG, "📹 Stream requested by userId=$viewerUserId")
-
-                if (isScreenStreaming.get()) {
-                    Log.w(TAG, "📹 Already streaming, ignoring duplicate start")
-                    return@launch
-                }
-
-                val context = contextRef?.get() ?: run {
-                    Log.e(TAG, "📹 Context not available for streaming")
-                    return@launch
-                }
-
-                val token = authToken ?: com.agent.portal.auth.SessionManager(context).getToken()
-                if (token.isNullOrEmpty()) {
-                    Log.e(TAG, "📹 No auth token for streaming")
-                    return@launch
-                }
-
-                val a11yService = com.agent.portal.accessibility.PortalAccessibilityService.instance
-                if (a11yService == null) {
-                    Log.e(TAG, "📹 Accessibility service not available for streaming")
-                    return@launch
-                }
-
-                isScreenStreaming.set(true)
-                Log.i(TAG, "📹 Starting screenshot stream loop (~${1000/STREAM_FRAME_INTERVAL_MS}fps)")
-
-                val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
-                val client = okhttp3.OkHttpClient.Builder()
-                    .connectTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
-                    .writeTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
-                    .readTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
-                    .build()
-
-                screenshotStreamJob = scope.launch(Dispatchers.IO) {
-                    var frameCount = 0
-                    var errorCount = 0
-                    
-                    while (isActive && isScreenStreaming.get()) {
-                        try {
-                            // Capture screenshot via AccessibilityService
-                            var resultBitmap: android.graphics.Bitmap? = null
-                            val latch = java.util.concurrent.CountDownLatch(1)
-
-                            a11yService.takeScreenshot { bitmap ->
-                                resultBitmap = bitmap
-                                latch.countDown()
-                            }
-
-                            // Wait max 2s for screenshot
-                            latch.await(2, java.util.concurrent.TimeUnit.SECONDS)
-
-                            val bitmap = resultBitmap
-                            if (bitmap != null) {
-                                // Scale down for bandwidth
-                                val scaleFactor = STREAM_MAX_WIDTH.toFloat() / bitmap.width.toFloat()
-                                val scaledWidth = STREAM_MAX_WIDTH
-                                val scaledHeight = (bitmap.height * scaleFactor).toInt()
-                                val scaledBitmap = android.graphics.Bitmap.createScaledBitmap(bitmap, scaledWidth, scaledHeight, true)
-
-                                // Compress to JPEG
-                                val outputStream = java.io.ByteArrayOutputStream()
-                                scaledBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, STREAM_JPEG_QUALITY, outputStream)
-                                val base64Frame = android.util.Base64.encodeToString(outputStream.toByteArray(), android.util.Base64.NO_WRAP)
-                                
-                                if (scaledBitmap !== bitmap) scaledBitmap.recycle()
-
-                                // POST frame to backend
-                                val jsonBody = org.json.JSONObject().apply {
-                                    put("frame", base64Frame)
-                                    put("width", scaledWidth)
-                                    put("height", scaledHeight)
-                                }
-
-                                val requestBody = okhttp3.RequestBody.create(
-                                    "application/json".toMediaTypeOrNull(),
-                                    jsonBody.toString()
-                                )
-
-                                val request = okhttp3.Request.Builder()
-                                    .url("$apiUrl/devices/stream/frame")
-                                    .post(requestBody)
-                                    .addHeader("Authorization", "Bearer $token")
-                                    .addHeader("Content-Type", "application/json")
-                                    .addHeader("Accept", "application/json")
-                                    .build()
-
-                                val response = client.newCall(request).execute()
-                                response.close()
-
-                                frameCount++
-                                errorCount = 0 // Reset on success
-                                
-                                if (frameCount % 30 == 0) {
-                                    val sizeKb = outputStream.size() / 1024
-                                    Log.d(TAG, "📹 Stream: $frameCount frames sent (last: ${sizeKb}KB)")
-                                }
-                            } else {
-                                Log.w(TAG, "📹 Screenshot capture returned null")
-                                errorCount++
-                            }
-                        } catch (e: Exception) {
-                            errorCount++
-                            if (errorCount % 10 == 1) {
-                                Log.e(TAG, "📹 Stream frame error ($errorCount consecutive): ${e.message}")
-                            }
-                        }
-
-                        // Stop if too many consecutive errors
-                        if (errorCount >= 30) {
-                            Log.e(TAG, "📹 Too many consecutive errors, stopping stream")
-                            isScreenStreaming.set(false)
-                            break
-                        }
-
-                        delay(STREAM_FRAME_INTERVAL_MS)
-                    }
-
-                    Log.i(TAG, "📹 Screenshot stream loop ended after $frameCount frames")
-                }
+                Log.i(TAG, "📹 Stream start requested by userId=$viewerUserId (browser will poll HTTP server)")
             } catch (e: Exception) {
-                Log.e(TAG, "📹 Error handling stream:start", e)
-                isScreenStreaming.set(false)
+                Log.e(TAG, "📹 Error handling stream.start", e)
             }
         }
     }
 
     /**
-     * Handle stream:stop event - browser wants to stop viewing
+     * Handle stream.stop event - browser stopped viewing
      */
     private fun handleStreamStop() {
-        scope.launch {
-            try {
-                Log.i(TAG, "📹 Stopping screenshot stream")
-                isScreenStreaming.set(false)
-                screenshotStreamJob?.cancel()
-                screenshotStreamJob = null
-
-                // Also stop legacy ScreenStreamService if running
-                val context = contextRef?.get() ?: return@launch
-                if (ScreenStreamService.isStreaming()) {
-                    ScreenStreamService.stopStreaming(context)
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "📹 Error stopping stream", e)
-            }
-        }
+        Log.i(TAG, "📹 Stream stop received")
     }
+
 
     /**
      * Handle webrtc:signal event - signaling data from browser (SDP answer, ICE candidates)
