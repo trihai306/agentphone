@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
+import { Icon } from '@/Components/UI';
 
 export default function MediaSidebar({
     activeFilter,
@@ -13,10 +14,10 @@ export default function MediaSidebar({
     const { t } = useTranslation();
 
     const navItems = [
-        { key: 'all', label: t('media.all_files', 'Tất cả'), icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z', count: stats.total },
-        { key: 'image', label: t('media.images', 'Hình ảnh'), icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z', count: stats.images },
-        { key: 'video', label: t('media.videos', 'Video'), icon: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z', count: stats.videos },
-        { key: 'ai', label: 'AI Generated', icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z', count: stats.ai_generated },
+        { key: 'all', label: t('media.all_files', 'Tất cả'), icon: 'grid', count: stats.total },
+        { key: 'image', label: t('media.images', 'Hình ảnh'), icon: 'media', count: stats.images },
+        { key: 'video', label: t('media.videos', 'Video'), icon: 'video', count: stats.videos },
+        { key: 'ai', label: 'AI Generated', icon: 'ai', count: stats.ai_generated },
     ];
 
     const formatBytes = (bytes) => {
@@ -32,7 +33,7 @@ export default function MediaSidebar({
     const storagePercent = Math.min((storageUsed / storageLimit) * 100, 100);
 
     return (
-        <div className={`w-56 flex-shrink-0 border-r h-full flex flex-col ${isDark ? 'bg-[#0d0d0d] border-[#2a2a2a]' : 'bg-white border-gray-200'}`}>
+        <div className={`w-56 flex-shrink-0 border-r h-full flex flex-col ${isDark ? 'bg-[#0a0a0a] border-white/5' : 'bg-white border-gray-200'}`}>
             {/* Navigation */}
             <div className="flex-1 p-4 space-y-1 overflow-y-auto">
                 <p className={`text-xs font-medium uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
@@ -58,9 +59,7 @@ export default function MediaSidebar({
                                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                             }`}
                     >
-                        <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={item.icon} />
-                        </svg>
+                        <Icon name={item.icon} className="w-5 h-5 flex-shrink-0" />
                         <span className="flex-1 text-left">{item.label}</span>
                         {item.count !== undefined && (
                             <span className={`text-xs ${(activeFilter === item.key && !activeFolder) || (item.key === 'all' && !activeFilter && !activeFolder)
@@ -88,13 +87,9 @@ export default function MediaSidebar({
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                         }`}
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
+                    <Icon name="ai" className="w-5 h-5 text-violet-500" />
                     <span className="flex-1 text-left">AI Studio</span>
-                    <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
+                    <Icon name="chevronRight" className="w-4 h-4 opacity-40" />
                 </Link>
 
                 <Link
@@ -104,13 +99,9 @@ export default function MediaSidebar({
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                         }`}
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
+                    <Icon name="media" className="w-5 h-5 text-emerald-500" />
                     <span className="flex-1 text-left">AI Gallery</span>
-                    <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
+                    <Icon name="chevronRight" className="w-4 h-4 opacity-40" />
                 </Link>
             </div>
 
@@ -166,9 +157,7 @@ export default function MediaSidebar({
                                 : 'bg-gray-900 text-white hover:bg-gray-800'
                                 }`}
                         >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                            </svg>
+                            <Icon name="arrowRight" className="w-3.5 h-3.5" />
                             Nâng cấp ngay
                         </Link>
                     </div>

@@ -90,7 +90,12 @@ const useCases = [
     },
 ];
 
+import { useTheme } from '@/Contexts/ThemeContext';
+
 export default function Index() {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+
     const [activeUseCase, setActiveUseCase] = useState(0);
     const [openFaq, setOpenFaq] = useState(null);
 

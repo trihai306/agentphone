@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/Components/UI';
+import { Button, Icon } from '@/Components/UI';
 
 export default function FolderSelectModal({
     isOpen,
@@ -136,9 +136,7 @@ export default function FolderSelectModal({
                             {selectedFolder === '/' && (
                                 <div className={`w-5 h-5 rounded-full flex items-center justify-center ${isDark ? 'bg-violet-500' : 'bg-violet-500'
                                     }`}>
-                                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                    </svg>
+                                    <Icon name="check" className="w-3 h-3 text-white" />
                                 </div>
                             )}
                         </button>
@@ -172,9 +170,7 @@ export default function FolderSelectModal({
                                 {selectedFolder === '/' + folder && (
                                     <div className={`w-5 h-5 rounded-full flex items-center justify-center ${isDark ? 'bg-violet-500' : 'bg-violet-500'
                                         }`}>
-                                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                        </svg>
+                                        <Icon name="check" className="w-3 h-3 text-white" />
                                     </div>
                                 )}
                             </button>

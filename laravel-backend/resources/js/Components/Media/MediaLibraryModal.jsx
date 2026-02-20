@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useToast } from '@/Components/Layout/ToastProvider';
-import { Button } from '@/Components/UI';
+import { Button, Icon } from '@/Components/UI';
 import { mediaApi } from '@/services/api';
 
 /**
@@ -234,7 +234,7 @@ export default function MediaLibraryModal({
                 onDrop={handleDrop}
             >
                 {/* Header */}
-                <div className={`px-6 py-4 border-b flex items-center justify-between ${isDark ? 'border-[#2a2a2a]' : 'border-gray-200'
+                <div className={`px-6 py-4 border-b flex items-center justify-between ${isDark ? 'border-white/5' : 'border-gray-200'
                     }`}>
                     <div className="flex items-center gap-4">
                         <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -254,9 +254,7 @@ export default function MediaLibraryModal({
                     <div className="flex items-center gap-3">
                         {/* Search */}
                         <div className="relative">
-                            <svg className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
+                            <Icon name="search" className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
                             <input
                                 type="text"
                                 placeholder={t('common.search', 'Tìm kiếm...')}
@@ -264,18 +262,18 @@ export default function MediaLibraryModal({
                                 onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
                                 onKeyDown={(e) => e.key === 'Enter' && fetchMedia()}
                                 className={`w-48 pl-10 pr-4 py-2 rounded-lg text-sm ${isDark
-                                    ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-gray-500 focus:border-gray-500'
+                                    ? 'bg-[#121212] border-white/5 text-white placeholder-gray-500 focus:border-gray-500'
                                     : 'bg-gray-100 border-transparent text-gray-900 placeholder-gray-400 focus:bg-gray-50'
                                     } border focus:outline-none transition-all`}
                             />
                         </div>
 
                         {/* View Toggle */}
-                        <div className={`flex p-1 rounded-lg ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-100'}`}>
-                            {[
-                                { mode: 'grid', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
-                                { mode: 'list', icon: 'M4 6h16M4 10h16M4 14h16M4 18h16' }
-                            ].map(({ mode, icon }) => (
+                        <div className={`flex p-1 rounded-lg ${isDark ? 'bg-[#121212]' : 'bg-gray-100'}`}>
+                            [
+                                    { mode: 'grid', icon: 'grid' },
+                                    { mode: 'list', icon: 'list' }
+                                ].map(({ mode, icon }) => (
                                 <button
                                     key={mode}
                                     onClick={() => setViewMode(mode)}
@@ -284,21 +282,17 @@ export default function MediaLibraryModal({
                                         : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
                                         }`}
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={icon} />
-                                    </svg>
+                                    <Icon name={icon} className="w-4 h-4" />
                                 </button>
                             ))}
                         </div>
 
                         {/* Upload Button */}
                         <label className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all ${isDark
-                            ? 'bg-[#1a1a1a] text-white hover:bg-[#222]'
+                            ? 'bg-[#121212] text-white hover:bg-[#222]'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}>
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                            </svg>
+                            <Icon name="upload" className="w-4 h-4" />
                             {t('media.upload', 'Tải lên')}
                             <input
                                 type="file"
@@ -321,7 +315,7 @@ export default function MediaLibraryModal({
                 {/* Body */}
                 <div className="flex-1 flex overflow-hidden">
                     {/* Sidebar */}
-                    <div className={`w-48 flex-shrink-0 border-r p-4 space-y-1 overflow-y-auto ${isDark ? 'border-[#2a2a2a]' : 'border-gray-200'
+                    <div className={`w-48 flex-shrink-0 border-r p-4 space-y-1 overflow-y-auto ${isDark ? 'border-white/5' : 'border-gray-200'
                         }`}>
                         <p className={`text-xs font-medium uppercase tracking-wider mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                             {t('media.library', 'Thư viện')}
@@ -337,7 +331,7 @@ export default function MediaLibraryModal({
                                 onClick={() => applyFilter(item.key)}
                                 className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${(filters.type === item.key && !filters.folder) || (item.key === 'all' && !filters.type && !filters.folder)
                                     ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
-                                    : isDark ? 'text-gray-400 hover:text-white hover:bg-[#1a1a1a]' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                    : isDark ? 'text-gray-400 hover:text-white hover:bg-[#121212]' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                                     }`}
                             >
                                 <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -358,7 +352,7 @@ export default function MediaLibraryModal({
                         {/* Folders */}
                         {folders.length > 0 && (
                             <>
-                                <div className={`my-3 border-t ${isDark ? 'border-[#2a2a2a]' : 'border-gray-100'}`} />
+                                <div className={`my-3 border-t ${isDark ? 'border-white/5' : 'border-gray-100'}`} />
                                 <p className={`text-xs font-medium uppercase tracking-wider mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                                     {t('media.folders', 'Thư mục')}
                                 </p>
@@ -368,12 +362,10 @@ export default function MediaLibraryModal({
                                         onClick={() => navigateToFolder(folder)}
                                         className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${filters.folder === '/' + folder
                                             ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
-                                            : isDark ? 'text-gray-400 hover:text-white hover:bg-[#1a1a1a]' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                            : isDark ? 'text-gray-400 hover:text-white hover:bg-[#121212]' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                                             }`}
                                     >
-                                        <svg className="w-4 h-4 flex-shrink-0 text-amber-500" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
-                                        </svg>
+                                        <Icon name="folder" className="w-4 h-4 flex-shrink-0 text-amber-500" />
                                         <span className="flex-1 text-left truncate">{folder}</span>
                                     </button>
                                 ))}
@@ -385,12 +377,10 @@ export default function MediaLibraryModal({
                     <div className="flex-1 flex flex-col overflow-hidden">
                         {/* Upload Progress */}
                         {isUploading && (
-                            <div className={`mx-4 mt-4 p-4 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-50 border border-gray-200'}`}>
+                            <div className={`mx-4 mt-4 p-4 rounded-xl ${isDark ? 'bg-[#121212]' : 'bg-gray-50 border border-gray-200'}`}>
                                 <div className="flex items-center gap-3">
                                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isDark ? 'bg-[#222]' : 'bg-gray-100'}`}>
-                                        <svg className={`w-5 h-5 animate-pulse ${isDark ? 'text-white' : 'text-gray-900'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                        </svg>
+                                        <Icon name="upload" className={`w-5 h-5 animate-pulse ${isDark ? 'text-white' : 'text-gray-900'}`} />
                                     </div>
                                     <div className="flex-1">
                                         <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -410,11 +400,9 @@ export default function MediaLibraryModal({
                         {/* Drag Overlay */}
                         {isDragging && (
                             <div className={`absolute inset-0 z-10 flex items-center justify-center ${isDark ? 'bg-black/80' : 'bg-white/80'} backdrop-blur-sm`}>
-                                <div className={`p-12 rounded-2xl border-2 border-dashed ${isDark ? 'border-[#2a2a2a] bg-[#1a1a1a]' : 'border-gray-300 bg-gray-50'}`}>
+                                <div className={`p-12 rounded-2xl border-2 border-dashed ${isDark ? 'border-white/5 bg-[#121212]' : 'border-gray-300 bg-gray-50'}`}>
                                     <div className={`w-20 h-20 mx-auto rounded-2xl flex items-center justify-center ${isDark ? 'bg-[#222]' : 'bg-gray-100'}`}>
-                                        <svg className={`w-10 h-10 ${isDark ? 'text-gray-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                        </svg>
+                                        <Icon name="upload" className={`w-10 h-10 ${isDark ? 'text-gray-400' : 'text-gray-400'}`} />
                                     </div>
                                     <p className={`mt-4 text-lg font-medium text-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                         {t('media.drop_here', 'Thả file vào đây')}
@@ -425,19 +413,15 @@ export default function MediaLibraryModal({
 
                         {/* Breadcrumb */}
                         {currentFolder && (
-                            <div className={`mx-4 mt-4 flex items-center gap-2 px-3 py-2 rounded-lg ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-100'}`}>
+                            <div className={`mx-4 mt-4 flex items-center gap-2 px-3 py-2 rounded-lg ${isDark ? 'bg-[#121212]' : 'bg-gray-100'}`}>
                                 <button
                                     onClick={navigateToRoot}
                                     className={`flex items-center gap-1 text-sm font-medium ${isDark ? 'text-violet-400 hover:text-violet-300' : 'text-violet-600 hover:text-violet-500'}`}
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                    </svg>
+                                    <Icon name="home" className="w-4 h-4" />
                                     Media
                                 </button>
-                                <svg className={`w-4 h-4 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
+                                <Icon name="chevronRight" className={`w-4 h-4 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
                                 <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                     {currentFolder}
                                 </span>
@@ -458,12 +442,10 @@ export default function MediaLibraryModal({
                                             <div
                                                 key={`folder-${folder}`}
                                                 onClick={() => navigateToFolder(folder)}
-                                                className={`group relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02] flex flex-col items-center justify-center border-2 border-dashed ${isDark ? 'bg-[#1a1a1a] hover:bg-[#222] border-[#2a2a2a]' : 'bg-gray-100 hover:bg-gray-50 border-gray-200'
+                                                className={`group relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02] flex flex-col items-center justify-center border-2 border-dashed ${isDark ? 'bg-[#121212] hover:bg-[#222] border-white/5' : 'bg-gray-100 hover:bg-gray-50 border-gray-200'
                                                     }`}
                                             >
-                                                <svg className={`w-12 h-12 mb-2 ${isDark ? 'text-amber-500' : 'text-amber-400'}`} fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
-                                                </svg>
+                                                <Icon name="folder" className={`w-12 h-12 mb-2 ${isDark ? 'text-amber-500' : 'text-amber-400'}`} />
                                                 <span className={`text-xs font-medium text-center px-2 truncate max-w-full ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                                     {folder}
                                                 </span>
@@ -480,7 +462,7 @@ export default function MediaLibraryModal({
                                                         ? 'ring-2 ring-violet-500 ring-offset-2 ring-offset-[#0d0d0d]'
                                                         : 'ring-2 ring-violet-500 ring-offset-2'
                                                     : ''
-                                                    } ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-100'}`}
+                                                    } ${isDark ? 'bg-[#121212]' : 'bg-gray-100'}`}
                                             >
                                                 {item.type === 'video' ? (
                                                     <div className="relative w-full h-full">
@@ -496,9 +478,7 @@ export default function MediaLibraryModal({
                                                         />
                                                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                                             <div className="w-10 h-10 rounded-full flex items-center justify-center bg-black/40 backdrop-blur-sm opacity-70 group-hover:opacity-100 transition-opacity">
-                                                                <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                                                                </svg>
+                                                                <Icon name="play" className="w-6 h-6 text-white ml-0.5" />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -512,9 +492,7 @@ export default function MediaLibraryModal({
                                                     : 'bg-black/30 backdrop-blur-sm border border-white/20 opacity-0 group-hover:opacity-100'
                                                     }`}>
                                                     {selectedItems.find(i => i.id === item.id) && (
-                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                                        </svg>
+                                                        <Icon name="check" className="w-3 h-3 text-current" />
                                                     )}
                                                 </div>
 
@@ -522,9 +500,7 @@ export default function MediaLibraryModal({
                                                 {item.source === 'ai_generated' && (
                                                     <div className="absolute top-2 right-2">
                                                         <div className={`px-1.5 py-0.5 rounded-md ${isDark ? 'bg-blue-900/80' : 'bg-blue-500/80'}`}>
-                                                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                                            </svg>
+                                                            <Icon name="ai" className="w-3 h-3 text-white" />
                                                         </div>
                                                     </div>
                                                 )}
@@ -541,24 +517,22 @@ export default function MediaLibraryModal({
                                     </div>
                                 ) : (
                                     /* List View */
-                                    <div className={`rounded-xl overflow-hidden ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
+                                    <div className={`rounded-xl overflow-hidden ${isDark ? 'bg-[#121212]' : 'bg-white border border-gray-200'}`}>
                                         {media.data.map((item) => (
                                             <div
                                                 key={item.id}
                                                 onClick={(e) => toggleSelect(item, e)}
                                                 className={`flex items-center gap-4 p-3 border-b last:border-b-0 transition-all cursor-pointer ${selectedItems.find(i => i.id === item.id)
                                                     ? isDark ? 'bg-violet-900/20' : 'bg-violet-50'
-                                                    : isDark ? 'border-[#2a2a2a] hover:bg-white/5' : 'border-gray-100 hover:bg-gray-50'
+                                                    : isDark ? 'border-white/5 hover:bg-white/5' : 'border-gray-100 hover:bg-gray-50'
                                                     }`}
                                             >
                                                 <div className={`w-5 h-5 rounded-md flex items-center justify-center border ${selectedItems.find(i => i.id === item.id)
                                                     ? 'bg-violet-500 border-violet-500 text-white'
-                                                    : isDark ? 'border-[#2a2a2a]' : 'border-gray-300'
+                                                    : isDark ? 'border-white/5' : 'border-gray-300'
                                                     }`}>
                                                     {selectedItems.find(i => i.id === item.id) && (
-                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                                        </svg>
+                                                        <Icon name="check" className="w-3 h-3 text-current" />
                                                     )}
                                                 </div>
                                                 <div className={`w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 ${isDark ? 'bg-[#222]' : 'bg-gray-100'}`}>
@@ -566,9 +540,7 @@ export default function MediaLibraryModal({
                                                         <div className="relative w-full h-full">
                                                             <video src={item.url} className="w-full h-full object-cover" muted playsInline preload="metadata" />
                                                             <div className="absolute inset-0 flex items-center justify-center">
-                                                                <svg className="w-3 h-3 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 20 20">
-                                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                                                                </svg>
+                                                                <Icon name="play" className="w-5 h-5 text-white drop-shadow-md" />
                                                             </div>
                                                         </div>
                                                     ) : (
@@ -586,11 +558,9 @@ export default function MediaLibraryModal({
                                 )
                             ) : (
                                 /* Empty State */
-                                <div className={`flex flex-col items-center justify-center py-20 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-gray-50 border border-gray-200'}`}>
+                                <div className={`flex flex-col items-center justify-center py-20 rounded-xl ${isDark ? 'bg-[#121212]' : 'bg-gray-50 border border-gray-200'}`}>
                                     <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${isDark ? 'bg-[#222]' : 'bg-gray-100'}`}>
-                                        <svg className={`w-8 h-8 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
+                                        <Icon name="media" className={`w-8 h-8 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
                                     </div>
                                     <h3 className={`mt-4 text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                         {t('media.no_files', 'Chưa có file nào')}
@@ -605,7 +575,7 @@ export default function MediaLibraryModal({
 
                     {/* Preview Panel */}
                     {activeItem && (
-                        <div className={`w-72 flex-shrink-0 border-l flex flex-col ${isDark ? 'border-[#2a2a2a]' : 'border-gray-200'}`}>
+                        <div className={`w-72 flex-shrink-0 border-l flex flex-col ${isDark ? 'border-white/5' : 'border-gray-200'}`}>
                             {/* Preview */}
                             <div className={`aspect-square w-full flex items-center justify-center p-4 ${isDark ? 'bg-[#0a0a0a]' : 'bg-gray-50'}`}>
                                 {activeItem.type === 'video' ? (
@@ -661,7 +631,7 @@ export default function MediaLibraryModal({
                 </div>
 
                 {/* Footer */}
-                <div className={`px-6 py-4 border-t flex items-center justify-between ${isDark ? 'border-[#2a2a2a]' : 'border-gray-200'}`}>
+                <div className={`px-6 py-4 border-t flex items-center justify-between ${isDark ? 'border-white/5' : 'border-gray-200'}`}>
                     <div className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                         {multiple
                             ? t('media.select_multiple_hint', 'Click để chọn nhiều file')

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Icon } from '@/Components/UI';
 
 export default function MediaContextMenu({
     position,
@@ -79,12 +80,12 @@ export default function MediaContextMenu({
             onClick={(e) => e.stopPropagation()}
         >
             <div className={`w-52 py-1.5 rounded-xl shadow-xl border overflow-hidden ${isDark
-                    ? 'bg-[#1a1a1a] border-[#2a2a2a]'
+                    ? 'bg-[#121212]/90 backdrop-blur-xl border-white/10'
                     : 'bg-white border-gray-200'
                 }`}>
                 {menuItems.map((menuItem, i) => (
                     menuItem.divider ? (
-                        <div key={i} className={`my-1.5 border-t ${isDark ? 'border-[#2a2a2a]' : 'border-gray-100'}`} />
+                        <div key={i} className={`my-1.5 border-t ${isDark ? 'border-white/10' : 'border-gray-100'}`} />
                     ) : (
                         <button
                             key={i}
