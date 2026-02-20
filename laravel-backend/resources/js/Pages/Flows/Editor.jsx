@@ -465,7 +465,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
         // Check accessibility service first
         if (!selectedDevice.accessibility_enabled) {
-            addToast(`❌ ${t('flows.editor.accessibility.not_enabled_record')}`, 'error');
+            addToast(`${t('flows.editor.accessibility.not_enabled_record')}`, 'error');
             return;
         }
 
@@ -724,9 +724,9 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
                         // Show toast notification
                         if (event.accessibility_enabled) {
-                            addToast(`✅ ${t('flows.editor.accessibility.enabled', { device: event.device.name })}`, 'success');
+                            addToast(`${t('flows.editor.accessibility.enabled', { device: event.device.name })}`, 'success');
                         } else {
-                            addToast(`⚠️ ${t('flows.editor.accessibility.disabled', { device: event.device.name })}`, 'warning');
+                            addToast(`${t('flows.editor.accessibility.disabled', { device: event.device.name })}`, 'warning');
                         }
                     }
                 });
@@ -783,7 +783,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
                     // Show progress toast
                     if (event.status === 'error') {
-                        addToast(`❌ Action failed: ${event.message || 'Unknown error'}`, 'error');
+                        addToast(`Action failed: ${event.message || 'Unknown error'}`, 'error');
                     }
                 });
 

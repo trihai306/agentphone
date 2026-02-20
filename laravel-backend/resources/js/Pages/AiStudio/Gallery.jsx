@@ -146,7 +146,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                             <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl ${isDark
                                 ? 'bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20'
                                 : 'bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200'}`}>
-                                <span className="text-lg">✨</span>
+                                <Icon name="ai" className="w-5 h-5" />
                                 <span className={`font-bold ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
                                     {currentCredits.toLocaleString()}
                                 </span>
@@ -515,7 +515,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                 </span>
                                 {selectedGeneration.credits_used > 0 && (
                                     <span className={`text-xs ${themeClasses.textMuted}`}>
-                                        ✨ {selectedGeneration.credits_used} credits
+                                        <><Icon name="ai" className="w-4 h-4 inline-block mr-0.5" /> {selectedGeneration.credits_used} credits</>
                                     </span>
                                 )}
                             </div>

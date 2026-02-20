@@ -423,7 +423,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                             <div className="flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-violet-600 to-indigo-600' : 'bg-gradient-to-br from-violet-500 to-indigo-500'
                                     }`}>
-                                    <span className="text-white text-lg">✨</span>
+                                    <Icon name="ai" className="w-5 h-5 text-white" />
                                 </div>
                                 <h1 className={`text-xl font-bold ${themeClasses.textPrimary}`}>
                                     AI Studio
@@ -435,7 +435,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                 {/* Credits Display */}
                                 <div className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${isDark ? 'bg-[#1a1a1a] border border-[#2a2a2a]' : 'bg-slate-50 border border-slate-200'
                                     }`}>
-                                    <span className="text-lg">✨</span>
+                                    <Icon name="ai" className="w-5 h-5" />
                                     <span className={`font-bold ${themeClasses.textPrimary}`}>{currentCredits.toLocaleString()}</span>
                                     <span className={`text-sm ${themeClasses.textMuted}`}>credits</span>
                                 </div>
@@ -464,7 +464,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                         : 'text-violet-600 hover:text-violet-700 hover:bg-violet-50'
                                         }`}
                                 >
-                                    ✨ Scenario Builder
+                                    <Icon name="ai" className="w-4 h-4 inline-block mr-1" /> Scenario Builder
                                 </Link>
                             </div>
                         </div>
@@ -633,7 +633,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                 onChange={(e) => setPrompt(e.target.value)}
                                                 placeholder={generationMode === 'image'
                                                     ? "Describe how the image should animate..."
-                                                    : "✨ Describe what you want to create... Be specific for best results!"
+                                                    : "Describe what you want to create... Be specific for best results!"
                                                 }
                                                 disabled={generating}
                                                 rows={5}
@@ -868,7 +868,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                     Đang tạo...
                                                 </span>
                                             ) : (
-                                                <>✨ Tạo ngay · {calculateEstimatedCost()} credits</>
+                                                <><Icon name="ai" className="w-4 h-4 inline-block mr-0.5" /> Tạo ngay · {calculateEstimatedCost()} credits</>
                                             )}
                                         </span>
                                     </button>
@@ -949,7 +949,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                     {/* Type Badge */}
                                                     <div className="absolute top-2 right-2">
                                                         <span className={`px-2 py-1 text-[10px] font-semibold rounded-md ${isDark ? 'bg-black/50 text-white' : 'bg-white/80 text-slate-700'}`}>
-                                                            {gen.type === 'video' ? '🎬' : '🖼️'}
+                                                            {gen.type === 'video' ? <Icon name="video" className="w-4 h-4" /> : <Icon name="media" className="w-4 h-4" />}
                                                         </span>
                                                     </div>
 
@@ -1000,7 +1000,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                             {gen.model}
                                                         </span>
                                                         <span className={`text-[10px] font-medium ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
-                                                            {gen.credits_used} ✨
+                                                            <>{gen.credits_used} <Icon name="ai" className="w-3.5 h-3.5 inline-block ml-0.5" /></>
                                                         </span>
                                                     </div>
                                                 </div>
@@ -1025,7 +1025,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                 : 'bg-violet-100 text-violet-700 hover:bg-violet-200 border border-violet-200'
                                                 }`}
                                         >
-                                            ✨ Bắt đầu tạo
+                                            <Icon name="ai" className="w-4 h-4 inline-block mr-1" /> Bắt đầu tạo
                                         </button>
                                     </div>
                                 )}
@@ -1173,7 +1173,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                     {/* Credits - Bottom Right Corner */}
                     <div className="absolute bottom-4 right-4">
                         <span className="text-sm text-white/60 bg-black/50 backdrop-blur-sm px-3 py-2 rounded-lg">
-                            ✨ {previewGeneration.credits_used} credits
+                            <><Icon name="ai" className="w-4 h-4 inline-block mr-0.5" /> {previewGeneration.credits_used} credits</>
                         </span>
                     </div>
                 </div>,

@@ -550,12 +550,12 @@ export default function ScenarioBuilder({
                         setGenerating(false);
 
                         if (responseData.scenario.status === 'completed') {
-                            addToast('🎉 Tất cả cảnh đã hoàn thành!', 'success');
+                            addToast('Tất cả cảnh đã hoàn thành!', 'success');
                             setStep('preview');
                         } else if (responseData.scenario.status === 'partial') {
-                            addToast('⚠️ Một số cảnh thất bại', 'warning');
+                            addToast('Một số cảnh thất bại', 'warning');
                         } else {
-                            addToast('❌ Tạo thất bại', 'error');
+                            addToast('Tạo thất bại', 'error');
                             setStep('editor');
                         }
                     }
@@ -1062,7 +1062,7 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                                         {scene.source_image_preview ? (
                                                             <img src={scene.source_image_preview} className="w-full h-full object-cover rounded-lg" />
                                                         ) : (
-                                                            <span>{scene.status === 'completed' ? '✅' : scene.status === 'generating' ? '⏳' : `${index + 1} `}</span>
+                                                            <span>{scene.status === 'completed' ? <Icon name="checkCircle" className="w-4 h-4 text-emerald-500" /> : scene.status === 'generating' ? <Icon name="clock" className="w-4 h-4 animate-spin" /> : `${index + 1} `}</span>
                                                         )}
                                                     </div>
 
@@ -1105,13 +1105,13 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                                     onClick={() => handleDuplicateScene(activeSceneIndex)}
                                                     className={`px - 3 py - 1.5 rounded - lg text - xs font - medium transition - all ${isDark ? 'bg-white/5 hover:bg-white/10 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'} `}
                                                 >
-                                                    📋 Nhân bản
+                                                    <Icon name="copy" className="w-3.5 h-3.5 inline-block mr-0.5" /> Nhân bản
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteScene(activeSceneIndex)}
                                                     className={`px - 3 py - 1.5 rounded - lg text - xs font - medium transition - all ${isDark ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400' : 'bg-rose-50 hover:bg-rose-100 text-rose-600'} `}
                                                 >
-                                                    🗑️ Xóa
+                                                    <Icon name="delete" className="w-3.5 h-3.5 inline-block mr-0.5" /> Xóa
                                                 </button>
                                             </div>
                                         </div>
@@ -1146,7 +1146,7 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                                             onClick={() => handleGeneratePrompt(activeSceneIndex)}
                                                             className={`text - xs font - medium ${isDark ? 'text-violet-400 hover:text-violet-300' : 'text-violet-600 hover:text-violet-700'} `}
                                                         >
-                                                            🪄 Tự động tạo
+                                                            <Icon name="ai" className="w-3.5 h-3.5 inline-block mr-0.5" /> Tự động tạo
                                                         </button>
                                                     </div>
                                                     <textarea
@@ -1165,7 +1165,7 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                                 {outputType === 'video' && (
                                                     <div>
                                                         <label className={`block text - sm font - bold mb - 3 ${themeClasses.textMuted} `}>
-                                                            ⏱️ Thời lượng: {scenes[activeSceneIndex]?.duration || settings.default_duration}s
+                                                            <Icon name="clock" className="w-3.5 h-3.5 inline-block mr-0.5" /> Thời lượng: {scenes[activeSceneIndex]?.duration || settings.default_duration}s
                                                         </label>
                                                         <input
                                                             type="range"
@@ -1188,7 +1188,7 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                                 {/* Reference Image Upload */}
                                                 <div>
                                                     <label className={`block text - sm font - bold mb - 2 ${themeClasses.textMuted} `}>
-                                                        🖼️ Ảnh tham chiếu (tùy chọn)
+                                                        <Icon name="media" className="w-3.5 h-3.5 inline-block mr-0.5" /> Ảnh tham chiếu (tùy chọn)
                                                     </label>
 
                                                     {scenes[activeSceneIndex]?.source_image_preview ? (

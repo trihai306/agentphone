@@ -254,7 +254,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                             </Link>
                             <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl ${glassCard}`}>
                                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
-                                    <span className="text-white text-sm">✨</span>
+                                    <Icon name="ai" className="w-4 h-4 text-white" />
                                 </div>
                                 <div>
                                     <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Credits</p>
@@ -411,7 +411,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                             {script.length} ký tự
                                         </span>
                                         <span className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                            💡 AI sẽ tự phân tách thành các scene
+                                            <Icon name="lightbulb" className="w-3.5 h-3.5 inline-block mr-0.5" /> AI sẽ tự phân tách thành các scene
                                         </span>
                                     </div>
                                 </div>
@@ -435,7 +435,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                         : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
                                                         }`}
                                                 >
-                                                    {type === 'video' ? '🎬 Video' : '🖼️ Ảnh'}
+                                                    {type === 'video' ? <><Icon name="video" className="w-4 h-4 inline-block mr-1" /> Video</> : <><Icon name="media" className="w-4 h-4 inline-block mr-1" /> Ảnh</>}
                                                 </button>
                                             ))}
                                         </div>
@@ -510,7 +510,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                         <div className={`p-4 rounded-xl ${chainMode === 'frame_chain' ? 'bg-amber-500/10 border border-amber-500/30' : isDark ? 'bg-black/20 border border-white/5' : 'bg-slate-50 border border-slate-200'}`}>
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
-                                                    <span className="text-xl">🔗</span>
+                                                    <Icon name="link" className="w-5 h-5" />
                                                     <div>
                                                         <p className={`font-medium text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Frame Chain</p>
                                                         <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Chuyển cảnh mượt mà</p>
@@ -545,7 +545,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
 
                                     {characters.length === 0 ? (
                                         <div className={`text-center py-8 rounded-xl ${isDark ? 'bg-black/20' : 'bg-slate-50'}`}>
-                                            <span className="text-4xl">👥</span>
+                                            <Icon name="users" className="w-10 h-10" />
                                             <p className={`text-sm mt-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                                                 Thêm nhân vật để AI giữ ngoại hình nhất quán
                                             </p>
@@ -616,7 +616,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                         </span>
                                     ) : (
                                         <span className="flex items-center justify-center gap-2">
-                                            <span>✨</span>
+                                            <Icon name="ai" className="w-4 h-4" />
                                             Phân tích kịch bản
                                         </span>
                                     )}
@@ -630,7 +630,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                             {step === 'input' && scenes.length === 0 && (
                                 <div className={`h-full min-h-[500px] rounded-2xl flex flex-col items-center justify-center ${glassCard}`}>
                                     <div className={`w-24 h-24 rounded-2xl flex items-center justify-center text-5xl mb-6 ${isDark ? 'bg-gradient-to-br from-violet-600/20 to-indigo-600/20' : 'bg-gradient-to-br from-violet-100 to-indigo-100'}`}>
-                                        🎬
+                                        <Icon name="video" className="w-5 h-5" />
                                     </div>
                                     <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
                                         Kịch bản trống
@@ -739,7 +739,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                                         onClick={(e) => e.stopPropagation()}
                                                                         className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-lg text-xs font-medium bg-gradient-to-r from-violet-600 to-indigo-600 text-white"
                                                                     >
-                                                                        ▶ Xem kết quả
+                                                                        Xem kết quả
                                                                     </a>
                                                                 )}
                                                             </div>
@@ -773,7 +773,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                             <>
                                                 <div className={`w-px h-10 ${isDark ? 'bg-white/10' : 'bg-slate-200'}`} />
                                                 <span className="px-3 py-1 rounded-lg text-xs font-medium bg-amber-500/20 text-amber-400">
-                                                    🔗 Frame Chain ON
+                                                    <Icon name="link" className="w-3.5 h-3.5 inline-block mr-0.5" /> Frame Chain ON
                                                 </span>
                                             </>
                                         )}
@@ -794,7 +794,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                 : isDark ? 'bg-white/5 text-slate-600 cursor-not-allowed' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                                 }`}
                                         >
-                                            🚀 Tạo {scenes.length} Video
+                                            Tạo {scenes.length} Video
                                         </button>
                                     </div>
                                 </div>
@@ -814,7 +814,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                             </div>
                                             <div>
                                                 <p className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                                    {scenario.status === 'queued' ? '🕐 Đang chờ trong hàng đợi...' : scenario.status === 'generating' ? 'Đang tạo video...' : scenario.status === 'completed' ? '✅ Hoàn thành!' : '⚠️ Hoàn thành một phần'}
+                                                    {scenario.status === 'queued' ? 'Đang chờ trong hàng đợi...' : scenario.status === 'generating' ? 'Đang tạo video...' : scenario.status === 'completed' ? 'Hoàn thành!' : 'Hoàn thành một phần'}
                                                 </p>
                                                 <p className={`text-sm ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
                                                     {scenario.status === 'queued' ? 'Các cảnh sẽ được tạo tuần tự' : `${scenario.completed_scenes} / ${scenario.total_scenes} scenes`}

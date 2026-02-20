@@ -30,7 +30,7 @@ export default function Show({ campaign }) {
             type: 'success',
             title: 'Chạy Campaign',
             message: `Bắt đầu chạy campaign "${campaign.name}"?`,
-            confirmText: '▶ Bắt đầu',
+            confirmText: 'Bắt đầu',
             onConfirm: () => {
                 setIsProcessing(true);
                 router.post(`/campaigns/${campaign.id}/run`, {}, {
@@ -46,7 +46,7 @@ export default function Show({ campaign }) {
             type: 'warning',
             title: 'Tạm dừng Campaign',
             message: `Tạm dừng campaign "${campaign.name}"?`,
-            confirmText: '⏸ Tạm dừng',
+            confirmText: 'Tạm dừng',
             onConfirm: () => {
                 setIsProcessing(true);
                 router.post(`/campaigns/${campaign.id}/pause`, {}, {
@@ -99,11 +99,11 @@ export default function Show({ campaign }) {
                         <div className="flex gap-3">
                             {campaign.status === 'active' ? (
                                 <Button variant="secondary" onClick={handlePause} className={isDark ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' : 'bg-amber-100 text-amber-600 hover:bg-amber-200'}>
-                                    ⏸ Tạm dừng
+                                    Tạm dừng
                                 </Button>
                             ) : (
                                 <Button variant="gradient" onClick={handleRun} className="bg-gradient-to-r from-emerald-500 to-teal-600">
-                                    ▶ Chạy Campaign
+                                    Chạy Campaign
                                 </Button>
                             )}
                         </div>

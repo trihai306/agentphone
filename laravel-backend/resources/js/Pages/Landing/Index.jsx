@@ -187,14 +187,17 @@ export default function Index() {
                             </AnimatedSection>
 
                             {/* Right: 3D Scene */}
-                            <AnimatedSection animation="fadeIn" delay={300} className="hidden lg:block h-[550px]">
-                                <div className="w-full h-full rounded-3xl overflow-hidden bg-gray-950/80 dark:bg-transparent">
+                            <AnimatedSection animation="fadeIn" delay={300} className="hidden lg:block h-[550px] relative">
+                                {/* Soft glow behind 3D scene */}
+                                <div className="absolute inset-0 bg-gradient-radial from-violet-500/10 dark:from-violet-500/20 to-transparent blur-2xl" />
+
+                                <div className="relative w-full h-full rounded-3xl overflow-hidden z-10">
                                     <Suspense fallback={
                                         <div className="w-full h-full flex items-center justify-center">
                                             <div className="w-16 h-16 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" />
                                         </div>
                                     }>
-                                        <HeroScene />
+                                        <HeroScene isDark={isDark} />
                                     </Suspense>
                                 </div>
                             </AnimatedSection>
@@ -342,8 +345,8 @@ export default function Index() {
                                         key={uc.id}
                                         onClick={() => setActiveUseCase(i)}
                                         className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${activeUseCase === i
-                                                ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-500/25'
-                                                : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-white/5'
+                                            ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-500/25'
+                                            : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-white/5'
                                             }`}
                                     >
                                         {uc.title}

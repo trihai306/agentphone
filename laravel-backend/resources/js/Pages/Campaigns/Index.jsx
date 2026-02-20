@@ -42,7 +42,7 @@ export default function Index({ campaigns, stats }) {
             type: 'success',
             title: t('campaigns.confirm.run_title'),
             message: t('campaigns.confirm.run_message', { name: campaign.name, count: campaign.total_records || 0 }),
-            confirmText: `▶ ${t('campaigns.actions.start')}`,
+            confirmText: t('campaigns.actions.start'),
             onConfirm: () => {
                 setIsProcessing(true);
                 router.post(`/campaigns/${campaign.id}/run`, {}, {
@@ -58,7 +58,7 @@ export default function Index({ campaigns, stats }) {
             type: 'warning',
             title: t('campaigns.confirm.pause_title'),
             message: t('campaigns.confirm.pause_message', { name: campaign.name }),
-            confirmText: `⏸ ${t('campaigns.actions.pause')}`,
+            confirmText: t('campaigns.actions.pause'),
             onConfirm: () => {
                 setIsProcessing(true);
                 router.post(`/campaigns/${campaign.id}/pause`, {}, {
@@ -258,7 +258,7 @@ export default function Index({ campaigns, stats }) {
                                                     onClick={() => handlePause(campaign)}
                                                     className={`flex-1 ${isDark ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' : 'bg-amber-100 text-amber-600 hover:bg-amber-200'}`}
                                                 >
-                                                    ⏸ {t('campaigns.actions.pause')}
+                                                    {t('campaigns.actions.pause')}
                                                 </Button>
                                             ) : (
                                                 <Button
@@ -267,7 +267,7 @@ export default function Index({ campaigns, stats }) {
                                                     onClick={() => handleRun(campaign)}
                                                     className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600"
                                                 >
-                                                    ▶ {t('campaigns.actions.run')}
+                                                    {t('campaigns.actions.run')}
                                                 </Button>
                                             )}
                                             <Button
