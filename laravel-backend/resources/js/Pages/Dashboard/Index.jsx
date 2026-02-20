@@ -13,6 +13,7 @@ import {
     GlassCardStat,
     Button,
     DataList,
+    Icon,
 } from '@/Components/UI';
 
 export default function Index({ stats, recentDevices, walletBalance = 0, activePackages = 0, workflowCount = 0 }) {
@@ -37,10 +38,10 @@ export default function Index({ stats, recentDevices, walletBalance = 0, activeP
     ];
 
     const quickActions = [
-        { href: '/devices', icon: '📱', title: t('devices.title'), description: t('dashboard.quick_actions.devices.description') },
-        { href: '/flows', icon: '⚡', title: t('flows.title'), description: t('dashboard.quick_actions.workflows.description') },
-        { href: '/ai-studio', icon: '✨', title: t('ai_studio.title'), description: t('ai_studio.generate') },
-        { href: '/media', icon: '🖼️', title: t('media.title'), description: t('media.my_media') },
+        { href: '/devices', icon: 'device', title: t('devices.title'), description: t('dashboard.quick_actions.devices.description') },
+        { href: '/flows', icon: 'credits', title: t('flows.title'), description: t('dashboard.quick_actions.workflows.description') },
+        { href: '/ai-studio', icon: 'ai', title: t('ai_studio.title'), description: t('ai_studio.generate') },
+        { href: '/media', icon: 'media', title: t('media.title'), description: t('media.my_media') },
     ];
 
     const systemServices = [
@@ -58,7 +59,7 @@ export default function Index({ stats, recentDevices, walletBalance = 0, activeP
             render: (_, device) => (
                 <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-100'}`}>
-                        <span className="text-sm">📱</span>
+                        <Icon name="device" className="w-4 h-4" />
                     </div>
                     <div>
                         <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -178,7 +179,7 @@ export default function Index({ stats, recentDevices, walletBalance = 0, activeP
                             />
                         ) : (
                             <EmptyStateCard
-                                icon="📱"
+                                icon="device"
                                 title={t('dashboard.recent_devices.empty.title')}
                                 description={t('dashboard.recent_devices.empty.description')}
                                 actionLabel={t('devices.create')}

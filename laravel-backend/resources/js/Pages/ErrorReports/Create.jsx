@@ -3,15 +3,15 @@ import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useState, useRef, useEffect } from 'react';
-import { Button } from '@/Components/UI';
+import { Button, Icon } from '@/Components/UI';
 import { errorReportApi } from '@/services/api';
 
 const typeOptions = [
-    { value: 'bug', label: 'Bug', icon: '🐛' },
-    { value: 'ui_issue', label: 'UI Issue', icon: '🎨' },
-    { value: 'performance', label: 'Performance', icon: '⚡' },
-    { value: 'feature_request', label: 'Feature Request', icon: '💡' },
-    { value: 'other', label: 'Other', icon: '❓' },
+    { value: 'bug', label: 'Bug', icon: 'bug' },
+    { value: 'ui_issue', label: 'UI Issue', icon: 'palette' },
+    { value: 'performance', label: 'Performance', icon: 'credits' },
+    { value: 'feature_request', label: 'Feature Request', icon: 'lightbulb' },
+    { value: 'other', label: 'Other', icon: 'questionMark' },
 ];
 
 const severityOptions = [

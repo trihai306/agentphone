@@ -3,6 +3,7 @@ import { Link, router, Head } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { Icon } from '@/Components/UI';
 
 export default function Run({ flow, devices = [], dataSource = null }) {
     const { t } = useTranslation();
@@ -230,7 +231,7 @@ export default function Run({ flow, devices = [], dataSource = null }) {
                                         className="w-12 h-12 rounded-xl flex items-center justify-center text-white text-xl"
                                         style={{ backgroundColor: dataSource.color || '#8B5CF6' }}
                                     >
-                                        {dataSource.icon || '📊'}
+                                        {dataSource.icon ? dataSource.icon : <Icon name="database" className="w-5 h-5" />}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, router, usePage, Head } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
-import { Button } from '@/Components/UI';
+import { Button, Icon } from '@/Components/UI';
 
 export default function Create({ flows = [], devices = [], dataCollections = [] }) {
     const { theme } = useTheme();
@@ -47,7 +47,7 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
                             ← Quay lại danh sách
                         </Button>
                         <h1 className={`text-4xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            Chạy Workflow 🚀
+                            Chạy Workflow
                         </h1>
                         <p className={`text-lg ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
                             Chọn thiết bị và kịch bản bạn muốn chạy
@@ -94,7 +94,7 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
                                                         ${selectedDevice?.id === device.id
                                                             ? 'bg-emerald-500/30'
                                                             : isDark ? 'bg-white/10' : 'bg-gray-100'}`}>
-                                                        📱
+                                                        <Icon name="device" className="w-5 h-5" />
                                                     </div>
                                                     <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-3 border-white flex items-center justify-center">
                                                         <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
@@ -122,7 +122,7 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
                                     </div>
                                 ) : (
                                     <div className="p-12 text-center">
-                                        <div className="text-6xl mb-4">📵</div>
+                                        <div className="mb-4"><Icon name="noDevice" className="w-14 h-14 mx-auto" /></div>
                                         <p className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                             Chưa có thiết bị online
                                         </p>
@@ -174,7 +174,7 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
                                                     ${selectedFlow?.id === flow.id
                                                         ? 'bg-violet-500/30'
                                                         : isDark ? 'bg-white/10' : 'bg-gray-100'}`}>
-                                                    ⚡
+                                                    <Icon name="credits" className="w-5 h-5" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className={`text-lg font-bold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -196,7 +196,7 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
                                     </div>
                                 ) : (
                                     <div className="p-12 text-center">
-                                        <div className="text-6xl mb-4">⚡</div>
+                                        <div className="mb-4"><Icon name="credits" className="w-14 h-14 mx-auto" /></div>
                                         <p className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                             Chưa có workflow
                                         </p>
@@ -221,14 +221,14 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
                             <>
                                 <div className="flex items-center justify-center gap-4 mb-6">
                                     <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${isDark ? 'bg-white/10' : 'bg-white'}`}>
-                                        <span className="text-2xl">📱</span>
+                                        <Icon name="device" className="w-6 h-6" />
                                         <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                             {selectedDevice.name || 'Thiết bị'}
                                         </span>
                                     </div>
                                     <span className="text-2xl">→</span>
                                     <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${isDark ? 'bg-white/10' : 'bg-white'}`}>
-                                        <span className="text-2xl">⚡</span>
+                                        <Icon name="credits" className="w-6 h-6" />
                                         <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                             {selectedFlow.name}
                                         </span>
@@ -243,17 +243,17 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
                                     loading={isSubmitting}
                                     className="px-12 py-5 text-xl bg-gradient-to-r from-violet-500 to-purple-600 shadow-2xl shadow-violet-500/40 hover:shadow-violet-500/60 hover:scale-105 active:scale-95"
                                 >
-                                    {isSubmitting ? 'Đang khởi tạo...' : '🚀 Bắt Đầu Chạy'}
+                                    {isSubmitting ? 'Đang khởi tạo...' : 'Bắt Đầu Chạy'}
                                 </Button>
                             </>
                         ) : (
                             <div className={`${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                                 <p className="text-lg mb-2">
                                     {!selectedDevice && !selectedFlow
-                                        ? '👆 Chọn thiết bị và kịch bản ở trên'
+                                        ? 'Chọn thiết bị và kịch bản ở trên'
                                         : !selectedDevice
-                                            ? '👈 Chọn thiết bị để tiếp tục'
-                                            : '👉 Chọn kịch bản để tiếp tục'}
+                                            ? 'Chọn thiết bị để tiếp tục'
+                                            : 'Chọn kịch bản để tiếp tục'}
                                 </p>
                                 <p className="text-sm">
                                     Sau khi chọn đủ, nút "Bắt Đầu Chạy" sẽ xuất hiện

@@ -4,6 +4,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
 import FolderSelectModal from '@/Components/Media/FolderSelectModal';
+import { Icon } from '@/Components/UI';
 
 export default function Gallery({ generations, filters, currentCredits = 0, folders = [] }) {
     const { theme } = useTheme();
@@ -103,7 +104,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark
                                     ? 'bg-gradient-to-br from-violet-600/30 to-indigo-600/30 border border-violet-500/30'
                                     : 'bg-gradient-to-br from-violet-100 to-indigo-100 border border-violet-200'}`}>
-                                    <span className="text-xl">🎨</span>
+                                    <Icon name="palette" className="w-5 h-5" />
                                 </div>
                                 <h1 className={`text-2xl font-bold ${themeClasses.textPrimary}`}>
                                     AI Gallery
@@ -180,8 +181,8 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                         : 'bg-slate-50 border-slate-200 text-slate-900 focus:ring-violet-500/20 focus:border-violet-400'}`}
                                 >
                                     <option value="">Tất cả</option>
-                                    <option value="image">🖼️ Hình ảnh</option>
-                                    <option value="video">🎬 Video</option>
+                                    <option value="image">Hình ảnh</option>
+                                    <option value="video">Video</option>
                                 </select>
                             </div>
 
@@ -287,7 +288,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                                         <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${isDark
                                                             ? 'bg-rose-500/20'
                                                             : 'bg-rose-50'}`}>
-                                                            <span className="text-xl">❌</span>
+                                                            <Icon name="xCircle" className="w-5 h-5" />
                                                         </div>
                                                         <span className={`text-sm font-medium ${isDark ? 'text-rose-400' : 'text-rose-600'}`}>
                                                             Thất bại
@@ -317,7 +318,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                         {/* Type Badge */}
                                         <div className="absolute top-3 left-3">
                                             <span className={`px-2.5 py-1 text-xs font-semibold rounded-lg border backdrop-blur-sm ${getTypeBadge(gen.type)}`}>
-                                                {gen.type === 'video' ? '🎬 Video' : '🖼️ Ảnh'}
+                                                {gen.type === 'video' ? 'Video' : 'Ảnh'}
                                             </span>
                                         </div>
                                     </div>
@@ -343,7 +344,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                                     {gen.status === 'processing' || gen.status === 'pending' ? (
                                                         <div className={`w-6 h-6 rounded-full border-2 border-t-transparent animate-spin ${isDark ? 'border-violet-500/30 border-t-violet-500' : 'border-violet-200 border-t-violet-500'}`} />
                                                     ) : (
-                                                        <span className="text-rose-500">❌</span>
+                                                        <Icon name="xCircle" className="w-4 h-4 text-rose-500" />
                                                     )}
                                                 </div>
                                             )}
@@ -359,7 +360,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                                     {new Date(gen.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                                 </span>
                                                 <span className={`px-1.5 py-0.5 text-xs font-medium rounded border ${getTypeBadge(gen.type)}`}>
-                                                    {gen.type === 'video' ? '🎬' : '🖼️'}
+                                                    {gen.type === 'video' ? <Icon name="video" className="w-5 h-5" /> : <Icon name="media" className="w-5 h-5" />}
                                                 </span>
                                             </div>
                                         </div>
@@ -378,7 +379,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                             <div className={`w-20 h-20 mx-auto rounded-2xl flex items-center justify-center mb-6 ${isDark
                                 ? 'bg-gradient-to-br from-violet-600/20 to-indigo-600/20 border border-violet-500/20'
                                 : 'bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100'}`}>
-                                <span className="text-4xl">🎨</span>
+                                <Icon name="palette" className="w-10 h-10" />
                             </div>
                             <h3 className={`text-xl font-semibold mb-2 ${themeClasses.textPrimary}`}>
                                 Chưa có tác phẩm nào
@@ -477,7 +478,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                     ) : (
                                         <>
                                             <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 ${isDark ? 'bg-rose-500/20' : 'bg-rose-50'}`}>
-                                                <span className="text-3xl">❌</span>
+                                                <Icon name="xCircle" className="w-8 h-8" />
                                             </div>
                                             <p className={`text-lg font-medium ${isDark ? 'text-rose-400' : 'text-rose-600'}`}>
                                                 Tạo thất bại
@@ -501,7 +502,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
 
                             <div className="flex flex-wrap items-center gap-3 mb-4">
                                 <span className={`px-2.5 py-1 text-xs font-semibold rounded-lg border ${getTypeBadge(selectedGeneration.type)}`}>
-                                    {selectedGeneration.type === 'video' ? '🎬 Video' : '🖼️ Hình ảnh'}
+                                    {selectedGeneration.type === 'video' ? 'Video' : 'Hình ảnh'}
                                 </span>
                                 <span className={`px-2.5 py-1 text-xs font-semibold rounded-lg border ${getStatusBadge(selectedGeneration.status).style}`}>
                                     {getStatusBadge(selectedGeneration.status).label}

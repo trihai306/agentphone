@@ -3,13 +3,13 @@ import { Link, router, Head } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import ConfirmModal from '@/Components/UI/ConfirmModal';
-import { Button } from '@/Components/UI';
+import { Button, Icon } from '@/Components/UI';
 
 const statusConfig = {
-    draft: { bg: 'bg-gray-500/10', text: 'text-gray-400', label: 'Nháp', icon: '📝' },
-    active: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', label: 'Đang chạy', icon: '▶️' },
-    paused: { bg: 'bg-amber-500/10', text: 'text-amber-400', label: 'Tạm dừng', icon: '⏸' },
-    completed: { bg: 'bg-violet-500/10', text: 'text-violet-400', label: 'Hoàn thành', icon: '✅' },
+    draft: { bg: 'bg-gray-500/10', text: 'text-gray-400', label: 'Nháp', iconName: 'edit' },
+    active: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', label: 'Đang chạy', iconName: 'play' },
+    paused: { bg: 'bg-amber-500/10', text: 'text-amber-400', label: 'Tạm dừng', iconName: 'clock' },
+    completed: { bg: 'bg-violet-500/10', text: 'text-violet-400', label: 'Hoàn thành', iconName: 'checkCircle' },
 };
 
 export default function Show({ campaign }) {
@@ -80,7 +80,7 @@ export default function Show({ campaign }) {
                                 className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-lg"
                                 style={{ backgroundColor: `${campaign.color}20` }}
                             >
-                                {campaign.icon || '🌱'}
+                                {campaign.icon ? campaign.icon : <Icon name="seed" className="w-8 h-8" />}
                             </div>
                             <div>
                                 <div className="flex items-center gap-3 mb-1">
@@ -88,7 +88,7 @@ export default function Show({ campaign }) {
                                         {campaign.name}
                                     </h1>
                                     <span className={`text-sm px-3 py-1 rounded-full ${status.bg} ${status.text}`}>
-                                        {status.icon} {status.label}
+                                        <Icon name={status.iconName} className="w-4 h-4 inline-block" /> {status.label}
                                     </span>
                                 </div>
                                 <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
@@ -112,15 +112,15 @@ export default function Show({ campaign }) {
                     {/* Stats Grid */}
                     <div className="grid grid-cols-5 gap-4 mb-8">
                         {[
-                            { label: 'Records', value: campaign.total_records || 0, icon: '📊', color: 'violet' },
-                            { label: 'Đã xử lý', value: campaign.records_processed || 0, icon: '✓', color: 'blue' },
-                            { label: 'Thành công', value: campaign.records_success || 0, icon: '✅', color: 'emerald' },
-                            { label: 'Thất bại', value: campaign.records_failed || 0, icon: '❌', color: 'red' },
-                            { label: 'Lặp/record', value: campaign.repeat_per_record || 1, icon: '🔄', color: 'amber' },
+                            { label: 'Records', value: campaign.total_records || 0, icon: 'chartBar', color: 'violet' },
+                            { label: 'Đã xử lý', value: campaign.records_processed || 0, icon: 'check', color: 'blue' },
+                            { label: 'Thành công', value: campaign.records_success || 0, icon: 'checkCircle', color: 'emerald' },
+                            { label: 'Thất bại', value: campaign.records_failed || 0, icon: 'xCircle', color: 'red' },
+                            { label: 'Lặp/record', value: campaign.repeat_per_record || 1, icon: 'refresh', color: 'amber' },
                         ].map(stat => (
                             <div key={stat.label} className={`p-4 rounded-2xl ${isDark ? 'bg-white/5' : 'bg-white shadow-sm'}`}>
                                 <div className="flex items-center justify-between mb-2">
-                                    <span className="text-lg">{stat.icon}</span>
+                                    <Icon name={stat.icon} className="w-5 h-5" />
                                     <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{stat.label}</span>
                                 </div>
                                 <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{stat.value}</p>
@@ -150,13 +150,13 @@ export default function Show({ campaign }) {
                     <div className="grid grid-cols-3 gap-6">
                         {/* Left: Configuration */}
                         <div className={`col-span-2 rounded-2xl p-6 ${isDark ? 'bg-white/5' : 'bg-white shadow-sm'}`}>
-                            <h2 className={`text-lg font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>⚙️ Cấu hình</h2>
+                            <h2 className={`text-lg font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}><Icon name="settings" className="w-5 h-5 inline-block mr-1" /> Cấu hình</h2>
 
                             {/* Data Collection */}
                             <div className="mb-6">
                                 <label className={`text-xs font-medium uppercase tracking-wide ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Data Collection</label>
                                 <div className={`mt-2 p-4 rounded-xl flex items-center gap-4 ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
-                                    <span className="text-2xl">{campaign.data_collection?.icon || '📊'}</span>
+                                    {campaign.data_collection?.icon ? <span className="text-2xl">{campaign.data_collection.icon}</span> : <Icon name="database" className="w-6 h-6" />}
                                     <div>
                                         <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{campaign.data_collection?.name || 'Chưa chọn'}</p>
                                         <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{campaign.data_collection?.total_records || 0} records</p>
@@ -186,7 +186,7 @@ export default function Show({ campaign }) {
                                     {campaign.devices?.length > 0 ? campaign.devices.map(device => (
                                         <div key={device.id} className={`p-3 rounded-xl flex items-center gap-2 ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
                                             <div className="relative">
-                                                <span className="text-lg">📱</span>
+                                                <Icon name="device" className="w-5 h-5" />
                                                 <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full ${device.socket_connected ? 'bg-green-500' : 'bg-gray-400'}`} />
                                             </div>
                                             <span className={`text-sm truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{device.name}</span>
@@ -201,7 +201,7 @@ export default function Show({ campaign }) {
                         {/* Right: Recent Jobs */}
                         <div className={`rounded-2xl p-6 ${isDark ? 'bg-white/5' : 'bg-white shadow-sm'}`}>
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>📋 Jobs gần đây</h2>
+                                <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}><Icon name="clipboard" className="w-5 h-5 inline-block mr-1" /> Jobs gần đây</h2>
                                 <Button variant="link" size="xs" href="/jobs" as="Link" className={isDark ? 'text-violet-400' : 'text-violet-600'}>Xem tất cả →</Button>
                             </div>
                             {campaign.jobs?.length > 0 ? (
@@ -221,7 +221,7 @@ export default function Show({ campaign }) {
                                 </div>
                             ) : (
                                 <div className={`text-center py-8 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    <p className="text-3xl mb-2">📭</p>
+                                    <Icon name="inbox" className="w-8 h-8 mx-auto mb-2" />
                                     <p className="text-sm">Chưa có job nào</p>
                                 </div>
                             )}

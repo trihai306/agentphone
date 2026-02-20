@@ -46,3 +46,6 @@ export { default as TagInput, Tag } from './TagInput';
 export { default as SlideOver } from './SlideOver';
 export { default as CommandPalette } from './CommandPalette';
 export { default as MetricCard, MetricCardGrid } from './MetricCard';
+
+// Icons
+export { default as Icon, iconPaths } from './Icon';

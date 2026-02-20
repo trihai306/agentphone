@@ -5,6 +5,7 @@ import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '@/Components/Layout/ToastProvider';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
+import { Icon } from '@/Components/UI';
 
 export default function Index({
     creditPackages = [],
@@ -651,8 +652,8 @@ export default function Index({
                                     {t('topup.credits_info_title', 'Credits dùng để làm gì?')}
                                 </h4>
                                 <ul className={`text-sm space-y-2 ${isDark ? 'text-purple-300/70' : 'text-purple-600/80'}`}>
-                                    <li>• 🖼️ {t('topup.credits_info_1', 'Tạo ảnh AI: ~10-50 credits/ảnh')}</li>
-                                    <li>• 🎬 {t('topup.credits_info_2', 'Tạo video AI: ~100-500 credits/video')}</li>
+                                    <li>• {t('topup.credits_info_1', 'Tạo ảnh AI: ~10-50 credits/ảnh')}</li>
+                                    <li>• {t('topup.credits_info_2', 'Tạo video AI: ~100-500 credits/video')}</li>
                                     <li>• ✨ {t('topup.credits_info_3', 'Sử dụng các model AI cao cấp')}</li>
                                 </ul>
                             </div>

@@ -5,6 +5,7 @@ import { aiStudioApi } from '@/services/api';
 import AppLayout from '@/Layouts/AppLayout';
 import { useToast } from '@/Components/Layout/ToastProvider';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { Icon } from '@/Components/UI';
 
 /**
  * AI Scenario Page - Professional Redesign
@@ -43,20 +44,20 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
 
     // Style options
     const styleOptions = [
-        { id: 'cinematic', icon: '🎬', name: 'Cinematic', desc: 'Hollywood style' },
-        { id: 'documentary', icon: '📹', name: 'Documentary', desc: 'Real & authentic' },
-        { id: 'commercial', icon: '💎', name: 'Commercial', desc: 'Premium ads' },
-        { id: 'social_media', icon: '📱', name: 'Social', desc: 'Viral content' },
-        { id: 'storytelling', icon: '💫', name: 'Story', desc: 'Emotional' },
+        { id: 'cinematic', icon: 'film', name: 'Cinematic', desc: 'Hollywood style' },
+        { id: 'documentary', icon: 'video', name: 'Documentary', desc: 'Real & authentic' },
+        { id: 'commercial', icon: 'diamond', name: 'Commercial', desc: 'Premium ads' },
+        { id: 'social_media', icon: 'device', name: 'Social', desc: 'Viral content' },
+        { id: 'storytelling', icon: 'sparkle', name: 'Story', desc: 'Emotional' },
         { id: 'minimal', icon: '◯', name: 'Minimal', desc: 'Clean & simple' },
     ];
 
     const platformOptions = [
-        { id: 'general', name: 'Đa nền tảng', icon: '🌐' },
-        { id: 'youtube', name: 'YouTube', icon: '▶️' },
-        { id: 'tiktok', name: 'TikTok', icon: '🎵' },
-        { id: 'instagram', name: 'Instagram', icon: '📷' },
-        { id: 'ads', name: 'Quảng cáo', icon: '💼' },
+        { id: 'general', name: 'Đa nền tảng', icon: 'globe' },
+        { id: 'youtube', name: 'YouTube', icon: 'play' },
+        { id: 'tiktok', name: 'TikTok', icon: 'music' },
+        { id: 'instagram', name: 'Instagram', icon: 'camera' },
+        { id: 'ads', name: 'Quảng cáo', icon: 'briefcase' },
     ];
 
     const models = outputType === 'video' ? videoModels : imageModels;
@@ -176,7 +177,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                     setStep('input');
                     setAiMetadata(null);
 
-                    addToast('🎬 Đã bắt đầu tạo video! Theo dõi tiến độ bên dưới.', 'success');
+                    addToast('Đã bắt đầu tạo video! Theo dõi tiến độ bên dưới.', 'success');
                 }
             }
         } catch (error) {
@@ -248,7 +249,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                 href="/ai-studio/scenarios"
                                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${glassCard} ${glassCardHover}`}
                             >
-                                <span>📋</span>
+                                <Icon name="clipboard" className="w-4 h-4" />
                                 <span className={isDark ? 'text-slate-300' : 'text-slate-700'}>Quản lý</span>
                             </Link>
                             <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl ${glassCard}`}>
@@ -274,7 +275,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                     <div className="flex items-center gap-3">
                                         <div className="w-3 h-3 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 animate-pulse" />
                                         <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                            🎬 Kịch bản đang tạo ({activeScenarios.length})
+                                            <Icon name="video" className="w-4 h-4 inline-block mr-1" /> Kịch bản đang tạo ({activeScenarios.length})
                                         </h3>
                                     </div>
                                     <span className={`text-xs px-3 py-1 rounded-full ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'}`}>
@@ -294,7 +295,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                     ? 'bg-gradient-to-br from-purple-500/20 to-purple-600/20 border border-purple-500/30'
                                                     : 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30'
                                                     }`}>
-                                                    {s.status === 'queued' ? '🕐' : '⚡'}
+                                                    {s.status === 'queued' ? <Icon name="clock" className="w-4 h-4" /> : <Icon name="credits" className="w-4 h-4" />}
                                                 </div>
                                                 <div>
                                                     <p className={`font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>
@@ -308,7 +309,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                             {s.status === 'queued' ? 'Đang chờ' : 'Đang tạo'}
                                                         </span>
                                                         <span className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                                            {s.output_type === 'video' ? '🎥' : '🖼️'} {s.total_scenes} cảnh
+                                                            <>{s.output_type === 'video' ? <Icon name="video" className="w-3.5 h-3.5 inline-block mr-0.5" /> : <Icon name="media" className="w-3.5 h-3.5 inline-block mr-0.5" />} {s.total_scenes} cảnh</>
                                                         </span>
                                                     </div>
                                                 </div>
@@ -371,9 +372,9 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                             <div className={`p-1.5 rounded-2xl ${glassCard}`}>
                                 <div className="flex gap-1">
                                     {[
-                                        { id: 'script', label: '📝 Kịch bản', icon: null },
-                                        { id: 'settings', label: '⚙️ Cài đặt', icon: null },
-                                        { id: 'characters', label: '👤 Nhân vật', icon: null },
+                                        { id: 'script', label: 'Kịch bản', icon: 'edit' },
+                                        { id: 'settings', label: 'Cài đặt', icon: 'settings' },
+                                        { id: 'characters', label: 'Nhân vật', icon: 'user' },
                                     ].map(tab => (
                                         <button
                                             key={tab.id}

@@ -12,6 +12,7 @@ import {
     Badge,
     Button,
     DataList,
+    Icon,
 } from '@/Components/UI';
 
 export default function StoragePlans({ currentPlan, plans, usage }) {
@@ -109,8 +110,8 @@ export default function StoragePlans({ currentPlan, plans, usage }) {
                             {usagePercent > 70 && (
                                 <p className={`mt-2 text-xs ${usagePercent > 90 ? 'text-red-400' : 'text-amber-400'}`}>
                                     {usagePercent > 90
-                                        ? '⚠️ Dung lượng sắp hết! Nâng cấp ngay để tiếp tục upload.'
-                                        : '⚡ Dung lượng đang sử dụng hơn 70%. Cân nhắc nâng cấp gói.'}
+                                        ? 'Dung lượng sắp hết! Nâng cấp ngay để tiếp tục upload.'
+                                        : 'Dung lượng đang sử dụng hơn 70%. Cân nhắc nâng cấp gói.'}
                                 </p>
                             )}
                         </div>

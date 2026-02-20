@@ -3,7 +3,7 @@ import { Head, useForm, usePage, Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
-import { Alert } from '@/Components/UI';
+import { Alert, Icon } from '@/Components/UI';
 
 export default function Edit({ user, stats = {}, storage = {}, activePackages = [] }) {
     const { t } = useTranslation();
@@ -65,12 +65,12 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
 
     // Stats data for grid
     const statsData = [
-        { label: t('navigation.devices'), value: stats.devices || 0, icon: '📱', color: 'blue', href: '/devices' },
-        { label: t('navigation.workflows'), value: stats.workflows || 0, icon: '⚡', color: 'purple', href: '/flows' },
-        { label: t('navigation.campaigns'), value: stats.campaigns || 0, icon: '🚀', color: 'green', href: '/campaigns' },
-        { label: t('navigation.jobs'), value: stats.jobs || 0, icon: '📋', color: 'orange', href: '/jobs' },
-        { label: t('profile.media_files', { defaultValue: 'Media Files' }), value: stats.mediaFiles || 0, icon: '🖼️', color: 'pink', href: '/media' },
-        { label: t('profile.data_collections', { defaultValue: 'Data Collections' }), value: stats.dataCollections || 0, icon: '📊', color: 'cyan', href: '/data-collections' },
+        { label: t('navigation.devices'), value: stats.devices || 0, icon: 'device', color: 'blue', href: '/devices' },
+        { label: t('navigation.workflows'), value: stats.workflows || 0, icon: 'credits', color: 'purple', href: '/flows' },
+        { label: t('navigation.campaigns'), value: stats.campaigns || 0, icon: 'rocket', color: 'green', href: '/campaigns' },
+        { label: t('navigation.jobs'), value: stats.jobs || 0, icon: 'clipboard', color: 'orange', href: '/jobs' },
+        { label: t('profile.media_files', { defaultValue: 'Media Files' }), value: stats.mediaFiles || 0, icon: 'media', color: 'pink', href: '/media' },
+        { label: t('profile.data_collections', { defaultValue: 'Data Collections' }), value: stats.dataCollections || 0, icon: 'database', color: 'cyan', href: '/data-collections' },
     ];
 
     const getColorClasses = (color) => {
@@ -133,12 +133,12 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
                                     </p>
                                     {user.phone && (
                                         <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                            📞 {user.phone}
+                                            <Icon name="phone" className="w-4 h-4 inline-block mr-1" /> {user.phone}
                                         </p>
                                     )}
                                     {user.location && (
                                         <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                            📍 {user.location}
+                                            <Icon name="pin" className="w-4 h-4 inline-block mr-1" /> {user.location}
                                         </p>
                                     )}
                                 </div>

@@ -52,8 +52,8 @@ export default function Show({ collection, records, filters }) {
 
     // Sort options
     const sortOptions = useMemo(() => [
-        { value: 'created_at', label: t('data_collections.sort.date_created'), icon: '📅' },
-        { value: 'id', label: 'ID', icon: '#️⃣' },
+        { value: 'created_at', label: t('data_collections.sort.date_created'), iconName: 'calendar' },
+        { value: 'id', label: 'ID', iconName: 'hash' },
         ...(collection.schema || []).map(field => ({
             value: `data.${field.name}`,
             label: field.name,
@@ -255,7 +255,7 @@ export default function Show({ collection, records, filters }) {
                         <div className="flex-1">
                             <div className="flex items-center gap-4 mb-2">
                                 <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/25`}>
-                                    <span className="text-2xl">{collection.icon || '📊'}</span>
+                                    {collection.icon ? <span className="text-2xl">{collection.icon}</span> : <Icon name="database" className="w-6 h-6" />}
                                 </div>
                                 <div>
                                     <h1 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -543,7 +543,7 @@ export default function Show({ collection, records, filters }) {
                                                 }`}
                                         >
                                             <div className="flex items-center gap-2">
-                                                <span className="text-sm">📅</span>
+                                                <Icon name="calendar" className="w-4 h-4" />
                                                 <span>{t('data_collections.sort.date_created')}</span>
                                                 {sortField === 'created_at' && (
                                                     <span className="text-blue-500">{sortOrder === 'asc' ? '↑' : '↓'}</span>
@@ -811,20 +811,20 @@ export default function Show({ collection, records, filters }) {
 // Helper function to get field icon
 function getFieldIcon(type) {
     const icons = {
-        text: '📝',
-        number: '🔢',
-        email: '📧',
-        date: '📅',
+        text: 'edit',
+        number: 'number',
+        email: 'mail',
+        date: 'calendar',
         boolean: '✓',
-        select: '📋',
-        textarea: '📄',
-        url: '🔗',
-        phone: '📱',
-        currency: '💰',
+        select: 'clipboard',
+        textarea: 'file',
+        url: 'link',
+        phone: 'device',
+        currency: 'coin',
         rating: '⭐',
-        autonumber: '#️⃣'
+        autonumber: 'hash'
     };
-    return icons[type] || '📝';
+    return icons[type] || 'edit';
 }
 
 function FieldInput({ field, value, onChange, isDark }) {

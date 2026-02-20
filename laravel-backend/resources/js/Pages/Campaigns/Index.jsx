@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import ConfirmModal from '@/Components/UI/ConfirmModal';
-import { Button } from '@/Components/UI';
+import { Button, Icon } from '@/Components/UI';
 
 const statusColors = {
     draft: { bg: 'bg-gray-500/10', text: 'text-gray-400', key: 'draft' },
@@ -74,7 +74,7 @@ export default function Index({ campaigns, stats }) {
             type: 'danger',
             title: t('campaigns.confirm.delete_title'),
             message: t('campaigns.confirm.delete_message', { name: campaign.name }),
-            confirmText: `🗑 ${t('campaigns.actions.delete')}`,
+            confirmText: t('campaigns.actions.delete'),
             onConfirm: () => {
                 setIsProcessing(true);
                 router.delete(`/campaigns/${campaign.id}`, {
@@ -93,7 +93,7 @@ export default function Index({ campaigns, stats }) {
                     <div className="flex items-start justify-between mb-8">
                         <div className="flex items-center gap-4">
                             <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25">
-                                <span className="text-2xl">🌱</span>
+                                <Icon name="seed" className="w-7 h-7 text-white" />
                             </div>
                             <div>
                                 <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -122,15 +122,15 @@ export default function Index({ campaigns, stats }) {
                     {/* Stats */}
                     <div className="grid grid-cols-4 gap-4 mb-8">
                         {[
-                            { label: t('campaigns.stats.total'), value: stats?.total || 0, gradient: 'from-violet-500 to-purple-600', icon: '📊' },
-                            { label: t('campaigns.stats.active'), value: stats?.active || 0, gradient: 'from-emerald-500 to-teal-500', icon: '▶️' },
-                            { label: t('campaigns.stats.draft'), value: stats?.draft || 0, gradient: 'from-gray-500 to-slate-600', icon: '📝' },
-                            { label: t('campaigns.stats.completed'), value: stats?.completed || 0, gradient: 'from-blue-500 to-cyan-500', icon: '✅' },
+                            { label: t('campaigns.stats.total'), value: stats?.total || 0, gradient: 'from-violet-500 to-purple-600', icon: 'chartBar' },
+                            { label: t('campaigns.stats.active'), value: stats?.active || 0, gradient: 'from-emerald-500 to-teal-500', icon: 'play' },
+                            { label: t('campaigns.stats.draft'), value: stats?.draft || 0, gradient: 'from-gray-500 to-slate-600', icon: 'edit' },
+                            { label: t('campaigns.stats.completed'), value: stats?.completed || 0, gradient: 'from-blue-500 to-cyan-500', icon: 'checkCircle' },
                         ].map(stat => (
                             <div key={stat.label} className={`p-4 rounded-2xl ${isDark ? 'bg-white/5' : 'bg-white shadow-sm'}`}>
                                 <div className="flex items-center justify-between mb-2">
                                     <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{stat.label}</p>
-                                    <span className="text-lg">{stat.icon}</span>
+                                    <Icon name={stat.icon} className="w-5 h-5" />
                                 </div>
                                 <p className={`text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r ${stat.gradient}`}>
                                     {stat.value}
@@ -160,7 +160,7 @@ export default function Index({ campaigns, stats }) {
                                                     className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
                                                     style={{ backgroundColor: `${campaign.color}20` }}
                                                 >
-                                                    {campaign.icon || '🌱'}
+                                                    {campaign.icon ? campaign.icon : <Icon name="seed" className="w-6 h-6" />}
                                                 </div>
                                                 <div>
                                                     <Link
@@ -181,7 +181,7 @@ export default function Index({ campaigns, stats }) {
                                         {/* Meta */}
                                         <div className="space-y-2 mb-4">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-sm">📊</span>
+                                                <Icon name="database" className="w-4 h-4" />
                                                 <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                                     {campaign.data_collection?.name || t('campaigns.meta.no_data')}
                                                     {campaign.total_records > 0 && (
@@ -191,7 +191,7 @@ export default function Index({ campaigns, stats }) {
                                             </div>
                                             {/* Workflow Chain */}
                                             <div className="flex items-center gap-2">
-                                                <span className="text-sm">⚡</span>
+                                                <Icon name="credits" className="w-4 h-4" />
                                                 <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                                     {campaign.workflows?.length > 0 ? (
                                                         campaign.workflows.map((wf, i) => (
@@ -207,7 +207,7 @@ export default function Index({ campaigns, stats }) {
                                             </div>
                                             {/* Devices & Distribution */}
                                             <div className="flex items-center gap-2">
-                                                <span className="text-sm">📱</span>
+                                                <Icon name="device" className="w-4 h-4" />
                                                 <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                                     {campaign.devices?.length || 0} {t('campaigns.meta.devices')}
                                                     {campaign.records_per_device && (
@@ -218,7 +218,7 @@ export default function Index({ campaigns, stats }) {
                                             {/* Data Pools */}
                                             {campaign.data_config?.pools?.length > 0 && (
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-sm">🔄</span>
+                                                    <Icon name="refresh" className="w-4 h-4" />
                                                     <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                                         Pools: {campaign.data_config.pools.map((p, i) => (
                                                             <span key={i}>
@@ -283,7 +283,7 @@ export default function Index({ campaigns, stats }) {
                                                 size="icon-sm"
                                                 onClick={() => handleDelete(campaign)}
                                             >
-                                                🗑
+                                                <Icon name="delete" className="w-4 h-4" />
                                             </Button>
                                         </div>
                                     </div>
@@ -298,7 +298,7 @@ export default function Index({ campaigns, stats }) {
                                 {/* Header */}
                                 <div className="text-center mb-8">
                                     <div className="w-20 h-20 mx-auto rounded-2xl flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg mb-4">
-                                        <span className="text-4xl">🚀</span>
+                                        <Icon name="rocket" className="w-10 h-10 text-white" />
                                     </div>
                                     <h3 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                         {t('campaigns.empty.title')}
@@ -311,26 +311,26 @@ export default function Index({ campaigns, stats }) {
                                 {/* How It Works */}
                                 <div className={`rounded-xl p-5 mb-6 ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
                                     <h4 className={`text-sm font-semibold mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                        📖 {t('campaigns.empty.how_it_works')}
+                                        <Icon name="book" className="w-4 h-4 inline-block mr-1" /> {t('campaigns.empty.how_it_works')}
                                     </h4>
                                     <div className="flex items-center justify-between gap-2">
                                         {[
-                                            { icon: '📊', title: 'Primary Data', desc: '1 record = 1 job' },
+                                            { icon: 'database', title: 'Primary Data', desc: '1 record = 1 job' },
                                             { icon: '→', isArrow: true },
-                                            { icon: '⚡', title: 'Workflow Chain', desc: 'WF1 → WF2 → ...' },
+                                            { icon: 'credits', title: 'Workflow Chain', desc: 'WF1 → WF2 → ...' },
                                             { icon: '→', isArrow: true },
-                                            { icon: '📱', title: 'Devices', desc: 'Phân phối đều' },
+                                            { icon: 'device', title: 'Devices', desc: 'Phân phối đều' },
                                             { icon: '→', isArrow: true },
-                                            { icon: '🔄', title: 'Pool Data', desc: 'Loop data' },
+                                            { icon: 'refresh', title: 'Pool Data', desc: 'Loop data' },
                                             { icon: '→', isArrow: true },
-                                            { icon: '🎯', title: 'Jobs', desc: 'Tự động chạy' },
+                                            { icon: 'target', title: 'Jobs', desc: 'Tự động chạy' },
                                         ].map((item, i) => (
                                             item.isArrow ? (
                                                 <span key={i} className={`text-lg ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>→</span>
                                             ) : (
                                                 <div key={i} className="text-center flex-1">
                                                     <div className={`w-10 h-10 mx-auto rounded-lg flex items-center justify-center mb-1.5 ${isDark ? 'bg-white/10' : 'bg-white shadow-sm'}`}>
-                                                        <span className="text-lg">{item.icon}</span>
+                                                        <Icon name={item.icon} className="w-5 h-5" />
                                                     </div>
                                                     <p className={`font-medium text-xs ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.title}</p>
                                                     <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{item.desc}</p>
@@ -343,25 +343,25 @@ export default function Index({ campaigns, stats }) {
                                 {/* Prerequisites Checklist */}
                                 <div className={`rounded-xl p-5 mb-6 ${isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50'}`}>
                                     <h4 className={`text-sm font-semibold mb-3 ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
-                                        📋 {t('campaigns.empty.checklist_title')}
+                                        <Icon name="clipboard" className="w-4 h-4 inline-block mr-1" /> {t('campaigns.empty.checklist_title')}
                                     </h4>
                                     <div className="grid grid-cols-3 gap-4">
                                         <Link href="/data" className={`flex items-center gap-3 p-3 rounded-lg transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-white hover:shadow-md'}`}>
-                                            <span className="text-xl">📊</span>
+                                            <Icon name="database" className="w-6 h-6" />
                                             <div>
                                                 <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Data Collection</p>
                                                 <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('campaigns.empty.checklist.accounts')}</p>
                                             </div>
                                         </Link>
                                         <Link href="/flows" className={`flex items-center gap-3 p-3 rounded-lg transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-white hover:shadow-md'}`}>
-                                            <span className="text-xl">⚡</span>
+                                            <Icon name="credits" className="w-6 h-6" />
                                             <div>
                                                 <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Workflows</p>
                                                 <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('campaigns.empty.checklist.scripts')}</p>
                                             </div>
                                         </Link>
                                         <Link href="/devices" className={`flex items-center gap-3 p-3 rounded-lg transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-white hover:shadow-md'}`}>
-                                            <span className="text-xl">📱</span>
+                                            <Icon name="device" className="w-6 h-6" />
                                             <div>
                                                 <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Devices</p>
                                                 <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('campaigns.empty.checklist.devices')}</p>

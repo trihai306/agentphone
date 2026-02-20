@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
 import { useTheme } from '@/Contexts/ThemeContext';
-import { Button, SearchInput } from '@/Components/UI';
+import { Button, SearchInput, Icon } from '@/Components/UI';
 
 // Simple debounce implementation
 function useDebounce(callback, delay) {
@@ -24,8 +24,8 @@ function useDebounce(callback, delay) {
 
 const statusColors = {
     pending: { bg: 'bg-yellow-500/10', text: 'text-yellow-500', border: 'border-yellow-500/20', icon: '⏳' },
-    queued: { bg: 'bg-blue-500/10', text: 'text-blue-500', border: 'border-blue-500/20', icon: '📋' },
-    running: { bg: 'bg-violet-500/10', text: 'text-violet-500', border: 'border-violet-500/20', icon: '▶️' },
+    queued: { bg: 'bg-blue-500/10', text: 'text-blue-500', border: 'border-blue-500/20', icon: 'clipboard' },
+    running: { bg: 'bg-violet-500/10', text: 'text-violet-500', border: 'border-violet-500/20', icon: 'play' },
     completed: { bg: 'bg-emerald-500/10', text: 'text-emerald-500', border: 'border-emerald-500/20', icon: '✓' },
     failed: { bg: 'bg-red-500/10', text: 'text-red-500', border: 'border-red-500/20', icon: '✕' },
     cancelled: { bg: 'bg-gray-500/10', text: 'text-gray-500', border: 'border-gray-500/20', icon: '⊘' },
@@ -148,7 +148,7 @@ export default function Index({ jobs, stats, deviceStats = [], devices = [], flo
                             <div className={`w-72 shrink-0 rounded-2xl backdrop-blur-xl border overflow-hidden ${isDark ? 'bg-white/5 border-white/10' : 'bg-white/80 border-gray-200/50 shadow-lg'}`}>
                                 <div className={`px-4 py-3 border-b ${isDark ? 'border-white/10' : 'border-gray-100'}`}>
                                     <h3 className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                        📱 {t('jobs.device_panel.title')}
+                                        <Icon name="device" className="w-4 h-4 inline-block mr-1" /> {t('jobs.device_panel.title')}
                                     </h3>
                                 </div>
                                 <div className="p-2 space-y-1 max-h-[500px] overflow-y-auto">
@@ -160,7 +160,7 @@ export default function Index({ jobs, stats, deviceStats = [], devices = [], flo
                                                 ? 'bg-violet-500/20 text-violet-400'
                                                 : isDark ? 'hover:bg-white/5 text-gray-400' : 'hover:bg-gray-50 text-gray-600'}`}
                                     >
-                                        <span className="text-lg">🌐</span>
+                                        <Icon name="globe" className="w-5 h-5" />
                                         <span className="flex-1 text-sm font-medium">{t('jobs.device_panel.all_devices')}</span>
                                         <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-white/10' : 'bg-gray-100'}`}>
                                             {stats?.total || 0}
@@ -177,7 +177,7 @@ export default function Index({ jobs, stats, deviceStats = [], devices = [], flo
                                                     : isDark ? 'hover:bg-white/5' : 'hover:bg-gray-50'}`}
                                         >
                                             <div className="relative">
-                                                <span className="text-lg">📱</span>
+                                                <Icon name="device" className="w-5 h-5" />
                                                 <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full ${device.socket_connected ? 'bg-green-500' : 'bg-gray-500'}`} />
                                             </div>
                                             <div className="flex-1 min-w-0">
@@ -222,7 +222,7 @@ export default function Index({ jobs, stats, deviceStats = [], devices = [], flo
                                     className={`p-2 rounded-lg ${showDevicePanel ? 'bg-violet-500/20 text-violet-400' : isDark ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
                                     title="Toggle device panel"
                                 >
-                                    📱
+                                    <Icon name="device" className="w-4 h-4" />
                                 </button>
                             </div>
 
@@ -238,7 +238,7 @@ export default function Index({ jobs, stats, deviceStats = [], devices = [], flo
                                     )}
                                     {filters.device_id && (
                                         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs ${isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>
-                                            📱 {devices.find(d => d.id == filters.device_id)?.name || t('jobs.device_panel.device')}
+                                            <Icon name="device" className="w-4 h-4 inline-block mr-1" /> {devices.find(d => d.id == filters.device_id)?.name || t('jobs.device_panel.device')}
                                             <button onClick={() => handleFilterChange('device_id', undefined)} className="hover:opacity-70">✕</button>
                                         </span>
                                     )}
@@ -285,7 +285,7 @@ export default function Index({ jobs, stats, deviceStats = [], devices = [], flo
                                                             </Link>
                                                             {job.is_multi_workflow && (
                                                                 <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded ${isDark ? 'bg-violet-500/20 text-violet-400' : 'bg-violet-100 text-violet-600'}`}>
-                                                                    🔗 Chain
+                                                                    <Icon name="link" className="w-3 h-3 inline-block mr-0.5" /> Chain
                                                                 </span>
                                                             )}
                                                         </td>

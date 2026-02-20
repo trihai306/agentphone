@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { Icon } from '@/Components/UI';
 
 export default function Index({ listings = { data: [] }, filters = {}, stats = {}, popularTags = [] }) {
     const { t } = useTranslation();
@@ -18,16 +19,16 @@ export default function Index({ listings = { data: [] }, filters = {}, stats = {
 
     // Categories as horizontal tabs
     const categories = [
-        { id: 'all', name: t('common.all', 'Tất cả'), icon: '🔥' },
-        { id: 'tiktok', name: 'TikTok', icon: '🎵' },
-        { id: 'facebook', name: 'Facebook', icon: '📘' },
-        { id: 'instagram', name: 'Instagram', icon: '📸' },
-        { id: 'youtube', name: 'YouTube', icon: '▶️' },
-        { id: 'shopee', name: 'Shopee', icon: '🛒' },
-        { id: 'lazada', name: 'Lazada', icon: '🛍️' },
-        { id: 'telegram', name: 'Telegram', icon: '✈️' },
-        { id: 'ecommerce', name: 'E-commerce', icon: '🏪' },
-        { id: 'automation', name: 'Automation', icon: '⚡' },
+        { id: 'all', name: t('common.all', 'Tất cả'), icon: 'fire' },
+        { id: 'tiktok', name: 'TikTok', icon: 'music' },
+        { id: 'facebook', name: 'Facebook', icon: 'globe' },
+        { id: 'instagram', name: 'Instagram', icon: 'camera' },
+        { id: 'youtube', name: 'YouTube', icon: 'play' },
+        { id: 'shopee', name: 'Shopee', icon: 'shoppingCart' },
+        { id: 'lazada', name: 'Lazada', icon: 'shoppingBag' },
+        { id: 'telegram', name: 'Telegram', icon: 'airplane' },
+        { id: 'ecommerce', name: 'E-commerce', icon: 'store' },
+        { id: 'automation', name: 'Automation', icon: 'credits' },
     ];
 
     const handleSearch = (e) => {
@@ -160,7 +161,7 @@ export default function Index({ listings = { data: [] }, filters = {}, stats = {
                                 {[
                                     { value: 'all', label: 'Tất cả' },
                                     { value: 'free', label: '🆓 Miễn phí' },
-                                    { value: 'paid', label: '💰 Trả phí' },
+                                    { value: 'paid', label: 'Trả phí' },
                                 ].map((option) => (
                                     <button
                                         key={option.value}
@@ -182,11 +183,11 @@ export default function Index({ listings = { data: [] }, filters = {}, stats = {
                             onChange={(e) => handleFilterChange('sort', e.target.value)}
                             className={`px-4 py-2 rounded-xl text-sm ${isDark ? 'bg-white/5 border-white/10 text-gray-300' : 'bg-white border-gray-200 text-gray-700'} border focus:outline-none`}
                         >
-                            <option value="popular">🔥 Phổ biến</option>
+                            <option value="popular">Phổ biến</option>
                             <option value="newest">✨ Mới nhất</option>
                             <option value="rating">⭐ Đánh giá cao</option>
-                            <option value="price_low">💵 Giá thấp → cao</option>
-                            <option value="price_high">💎 Giá cao → thấp</option>
+                            <option value="price_low">Giá thấp → cao</option>
+                            <option value="price_high">Giá cao → thấp</option>
                         </select>
                     </div>
 

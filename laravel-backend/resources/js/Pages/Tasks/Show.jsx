@@ -79,7 +79,7 @@ export default function Show({ task, userApplication, userDevices = [], canApply
                         <div className="flex items-start gap-6">
                             {/* Icon */}
                             <div className="w-20 h-20 rounded-3xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                                <span className="text-4xl">{task.icon || '📋'}</span>
+                                {task.icon ? <span className="text-4xl">{task.icon}</span> : <Icon name="clipboard" className="w-10 h-10" />}
                             </div>
 
                             {/* Info */}
@@ -125,7 +125,7 @@ export default function Show({ task, userApplication, userDevices = [], canApply
                                 </h3>
                                 {task.flow && (
                                     <div className={`flex items-center gap-4 p-4 rounded-xl ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
-                                        <span className="text-3xl">{task.flow.icon || '🤖'}</span>
+                                        {task.flow.icon ? <span className="text-3xl">{task.flow.icon}</span> : <Icon name="robot" className="w-8 h-8" />}
                                         <div>
                                             <div className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{task.flow.name}</div>
                                         </div>
@@ -142,12 +142,12 @@ export default function Show({ task, userApplication, userDevices = [], canApply
                                     {task.user_provides_data ? (
                                         <div className={`p-4 rounded-xl ${isDark ? 'bg-amber-500/10' : 'bg-amber-50'}`}>
                                             <p className={`text-sm ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
-                                                ⚠️ {t('tasks.user_must_provide_data', 'Bạn cần cung cấp data collection của riêng mình khi nhận nhiệm vụ')}
+                                                <Icon name="exclamation" className="w-4 h-4 inline-block mr-1" /> {t('tasks.user_must_provide_data', 'Bạn cần cung cấp data collection của riêng mình khi nhận nhiệm vụ')}
                                             </p>
                                         </div>
                                     ) : task.data_collection ? (
                                         <div className={`flex items-center gap-4 p-4 rounded-xl ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
-                                            <span className="text-3xl">{task.data_collection.icon || '📊'}</span>
+                                            {task.data_collection.icon ? <span className="text-3xl">{task.data_collection.icon}</span> : <Icon name="database" className="w-8 h-8" />}
                                             <div>
                                                 <div className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{task.data_collection.name}</div>
                                             </div>
@@ -174,7 +174,7 @@ export default function Show({ task, userApplication, userDevices = [], canApply
                                                         <div>
                                                             <div className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{app.user?.name}</div>
                                                             <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                                                📱 {app.device?.name || app.device?.brand}
+                                                                <Icon name="device" className="w-3.5 h-3.5 inline-block mr-0.5" /> {app.device?.name || app.device?.brand}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -274,7 +274,7 @@ export default function Show({ task, userApplication, userDevices = [], canApply
                                         onClick={() => setShowApplyModal(true)}
                                         className="w-full py-4 text-base font-semibold rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:shadow-lg hover:shadow-emerald-500/30 transition-all"
                                     >
-                                        📱 {t('tasks.apply_now', 'Nhận nhiệm vụ')}
+                                        <Icon name="device" className="w-4 h-4 inline-block mr-1" /> {t('tasks.apply_now', 'Nhận nhiệm vụ')}
                                     </button>
                                 )}
 

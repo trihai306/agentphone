@@ -8,7 +8,7 @@ import ImportCSVModal from '@/Components/DataCollections/ImportCSVModal';
 import CreateDropdownMenu, { QUICK_TEMPLATES } from '@/Components/DataCollections/CreateDropdownMenu';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
 import { useToast } from '@/Components/Layout/ToastProvider';
-import { Button, SearchInput } from '@/Components/UI';
+import { Button, SearchInput, Icon } from '@/Components/UI';
 
 export default function Index({ collections, stats }) {
     const { t } = useTranslation();
@@ -205,17 +205,17 @@ export default function Index({ collections, stats }) {
     const getColor = (index) => collectionColors[index % collectionColors.length];
 
     const sortOptions = [
-        { value: 'updated_at', label: t('data_collections.sort.last_updated'), icon: '🕐' },
-        { value: 'created_at', label: t('data_collections.sort.date_created'), icon: '📅' },
-        { value: 'name', label: t('data_collections.sort.name_az'), icon: '🔤' },
-        { value: 'records', label: t('data_collections.sort.records_count'), icon: '📊' },
+        { value: 'updated_at', label: t('data_collections.sort.last_updated'), iconName: 'clock' },
+        { value: 'created_at', label: t('data_collections.sort.date_created'), iconName: 'calendar' },
+        { value: 'name', label: t('data_collections.sort.name_az'), iconName: 'sortAsc' },
+        { value: 'records', label: t('data_collections.sort.records_count'), iconName: 'chartBar' },
     ];
 
     const filterOptions = [
-        { value: 'all', label: t('data_collections.filter.all'), icon: '📂', count: collections.length },
-        { value: 'has_data', label: t('data_collections.filter.has_data'), icon: '📈', count: collections.filter(c => (c.total_records || 0) > 0).length },
-        { value: 'empty', label: t('data_collections.filter.empty'), icon: '📭', count: collections.filter(c => (c.total_records || 0) === 0).length },
-        { value: 'with_workflows', label: t('data_collections.filter.with_workflows'), icon: '⚡', count: collections.filter(c => (c.workflows_count || 0) > 0).length },
+        { value: 'all', label: t('data_collections.filter.all'), iconName: 'folder', count: collections.length },
+        { value: 'has_data', label: t('data_collections.filter.has_data'), iconName: 'trendingUp', count: collections.filter(c => (c.total_records || 0) > 0).length },
+        { value: 'empty', label: t('data_collections.filter.empty'), iconName: 'inbox', count: collections.filter(c => (c.total_records || 0) === 0).length },
+        { value: 'with_workflows', label: t('data_collections.filter.with_workflows'), iconName: 'credits', count: collections.filter(c => (c.workflows_count || 0) > 0).length },
     ];
 
     return (
@@ -313,7 +313,7 @@ export default function Index({ collections, stats }) {
                                     : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                                     }`}
                             >
-                                <span>{sortOptions.find(o => o.value === sortBy)?.icon}</span>
+                                <Icon name={sortOptions.find(o => o.value === sortBy)?.iconName} className="w-4 h-4" />
                                 <span className="hidden sm:inline">{sortOptions.find(o => o.value === sortBy)?.label}</span>
                                 <svg className={`w-4 h-4 transition-transform ${showSortDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -340,7 +340,7 @@ export default function Index({ collections, stats }) {
                                                 : isDark ? 'hover:bg-white/5 text-gray-300' : 'hover:bg-gray-50 text-gray-700'
                                                 }`}
                                         >
-                                            <span>{option.icon}</span>
+                                            <Icon name={option.iconName} className="w-4 h-4" />
                                             <span className="flex-1 text-left">{option.label}</span>
                                             {sortBy === option.value && (
                                                 <svg className={`w-4 h-4 ${sortOrder === 'asc' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -364,7 +364,7 @@ export default function Index({ collections, stats }) {
                                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                                     }`}
                             >
-                                <span>{filterOptions.find(o => o.value === filterBy)?.icon}</span>
+                                <Icon name={filterOptions.find(o => o.value === filterBy)?.iconName} className="w-4 h-4" />
                                 <span className="hidden sm:inline">{filterOptions.find(o => o.value === filterBy)?.label}</span>
                                 <svg className={`w-4 h-4 transition-transform ${showFilterDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -383,7 +383,7 @@ export default function Index({ collections, stats }) {
                                                 : isDark ? 'hover:bg-white/5 text-gray-300' : 'hover:bg-gray-50 text-gray-700'
                                                 }`}
                                         >
-                                            <span>{option.icon}</span>
+                                            <Icon name={option.iconName} className="w-4 h-4" />
                                             <span className="flex-1 text-left">{option.label}</span>
                                             <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-white/10' : 'bg-gray-100'
                                                 }`}>{option.count}</span>
@@ -484,7 +484,7 @@ export default function Index({ collections, stats }) {
 
                                                 {/* Icon - top right */}
                                                 <div className="absolute top-3 right-3 w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                                                    <span className="text-xl">{collection.icon || '📊'}</span>
+                                                    {collection.icon ? <span className="text-xl">{collection.icon}</span> : <Icon name="database" className="w-5 h-5 text-white" />}
                                                 </div>
 
                                                 {/* Stats badges */}

@@ -6,6 +6,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { useToast } from '@/Components/Layout/ToastProvider';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { Icon } from '@/Components/UI';
 
 /**
  * Scenarios Management Page
@@ -56,7 +57,7 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
             confirmText: 'Xóa',
             cancelText: 'Hủy',
             type: 'danger',
-            icon: '🗑️',
+            icon: 'delete',
         });
         if (!confirmed) return;
 
@@ -74,13 +75,13 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
 
     const getStatusConfig = (status) => {
         const configs = {
-            draft: { label: 'Bản nháp', color: 'slate', icon: '📝' },
-            parsed: { label: 'Đã phân tích', color: 'blue', icon: '✨' },
-            queued: { label: 'Đang chờ', color: 'purple', icon: '🕐' },
-            generating: { label: 'Đang tạo', color: 'amber', icon: '⚡' },
-            completed: { label: 'Hoàn thành', color: 'emerald', icon: '✅' },
-            failed: { label: 'Thất bại', color: 'red', icon: '❌' },
-            partial: { label: 'Một phần', color: 'orange', icon: '⚠️' },
+            draft: { label: 'Bản nháp', color: 'slate', icon: 'edit' },
+            parsed: { label: 'Đã phân tích', color: 'blue', icon: 'ai' },
+            queued: { label: 'Đang chờ', color: 'purple', icon: 'clock' },
+            generating: { label: 'Đang tạo', color: 'amber', icon: 'credits' },
+            completed: { label: 'Hoàn thành', color: 'emerald', icon: 'checkCircle' },
+            failed: { label: 'Thất bại', color: 'red', icon: 'xCircle' },
+            partial: { label: 'Một phần', color: 'orange', icon: 'exclamation' },
         };
         return configs[status] || configs.draft;
     };
@@ -110,7 +111,7 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
                             </Link>
                             <div>
                                 <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                    🎬 Quản lý Kịch bản
+                                    <Icon name="video" className="w-5 h-5 inline-block mr-1" /> Quản lý Kịch bản
                                 </h1>
                                 <p className={`text-sm ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
                                     {scenarioList.length} kịch bản
@@ -120,7 +121,7 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
 
                         <div className="flex items-center gap-4">
                             <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl ${glassCard}`}>
-                                <span className="text-lg">✨</span>
+                                <Icon name="ai" className="w-5 h-5" />
                                 <div>
                                     <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Credits</p>
                                     <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
@@ -140,7 +141,7 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
                     {/* Scenarios Table */}
                     {scenarioList.length === 0 ? (
                         <div className={`text-center py-20 rounded-2xl ${glassCard}`}>
-                            <div className="text-6xl mb-4">🎬</div>
+                            <div className="mb-4"><Icon name="video" className="w-14 h-14 mx-auto" /></div>
                             <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
                                 Chưa có kịch bản nào
                             </h3>
@@ -151,7 +152,7 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
                                 href="/ai-studio/scenarios/create"
                                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium bg-gradient-to-r from-violet-600 to-indigo-600 text-white"
                             >
-                                ✨ Tạo kịch bản đầu tiên
+                                <Icon name="ai" className="w-5 h-5 inline-block mr-1" /> Tạo kịch bản đầu tiên
                             </Link>
                         </div>
                     ) : (
@@ -187,10 +188,10 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
                                                 </Link>
                                                 <div className="flex items-center gap-3 mt-1">
                                                     <span className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                                        {scenario.output_type === 'video' ? '🎥' : '🖼️'} {scenario.total_scenes} cảnh
+                                                        <>{scenario.output_type === 'video' ? <Icon name="video" className="w-3.5 h-3.5 inline-block mr-0.5" /> : <Icon name="media" className="w-3.5 h-3.5 inline-block mr-0.5" />} {scenario.total_scenes} cảnh</>
                                                     </span>
                                                     <span className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                                        💎 {scenario.total_credits} credits
+                                                        <Icon name="diamond" className="w-3.5 h-3.5 inline-block mr-0.5" /> {scenario.total_credits} credits
                                                     </span>
                                                 </div>
                                             </div>
@@ -201,7 +202,7 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
                                                     ? `bg-${statusConfig.color}-500/20 text-${statusConfig.color}-400 border border-${statusConfig.color}-500/30`
                                                     : `bg-${statusConfig.color}-100 text-${statusConfig.color}-700`
                                                     } ${isActive ? 'animate-pulse' : ''}`}>
-                                                    <span>{statusConfig.icon}</span>
+                                                    <Icon name={statusConfig.icon} className="w-3.5 h-3.5" />
                                                     <span>{statusConfig.label}</span>
                                                 </span>
                                             </div>

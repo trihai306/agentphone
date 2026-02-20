@@ -200,8 +200,8 @@ export default function Index({ tasks = { data: [] }, filters: rawFilters = {}, 
                         >
                             <option value="newest">✨ {t('common.newest', 'Mới nhất')}</option>
                             <option value="deadline">⏰ {t('tasks.deadline_soon', 'Sắp hết hạn')}</option>
-                            <option value="reward_high">💎 {t('tasks.reward_high', 'Thưởng cao')}</option>
-                            <option value="reward_low">💵 {t('tasks.reward_low', 'Thưởng thấp')}</option>
+                            <option value="reward_high">{t('tasks.reward_high', 'Thưởng cao')}</option>
+                            <option value="reward_low">{t('tasks.reward_low', 'Thưởng thấp')}</option>
                         </select>
                     </div>
 
@@ -234,7 +234,7 @@ export default function Index({ tasks = { data: [] }, filters: rawFilters = {}, 
 
                                             {/* Icon & Time */}
                                             <div className="absolute bottom-4 left-4 flex items-center gap-3">
-                                                <span className="text-3xl">{task.icon || '📋'}</span>
+                                                {task.icon ? <span className="text-3xl">{task.icon}</span> : <Icon name="clipboard" className="w-8 h-8" />}
                                                 {timeRemaining && (
                                                     <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${timeRemaining.expired ? 'bg-red-500/80 text-white' : 'bg-black/20 text-white'}`}>
                                                         ⏰ {timeRemaining.text}

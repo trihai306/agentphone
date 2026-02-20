@@ -4,14 +4,14 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import WorkflowConfigPanel from '@/Components/Campaigns/WorkflowConfigPanel';
-import { Button } from '@/Components/UI';
+import { Button, Icon } from '@/Components/UI';
 import { campaignApi } from '@/services/api';
 
 // Quick Start Templates
 const TEMPLATES = [
     {
         id: 'facebook-farming',
-        icon: '🌱',
+        icon: 'seed',
         name: 'Nuôi Facebook Daily',
         description: 'Đăng bài, like, comment tự động mỗi ngày',
         tags: ['facebook', 'social'],
@@ -19,7 +19,7 @@ const TEMPLATES = [
     },
     {
         id: 'tiktok-farming',
-        icon: '🎵',
+        icon: 'music',
         name: 'Nuôi TikTok',
         description: 'Xem video, like, follow tự động',
         tags: ['tiktok', 'video'],
@@ -27,7 +27,7 @@ const TEMPLATES = [
     },
     {
         id: 'lead-generation',
-        icon: '🎯',
+        icon: 'target',
         name: 'Lead Generation',
         description: 'Thu thập leads từ các nền tảng',
         tags: ['leads', 'marketing'],
@@ -35,7 +35,7 @@ const TEMPLATES = [
     },
     {
         id: 'custom',
-        icon: '⚙️',
+        icon: 'settings',
         name: 'Tùy chỉnh',
         description: 'Cấu hình theo ý muốn',
         tags: [],
@@ -293,11 +293,11 @@ export default function Create({ dataCollections = [], workflows = [], devices =
 
     const getValidationHint = () => {
         if (step === 1) {
-            if (!name.trim()) return '⚠️ Nhập tên campaign';
-            if (selectedWorkflows.length === 0) return '⚠️ Thêm ít nhất 1 kịch bản';
+            if (!name.trim()) return 'Nhập tên campaign';
+            if (selectedWorkflows.length === 0) return 'Thêm ít nhất 1 kịch bản';
         }
         if (step === 2 && selectedDevices.length === 0) {
-            return '⚠️ Chọn ít nhất 1 thiết bị';
+            return 'Chọn ít nhất 1 thiết bị';
         }
         return null;
     };
@@ -380,7 +380,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                         {/* Header */}
                         <div className="text-center mb-8">
                             <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg mb-4">
-                                <span className="text-3xl">🚀</span>
+                                <Icon name="rocket" className="w-8 h-8" />
                             </div>
                             <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 Tạo Campaign Mới
@@ -393,17 +393,17 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                         {/* How It Works - Simplified */}
                         <div className={`rounded-2xl p-6 mb-8 ${isDark ? 'bg-white/5' : 'bg-white shadow-lg'}`}>
                             <h2 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                📖 Cách thức hoạt động
+                                <Icon name="book" className="w-4 h-4 inline-block mr-1" /> Cách thức hoạt động
                             </h2>
                             <div className="flex items-center justify-center gap-4">
                                 {[
-                                    { icon: '⚡', title: 'Kịch bản', desc: 'Chọn workflow' },
+                                    { icon: 'credits', title: 'Kịch bản', desc: 'Chọn workflow' },
                                     { icon: '→', isArrow: true },
-                                    { icon: '📱', title: 'Thiết bị', desc: 'Chọn điện thoại' },
+                                    { icon: 'device', title: 'Thiết bị', desc: 'Chọn điện thoại' },
                                     { icon: '→', isArrow: true },
-                                    { icon: '📊', title: 'Dữ liệu', desc: 'Chọn records chạy' },
+                                    { icon: 'database', title: 'Dữ liệu', desc: 'Chọn records chạy' },
                                     { icon: '→', isArrow: true },
-                                    { icon: '🎯', title: 'Kết quả', desc: 'Jobs tự động tạo' },
+                                    { icon: 'target', title: 'Kết quả', desc: 'Jobs tự động tạo' },
                                 ].map((item, i) => (
                                     item.isArrow ? (
                                         <span key={i} className={`text-2xl ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>→</span>
@@ -422,7 +422,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
 
                         {/* Templates */}
                         <h2 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            ⚡ Bắt đầu nhanh
+                            <Icon name="credits" className="w-4 h-4 inline-block mr-1" /> Bắt đầu nhanh
                         </h2>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                             {TEMPLATES.map(template => (
@@ -459,7 +459,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                     {/* Header */}
                     <div className="text-center mb-8">
                         <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center shadow-lg mb-4 bg-gradient-to-br ${selectedTemplate?.color || 'from-emerald-500 to-teal-600'}`}>
-                            <span className="text-3xl">{selectedTemplate?.icon || '🌱'}</span>
+                            {selectedTemplate?.icon ? <span className="text-3xl">{selectedTemplate.icon}</span> : <Icon name="seed" className="w-8 h-8" />}
                         </div>
                         <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             Tạo Campaign
@@ -472,10 +472,10 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                     {/* Step Indicators - 4 steps */}
                     <div className="flex items-center justify-center mb-10">
                         {[
-                            { num: 1, label: 'Kịch bản', icon: '⚡' },
-                            { num: 2, label: 'Thiết bị', icon: '📱' },
-                            { num: 3, label: 'Cấu hình', icon: '⚙️' },
-                            { num: 4, label: 'Xác nhận', icon: '✅' },
+                            { num: 1, label: 'Kịch bản', icon: 'credits' },
+                            { num: 2, label: 'Thiết bị', icon: 'device' },
+                            { num: 3, label: 'Cấu hình', icon: 'settings' },
+                            { num: 4, label: 'Xác nhận', icon: 'checkCircle' },
                         ].map((s, idx, arr) => (
                             <div key={s.num} className="flex items-center">
                                 <button
@@ -544,16 +544,16 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                     {/* Selected Workflows (Order) */}
                                     <div>
                                         <label className={`block text-sm font-medium mb-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                            ⚡ Thứ Tự Chạy ({selectedWorkflows.length})
+                                            <Icon name="credits" className="w-4 h-4 inline-block mr-1" /> Thứ Tự Chạy ({selectedWorkflows.length})
                                         </label>
                                         <div className="space-y-2 min-h-40">
                                             {selectedWorkflows.length > 0 ? selectedWorkflows.map((wf, index) => {
                                                 const config = getWorkflowConfig(wf.id);
                                                 const modeBadge = config.execution_mode === 'repeat'
-                                                    ? { icon: '🔵', text: `${config.repeat_count}×`, color: 'blue' }
+                                                    ? { icon: 'refresh', text: `${config.repeat_count}×`, color: 'blue' }
                                                     : config.execution_mode === 'conditional'
-                                                        ? { icon: '🟣', text: 'If', color: 'purple' }
-                                                        : { icon: '🟢', text: '1×', color: 'emerald' };
+                                                        ? { icon: 'target', text: 'If', color: 'purple' }
+                                                        : { icon: 'check', text: '1×', color: 'emerald' };
 
                                                 return (
                                                     <div key={wf.id} className={`flex items-center gap-2 p-3 rounded-xl ${isDark ? 'bg-violet-500/10 border border-violet-500/30' : 'bg-violet-50 border border-violet-200'}`}>
@@ -575,7 +575,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                                                 }`}
                                                             title="Cấu hình workflow"
                                                         >
-                                                            ⚙️
+                                                            <Icon name="settings" className="w-4 h-4" />
                                                         </button>
                                                         <button onClick={() => moveWorkflow(index, -1)} disabled={index === 0} className={`w-6 h-6 rounded text-xs ${index === 0 ? 'opacity-30' : 'hover:bg-white/20'}`}>↑</button>
                                                         <button onClick={() => moveWorkflow(index, 1)} disabled={index === selectedWorkflows.length - 1} className={`w-6 h-6 rounded text-xs ${index === selectedWorkflows.length - 1 ? 'opacity-30' : 'hover:bg-white/20'}`}>↓</button>
@@ -599,7 +599,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                             type="text"
                                             value={searchWF}
                                             onChange={e => setSearchWF(e.target.value)}
-                                            placeholder="🔍 Tìm..."
+                                            placeholder="Tìm..."
                                             className={`w-full px-3 py-2 rounded-xl border mb-3 text-sm ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200'} focus:outline-none`}
                                         />
                                         <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -609,7 +609,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                                     onClick={() => addWorkflow(wf)}
                                                     className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-50 hover:bg-gray-100'}`}
                                                 >
-                                                    <span className="text-lg">⚡</span>
+                                                    <Icon name="credits" className="w-5 h-5" />
                                                     <span className={`flex-1 text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{wf.name}</span>
                                                     <span className={`text-xs px-2 py-1 rounded ${isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-600'}`}>+ Thêm</span>
                                                 </button>
@@ -629,7 +629,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                             <div>
                                 <div className="flex items-center justify-between mb-4">
                                     <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                        📱 Chọn Thiết Bị ({selectedDevices.length}/{devices.length} thiết bị)
+                                        <Icon name="device" className="w-4 h-4 inline-block mr-1" /> Chọn Thiết Bị ({selectedDevices.length}/{devices.length} thiết bị)
                                     </label>
                                     <div className="flex gap-2">
                                         <Button
@@ -670,7 +670,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                                             : isDark ? 'bg-white/5 border-white/10 hover:border-white/20' : 'bg-gray-50 border-gray-200 hover:border-gray-300'}`}
                                                 >
                                                     <div className="relative">
-                                                        <span className="text-2xl">📱</span>
+                                                        <Icon name="device" className="w-6 h-6" />
                                                         <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
@@ -686,7 +686,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                                 {isSelected && (
                                                     <div className={`px-4 py-3 rounded-xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-gray-50 border-gray-200'}`}>
                                                         <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                                            📊 Data collection (tuỳ chọn):
+                                                            <Icon name="database" className="w-3.5 h-3.5 inline-block mr-0.5" /> Data collection (tuỳ chọn):
                                                         </label>
                                                         <select
                                                             value={deviceCollectionAssignments[device.id] || ''}
@@ -722,7 +722,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                 </div>
                                 {devices.length === 0 && (
                                     <div className={`text-center py-12 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                        <span className="text-4xl block mb-3">📵</span>
+                                        <Icon name="noDevice" className="w-10 h-10 mx-auto mb-3" />
                                         <p>Chưa có thiết bị nào</p>
                                         <a href="/devices" className="text-emerald-400 hover:underline text-sm">Thêm thiết bị →</a>
                                     </div>
@@ -737,7 +737,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                 <div className={`p-5 rounded-xl ${isDark ? 'bg-cyan-500/10 border border-cyan-500/20' : 'bg-cyan-50'}`}>
                                     <div className="flex items-center justify-between mb-4">
                                         <div className="flex items-center gap-3">
-                                            <span className="text-2xl">📊</span>
+                                            <Icon name="database" className="w-6 h-6" />
                                             <div>
                                                 <p className={`font-medium ${isDark ? 'text-cyan-300' : 'text-cyan-800'}`}>Chọn Dữ Liệu Chạy</p>
                                                 <p className={`text-xs ${isDark ? 'text-cyan-400/70' : 'text-cyan-600'}`}>Bộ sưu tập tài khoản sẽ dùng</p>
@@ -760,7 +760,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                                         ? 'bg-cyan-500/20 border-cyan-500'
                                                         : isDark ? 'bg-white/5 border-white/10 hover:border-white/20' : 'bg-white border-gray-200 hover:border-gray-300'}`}
                                             >
-                                                <span className="text-xl">{dc.icon || '📋'}</span>
+                                                {dc.icon ? <span className="text-xl">{dc.icon}</span> : <Icon name="clipboard" className="w-5 h-5" />}
                                                 <div className="flex-1 min-w-0">
                                                     <p className={`font-medium text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{dc.name}</p>
                                                     <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{dc.records_count || 0} records</p>
@@ -847,7 +847,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                     className={`w-full p-4 rounded-xl flex items-center justify-between transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-50 hover:bg-gray-100'}`}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <span className="text-xl">⚙️</span>
+                                        <Icon name="settings" className="w-5 h-5" />
                                         <div className="text-left">
                                             <p className={`font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Tuỳ chỉnh nâng cao</p>
                                             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Data Pools, phân chia records thủ công</p>
@@ -863,7 +863,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                         <div className={`p-5 rounded-xl ${isDark ? 'bg-violet-500/10 border border-violet-500/20' : 'bg-violet-50'}`}>
                                             <div className="flex items-center justify-between mb-4">
                                                 <div className="flex items-center gap-3">
-                                                    <span className="text-2xl">🔄</span>
+                                                    <Icon name="refresh" className="w-6 h-6" />
                                                     <div>
                                                         <p className={`font-medium ${isDark ? 'text-violet-300' : 'text-violet-800'}`}>Dữ Liệu Cho Vòng Lặp (Pool)</p>
                                                         <p className={`text-xs ${isDark ? 'text-violet-400/70' : 'text-violet-600'}`}>Comments, media, v.v. dùng lặp trong mỗi job</p>
@@ -947,8 +947,8 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                                                                 onChange={e => updateDataPool(pool.id, { mode: e.target.value })}
                                                                                 className={`w-full px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200'} focus:outline-none`}
                                                                             >
-                                                                                <option value="random">🔀 Random</option>
-                                                                                <option value="sequential">📋 Tuần tự</option>
+                                                                                <option value="random">Random</option>
+                                                                                <option value="sequential">Tuần tự</option>
                                                                             </select>
                                                                         </div>
                                                                     </div>
@@ -970,7 +970,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                         <div className={`p-5 rounded-xl ${isDark ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-emerald-50'}`}>
                                             <div className="flex items-center justify-between mb-4">
                                                 <div className="flex items-center gap-3">
-                                                    <span className="text-2xl">📱</span>
+                                                    <Icon name="device" className="w-6 h-6" />
                                                     <div>
                                                         <p className={`font-medium ${isDark ? 'text-emerald-300' : 'text-emerald-800'}`}>Phân Chia Records</p>
                                                         <p className={`text-xs ${isDark ? 'text-emerald-400/70' : 'text-emerald-600'}`}>Cách phân records cho các thiết bị</p>
@@ -987,7 +987,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                                             ? 'bg-emerald-500 text-white'
                                                             : isDark ? 'bg-white/10 text-gray-300 hover:bg-white/15' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                                                 >
-                                                    🔄 Tự động (chia đều)
+                                                    <Icon name="refresh" className="w-4 h-4 inline-block mr-1" /> Tự động (chia đều)
                                                 </button>
                                                 <button
                                                     onClick={() => {
@@ -1001,7 +1001,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                                             ? 'bg-emerald-500 text-white'
                                                             : isDark ? 'bg-white/10 text-gray-300 hover:bg-white/15' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                                                 >
-                                                    🎯 Thủ công (chọn cụ thể)
+                                                    <Icon name="target" className="w-4 h-4 inline-block mr-1" /> Thủ công (chọn cụ thể)
                                                 </button>
                                             </div>
 
@@ -1038,7 +1038,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                                                 onClick={() => setActiveDeviceForPicker(activeDeviceForPicker === device.id ? null : device.id)}
                                                             >
                                                                 <div className="flex items-center gap-3">
-                                                                    <span className="text-xl">📱</span>
+                                                                    <Icon name="device" className="w-5 h-5" />
                                                                     <div>
                                                                         <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{device.name}</p>
                                                                         <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{device.model}</p>
@@ -1112,7 +1112,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                             {/* Warning when no collection selected in manual mode */}
                                             {assignmentMode === 'manual' && !selectedCollection && (
                                                 <p className={`text-sm text-center py-4 ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
-                                                    ⚠️ Vui lòng chọn Dữ Liệu trước khi phân chia thủ công
+                                                    <Icon name="exclamation" className="w-4 h-4 inline-block mr-1" /> Vui lòng chọn Dữ Liệu trước khi phân chia thủ công
                                                 </p>
                                             )}
                                         </div>
@@ -1120,7 +1120,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                         {/* Repeat Config */}
                                         <div className={`p-5 rounded-xl flex items-center justify-between ${isDark ? 'bg-amber-500/10' : 'bg-amber-50'}`}>
                                             <div className="flex items-center gap-3">
-                                                <span className="text-2xl">🔄</span>
+                                                <Icon name="refresh" className="w-6 h-6" />
                                                 <div>
                                                     <p className={`font-medium ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>Số lần lặp</p>
                                                     <p className={`text-xs ${isDark ? 'text-amber-400/70' : 'text-amber-600'}`}>Mỗi record chạy bao nhiêu lần</p>
@@ -1158,7 +1158,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                         {step === 4 && (
                             <div className="space-y-4">
                                 <div className={`p-5 rounded-xl space-y-4 ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
-                                    <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>📋 Tóm tắt Campaign</h3>
+                                    <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}><Icon name="clipboard" className="w-4 h-4 inline-block mr-1" /> Tóm tắt Campaign</h3>
 
                                     <div className="grid grid-cols-2 gap-4 text-sm">
                                         <div className={isDark ? 'text-gray-400' : 'text-gray-500'}>Tên:</div>
@@ -1246,7 +1246,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                 loading={isSubmitting}
                                 className="bg-gradient-to-r from-emerald-500 to-teal-600"
                             >
-                                {isSubmitting ? 'Đang tạo...' : '🚀 Tạo Campaign'}
+                                {isSubmitting ? 'Đang tạo...' : 'Tạo Campaign'}
                             </Button>
                         )}
                     </div>
@@ -1261,7 +1261,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                         <div className={`flex items-center justify-between p-4 border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                             <div>
                                 <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    📋 Chọn Records - {selectedCollection.name}
+                                    <Icon name="clipboard" className="w-4 h-4 inline-block mr-1" /> Chọn Records - {selectedCollection.name}
                                 </h3>
                                 <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                                     Đã chọn {selectedRecordIds.length} / {records.length} records

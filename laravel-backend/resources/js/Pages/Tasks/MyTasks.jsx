@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { Icon } from '@/Components/UI';
 
 export default function MyTasks({ createdTasks = [], acceptedApplications = [] }) {
     const { t } = useTranslation();
@@ -70,7 +71,7 @@ export default function MyTasks({ createdTasks = [], acceptedApplications = [] }
                                 : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                                 }`}
                         >
-                            📤 {t('tasks.created_tasks', 'Đã tạo')} ({createdTasks.length})
+                            <Icon name="upload" className="w-4 h-4 inline-block mr-1" /> {t('tasks.created_tasks', 'Đã tạo')} ({createdTasks.length})
                         </button>
                         <button
                             onClick={() => setActiveTab('accepted')}
@@ -79,7 +80,7 @@ export default function MyTasks({ createdTasks = [], acceptedApplications = [] }
                                 : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                                 }`}
                         >
-                            📥 {t('tasks.accepted_tasks', 'Đã nhận')} ({acceptedApplications.length})
+                            <Icon name="download" className="w-4 h-4 inline-block mr-1" /> {t('tasks.accepted_tasks', 'Đã nhận')} ({acceptedApplications.length})
                         </button>
                     </div>
 
@@ -88,7 +89,7 @@ export default function MyTasks({ createdTasks = [], acceptedApplications = [] }
                         <div className="space-y-4">
                             {createdTasks.length === 0 ? (
                                 <div className={`text-center py-16 rounded-3xl ${isDark ? 'bg-white/5' : 'bg-white shadow-lg'}`}>
-                                    <div className="text-5xl mb-4">📋</div>
+                                    <div className="mb-4"><Icon name="clipboard" className="w-12 h-12 mx-auto" /></div>
                                     <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                         {t('tasks.no_created_tasks', 'Chưa tạo nhiệm vụ nào')}
                                     </h3>
@@ -114,18 +115,18 @@ export default function MyTasks({ createdTasks = [], acceptedApplications = [] }
                                         >
                                             <div className="flex items-start justify-between">
                                                 <div className="flex items-center gap-4">
-                                                    <span className="text-3xl">{task.icon || '📋'}</span>
+                                                    {task.icon ? <span className="text-3xl">{task.icon}</span> : <Icon name="clipboard" className="w-8 h-8" />}
                                                     <div>
                                                         <h3 className={`font-semibold text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                                             {task.title}
                                                         </h3>
                                                         <div className="flex items-center gap-3 mt-1">
                                                             <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                                                🤖 {task.flow?.name}
+                                                                <Icon name="robot" className="w-3.5 h-3.5 inline-block mr-0.5" /> {task.flow?.name}
                                                             </span>
                                                             <span className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>·</span>
                                                             <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                                                📱 {task.accepted_devices}/{task.required_devices}
+                                                                <Icon name="device" className="w-3.5 h-3.5 inline-block mr-0.5" /> {task.accepted_devices}/{task.required_devices}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -142,7 +143,7 @@ export default function MyTasks({ createdTasks = [], acceptedApplications = [] }
                                                     </span>
                                                     {task.reward_amount > 0 && (
                                                         <span className={`text-sm font-medium ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                                                            💰 {formatVND(task.reward_amount)} đ
+                                                            <Icon name="coin" className="w-3.5 h-3.5 inline-block mr-0.5" /> {formatVND(task.reward_amount)} đ
                                                         </span>
                                                     )}
                                                 </div>
@@ -159,7 +160,7 @@ export default function MyTasks({ createdTasks = [], acceptedApplications = [] }
                         <div className="space-y-4">
                             {acceptedApplications.length === 0 ? (
                                 <div className={`text-center py-16 rounded-3xl ${isDark ? 'bg-white/5' : 'bg-white shadow-lg'}`}>
-                                    <div className="text-5xl mb-4">📥</div>
+                                    <div className="mb-4"><Icon name="download" className="w-12 h-12 mx-auto" /></div>
                                     <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                         {t('tasks.no_accepted_tasks', 'Chưa nhận nhiệm vụ nào')}
                                     </h3>
@@ -183,18 +184,18 @@ export default function MyTasks({ createdTasks = [], acceptedApplications = [] }
                                         >
                                             <div className="flex items-start justify-between">
                                                 <Link href={`/tasks/${app.task?.id}`} className="flex items-center gap-4 group">
-                                                    <span className="text-3xl">{app.task?.icon || '📋'}</span>
+                                                    {app.task?.icon ? <span className="text-3xl">{app.task.icon}</span> : <Icon name="clipboard" className="w-8 h-8" />}
                                                     <div>
                                                         <h3 className={`font-semibold text-lg group-hover:text-emerald-500 transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                                             {app.task?.title}
                                                         </h3>
                                                         <div className="flex items-center gap-3 mt-1">
                                                             <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                                                👤 {app.task?.creator?.name}
+                                                                <Icon name="user" className="w-3.5 h-3.5 inline-block mr-0.5" /> {app.task?.creator?.name}
                                                             </span>
                                                             <span className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>·</span>
                                                             <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                                                📱 {app.device?.name || `${app.device?.brand} ${app.device?.model}`}
+                                                                <Icon name="device" className="w-3.5 h-3.5 inline-block mr-0.5" /> {app.device?.name || `${app.device?.brand} ${app.device?.model}`}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -211,7 +212,7 @@ export default function MyTasks({ createdTasks = [], acceptedApplications = [] }
                                                             onClick={() => handleStartExecution(app.task?.id, app.id)}
                                                             className="px-4 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:shadow-lg"
                                                         >
-                                                            ▶️ {t('tasks.start', 'Bắt đầu')}
+                                                            {t('tasks.start', 'Bắt đầu')}
                                                         </button>
                                                     )}
 

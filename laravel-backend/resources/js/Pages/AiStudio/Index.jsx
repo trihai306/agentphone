@@ -10,6 +10,7 @@ import { useTheme } from '@/Contexts/ThemeContext';
 import FolderSelectModal from '@/Components/Media/FolderSelectModal';
 import ScenarioTab from '@/Components/AiStudio/ScenarioTab';
 import JobsQueuePanel from '@/Components/AiStudio/JobsQueuePanel';
+import { Icon } from '@/Components/UI';
 
 // Provider badge colors - professional palette
 const providerColors = {
@@ -349,7 +350,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
             confirmText: t('ai_studio.retry', { defaultValue: 'Thử lại' }),
             cancelText: t('common.cancel', { defaultValue: 'Hủy' }),
             type: 'warning',
-            icon: '🔄',
+            icon: 'refresh',
         });
 
         if (!confirmed) return;
@@ -380,13 +381,13 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
     const aspectRatios = type === 'image'
         ? [
             { label: '1:1', w: 1024, h: 1024, icon: '⬜' },
-            { label: '16:9', w: 1920, h: 1080, icon: '🖥️' },
-            { label: '9:16', w: 1080, h: 1920, icon: '📱' },
-            { label: '4:3', w: 1024, h: 768, icon: '📺' },
+            { label: '16:9', w: 1920, h: 1080, icon: 'tv' },
+            { label: '9:16', w: 1080, h: 1920, icon: 'device' },
+            { label: '4:3', w: 1024, h: 768, icon: 'tv' },
         ]
         : [
-            { label: '16:9', value: '16:9', icon: '🖥️' },
-            { label: '9:16', value: '9:16', icon: '📱' },
+            { label: '16:9', value: '16:9', icon: 'tv' },
+            { label: '9:16', value: '9:16', icon: 'device' },
         ];
 
     const resolutions = selectedModel?.resolutions
@@ -522,7 +523,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                     }`}
                                             >
                                                 <div className={`text-3xl mb-2 ${type === 'video' ? 'scale-110' : 'group-hover:scale-110'} transition-transform duration-300`}>
-                                                    🎬
+                                                    <Icon name="video" className="w-5 h-5" />
                                                 </div>
                                                 <div className={`text-sm font-semibold ${type === 'video' ? (isDark ? 'text-violet-300' : 'text-violet-700') : themeClasses.textPrimary}`}>
                                                     Video
@@ -544,7 +545,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                     }`}
                                             >
                                                 <div className={`text-3xl mb-2 ${type === 'image' ? 'scale-110' : 'group-hover:scale-110'} transition-transform duration-300`}>
-                                                    🖼️
+                                                    <Icon name="media" className="w-5 h-5" />
                                                 </div>
                                                 <div className={`text-sm font-semibold ${type === 'image' ? (isDark ? 'text-violet-300' : 'text-violet-700') : themeClasses.textPrimary}`}>
                                                     Image
@@ -570,7 +571,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                         : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
                                                         }`}
                                                 >
-                                                    📝 Text to Video
+                                                    <Icon name="edit" className="w-4 h-4 inline-block mr-1" /> Text to Video
                                                 </button>
                                                 <button
                                                     onClick={() => setGenerationMode('image')}
@@ -579,7 +580,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                         : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
                                                         }`}
                                                 >
-                                                    🖼️ Image to Video
+                                                    <Icon name="media" className="w-4 h-4 inline-block mr-1" /> Image to Video
                                                 </button>
                                             </div>
                                         </div>
@@ -611,7 +612,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                     <label className="cursor-pointer block">
                                                         <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                                                         <div className={`py-6 ${themeClasses.textMuted}`}>
-                                                            <span className="text-3xl block mb-3">📷</span>
+                                                            <Icon name="camera" className="w-8 h-8 mx-auto mb-3" />
                                                             <span className="text-sm font-medium">Click to upload or drag image</span>
                                                         </div>
                                                     </label>
@@ -773,7 +774,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                     }`}>
                                                     <div>
                                                         <p className={`text-sm font-semibold ${themeClasses.textPrimary}`}>
-                                                            🔊 Generate Audio
+                                                            <Icon name="sound" className="w-4 h-4 inline-block mr-1" /> Generate Audio
                                                         </p>
                                                         <p className={`text-xs mt-0.5 ${themeClasses.textMuted}`}>
                                                             Include dialogue and sound effects
@@ -879,7 +880,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                 {/* Header */}
                                 <div className="flex items-center justify-between mb-4">
                                     <h2 className={`text-lg font-bold ${themeClasses.textPrimary}`}>
-                                        {type === 'image' ? '🖼️ Ảnh gần đây' : '🎬 Video gần đây'}
+                                        {type === 'image' ? <><Icon name="media" className="w-4 h-4 inline-block mr-1" /> Ảnh gần đây</> : <><Icon name="video" className="w-4 h-4 inline-block mr-1" /> Video gần đây</>}
                                     </h2>
                                     <Link
                                         href="/ai-studio/generations"
@@ -925,11 +926,11 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                         </div>
                                                     ) : gen.status === 'failed' ? (
                                                         <div className="w-full h-full flex items-center justify-center">
-                                                            <span className="text-4xl">❌</span>
+                                                            <Icon name="xCircle" className="w-10 h-10" />
                                                         </div>
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center">
-                                                            <span className="text-4xl">{gen.type === 'video' ? '🎬' : '🖼️'}</span>
+                                                            <span className="text-4xl">{gen.type === 'video' ? <Icon name="video" className="w-5 h-5" /> : <Icon name="media" className="w-5 h-5" />}</span>
                                                         </div>
                                                     )}
 
@@ -961,7 +962,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                                 className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors"
                                                                 title="Download"
                                                             >
-                                                                ⬇️
+                                                                <Icon name="download" className="w-4 h-4" />
                                                             </a>
                                                             <button
                                                                 onClick={() => {
@@ -971,7 +972,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                                 className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors"
                                                                 title="Save to Media"
                                                             >
-                                                                💾
+                                                                <Icon name="save" className="w-4 h-4" />
                                                             </button>
                                                         </div>
                                                     )}
@@ -983,7 +984,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                                 onClick={() => handleRetry(gen.id)}
                                                                 className="px-3 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors"
                                                             >
-                                                                🔄 Thử lại
+                                                                <Icon name="refresh" className="w-3.5 h-3.5 inline-block mr-0.5" /> Thử lại
                                                             </button>
                                                         </div>
                                                     )}
@@ -1009,7 +1010,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                 ) : (
                                     <div className={`flex flex-col items-center justify-center py-20 rounded-2xl border-2 border-dashed transition-all ${isDark ? 'border-[#2a2a2a] bg-gradient-to-br from-violet-500/5 to-indigo-500/5' : 'border-slate-200 bg-gradient-to-br from-violet-50/50 to-indigo-50/50'}`}>
                                         <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-5 ${isDark ? 'bg-gradient-to-br from-violet-600/20 to-indigo-600/20' : 'bg-gradient-to-br from-violet-100 to-indigo-100'}`}>
-                                            <span className="text-4xl">{type === 'image' ? '🖼️' : '🎬'}</span>
+                                            {type === 'image' ? <Icon name="media" className="w-10 h-10" /> : <Icon name="video" className="w-10 h-10" />}
                                         </div>
                                         <p className={`text-lg font-semibold ${themeClasses.textPrimary}`}>
                                             Chưa có {type === 'image' ? 'ảnh' : 'video'} nào
@@ -1033,7 +1034,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                 {(activeGenerations?.length > 0 || activeScenarios?.length > 0) && (
                                     <div className="mt-6">
                                         <h3 className={`text-sm font-semibold mb-3 ${themeClasses.textPrimary}`}>
-                                            ⚡ Đang xử lý
+                                            <Icon name="credits" className="w-4 h-4 inline-block mr-1" /> Đang xử lý
                                         </h3>
                                         <div className="space-y-2">
                                             {activeGenerations?.map((gen) => (
@@ -1122,7 +1123,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 px-4 py-3 rounded-2xl bg-black/70 backdrop-blur-xl border border-white/10">
                             {/* Type Badge */}
                             <span className="px-3 py-1.5 text-xs font-bold rounded-lg bg-violet-500/30 text-violet-300 border border-violet-500/30">
-                                {previewGeneration.type === 'video' ? '🎬 Video' : '🖼️ Ảnh'}
+                                {previewGeneration.type === 'video' ? <><Icon name="video" className="w-4 h-4 inline-block mr-1" /> Video</> : <><Icon name="media" className="w-4 h-4 inline-block mr-1" /> Ảnh</>}
                             </span>
 
                             {/* Model */}

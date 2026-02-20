@@ -4,6 +4,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
+import { Icon } from '@/Components/UI';
 
 export default function Index({
     bankAccounts = [],
@@ -49,7 +50,7 @@ export default function Index({
             confirmText: t('withdraw.cancel', { defaultValue: 'Hủy yêu cầu' }),
             cancelText: t('common.close', { defaultValue: 'Đóng' }),
             type: 'warning',
-            icon: '⚠️',
+            icon: 'exclamation',
         });
         if (confirmed) {
             router.post(`/withdraw/${transactionId}/cancel`);
