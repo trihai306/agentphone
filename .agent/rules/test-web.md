@@ -1,94 +1,49 @@
----
-trigger: always_on
-glob:
-description: MANDATORY web testing protocol - NO multiple tabs, backend logs FIRST
----
 
-# Web Testing Protocol (MANDATORY)
 
-## 🚨 CRITICAL RULES (MUST FOLLOW)
+# WEB TESTING RULES (MANDATORY)
 
-### Rule 1: SINGLE BROWSER SESSION ONLY
-**NEVER open multiple tabs to the same URL in a loop.**
-- ✅ Open browser ONCE per test
-- ❌ DO NOT open multiple tabs trying to "retry" or "refresh"
-- ❌ DO NOT call browser_subagent multiple times for the same page
+**BẮT BUỘC**: Mọi test web PHẢI tuân theo quy trình này.
 
-### Rule 2: CHECK LARAVEL LOGS BEFORE BROWSER
-**ALWAYS check backend logs BEFORE opening browser.**
+## 1. LUÔN DEPLOY TRƯỚC KHI TEST
 
-```bash
-# MANDATORY pre-flight check
-tail -n 50 /Users/hainc/duan/agent/laravel-backend/storage/logs/laravel.log | grep -i error
+**CRITICAL**: KHÔNG BAO GIỜ test trên localhost. Luôn deploy lên production trước, sau đó test trên production URL.
+
+### Quy trình bắt buộc:
+```
+1. Build xong → git commit + push
+2. Deploy lên production (ssh-mcp)
+3. Verify services running (supervisorctl status)
+4. Test trên https://clickai.lionsoftware.cloud/
 ```
 
-**If there are Laravel errors → FIX BACKEND FIRST → THEN test browser (once)**
+### ❌ KHÔNG LÀM:
+- Test trên `localhost:8000` hoặc `127.0.0.1`
+- Mở browser trước khi deploy
+- Test khi chưa verify services running
 
-### Rule 3: BLANK PAGE = BACKEND ERROR (90% of cases)
-When browser shows blank/white page:
-1. **STOP** opening more tabs
-2. **CHECK** Laravel logs immediately
-3. **FIX** backend error
-4. **THEN** test again (single tab)
+## 2. URL TEST PRODUCTION
 
-**DO NOT assume it's a frontend issue.**
+| Page | URL |
+|------|-----|
+| Landing | `https://clickai.lionsoftware.cloud/` |
+| Login | `https://clickai.lionsoftware.cloud/login` |
+| Register | `https://clickai.lionsoftware.cloud/register` |
+| Dashboard | `https://clickai.lionsoftware.cloud/dashboard` |
+| Admin | `https://clickai.lionsoftware.cloud/admin` |
 
----
+## 3. BROWSER TEST RULES
 
-## Testing Workflow (MANDATORY SEQUENCE)
+- Mở browser **MỘT LẦN DUY NHẤT** per test
+- Nếu trang trắng → check Laravel logs trước (ssh-mcp)
+- KHÔNG mở nhiều tabs retry
+- Screenshot để verify UI changes
+
+## 4. QUY TRÌNH TEST SAU DEPLOY
 
 ```
-1. Check Laravel logs
-   ↓
-2. Fix any backend errors found
-   ↓
-3. Open browser ONCE
-   ↓
-4. If blank → GOTO step 1
-   ↓
-5. Test feature
-   ↓
-6. Document results
+1. supervisorctl status → verify all RUNNING
+2. curl -I http://127.0.0.1:9000 → verify HTTP 200
+3. Browser test trên https://clickai.lionsoftware.cloud/
+4. Kiểm tra console errors
+5. Report kết quả
 ```
-
----
-
-## Browser Subagent Usage
-
-### ✅ CORRECT Usage
-```javascript
-// Open page once with clear task
-browser_subagent({
-    task: "Navigate to URL, verify element exists, take screenshot"
-})
-```
-
-### ❌ FORBIDDEN Usage
-```javascript
-// DO NOT DO THIS
-browser_subagent({ task: "Open URL" })
-browser_subagent({ task: "Try again" })     // ❌ FORBIDDEN
-browser_subagent({ task: "Refresh" })       // ❌ FORBIDDEN
-browser_subagent({ task: "Open URL again" }) // ❌ FORBIDDEN
-```
-
----
-
-## Common Laravel Errors That Cause Blank Pages
-
-| Error Type | Log Pattern | Fix |
-|------------|-------------|-----|
-| Undefined variable | `Undefined variable $xyz` | Add variable to Inertia::render() props |
-| Route not found | `NotFoundHttpException` | Check route exists: `php artisan route:list` |
-| DB error | `SQLSTATE` | Fix query or migration |
-| Missing column | `Column not found: 1054` | Fix database schema or query |
-
----
-
-## Summary (3 Rules)
-
-1. **Check Laravel logs FIRST** (before browser)
-2. **Open browser ONCE** (no multiple tabs)
-3. **Blank page = Backend error** (fix Laravel first)
-
-**VIOLATION OF THESE RULES = WASTED TIME + BROWSER TAB SPAM**

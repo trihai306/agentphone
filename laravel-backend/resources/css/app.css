@@ -833,3 +833,13 @@
 .animate-pulse-glow {
     animation: pulse-glow 2s ease-in-out infinite;
 }
+
+/* Landing page marquee scroll */
+@keyframes scroll {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
