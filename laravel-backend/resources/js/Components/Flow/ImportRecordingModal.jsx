@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/Components/UI';
+import { recordingApi } from '@/services/api';
 
 // Inline SVG Icons
 const XMarkIcon = ({ className }) => (
@@ -59,18 +60,11 @@ export default function ImportRecordingModal({
 
         setIsConverting(true);
         try {
-            const response = await fetch('/api/recording/convert-to-nodes', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                },
-                body: JSON.stringify({
-                    session_id: session.sessionId,
-                }),
+            const result = await recordingApi.convertToNodes({
+                session_id: session.sessionId,
             });
 
-            const data = await response.json();
+            const data = result.data;
             if (data.success) {
                 setPreviewNodes(data.nodes);
             }

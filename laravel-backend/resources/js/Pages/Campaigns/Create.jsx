@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import WorkflowConfigPanel from '@/Components/Campaigns/WorkflowConfigPanel';
 import { Button } from '@/Components/UI';
+import { campaignApi } from '@/services/api';
 
 // Quick Start Templates
 const TEMPLATES = [
@@ -105,9 +106,8 @@ export default function Create({ dataCollections = [], workflows = [], devices =
         if (!selectedCollection) return;
         setLoadingRecords(true);
         try {
-            const response = await fetch(`/api/data-collections/${selectedCollection.id}/records?per_page=500`);
-            const data = await response.json();
-            setRecords(data.data || []);
+            const result = await campaignApi.getCollectionRecords(selectedCollection.id);
+            setRecords(result.data?.data || []);
         } catch (error) {
             console.error('Failed to load records:', error);
         }

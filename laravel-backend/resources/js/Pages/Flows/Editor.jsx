@@ -470,20 +470,12 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         }
 
         try {
-            const response = await fetch('/recording-sessions/start', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({
-                    device_id: selectedDevice.device_id,
-                    flow_id: flow.id,
-                }),
+            const result = await recordingApi.start({
+                flowId: flow.id,
+                deviceId: selectedDevice.device_id,
             });
 
-            const data = await response.json();
+            const data = result.data;
             if (data.success) {
                 setRecordingSession(data.session);
                 setIsRecording(true);
@@ -514,16 +506,9 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         }
 
         try {
-            const response = await fetch(`/recording-sessions/${recordingSession.session_id}/stop`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
-                    'Accept': 'application/json',
-                },
-            });
+            const result = await recordingApi.stop(recordingSession.session_id, { nodes: [], edges: [] });
 
-            const data = await response.json();
+            const data = result.data;
             if (data.success) {
                 setIsRecording(false);
                 setIsRecordingPaused(false);

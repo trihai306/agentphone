@@ -97,6 +97,15 @@ export const apiService = {
         }
     },
 
+    patch: async (url, data = {}, config = {}) => {
+        try {
+            const response = await api.patch(url, data, config);
+            return handleResponse(response);
+        } catch (error) {
+            return handleError(error);
+        }
+    },
+
     // Raw axios instance for special cases
     instance: api,
 };
@@ -285,6 +294,9 @@ export const aiStudioApi = {
     parseScenario: async (payload) => apiService.post('/ai-studio/scenarios/parse', payload),
     estimateScenario: async (payload) => apiService.post('/ai-studio/scenarios/estimate', payload),
     saveScenario: async (payload) => apiService.post('/ai-studio/scenarios', payload),
+    createDraftScenario: async (payload) => apiService.post('/ai-studio/scenarios/create-draft', payload),
+    getScenario: async (id) => apiService.get(`/ai-studio/scenarios/${id}`),
+    updateScenario: async (id, payload) => apiService.patch(`/ai-studio/scenarios/${id}`, payload),
     generateScenario: async (id) => apiService.post(`/ai-studio/scenarios/${id}/generate`),
     getScenarioStatus: async (id) => apiService.get(`/ai-studio/scenarios/${id}/status`),
     deleteScenario: async (id) => apiService.delete(`/ai-studio/scenarios/${id}`),
@@ -319,6 +331,22 @@ export const campaignApi = {
 };
 
 /**
+ * Error Report API - Bug reporting
+ */
+export const errorReportApi = {
+    uploadScreenshot: async (formData) => {
+        try {
+            const response = await api.post('/error-reports/upload-screenshot', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            return handleResponse(response);
+        } catch (error) {
+            return handleError(error);
+        }
+    },
+};
+
+/**
  * Extended Flow API - Batch jobs
  */
 flowApi.batchJobs = async (flowId, payload) =>
@@ -331,12 +359,18 @@ recordingApi.convertToNodes = async (payload) =>
     apiService.post('/api/recording/convert-to-nodes', payload);
 
 /**
- * Extended Device API - Inspection
+ * Extended Device API - Inspection & Streaming
  */
 deviceApi.inspect = async (deviceId) =>
     apiService.post('/devices/inspect', { device_id: deviceId });
 
 deviceApi.getInspectScreenshot = async (screenshotKey) =>
     apiService.get(`/api/inspect-screenshot/${encodeURIComponent(screenshotKey)}`);
+
+deviceApi.startStream = async (deviceId) =>
+    apiService.post(`/api/devices/${deviceId}/stream/start`);
+
+deviceApi.stopStream = async (deviceId) =>
+    apiService.post(`/api/devices/${deviceId}/stream/stop`);
 
 export default apiService;

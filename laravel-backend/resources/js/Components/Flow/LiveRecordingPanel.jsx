@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRecordingSync } from '@/hooks/useRecordingSync';
+import { recordingApi } from '@/services/api';
 
 // Inline SVG Icons
 const VideoCameraIcon = ({ className }) => (
@@ -94,18 +95,11 @@ export default function LiveRecordingPanel({
         if (!activeSession?.sessionId) return;
 
         try {
-            const response = await fetch('/api/recording/convert-to-nodes', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                },
-                body: JSON.stringify({
-                    session_id: activeSession.sessionId,
-                }),
+            const result = await recordingApi.convertToNodes({
+                session_id: activeSession.sessionId,
             });
 
-            const data = await response.json();
+            const data = result.data;
             if (data.success) {
                 onImportNodes?.(data.nodes, data.edges);
                 clearSession();

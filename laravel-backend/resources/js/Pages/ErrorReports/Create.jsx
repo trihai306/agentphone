@@ -4,6 +4,7 @@ import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/Components/UI';
+import { errorReportApi } from '@/services/api';
 
 const typeOptions = [
     { value: 'bug', label: 'Bug', icon: '🐛' },
@@ -61,15 +62,10 @@ export default function Create() {
             formData.append('screenshot', file);
 
             try {
-                const response = await fetch('/error-reports/upload-screenshot', {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content },
-                });
+                const result = await errorReportApi.uploadScreenshot(formData);
 
-                if (response.ok) {
-                    const result = await response.json();
-                    newScreenshots.push({ path: result.path, url: result.url, name: file.name });
+                if (result.success) {
+                    newScreenshots.push({ path: result.data.path, url: result.data.url, name: file.name });
                 }
             } catch (error) {
                 console.error('Upload failed:', error);

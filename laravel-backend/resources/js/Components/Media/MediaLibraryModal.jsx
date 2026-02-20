@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useToast } from '@/Components/Layout/ToastProvider';
 import { Button } from '@/Components/UI';
+import { mediaApi } from '@/services/api';
 
 /**
  * MediaLibraryModal - Reusable media picker modal
@@ -69,27 +70,16 @@ export default function MediaLibraryModal({
 
             // Parallel fetch: files, folders, stats
             const [filesRes, foldersRes, statsRes] = await Promise.all([
-                fetch(`/media/list.json?${params.toString()}`, {
-                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                    credentials: 'same-origin'
-                }),
-                fetch('/media/folders.json', {
-                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                    credentials: 'same-origin'
-                }),
-                fetch('/media/stats.json', {
-                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                    credentials: 'same-origin'
-                })
+                mediaApi.list(params.toString()),
+                mediaApi.getFolders(),
+                mediaApi.getStats(),
             ]);
 
-            if (!filesRes.ok) throw new Error('Failed to fetch media');
+            if (!filesRes.success) throw new Error('Failed to fetch media');
 
-            const [filesData, foldersData, statsData] = await Promise.all([
-                filesRes.json(),
-                foldersRes.json(),
-                statsRes.json()
-            ]);
+            const filesData = filesRes.data;
+            const foldersData = foldersRes.data;
+            const statsData = statsRes.data;
 
             // Handle both paginated and non-paginated responses
             const mediaItems = filesData.data || filesData;
@@ -136,18 +126,9 @@ export default function MediaLibraryModal({
         }, 200);
 
         try {
-            const response = await fetch('/media', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken || '',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                },
-                credentials: 'same-origin',
-                body: formData
-            });
+            const result = await mediaApi.upload(formData);
 
-            if (!response.ok) throw new Error('Upload failed');
+            if (!result.success) throw new Error('Upload failed');
 
             addToast(t('media.upload_success', 'Tải lên thành công'), 'success');
             fetchMedia();

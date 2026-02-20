@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useToast } from '@/Components/Layout/ToastProvider';
+import { aiStudioApi } from '@/services/api';
 
 export default function Start({ currentCredits = 0, templates = [] }) {
     const { t } = useTranslation();
@@ -32,20 +33,13 @@ export default function Start({ currentCredits = 0, templates = [] }) {
 
         setLoading(true);
         try {
-            const response = await fetch('/ai-studio/scenarios/create-draft', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                },
-                body: JSON.stringify({
-                    output_type: outputType,
-                    creation_method: creationMethod,
-                    template_id: selectedTemplate,
-                }),
+            const response = await aiStudioApi.createDraftScenario({
+                output_type: outputType,
+                creation_method: creationMethod,
+                template_id: selectedTemplate,
             });
 
-            const data = await response.json();
+            const data = response.data;
             if (data.success) {
                 router.visit(data.redirect_url);
             } else {

@@ -74,28 +74,21 @@ export default function Images({ scenario, currentCredits = 0, videoModels = [],
             const models = scenario.output_type === 'video' ? videoModels : imageModels;
             const defaultModel = models[0]?.id || 'kling-1.5-pro';
 
-            const saveResponse = await fetch('/ai-studio/scenarios', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                },
-                body: JSON.stringify({
-                    script: `Analyzed from ${uploadedImages.length} images`,
-                    title,
-                    output_type: scenario.output_type,
-                    model: defaultModel,
-                    scenes: scenes.map((s, i) => ({
-                        order: i + 1,
-                        description: s.description,
-                        prompt: s.prompt,
-                        duration: s.duration || 5,
-                        source_image: uploadedImages[i]?.data,
-                    })),
-                }),
+            const saveResponse = await aiStudioApi.saveScenario({
+                script: `Analyzed from ${uploadedImages.length} images`,
+                title,
+                output_type: scenario.output_type,
+                model: defaultModel,
+                scenes: scenes.map((s, i) => ({
+                    order: i + 1,
+                    description: s.description,
+                    prompt: s.prompt,
+                    duration: s.duration || 5,
+                    source_image: uploadedImages[i]?.data,
+                })),
             });
 
-            const saveData = await saveResponse.json();
+            const saveData = saveResponse.data;
             if (saveData.success) {
                 showToast(`Đã phân tích ${scenes.length} cảnh từ ảnh`, 'success');
                 router.visit(`/ai-studio/scenarios/${saveData.scenario.id}/edit`);

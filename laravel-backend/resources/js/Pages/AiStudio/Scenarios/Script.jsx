@@ -51,27 +51,20 @@ export default function Script({ scenario, currentCredits = 0, videoModels = [],
             const defaultModel = models[0]?.id || 'kling-1.5-pro';
 
             // Save scenario with parsed scenes (UPDATE existing draft)
-            const saveResponse = await fetch(`/ai-studio/scenarios/${scenario.id}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                },
-                body: JSON.stringify({
-                    script,
-                    title,
-                    output_type: scenario.output_type,
-                    model: defaultModel,
-                    scenes: scenes.map((s, i) => ({
-                        order: i + 1,
-                        description: s.description,
-                        prompt: s.prompt,
-                        duration: s.duration || 5,
-                    })),
-                }),
+            const saveResponse = await aiStudioApi.updateScenario(scenario.id, {
+                script,
+                title,
+                output_type: scenario.output_type,
+                model: defaultModel,
+                scenes: scenes.map((s, i) => ({
+                    order: i + 1,
+                    description: s.description,
+                    prompt: s.prompt,
+                    duration: s.duration || 5,
+                })),
             });
 
-            const saveData = await saveResponse.json();
+            const saveData = saveResponse.data;
             if (saveData.success) {
                 showToast(`Đã phân tích ${scenes.length} cảnh`, 'success');
                 router.visit(`/ai-studio/scenarios/${saveData.scenario.id}/edit`);
@@ -88,14 +81,7 @@ export default function Script({ scenario, currentCredits = 0, videoModels = [],
     const handleSaveDraft = async () => {
         setSaving(true);
         try {
-            await fetch(`/ai-studio/scenarios/${scenario.id}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                },
-                body: JSON.stringify({ title, script }),
-            });
+            await aiStudioApi.updateScenario(scenario.id, { title, script });
             showToast('Đã lưu nháp', 'success');
         } catch (error) {
             showToast('Lỗi: ' + error.message, 'error');

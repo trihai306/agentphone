@@ -68,21 +68,14 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
         setGeneratingImageIndex(index);
         try {
             // Start generation
-            const genResponse = await fetch('/ai-studio/generate/image', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                },
-                body: JSON.stringify({
-                    model: 'gemini-imagen-3',
-                    prompt: scene.prompt,
-                    width: 1280,
-                    height: 720,
-                }),
+            const genResponse = await aiStudioApi.generate('/ai-studio/generate/image', {
+                model: 'gemini-imagen-3',
+                prompt: scene.prompt,
+                width: 1280,
+                height: 720,
             });
 
-            const genData = await genResponse.json();
+            const genData = genResponse.data;
             if (!genData.success) {
                 throw new Error(genData.error || 'Không thể tạo ảnh');
             }
@@ -98,8 +91,8 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
             const pollInterval = setInterval(async () => {
                 attempts++;
                 try {
-                    const statusRes = await fetch(`/ai-studio/generations/${generationId}/status`);
-                    const statusData = await statusRes.json();
+                    const statusRes = await aiStudioApi.getGenerationStatus(generationId);
+                    const statusData = statusRes.data;
 
                     if (statusData.status === 'completed' && statusData.output_url) {
                         clearInterval(pollInterval);
@@ -174,41 +167,28 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
         setGenerating(true);
         try {
             // First save final state
-            const saveResponse = await fetch('/ai-studio/scenarios', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                },
-                body: JSON.stringify({
-                    script: scenario.script || 'Generated from editor',
-                    title: scenario.title,
-                    output_type: scenario.output_type,
-                    model,
-                    scenes: scenes.map((s, i) => ({
-                        order: i + 1,
-                        description: s.description,
-                        prompt: s.prompt,
-                        duration: s.duration || 5,
-                    })),
-                }),
+            const saveResponse = await aiStudioApi.saveScenario({
+                script: scenario.script || 'Generated from editor',
+                title: scenario.title,
+                output_type: scenario.output_type,
+                model,
+                scenes: scenes.map((s, i) => ({
+                    order: i + 1,
+                    description: s.description,
+                    prompt: s.prompt,
+                    duration: s.duration || 5,
+                })),
             });
 
-            const saveData = await saveResponse.json();
+            const saveData = saveResponse.data;
             if (!saveData.success) {
                 throw new Error(saveData.error || 'Không thể lưu');
             }
 
             // Start generation
-            const genResponse = await fetch(`/ai-studio/scenarios/${saveData.scenario.id}/generate`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                },
-            });
+            const genResponse = await aiStudioApi.generateScenario(saveData.scenario.id);
 
-            const genData = await genResponse.json();
+            const genData = genResponse.data;
             if (genData.success) {
                 showToast('Đã bắt đầu tạo! Đang chuyển trang...', 'success');
                 router.visit(`/ai-studio/scenarios/${saveData.scenario.id}`);
