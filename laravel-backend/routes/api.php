@@ -105,6 +105,51 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/devices/stream/mjpeg-info', [\App\Http\Controllers\Api\WebRTCSignalController::class, 'receiveMjpegInfo']);
     Route::post('/devices/stream/frame', [\App\Http\Controllers\Api\WebRTCSignalController::class, 'receiveFrame']);
 
+    // Screen streaming via HTTP polling (simple, reliable alternative to WebSocket)
+    Route::post('/devices/{device_id}/screen/start', function (Request $request, string $device_id) {
+        $device = $request->user()->devices()->where('device_id', $device_id)->first();
+        if (!$device) return response()->json(['error' => 'Device not found'], 404);
+
+        // Tell APK to start streaming via socket event
+        broadcast(new \App\Events\DispatchJobToDevice($device, [
+            'viewer_user_id' => $request->user()->id,
+        ], 'screen:start'));
+
+        // Also set a Redis flag so APK heartbeat knows to stream
+        \Illuminate\Support\Facades\Cache::put("screen:streaming:{$device->device_id}", true, now()->addMinutes(2));
+
+        return response()->json(['success' => true]);
+    });
+
+    Route::post('/devices/{device_id}/screen/stop', function (Request $request, string $device_id) {
+        $device = $request->user()->devices()->where('device_id', $device_id)->first();
+        if (!$device) return response()->json(['error' => 'Device not found'], 404);
+
+        broadcast(new \App\Events\DispatchJobToDevice($device, [], 'screen:stop'));
+        \Illuminate\Support\Facades\Cache::forget("screen:streaming:{$device->device_id}");
+
+        return response()->json(['success' => true]);
+    });
+
+    // APK posts screenshot frames here
+    Route::post('/devices/screen/frame', function (Request $request) {
+        $request->validate(['device_id' => 'required|string', 'frame' => 'required|string']);
+        // Store in Redis with 5s TTL (auto-expires if APK stops sending)
+        \Illuminate\Support\Facades\Redis::setex(
+            'screen:frame:' . $request->input('device_id'),
+            5,
+            $request->input('frame')
+        );
+        return response()->json(['success' => true]);
+    });
+
+    // Frontend polls this to get latest frame
+    Route::get('/devices/{device_id}/screen/frame', function (Request $request, string $device_id) {
+        $frame = \Illuminate\Support\Facades\Redis::get('screen:frame:' . $device_id);
+        if (!$frame) return response()->json(['frame' => null]);
+        return response()->json(['frame' => $frame]);
+    });
+
     // Subscription management
     Route::prefix('subscriptions')->group(function () {
         Route::get('/current', [ServicePackageController::class, 'current']);

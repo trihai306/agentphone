@@ -21,7 +21,7 @@ export default function FloatingPhonePreview({ device, userId }) {
     const [frameData, setFrameData] = useState(null);
     const [connected, setConnected] = useState(false);
     const [status, setStatus] = useState('idle');
-    const channelRef = useRef(null);
+    const pollIntervalRef = useRef(null);
     const streamTimeoutRef = useRef(null);
     const retryCountRef = useRef(0);
     const MAX_RETRIES = 5;
@@ -77,50 +77,49 @@ export default function FloatingPhonePreview({ device, userId }) {
         retryCountRef.current = 0;
     }, [device?.id]);
 
-    // ─── Echo stream ──────────────────────────────────────────
+    // ─── HTTP polling stream ─────────────────────────────────
     const startStream = useCallback(() => {
-        if (!device?.id || !userId || !window.Echo) {
+        if (!device?.device_id || !userId) {
             setStatus('error');
             return;
         }
         setStatus('connecting');
 
-        axios.post(`/api/devices/${device.id}/stream/start`).catch(() => { });
+        // Tell backend to start (which tells APK)
+        axios.post(`/api/devices/${device.device_id}/screen/start`).catch(() => {});
 
-        const channel = window.Echo.private(`devices.${userId}`);
-        channelRef.current = channel;
-
-        channel.listen('.screen.frame', (data) => {
-            if (data.device_id === device.id || !data.device_id) {
-                setFrameData(`data:image/jpeg;base64,${data.frame}`);
-                setConnected(true);
-                setStatus('live');
-
-                if (streamTimeoutRef.current) clearTimeout(streamTimeoutRef.current);
-                streamTimeoutRef.current = setTimeout(() => {
-                    setStatus('error');
-                    setConnected(false);
-                }, 8000);
+        // Start polling for frames
+        if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = setInterval(async () => {
+            try {
+                const res = await axios.get(`/api/devices/${device.device_id}/screen/frame`);
+                if (res.data.frame) {
+                    setFrameData(`data:image/jpeg;base64,${res.data.frame}`);
+                    setConnected(true);
+                    setStatus('live');
+                }
+            } catch (e) {
+                // ignore
             }
-        });
+        }, 500);
 
+        // Timeout if no frame after 15s
         streamTimeoutRef.current = setTimeout(() => {
             setStatus(prev => prev !== 'live' ? 'error' : prev);
-        }, 12000);
-    }, [device?.id, userId]);
+        }, 15000);
+    }, [device?.device_id, userId]);
 
     const stopStream = useCallback(() => {
-        channelRef.current?.stopListening('.screen.frame');
-        channelRef.current = null;
+        if (pollIntervalRef.current) { clearInterval(pollIntervalRef.current); pollIntervalRef.current = null; }
         if (streamTimeoutRef.current) { clearTimeout(streamTimeoutRef.current); streamTimeoutRef.current = null; }
-        if (device?.id) axios.post(`/api/devices/${device.id}/stream/stop`).catch(() => { });
-    }, [device?.id]);
+        if (device?.device_id) axios.post(`/api/devices/${device.device_id}/screen/stop`).catch(() => {});
+    }, [device?.device_id]);
 
     useEffect(() => {
-        if (!device?.id || minimized) return;
+        if (!device?.device_id || minimized) return;
         startStream();
         return () => stopStream();
-    }, [device?.id, minimized]);
+    }, [device?.device_id, minimized]);
 
     useEffect(() => () => stopStream(), []);
 
@@ -138,12 +137,12 @@ export default function FloatingPhonePreview({ device, userId }) {
 
     // Periodic keepalive to ensure phone keeps sending frames
     useEffect(() => {
-        if (!device?.id || minimized || status !== 'live') return;
+        if (!device?.device_id || minimized || status !== 'live') return;
         const interval = setInterval(() => {
-            axios.post(`/api/devices/${device.id}/stream/start`).catch(() => {});
+            axios.post(`/api/devices/${device.device_id}/screen/start`).catch(() => {});
         }, 15000);
         return () => clearInterval(interval);
-    }, [device?.id, minimized, status]);
+    }, [device?.device_id, minimized, status]);
 
     const handleRetry = () => {
         stopStream();

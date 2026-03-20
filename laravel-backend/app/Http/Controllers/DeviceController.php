@@ -230,6 +230,7 @@ class DeviceController extends Controller
             'success' => true,
             'message' => 'Heartbeat received',
             'last_active_at' => $device->last_active_at->toIso8601String(),
+            'stream' => \Illuminate\Support\Facades\Cache::has("screen:streaming:{$device->device_id}"),
         ]);
     }
 

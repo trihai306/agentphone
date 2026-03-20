@@ -453,6 +453,15 @@ object SocketJobManager {
                     "pusher_internal:subscription_succeeded" -> {
                         Log.w(TAG, "🟢 PUSHER INTERNAL: Subscription confirmed by server!")
                     }
+                    // HTTP polling screen streaming events (colon notation)
+                    "screen:start" -> {
+                        Log.i(TAG, "📹 Screen start via HTTP polling mode")
+                        handleScreenStartHTTP(event.data ?: "")
+                    }
+                    "screen:stop" -> {
+                        Log.i(TAG, "📹 Screen stop")
+                        handleScreenStopHTTP()
+                    }
                     // WebRTC screen streaming events (dot notation matches Laravel broadcastAs)
                     "stream.start" -> {
                         Log.i(TAG, "📹 Received stream.start request")
@@ -593,6 +602,25 @@ object SocketJobManager {
             override fun onEvent(event: PusherEvent) {
                 Log.w(TAG, "🏓 EXPLICIT BIND: ping:request received!")
                 handlePingRequest(event.data ?: "")
+            }
+            override fun onSubscriptionSucceeded(channelName: String) {}
+            override fun onAuthenticationFailure(message: String?, e: Exception?) {}
+        })
+
+        // Bind HTTP polling screen streaming events (colon notation)
+        deviceChannel?.bind("screen:start", object : com.pusher.client.channel.PrivateChannelEventListener {
+            override fun onEvent(event: PusherEvent) {
+                Log.i(TAG, "📹 EXPLICIT BIND: screen:start received!")
+                handleScreenStartHTTP(event.data ?: "")
+            }
+            override fun onSubscriptionSucceeded(channelName: String) {}
+            override fun onAuthenticationFailure(message: String?, e: Exception?) {}
+        })
+
+        deviceChannel?.bind("screen:stop", object : com.pusher.client.channel.PrivateChannelEventListener {
+            override fun onEvent(event: PusherEvent) {
+                Log.i(TAG, "📹 EXPLICIT BIND: screen:stop received!")
+                handleScreenStopHTTP()
             }
             override fun onSubscriptionSucceeded(channelName: String) {}
             override fun onAuthenticationFailure(message: String?, e: Exception?) {}
@@ -961,6 +989,23 @@ object SocketJobManager {
             httpClient.newCall(request).execute().use { response ->
                 if (response.isSuccessful) {
                     Log.d(TAG, "Heartbeat OK")
+                    // Check if backend requests screen streaming
+                    try {
+                        val responseBody = response.body?.string()
+                        if (responseBody != null) {
+                            val responseJson = org.json.JSONObject(responseBody)
+                            val streamRequested = responseJson.optBoolean("stream", false)
+                            if (streamRequested && screenPollingJob?.isActive != true) {
+                                Log.i(TAG, "📹 Heartbeat: stream requested, starting HTTP streaming")
+                                handleScreenStartHTTP("")
+                            } else if (!streamRequested && screenPollingJob?.isActive == true) {
+                                Log.i(TAG, "📹 Heartbeat: stream no longer requested, stopping")
+                                handleScreenStopHTTP()
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.d(TAG, "Heartbeat response parse error: ${e.message}")
+                    }
                 }
             }
         }
@@ -2491,6 +2536,76 @@ object SocketJobManager {
                 Log.e(TAG, "Error handling accessibility check", e)
             }
         }
+    }
+
+    // ================================================================================
+    // HTTP Polling Screen Streaming Handlers
+    // ================================================================================
+
+    private var screenPollingJob: kotlinx.coroutines.Job? = null
+
+    private fun handleScreenStartHTTP(data: String) {
+        if (screenPollingJob?.isActive == true) {
+            Log.w(TAG, "📹 Already streaming via HTTP polling, ignoring")
+            return
+        }
+
+        screenPollingJob = scope.launch(Dispatchers.IO) {
+            val accessibilityService = com.agent.portal.accessibility.PortalAccessibilityService.instance
+            if (accessibilityService == null) {
+                Log.e(TAG, "📹 No accessibility service for HTTP streaming")
+                return@launch
+            }
+
+            val id = deviceId ?: return@launch
+            val context = contextRef?.get() ?: return@launch
+            val token = com.agent.portal.auth.SessionManager(context).getSession()?.token ?: return@launch
+            val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
+
+            Log.i(TAG, "📹 Starting HTTP screen streaming for device=$id")
+
+            while (isActive) {
+                try {
+                    val bitmap = accessibilityService.takeScreenshotBitmap()
+                    if (bitmap != null) {
+                        // Scale down
+                        val scale = if (bitmap.width > 600) 3 else 2
+                        val scaled = android.graphics.Bitmap.createScaledBitmap(
+                            bitmap, bitmap.width / scale, bitmap.height / scale, true
+                        )
+
+                        val stream = java.io.ByteArrayOutputStream()
+                        scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 40, stream)
+                        val base64 = android.util.Base64.encodeToString(stream.toByteArray(), android.util.Base64.NO_WRAP)
+
+                        scaled.recycle()
+                        if (scaled !== bitmap) bitmap.recycle()
+
+                        // POST frame to backend
+                        val body = okhttp3.RequestBody.create(
+                            "application/json".toMediaTypeOrNull(),
+                            """{"device_id":"$id","frame":"$base64"}"""
+                        )
+                        val request = okhttp3.Request.Builder()
+                            .url("$apiUrl/devices/screen/frame")
+                            .post(body)
+                            .addHeader("Authorization", "Bearer $token")
+                            .build()
+
+                        httpClient.newCall(request).execute().close()
+                    }
+                } catch (e: Exception) {
+                    Log.d(TAG, "📹 HTTP frame error: ${e.message}")
+                }
+                delay(500) // 2 FPS
+            }
+        }
+    }
+
+    private fun handleScreenStopHTTP() {
+        screenPollingJob?.cancel()
+        screenPollingJob = null
+        Log.i(TAG, "📹 HTTP screen streaming stopped")
     }
 
     // ================================================================================
