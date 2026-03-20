@@ -219,6 +219,112 @@ class AIOrchestrationController extends Controller
     }
 
     /**
+     * Generate a ReactFlow workflow from a natural language description using AI
+     *
+     * POST /api/ai/generate-flow
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function generateFlow(Request $request)
+    {
+        $request->validate([
+            'description' => 'required|string|max:2000',
+            'provider' => 'nullable|string|in:openai,anthropic,gemini,groq',
+        ]);
+
+        $provider = $request->input('provider', 'gemini');
+
+        $systemPrompt = <<<'PROMPT'
+You are a workflow automation expert. Generate a ReactFlow workflow from the user's description.
+
+Available node types and their params:
+- open_app: { packageName: "com.example.app" }
+- click/tap: { x: number, y: number, resourceId?: string, text?: string, contentDescription?: string }
+- text_input: { text: "value", resourceId?: string, x?: number, y?: number }
+- scroll: { direction: "up"|"down"|"left"|"right", amount?: number }
+- swipe: { direction: "up"|"down"|"left"|"right", startX?: number, startY?: number }
+- wait: { duration: number_ms }
+- condition: { leftValue: string, operator: "=="|"!="|">"|"<", rightValue: string }
+- loop: { iterations: number, dataSource: "fixed" }
+- assert: { assertType: "exists"|"not_exists"|"text_equals", resourceId?: string, text?: string }
+- key_event: { key: "KEYCODE_BACK"|"KEYCODE_HOME"|"KEYCODE_ENTER" }
+- long_tap: { x: number, y: number, duration?: number }
+- double_tap: { x: number, y: number }
+
+Output ONLY valid JSON with this exact structure:
+{
+  "nodes": [
+    {
+      "id": "node-1",
+      "type": "open_app",
+      "position": { "x": 400, "y": 100 },
+      "data": { "label": "Open Facebook", "packageName": "com.facebook.katana" }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1-2",
+      "source": "node-1",
+      "target": "node-2",
+      "type": "smoothstep",
+      "animated": true
+    }
+  ]
+}
+
+Rules:
+- Position nodes vertically, increment y by 180 for each node
+- Use descriptive labels in the user's language
+- Always start with a "start" type node
+- Connect all nodes sequentially with edges
+- Use realistic coordinates for tap actions (1080x2400 screen)
+- Include wait nodes between actions (500-2000ms)
+PROMPT;
+
+        try {
+            $service = app(\App\Services\AIOrchestrationService::class);
+            $result = $service->execute([
+                'provider' => $provider,
+                'model' => $provider === 'gemini' ? 'gemini-2.0-flash' : null,
+                'system_prompt' => $systemPrompt,
+                'prompt' => $request->input('description'),
+                'response_format' => 'json',
+                'temperature' => 0.3,
+                'max_tokens' => 4000,
+                'api_token' => config("services.{$provider}.key") ?: $request->input('api_token'),
+            ]);
+
+            // Parse the response to extract nodes/edges JSON
+            $content = $result['content'] ?? '';
+
+            // Try to extract JSON from the response
+            if (preg_match('/\{[\s\S]*"nodes"[\s\S]*\}/', $content, $matches)) {
+                $flowData = json_decode($matches[0], true);
+                if ($flowData && isset($flowData['nodes'])) {
+                    return response()->json([
+                        'success' => true,
+                        'nodes' => $flowData['nodes'],
+                        'edges' => $flowData['edges'] ?? [],
+                    ]);
+                }
+            }
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Could not parse AI response into workflow format',
+                'raw' => $content,
+            ], 422);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Estimate token count and cost for a prompt
      * 
      * POST /api/ai/estimate-tokens

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { NodeIcon } from './FlowIcons';
@@ -19,6 +19,18 @@ export default function NodeSidebar({
     const isDark = theme === 'dark';
     const { t } = useTranslation();
     const { startDrag } = useMouseDrag();
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Filter templates based on search query
+    const filteredTemplates = useMemo(() => {
+        if (!searchQuery.trim()) return nodeTemplates;
+        const query = searchQuery.toLowerCase().trim();
+        return nodeTemplates.filter(
+            (tpl) =>
+                tpl.label.toLowerCase().includes(query) ||
+                tpl.type.toLowerCase().includes(query)
+        );
+    }, [nodeTemplates, searchQuery]);
 
     if (!showSidebar) return null;
 
@@ -129,6 +141,8 @@ export default function NodeSidebar({
                         </svg>
                         <input
                             type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder={t('flows.editor.sidebar.search_placeholder')}
                             className={`w-full pl-8 pr-2 py-1.5 text-xs rounded-md border transition-colors ${isDark ? 'bg-[#1a1a1a] border-[#252525] text-white placeholder-gray-500 focus:border-indigo-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-indigo-500'} focus:outline-none`}
                         />
@@ -142,19 +156,19 @@ export default function NodeSidebar({
                     category="action"
                     label={t('flows.editor.categories.recorded_actions')}
                     color="bg-blue-500"
-                    templates={nodeTemplates.filter(t => t.category === 'action')}
+                    templates={filteredTemplates.filter(t => t.category === 'action')}
                 />
                 <CategorySection
                     category="logic"
                     label={t('flows.editor.categories.logic_control')}
                     color="bg-orange-500"
-                    templates={nodeTemplates.filter(t => t.category === 'logic')}
+                    templates={filteredTemplates.filter(t => t.category === 'logic')}
                 />
                 <CategorySection
                     category="resource"
                     label={t('flows.editor.categories.resources')}
                     color="bg-purple-500"
-                    templates={nodeTemplates.filter(t => t.category === 'resource')}
+                    templates={filteredTemplates.filter(t => t.category === 'resource')}
                 />
             </div>
         </div>

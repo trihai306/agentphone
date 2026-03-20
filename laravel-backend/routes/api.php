@@ -227,6 +227,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/test-prompt', [AIOrchestrationController::class, 'testPrompt']);
         Route::get('/models/{provider}', [AIOrchestrationController::class, 'getModels']);
         Route::post('/estimate-tokens', [AIOrchestrationController::class, 'estimateTokens']);
+        Route::post('/generate-flow', [AIOrchestrationController::class, 'generateFlow']);
     });
 });
 

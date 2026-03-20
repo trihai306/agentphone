@@ -276,6 +276,12 @@ export const aiApi = {
     generatePortrait: async (payload) => {
         return apiService.post('/api/ai/generate-portrait', payload);
     },
+
+    /**
+     * Generate flow (nodes + edges) from natural language description
+     */
+    generateFlow: (description, provider = 'gemini') =>
+        window.axios.post('/api/ai/generate-flow', { description, provider }),
 };
 
 /**

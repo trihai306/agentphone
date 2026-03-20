@@ -143,8 +143,13 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
     // ===== UI State =====
     const [showSidebar, setShowSidebar] = useState(true);
-    const [sidebarExpanded, setSidebarExpanded] = useState(false); // Compact by default
+    const [sidebarExpanded, setSidebarExpanded] = useState(true); // Expanded by default
     const [showLogPanel, setShowLogPanel] = useState(false);
+
+    // ===== AI Generate Flow State =====
+    const [showAIGenerator, setShowAIGenerator] = useState(false);
+    const [aiPrompt, setAIPrompt] = useState('');
+    const [aiGenerating, setAIGenerating] = useState(false);
 
     // ===== Recording Mode State (TODO: extract to useRecordingMode) =====
     const [isRecording, setIsRecording] = useState(false);
@@ -1143,6 +1148,29 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         closeModal('clearConfirm');
     }, [nodes.length, viewport, saveFlow]);
 
+    // ===== AI Generate Flow Handler =====
+    const handleAIGenerate = async () => {
+        if (!aiPrompt.trim()) return;
+        setAIGenerating(true);
+        try {
+            const response = await window.axios.post('/api/ai/generate-flow', {
+                description: aiPrompt
+            });
+            if (response.data.success) {
+                const newNodes = response.data.nodes || [];
+                const newEdges = response.data.edges || [];
+                setNodes(prev => [...prev, ...newNodes]);
+                setEdges(prev => [...prev, ...newEdges]);
+                setShowAIGenerator(false);
+                setAIPrompt('');
+                debouncedSave([...nodes, ...newNodes], [...edges, ...newEdges], viewport);
+            }
+        } catch (error) {
+            console.error('AI generate failed:', error);
+        }
+        setAIGenerating(false);
+    };
+
     useEffect(() => {
         const handleKeyDown = (e) => {
             // Ctrl/Cmd+Z = Undo (without Shift)
@@ -1434,7 +1462,82 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                     fitView={fitView}
                                 />
 
+                                {/* AI Flow Generator Button */}
+                                <div className="absolute bottom-4 left-20 z-20">
+                                    <button
+                                        onClick={() => setShowAIGenerator(true)}
+                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg transition-all hover:scale-105 ${
+                                            isDark
+                                                ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-violet-500/25'
+                                                : 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-violet-500/30'
+                                        }`}
+                                        title="AI Generate Workflow"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                        AI Generate
+                                    </button>
+                                </div>
 
+                                {/* AI Flow Generator Modal */}
+                                {showAIGenerator && (
+                                    <div className="absolute bottom-4 left-20 z-30 w-96">
+                                        <div className={`rounded-2xl shadow-2xl border overflow-hidden ${
+                                            isDark ? 'bg-[#0a0a0f] border-white/10' : 'bg-white border-gray-200'
+                                        }`}>
+                                            <div className={`flex items-center justify-between px-4 py-3 border-b ${isDark ? 'border-white/10' : 'border-gray-100'}`}>
+                                                <div className="flex items-center gap-2">
+                                                    <svg className="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                                    </svg>
+                                                    <span className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>AI Generate Workflow</span>
+                                                </div>
+                                                <button onClick={() => setShowAIGenerator(false)} className={`w-6 h-6 rounded-lg flex items-center justify-center ${isDark ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}>
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                </button>
+                                            </div>
+                                            <div className="p-4 space-y-3">
+                                                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                    Describe what you want the workflow to do. AI will generate the nodes and connections automatically.
+                                                </p>
+                                                <textarea
+                                                    value={aiPrompt}
+                                                    onChange={(e) => setAIPrompt(e.target.value)}
+                                                    placeholder="E.g: Open Facebook, login with account data, scroll feed, like 3 random posts, then close app"
+                                                    rows={4}
+                                                    className={`w-full px-3 py-2.5 rounded-xl border text-sm resize-none ${
+                                                        isDark
+                                                            ? 'bg-white/5 border-white/10 text-white placeholder:text-gray-600'
+                                                            : 'bg-gray-50 border-gray-200 text-gray-900'
+                                                    } focus:outline-none focus:ring-2 focus:ring-violet-500`}
+                                                    autoFocus
+                                                />
+                                                <button
+                                                    onClick={handleAIGenerate}
+                                                    disabled={aiGenerating || !aiPrompt.trim()}
+                                                    className={`w-full py-2.5 rounded-xl font-semibold text-sm text-white transition-all ${
+                                                        aiGenerating || !aiPrompt.trim()
+                                                            ? 'bg-gray-400 cursor-not-allowed'
+                                                            : 'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 shadow-lg shadow-violet-500/25'
+                                                    }`}
+                                                >
+                                                    {aiGenerating ? (
+                                                        <span className="flex items-center justify-center gap-2">
+                                                            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+                                                            Generating...
+                                                        </span>
+                                                    ) : (
+                                                        <span className="flex items-center justify-center gap-2">
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                                            Generate Workflow
+                                                        </span>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Multi-Selection Floating Toolbar */}
                                 <MultiSelectionToolbar
