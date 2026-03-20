@@ -151,23 +151,19 @@ export function useDeviceManager(initialDevices = [], auth = null) {
                             // Assume online if DB says socket_connected
                             if (device.socket_connected) {
                                 console.log('⚡ useDeviceManager: Fallback - using socket_connected hint');
-                                setIsPinging(false);
                                 return { ...prev, is_verified: true };
                             } else {
                                 // Device didn't respond to ping but KEEP IT SELECTED
                                 // Just mark as unverified and show warning
                                 console.warn('⚠️ useDeviceManager: Fallback - device not responding, keeping selected');
                                 setPingError('Device may be offline');
-                                setIsPinging(false);
                                 // Keep device selected but mark unverified - still usable for app list
                                 return { ...prev, is_verified: false };
                             }
                         }
-                        if (prev?.is_verified) {
-                            setIsPinging(false);
-                        }
                         return prev;
                     });
+                    setIsPinging(false);
                 }, 3000);
             } else {
                 console.error('❌ useDeviceManager: Verify request failed');

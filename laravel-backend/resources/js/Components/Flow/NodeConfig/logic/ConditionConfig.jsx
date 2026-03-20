@@ -37,8 +37,12 @@ export function ConditionConfig({ data, updateData, updateMultipleData, isDark, 
         let centerX, centerY;
         if (element.bounds) {
             const b = element.bounds;
-            centerX = Math.round((b.left + b.right) / 2);
-            centerY = Math.round((b.top + b.bottom) / 2);
+            centerX = b.right !== undefined
+                ? Math.round((b.left + b.right) / 2)
+                : Math.round(b.left + (b.width || 0) / 2);
+            centerY = b.bottom !== undefined
+                ? Math.round((b.top + b.bottom) / 2)
+                : Math.round(b.top + (b.height || 0) / 2);
         }
 
         updateMultipleData({

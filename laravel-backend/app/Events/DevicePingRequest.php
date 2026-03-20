@@ -31,7 +31,7 @@ class DevicePingRequest implements ShouldBroadcastNow
 
     public function broadcastAs(): string
     {
-        return 'ping.request';
+        return 'ping:request';
     }
 
     public function broadcastWith(): array

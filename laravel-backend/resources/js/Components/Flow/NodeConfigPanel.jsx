@@ -142,6 +142,7 @@ export default function NodeConfigPanel({
                     <LoopConfig
                         data={nodeData}
                         updateData={updateData}
+                        updateMultipleData={updateMultipleData}
                         isDark={isDark}
                         dataSourceNodes={dataSourceNodes}
                     />
@@ -461,9 +462,10 @@ export default function NodeConfigPanel({
                                             value={option.value}
                                             checked={isSelected}
                                             onChange={() => {
-                                                updateData('onError', option.value);
-                                                // Also set continueOnError for backward compatibility
-                                                updateData('continueOnError', option.value === 'continue');
+                                                updateMultipleData({
+                                                    onError: option.value,
+                                                    continueOnError: option.value === 'continue'
+                                                });
                                             }}
                                             className="sr-only"
                                         />

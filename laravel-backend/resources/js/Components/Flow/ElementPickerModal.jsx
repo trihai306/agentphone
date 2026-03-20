@@ -441,6 +441,7 @@ export default function ElementPickerModal({
                 channel.stopListening('.inspect.result');
                 channel.stopListening('.inspect.chunk');
                 channel.stopListening('.visual.result');
+                if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
             };
         } else {
             console.error('❌ ElementPicker: window.Echo not available!');
@@ -838,7 +839,10 @@ export default function ElementPickerModal({
                                                                     style={{ left: `${elLeft + elWidth / 2 - 5}px`, top: `${elTop + elHeight / 2 - 5}px` }}
                                                                     onMouseEnter={() => setHoveredElement(idx)}
                                                                     onMouseLeave={() => setHoveredElement(null)}
-                                                                    onClick={() => onSelect(el)}
+                                                                    onClick={() => {
+                                                                        setSelectedElement(el);
+                                                                        onSelect(buildSelectorOutput(el));
+                                                                    }}
                                                                 >
                                                                     {/* Dot marker */}
                                                                     <div className="relative w-[10px] h-[10px]">

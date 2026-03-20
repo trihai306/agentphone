@@ -20,6 +20,12 @@ class HeartbeatWorker(
 
     companion object {
         private const val TAG = "HeartbeatWorker"
+
+        // Shared OkHttpClient - avoid creating per-execution instances
+        private val sharedClient = OkHttpClient.Builder()
+            .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+            .build()
     }
 
     override suspend fun doWork(): Result {
@@ -80,8 +86,7 @@ class HeartbeatWorker(
             json
         )
         
-        // Send HTTP POST request
-        val client = OkHttpClient()
+        // Send HTTP POST request using shared client
         val request = Request.Builder()
             .url("$apiUrl/heartbeat")
             .post(requestBody)
@@ -90,7 +95,7 @@ class HeartbeatWorker(
             .addHeader("Accept", "application/json")
             .build()
         
-        val response = client.newCall(request).execute()
+        val response = sharedClient.newCall(request).execute()
         
         if (response.isSuccessful) {
             Log.d(TAG, "Heartbeat response: ${response.code}")

@@ -923,8 +923,8 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         closeModal(MODAL_TYPES.EDGE_DELAY);
 
         // Trigger auto-save
-        debouncedSave(nodes, edges);
-    }, [modals.edgeDelay.edge, nodes, edges, debouncedSave, closeModal, MODAL_TYPES]);
+        debouncedSave(nodes, edges, viewport);
+    }, [modals.edgeDelay.edge, nodes, edges, viewport, debouncedSave, closeModal, MODAL_TYPES]);
 
     const onDragOver = useCallback((event) => {
         event.preventDefault();

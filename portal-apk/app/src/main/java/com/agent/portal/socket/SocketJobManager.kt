@@ -405,20 +405,20 @@ object SocketJobManager {
                         Log.d(TAG, "workflow:test in onEvent - explicit bind handles this")
                     }
                     "inspect:elements" -> {
-                        Log.w(TAG, "🔍 INSPECT:ELEMENTS received via main onEvent!")
-                        handleInspectElements(event.data ?: "")
+                        // Handled by explicit bind - skip to avoid duplicate
+                        Log.d(TAG, "inspect:elements in onEvent - explicit bind handles this")
                     }
                     "check:accessibility" -> {
-                        Log.w(TAG, "📱 CHECK:ACCESSIBILITY received via main onEvent!")
-                        handleCheckAccessibility(event.data ?: "")
+                        // Handled by explicit bind - skip to avoid duplicate
+                        Log.d(TAG, "check:accessibility in onEvent - explicit bind handles this")
                     }
                     "visual:inspect" -> {
                         // DEPRECATED: OCR now included in inspect:elements
-                        Log.i(TAG, "⚠️ Ignoring visual:inspect - OCR in inspect:elements")
+                        Log.i(TAG, "Ignoring visual:inspect - OCR in inspect:elements")
                     }
                     "find:icon" -> {
-                        Log.w(TAG, "🔍 Received find:icon via main handler!")
-                        handleFindIcon(event.data)
+                        // Handled by explicit bind - skip to avoid duplicate
+                        Log.d(TAG, "find:icon in onEvent - explicit bind handles this")
                     }
                     "ping:request" -> {
                         Log.w(TAG, "🏓 PING:REQUEST received via main handler!")

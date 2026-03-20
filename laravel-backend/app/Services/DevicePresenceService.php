@@ -18,20 +18,26 @@ class DevicePresenceService
     // Redis key patterns
     private const KEY_ONLINE_DEVICES = 'device:online:%d'; // %d = user_id
     private const KEY_DEVICE_INFO = 'device:info:%s';       // %s = device_id
+    private const KEY_DEVICE_ALIVE = 'device:alive:%s';     // %s = device_id (per-device TTL)
 
-    // TTL in seconds (180s = 3 minutes - devices auto-expire if no refresh/reconnect)
-    private const PRESENCE_TTL = 180;
+    // TTL in seconds
+    private const PRESENCE_TTL = 180;       // Per-device alive key (3 minutes)
+    private const SET_TTL = 600;            // Set TTL (10 minutes, longer as safety net)
 
     /**
      * Mark a device as online
      */
     public function markOnline(int $userId, string $deviceId, ?int $deviceDbId = null): void
     {
-        $key = sprintf(self::KEY_ONLINE_DEVICES, $userId);
+        $setKey = sprintf(self::KEY_ONLINE_DEVICES, $userId);
+        $deviceKey = sprintf(self::KEY_DEVICE_ALIVE, $deviceId);
 
         // Add device to user's online set
-        Redis::sadd($key, $deviceId);
-        Redis::expire($key, self::PRESENCE_TTL);
+        Redis::sadd($setKey, $deviceId);
+        Redis::expire($setKey, self::SET_TTL);
+
+        // Per-device TTL key - expires individually
+        Redis::setex($deviceKey, self::PRESENCE_TTL, '1');
 
         // Store device info for quick lookup
         if ($deviceDbId) {
@@ -50,6 +56,10 @@ class DevicePresenceService
     {
         $key = sprintf(self::KEY_ONLINE_DEVICES, $userId);
         Redis::srem($key, $deviceId);
+
+        // Clean up per-device alive key
+        $deviceKey = sprintf(self::KEY_DEVICE_ALIVE, $deviceId);
+        Redis::del($deviceKey);
 
         // Clean up device info
         $infoKey = sprintf(self::KEY_DEVICE_INFO, $deviceId);
@@ -72,8 +82,11 @@ class DevicePresenceService
      */
     public function isOnline(int $userId, string $deviceId): bool
     {
-        $key = sprintf(self::KEY_ONLINE_DEVICES, $userId);
-        return (bool) Redis::sismember($key, $deviceId);
+        $setKey = sprintf(self::KEY_ONLINE_DEVICES, $userId);
+        $deviceKey = sprintf(self::KEY_DEVICE_ALIVE, $deviceId);
+
+        // Check both set membership AND per-device alive key
+        return (bool) Redis::sismember($setKey, $deviceId) && (bool) Redis::exists($deviceKey);
     }
 
     /**
@@ -90,11 +103,13 @@ class DevicePresenceService
      */
     public function refreshPresence(int $userId, string $deviceId): void
     {
-        $key = sprintf(self::KEY_ONLINE_DEVICES, $userId);
+        $setKey = sprintf(self::KEY_ONLINE_DEVICES, $userId);
+        $deviceKey = sprintf(self::KEY_DEVICE_ALIVE, $deviceId);
 
         // Only refresh if device is in the set
-        if (Redis::sismember($key, $deviceId)) {
-            Redis::expire($key, self::PRESENCE_TTL);
+        if (Redis::sismember($setKey, $deviceId)) {
+            Redis::expire($setKey, self::SET_TTL);
+            Redis::setex($deviceKey, self::PRESENCE_TTL, '1');
 
             $infoKey = sprintf(self::KEY_DEVICE_INFO, $deviceId);
             Redis::expire($infoKey, self::PRESENCE_TTL);
@@ -114,8 +129,10 @@ class DevicePresenceService
         // Delete the set
         Redis::del($key);
 
-        // Clean up device info keys
+        // Clean up per-device alive keys and device info keys
         foreach ($deviceIds as $deviceId) {
+            $deviceKey = sprintf(self::KEY_DEVICE_ALIVE, $deviceId);
+            Redis::del($deviceKey);
             $infoKey = sprintf(self::KEY_DEVICE_INFO, $deviceId);
             Redis::del($infoKey);
         }

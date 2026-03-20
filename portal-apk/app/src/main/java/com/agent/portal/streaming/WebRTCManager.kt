@@ -296,8 +296,11 @@ object WebRTCManager {
                 val token = sessionManager.getToken() ?: return@launch
                 val userId = sessionManager.getUserId() ?: return@launch
 
+                val deviceId = context.getSharedPreferences("portal_device", Context.MODE_PRIVATE)
+                    .getString("unique_device_id", null) ?: return@launch
+
                 val payload = JSONObject().apply {
-                    put("device_id", userId as Any)  // explicit cast to resolve overload
+                    put("device_id", deviceId as Any)
                     put("viewer_user_id", viewerUserId as Any)
                     put("signal_type", type)
                     put("signal_data", data)

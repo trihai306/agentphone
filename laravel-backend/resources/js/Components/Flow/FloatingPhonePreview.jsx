@@ -13,7 +13,7 @@ export default function FloatingPhonePreview({ device, userId }) {
     const isDark = theme === 'dark';
 
     // Position & size
-    const [position, setPosition] = useState({ x: window.innerWidth - 280, y: 80 });
+    const [position, setPosition] = useState({ x: typeof window !== 'undefined' ? window.innerWidth - 280 : 800, y: 80 });
     const [size, setSize] = useState({ w: 220, h: 420 });
     const [minimized, setMinimized] = useState(false);
 
@@ -71,6 +71,11 @@ export default function FloatingPhonePreview({ device, userId }) {
         window.addEventListener('mouseup', up);
         return () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
     }, [isDragging, isResizing]);
+
+    // Reset retry count when device changes
+    useEffect(() => {
+        retryCountRef.current = 0;
+    }, [device?.id]);
 
     // ─── Echo stream ──────────────────────────────────────────
     const startStream = useCallback(() => {

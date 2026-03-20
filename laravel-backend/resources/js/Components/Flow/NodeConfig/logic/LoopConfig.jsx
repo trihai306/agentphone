@@ -5,24 +5,28 @@ import { ConfigSection } from '../shared';
  * LoopConfig - Configuration for loop nodes
  * Supports data source, fixed count, and custom array modes
  */
-export function LoopConfig({ data, updateData, isDark, dataSourceNodes = [] }) {
+export function LoopConfig({ data, updateData, updateMultipleData, isDark, dataSourceNodes = [] }) {
     const { t } = useTranslation();
 
     // Map source to dataSource for backend compatibility
     const currentSource = data.dataSource || data.source || 'fixed';
 
     const handleSourceChange = (source) => {
-        updateData('source', source);
         const dataSourceValue = source === 'count' ? 'fixed' : source;
-        updateData('dataSource', dataSourceValue);
+        updateMultipleData({
+            source: source,
+            dataSource: dataSourceValue
+        });
     };
 
     const handleDataSourceSelect = (nodeId) => {
         const selectedNode = dataSourceNodes.find(n => n.id === nodeId);
         if (selectedNode) {
-            updateData('dataSourceNodeId', nodeId);
-            updateData('dataSourceName', selectedNode.data?.outputName ||
-                selectedNode.data?.collectionName?.toLowerCase().replace(/\s+/g, '_') || 'records');
+            updateMultipleData({
+                dataSourceNodeId: nodeId,
+                dataSourceName: selectedNode.data?.outputName ||
+                    selectedNode.data?.collectionName?.toLowerCase().replace(/\s+/g, '_') || 'records'
+            });
         }
     };
 

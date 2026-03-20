@@ -147,7 +147,7 @@ class WebRTCSignalController extends Controller
 
         // Find the user's active device
         $device = Device::where('user_id', $user->id)
-            ->where('is_online', true)
+            ->where('socket_connected', true)
             ->latest('updated_at')
             ->first();
 
@@ -198,7 +198,7 @@ class WebRTCSignalController extends Controller
 
         // Find the user's active device
         $device = Device::where('user_id', $user->id)
-            ->where('is_online', true)
+            ->where('socket_connected', true)
             ->latest('updated_at')
             ->first();
 
