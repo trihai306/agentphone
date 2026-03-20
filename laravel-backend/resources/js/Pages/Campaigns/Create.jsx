@@ -7,6 +7,16 @@ import WorkflowConfigPanel from '@/Components/Campaigns/WorkflowConfigPanel';
 import { Button, Icon } from '@/Components/UI';
 import { campaignApi } from '@/services/api';
 
+// Inline tip component for beginners
+const StepTip = ({ isDark, children }) => (
+    <div className={`flex items-start gap-3 p-4 rounded-xl mb-6 ${isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50 border border-blue-100'}`}>
+        <svg className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p className={`text-sm leading-relaxed ${isDark ? 'text-blue-300/80' : 'text-blue-700'}`}>{children}</p>
+    </div>
+);
+
 // Quick Start Templates
 const getTemplates = (t) => [
     {
@@ -50,7 +60,7 @@ export default function Create({ dataCollections = [], workflows = [], devices =
 
     const TEMPLATES = useMemo(() => getTemplates(t), [t]);
 
-    const [showTemplates, setShowTemplates] = useState(true);
+    const [showTemplates, setShowTemplates] = useState(false);
     const [selectedTemplate, setSelectedTemplate] = useState(null);
     const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -527,6 +537,9 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                         {/* Step 1: Name & Workflows */}
                         {step === 1 && (
                             <div className="space-y-6">
+                                <StepTip isDark={isDark}>
+                                    {t('campaigns.create.tip_step1', { defaultValue: 'Give your campaign a name and select the workflows (automation scripts) to run. You can add multiple workflows - they will execute in order for each record.' })}
+                                </StepTip>
                                 <div>
                                     <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                         {t('campaigns.create.name')} *
@@ -536,6 +549,21 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                                         value={name}
                                         onChange={e => setName(e.target.value)}
                                         placeholder={t('campaigns.create.name_placeholder')}
+                                        className={`w-full px-4 py-3 rounded-xl border ${isDark
+                                            ? 'bg-white/5 border-white/10 text-white placeholder:text-gray-600'
+                                            : 'bg-gray-50 border-gray-200 text-gray-900'} focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                        {t('campaigns.create.description_optional', { defaultValue: 'Description (optional)' })}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={description}
+                                        onChange={e => setDescription(e.target.value)}
+                                        placeholder={t('campaigns.create.description_placeholder', { defaultValue: 'Brief description of what this campaign does...' })}
                                         className={`w-full px-4 py-3 rounded-xl border ${isDark
                                             ? 'bg-white/5 border-white/10 text-white placeholder:text-gray-600'
                                             : 'bg-gray-50 border-gray-200 text-gray-900'} focus:outline-none focus:ring-2 focus:ring-emerald-500`}
@@ -629,6 +657,9 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                         {/* Step 2: Devices */}
                         {step === 2 && (
                             <div>
+                                <StepTip isDark={isDark}>
+                                    {t('campaigns.create.tip_step2', { defaultValue: 'Select which devices will run this campaign. Green dot = online. Records will be distributed across selected devices automatically.' })}
+                                </StepTip>
                                 <div className="flex items-center justify-between mb-4">
                                     <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                         <Icon name="device" className="w-4 h-4 inline-block mr-1" /> {t('campaigns.create.select_devices')} ({selectedDevices.length}/{devices.length} {t('campaigns.meta.devices')})
@@ -735,6 +766,9 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                         {/* Step 3: Config + Data Selection */}
                         {step === 3 && (
                             <div className="space-y-5">
+                                <StepTip isDark={isDark}>
+                                    {t('campaigns.create.tip_step3', { defaultValue: 'Optional: Select a data collection (e.g. list of accounts). Each record becomes a separate job. Skip this if your workflow doesn\'t need data input.' })}
+                                </StepTip>
                                 {/* Data Collection Selection */}
                                 <div className={`p-5 rounded-xl ${isDark ? 'bg-cyan-500/10 border border-cyan-500/20' : 'bg-cyan-50'}`}>
                                     <div className="flex items-center justify-between mb-4">
@@ -1226,9 +1260,9 @@ export default function Create({ dataCollections = [], workflows = [], devices =
                     <div className="flex items-center justify-between mt-6">
                         <Button
                             variant="ghost"
-                            onClick={() => step > 1 ? setStep(step - 1) : setShowTemplates(true)}
+                            onClick={() => step > 1 ? setStep(step - 1) : window.history.back()}
                         >
-                            {step > 1 ? `← ${t('campaigns.create.back')}` : `← ${t('campaigns.create.choose_other_template')}`}
+                            {step > 1 ? `← ${t('campaigns.create.back')}` : `← ${t('campaigns.create.back_to_list', { defaultValue: 'Back' })}`}
                         </Button>
 
                         {step < 4 ? (

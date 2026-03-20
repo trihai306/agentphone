@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, router, Head } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+import { Link, router, Head, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
@@ -22,6 +22,17 @@ export default function Show({ campaign }) {
 
     const [confirmModal, setConfirmModal] = useState({ isOpen: false });
     const [isProcessing, setIsProcessing] = useState(false);
+    const { auth } = usePage().props;
+
+    // Real-time updates: reload campaign data when job status changes
+    useEffect(() => {
+        if (!window.Echo || !auth?.user?.id) return;
+        const channel = window.Echo.private(`user.${auth.user.id}`);
+        channel.listen('.job.status.changed', () => {
+            router.reload({ only: ['campaign'], preserveScroll: true });
+        });
+        return () => { window.Echo.leave(`user.${auth.user.id}`); };
+    }, [auth?.user?.id]);
 
     const progress = campaign?.total_records > 0
         ? Math.round((campaign.records_processed / campaign.total_records) * 100)
