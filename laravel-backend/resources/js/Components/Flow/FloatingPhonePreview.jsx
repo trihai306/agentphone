@@ -205,18 +205,32 @@ export default function FloatingPhonePreview({ device, userId }) {
                             <>
                                 <div className="w-6 h-6 border-2 border-violet-500/60 border-t-transparent rounded-full animate-spin mb-2" />
                                 <p className="text-white/30 text-[10px]">Connecting...</p>
+                                <p className="text-white/15 text-[8px] mt-1">
+                                    {retryCountRef.current > 0 ? `Retry ${retryCountRef.current}/${MAX_RETRIES}` : ''}
+                                </p>
                             </>
                         ) : status === 'error' ? (
-                            <>
-                                <p className="text-white/25 text-[10px] mb-2">No stream</p>
-                                <button
-                                    onClick={handleRetry}
-                                    className="px-3 py-1 text-[10px] rounded-lg bg-white/10 text-white/50 hover:bg-white/20 transition-all"
-                                    data-no-drag
-                                >
-                                    Retry
-                                </button>
-                            </>
+                            <div className="text-center px-4" data-no-drag>
+                                <svg className="w-8 h-8 mx-auto mb-2 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                </svg>
+                                <p className="text-white/30 text-[11px] font-medium mb-1">Device Offline</p>
+                                <p className="text-white/15 text-[9px] mb-3">Cannot connect to screen stream</p>
+                                <div className="flex gap-2 justify-center">
+                                    <button
+                                        onClick={handleRetry}
+                                        className="px-3 py-1.5 text-[10px] rounded-lg bg-white/10 text-white/50 hover:bg-white/20 transition-all"
+                                    >
+                                        Retry
+                                    </button>
+                                    <button
+                                        onClick={() => { stopStream(); setMinimized(true); }}
+                                        className="px-3 py-1.5 text-[10px] rounded-lg bg-white/10 text-white/50 hover:bg-white/20 transition-all"
+                                    >
+                                        Hide
+                                    </button>
+                                </div>
+                            </div>
                         ) : (
                             <p className="text-white/15 text-[10px]">Waiting...</p>
                         )}

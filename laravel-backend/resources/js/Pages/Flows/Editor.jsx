@@ -1407,8 +1407,8 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                                 formatDuration={formatDuration}
                             />
 
-                            {/* Floating Phone Preview — Live MJPEG stream */}
-                            {selectedDevice && (
+                            {/* Floating Phone Preview — only when device is verified online */}
+                            {selectedDevice?.is_verified && (
                                 <Suspense fallback={null}>
                                     <FloatingPhonePreview
                                         device={selectedDevice}
