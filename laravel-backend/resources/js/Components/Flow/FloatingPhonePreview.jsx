@@ -85,8 +85,8 @@ export default function FloatingPhonePreview({ device, userId }) {
         }
         setStatus('connecting');
 
-        // Tell backend to start (which tells APK)
-        axios.post(`/api/devices/${device.device_id}/screen/start`).catch(() => {});
+        // Tell backend to start (web route uses session auth)
+        axios.post(`/screen/${device.device_id}/start`).catch(() => {});
 
         // Start polling for frames
         if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
@@ -112,7 +112,7 @@ export default function FloatingPhonePreview({ device, userId }) {
     const stopStream = useCallback(() => {
         if (pollIntervalRef.current) { clearInterval(pollIntervalRef.current); pollIntervalRef.current = null; }
         if (streamTimeoutRef.current) { clearTimeout(streamTimeoutRef.current); streamTimeoutRef.current = null; }
-        if (device?.device_id) axios.post(`/api/devices/${device.device_id}/screen/stop`).catch(() => {});
+        if (device?.device_id) axios.post(`/screen/${device.device_id}/stop`).catch(() => {});
     }, [device?.device_id]);
 
     useEffect(() => {
@@ -139,7 +139,7 @@ export default function FloatingPhonePreview({ device, userId }) {
     useEffect(() => {
         if (!device?.device_id || minimized || status !== 'live') return;
         const interval = setInterval(() => {
-            axios.post(`/api/devices/${device.device_id}/screen/start`).catch(() => {});
+            axios.post(`/screen/${device.device_id}/start`).catch(() => {});
         }, 15000);
         return () => clearInterval(interval);
     }, [device?.device_id, minimized, status]);

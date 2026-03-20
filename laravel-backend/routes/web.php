@@ -140,6 +140,22 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/flows/{flow}/test-run', [FlowController::class, 'testRun'])->name('flows.testRun');
     Route::delete('/flows/{flow}', [FlowController::class, 'destroy'])->name('flows.destroy');
 
+    // Screen streaming control (web auth for Flow Editor)
+    Route::post('/screen/{device_id}/start', function (\Illuminate\Http\Request $request, string $device_id) {
+        $device = $request->user()->devices()->where('device_id', $device_id)->first();
+        if (!$device) return response()->json(['error' => 'Device not found'], 404);
+        broadcast(new \App\Events\DispatchJobToDevice($device, ['viewer_user_id' => $request->user()->id], 'screen:start'));
+        \Illuminate\Support\Facades\Cache::put("screen:streaming:{$device->device_id}", true, now()->addMinutes(2));
+        return response()->json(['success' => true]);
+    });
+    Route::post('/screen/{device_id}/stop', function (\Illuminate\Http\Request $request, string $device_id) {
+        $device = $request->user()->devices()->where('device_id', $device_id)->first();
+        if (!$device) return response()->json(['error' => 'Device not found'], 404);
+        broadcast(new \App\Events\DispatchJobToDevice($device, [], 'screen:stop'));
+        \Illuminate\Support\Facades\Cache::forget("screen:streaming:{$device->device_id}");
+        return response()->json(['success' => true]);
+    });
+
     // Recording Session Routes (Web auth for Flow Editor)
     Route::post('/recording-sessions/start', [\App\Http\Controllers\Api\RecordingEventController::class, 'startSession'])->name('recording.start');
     Route::post('/recording-sessions/{sessionId}/stop', [\App\Http\Controllers\Api\RecordingEventController::class, 'stopSession'])->name('recording.stop');

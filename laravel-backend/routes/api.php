@@ -143,12 +143,7 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json(['success' => true]);
     });
 
-    // Frontend polls this to get latest frame
-    Route::get('/devices/{device_id}/screen/frame', function (Request $request, string $device_id) {
-        $frame = \Illuminate\Support\Facades\Redis::get('screen:frame:' . $device_id);
-        if (!$frame) return response()->json(['frame' => null]);
-        return response()->json(['frame' => $frame]);
-    });
+    // (GET frame endpoint moved outside auth group - see below)
 
     // Subscription management
     Route::prefix('subscriptions')->group(function () {
@@ -278,6 +273,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // AI model listing (public - no auth required for browsing models)
 Route::get('/ai/models/{provider}', [AIOrchestrationController::class, 'getModels']);
+
+// Screen frame polling (no auth - device_id UUID is unique enough, browser polls this via setInterval)
+Route::get('/devices/{device_id}/screen/frame', function (Request $request, string $device_id) {
+    $frame = \Illuminate\Support\Facades\Redis::get('screen:frame:' . $device_id);
+    if (!$frame) return response()->json(['frame' => null]);
+    return response()->json(['frame' => $frame]);
+});
 
 // Pusher/Soketi auth endpoint for presence channels (requires auth)
 Route::middleware('auth:sanctum')->post('/pusher/auth', [\App\Http\Controllers\Api\SocketAuthController::class, 'auth']);
