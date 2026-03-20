@@ -198,10 +198,15 @@ class TouchCaptureOverlay : Service() {
                 // ========== ALWAYS STORE TAP COORDINATES ==========
                 // Store EVERY touch for EventCapture to use for accurate tap position
                 // Do this BEFORE any other logic so we never miss a tap
-                lastTapX = x
-                lastTapY = y
-                lastTapTimestamp = currentTime
-                Log.d(TAG, "👆 Touch at (${x.toInt()}, ${y.toInt()}) - stored for EventCapture")
+                // Filter out invalid coordinates (system touches, status bar area)
+                if (x.toInt() <= 0 && y.toInt() <= 0) {
+                    Log.d(TAG, "⚠️ Skipped invalid touch at (${x.toInt()}, ${y.toInt()})")
+                } else {
+                    lastTapX = x
+                    lastTapY = y
+                    lastTapTimestamp = currentTime
+                    Log.d(TAG, "👆 Touch at (${x.toInt()}, ${y.toInt()}) - stored for EventCapture")
+                }
                 
                 // Auto-reset gesture tracking if too much time passed (stale state protection)
                 // This prevents getting stuck in "subsequent touch" branch forever

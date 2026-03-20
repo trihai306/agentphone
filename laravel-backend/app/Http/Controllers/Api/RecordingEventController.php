@@ -288,13 +288,22 @@ class RecordingEventController extends Controller
                     ], 404);
                 }
 
+                // Validate status transition: only stop if started or recording
+                if (in_array($session->status, ['stopped', 'completed', 'saved', 'failed'])) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Session already stopped',
+                        'session' => $session
+                    ]);
+                }
+
                 $session->update([
                     'status' => 'stopped',
                     'stopped_at' => $request->stopped_at
                         ? now()->setTimestamp($request->stopped_at / 1000)
                         : now(),
                     'duration' => $request->duration ?? null,
-                    'event_count' => $request->event_count ?? null,
+                    'event_count' => $request->event_count ?? count($session->actions ?? []),
                 ]);
 
                 Log::info("Recording stopped: {$sessionId}", [
@@ -409,6 +418,15 @@ class RecordingEventController extends Controller
                         'success' => false,
                         'message' => 'Device not found'
                     ], 404);
+                }
+
+                // Authorization: verify device belongs to authenticated user
+                $authUser = $request->user();
+                if ($authUser && $device->user_id !== $authUser->id) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Device not authorized for this user'
+                    ], 403);
                 }
 
                 $session = RecordingSession::create([

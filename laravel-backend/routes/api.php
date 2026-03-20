@@ -137,22 +137,28 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/test/filament-admin', [NotificationController::class, 'testFilamentAdminNotification']);
         Route::post('/test/announcement', [NotificationController::class, 'testAnnouncement']);
 
-        // Recording events from Android app
+        // Recording events from Android app (rate limited: 60 req/min for session ops, 300/min for events)
         Route::post('/recording-events', [\App\Http\Controllers\Api\RecordingEventController::class, 'store']);
 
         // Recording session management for workflow automation
-        Route::post('/recording-sessions/start', [\App\Http\Controllers\Api\RecordingEventController::class, 'startSession']);
-        Route::post('/recording-sessions/{sessionId}/stop', [\App\Http\Controllers\Api\RecordingEventController::class, 'stopSession']);
-        Route::post('/recording-actions', [\App\Http\Controllers\Api\RecordingEventController::class, 'storeAction']);
+        Route::middleware('throttle:60,1')->group(function () {
+            Route::post('/recording-sessions/start', [\App\Http\Controllers\Api\RecordingEventController::class, 'startSession']);
+            Route::post('/recording-sessions/{sessionId}/stop', [\App\Http\Controllers\Api\RecordingEventController::class, 'stopSession']);
+        });
+        Route::post('/recording-actions', [\App\Http\Controllers\Api\RecordingEventController::class, 'storeAction'])
+            ->middleware('throttle:300,1');
 
         // Note: heartbeat route removed - now using Soketi presence webhooks
     });
 
-    // Recording API for real-time workflow sync
+    // Recording API for real-time workflow sync (rate limited)
     Route::prefix('recording')->group(function () {
-        Route::post('/start', [\App\Http\Controllers\Api\RecordingController::class, 'start']);
-        Route::post('/event', [\App\Http\Controllers\Api\RecordingController::class, 'event']);
-        Route::post('/stop', [\App\Http\Controllers\Api\RecordingController::class, 'stop']);
+        Route::post('/start', [\App\Http\Controllers\Api\RecordingController::class, 'start'])
+            ->middleware('throttle:30,1');
+        Route::post('/event', [\App\Http\Controllers\Api\RecordingController::class, 'event'])
+            ->middleware('throttle:300,1');
+        Route::post('/stop', [\App\Http\Controllers\Api\RecordingController::class, 'stop'])
+            ->middleware('throttle:30,1');
         Route::get('/sessions', [\App\Http\Controllers\Api\RecordingController::class, 'index']);
         Route::get('/sessions/{sessionId}', [\App\Http\Controllers\Api\RecordingController::class, 'show']);
         Route::post('/convert-to-nodes', [\App\Http\Controllers\Api\RecordingController::class, 'convertToNodes']);
