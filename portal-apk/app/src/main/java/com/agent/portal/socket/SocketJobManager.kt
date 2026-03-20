@@ -205,18 +205,38 @@ object SocketJobManager {
                     Log.d(TAG, "Auth token refreshed: ${authToken?.take(20) ?: "null"}...")
                 }
                 
-                val authorizer = HttpChannelAuthorizer(authUrl)
-                // Add auth headers
-                if (authToken != null) {
-                    authorizer.setHeaders(mapOf(
-                        "Authorization" to "Bearer $authToken",
-                        "Accept" to "application/json",
-                        "Content-Type" to "application/x-www-form-urlencoded"
-                    ))
-                    Log.i(TAG, "✓ Auth header set for Pusher authorizer")
-                } else {
-                    Log.w(TAG, "⚠️ No auth token available for Pusher auth!")
+                // Custom authorizer using OkHttp (HttpChannelAuthorizer has a known bug
+                // where setHeaders() doesn't reliably send custom headers, causing 302→404)
+                val token = authToken
+                val authorizer = com.pusher.client.ChannelAuthorizer { channelName, socketId ->
+                    try {
+                        val body = okhttp3.FormBody.Builder()
+                            .add("socket_id", socketId)
+                            .add("channel_name", channelName)
+                            .build()
+                        val request = okhttp3.Request.Builder()
+                            .url(authUrl)
+                            .post(body)
+                            .addHeader("Authorization", "Bearer ${token ?: ""}")
+                            .addHeader("Accept", "application/json")
+                            .build()
+                        val response = httpClient.newCall(request).execute()
+                        val responseBody = response.body?.string() ?: ""
+                        Log.d(TAG, "Pusher auth response: ${response.code} - $responseBody")
+                        if (response.isSuccessful) {
+                            responseBody
+                        } else {
+                            Log.e(TAG, "Pusher auth failed: ${response.code} - $responseBody")
+                            throw com.pusher.client.AuthorizationFailureException("Auth failed: ${response.code}")
+                        }
+                    } catch (e: com.pusher.client.AuthorizationFailureException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Pusher auth error", e)
+                        throw com.pusher.client.AuthorizationFailureException(e.message)
+                    }
                 }
+                Log.i(TAG, "✓ Custom OkHttp authorizer configured (token: ${token?.take(20) ?: "null"}...)")
 
                 val options = PusherOptions().apply {
                     setCluster("") // Empty for self-hosted
