@@ -196,11 +196,12 @@ class WebRTCSignalController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
         }
 
-        // Find the user's active device
-        $device = Device::where('user_id', $user->id)
-            ->where('socket_connected', true)
-            ->latest('updated_at')
-            ->first();
+        // Find the user's active device (check Redis heartbeat first, fallback to DB)
+        $presenceService = app(\App\Services\DevicePresenceService::class);
+        $onlineIds = $presenceService->getOnlineDevices($user->id);
+        $device = !empty($onlineIds)
+            ? Device::where('user_id', $user->id)->whereIn('device_id', $onlineIds)->first()
+            : Device::where('user_id', $user->id)->where('socket_connected', true)->latest('updated_at')->first();
 
         if (!$device) {
             return response()->json(['success' => false, 'message' => 'No active device'], 404);
