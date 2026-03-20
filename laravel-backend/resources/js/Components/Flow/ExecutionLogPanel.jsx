@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/Components/UI';
 import { LogIcon } from './FlowIcons';
 
@@ -13,6 +14,7 @@ export default function ExecutionLogPanel({
 }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const { t } = useTranslation();
 
     if (!showLogPanel || executionLog.length === 0) return null;
 
@@ -21,9 +23,9 @@ export default function ExecutionLogPanel({
             {/* Header */}
             <div className={`h-10 px-4 flex items-center justify-between flex-shrink-0 border-b ${isDark ? 'border-[#1e1e1e]' : 'border-gray-200'}`}>
                 <div className="flex items-center gap-2">
-                    <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Execution Log</span>
+                    <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('flows.editor.execution_log.title')}</span>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-[#1a1a1a] text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
-                        {executionLog.length} entries
+                        {executionLog.length} {t('flows.editor.execution_log.entries')}
                     </span>
                 </div>
                 <Button variant="ghost" size="icon-xs" onClick={() => setShowLogPanel(false)}>

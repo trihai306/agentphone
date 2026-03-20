@@ -1,5 +1,6 @@
 import { memo, useState } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/Components/UI';
 import RecordingPreview from './RecordingPreview';
 
@@ -10,6 +11,7 @@ import RecordingPreview from './RecordingPreview';
 function WorkflowPreviewModal({ isOpen, onClose, nodes = [], workflowName = 'Workflow' }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const { t } = useTranslation();
 
     if (!isOpen) return null;
 
@@ -66,7 +68,7 @@ function WorkflowPreviewModal({ isOpen, onClose, nodes = [], workflowName = 'Wor
                         </div>
                         <div>
                             <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                Workflow Preview
+                                {t('flows.editor.preview.title')}
                             </h2>
                             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                                 {workflowName} • {actionNodes.length} steps {nodesWithScreenshots > 0 && `(${nodesWithScreenshots} with screenshots)`}
@@ -95,9 +97,9 @@ function WorkflowPreviewModal({ isOpen, onClose, nodes = [], workflowName = 'Wor
                             <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            <p className="text-sm font-medium mb-1">No Actions Found</p>
+                            <p className="text-sm font-medium mb-1">{t('flows.editor.preview.no_actions')}</p>
                             <p className="text-xs text-center max-w-xs">
-                                Add action nodes to your workflow to preview them here
+                                {t('flows.editor.preview.add_actions_hint')}
                             </p>
                         </div>
                     )}
@@ -121,7 +123,7 @@ function WorkflowPreviewModal({ isOpen, onClose, nodes = [], workflowName = 'Wor
                     </div>
 
                     <Button variant="secondary" onClick={onClose}>
-                        Close
+                        {t('common.close')}
                     </Button>
                 </div>
             </div>

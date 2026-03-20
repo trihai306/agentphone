@@ -1,14 +1,16 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { NodeStatus } from '@/hooks/useExecutionState';
 
 /**
  * GlassWaitForElementNode - Premium glassmorphic wait for element node
- * Horizontal layout: Input (Left) → Output (Right)
+ * Horizontal layout: Input (Left) -> Output (Right)
  * Features: Progress bar, timeout display, action badge
  */
 function GlassWaitForElementNode({ id, data, selected }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
@@ -27,11 +29,11 @@ function GlassWaitForElementNode({ id, data, selected }) {
 
     // Status config
     const getStatusConfig = () => {
-        if (isRunning) return { label: 'Đang chờ...', text: 'text-indigo-400', bg: 'rgba(99, 102, 241, 0.15)' };
-        if (isSuccess) return { label: 'Tìm thấy!', text: 'text-emerald-400', bg: 'rgba(16, 185, 129, 0.15)' };
-        if (isTimeout) return { label: 'Hết thời gian', text: 'text-amber-400', bg: 'rgba(245, 158, 11, 0.15)' };
-        if (isError) return { label: 'Lỗi', text: 'text-red-400', bg: 'rgba(239, 68, 68, 0.15)' };
-        return { label: 'Wait For Element', text: 'text-violet-400', bg: 'rgba(139, 92, 246, 0.1)' };
+        if (isRunning) return { label: t('flows.editor.glass_nodes.waiting'), text: 'text-indigo-400', bg: 'rgba(99, 102, 241, 0.15)' };
+        if (isSuccess) return { label: t('flows.editor.glass_nodes.element_found'), text: 'text-emerald-400', bg: 'rgba(16, 185, 129, 0.15)' };
+        if (isTimeout) return { label: t('flows.editor.glass_nodes.timed_out'), text: 'text-amber-400', bg: 'rgba(245, 158, 11, 0.15)' };
+        if (isError) return { label: t('flows.editor.glass_nodes.error'), text: 'text-red-400', bg: 'rgba(239, 68, 68, 0.15)' };
+        return { label: t('flows.editor.glass_nodes.wait_for_element'), text: 'text-violet-400', bg: 'rgba(139, 92, 246, 0.1)' };
     };
 
     const status = getStatusConfig();
@@ -81,14 +83,26 @@ function GlassWaitForElementNode({ id, data, selected }) {
                             boxShadow: `0 4px 12px rgba(139, 92, 246, 0.3)`,
                         }}
                     >
-                        <span className="text-lg">{isRunning ? '⏳' : isSuccess ? '✓' : isTimeout ? '⏱' : '🔍'}</span>
+                        {isSuccess ? (
+                            <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        ) : isError ? (
+                            <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        ) : (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ color: '#8b5cf6' }}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        )}
                     </div>
                     <div className="flex-1 min-w-0">
                         <h3 className={`text-sm font-bold ${status.text}`}>
                             {status.label}
                         </h3>
                         <p className={`text-[10px] truncate ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                            {data?.label || 'Chờ element xuất hiện'}
+                            {data?.label || t('flows.editor.glass_nodes.wait_for_element_appear')}
                         </p>
                     </div>
                     {/* Timeout Badge */}
@@ -117,7 +131,7 @@ function GlassWaitForElementNode({ id, data, selected }) {
                         </div>
                     ) : (
                         <p className={`text-xs italic ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                            Chưa chọn element
+                            {t('flows.editor.glass_nodes.no_element_selected')}
                         </p>
                     )}
 
@@ -126,7 +140,7 @@ function GlassWaitForElementNode({ id, data, selected }) {
                             ? isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600'
                             : isDark ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-600'
                         }`}>
-                        {onTimeout === 'skip' ? '→ Skip nếu hết thời gian' : '✗ Fail nếu hết thời gian'}
+                        {onTimeout === 'skip' ? t('flows.editor.glass_nodes.skip_on_timeout') : t('flows.editor.glass_nodes.fail_on_timeout')}
                     </div>
                 </div>
             </div>

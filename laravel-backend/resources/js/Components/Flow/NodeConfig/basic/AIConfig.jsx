@@ -158,7 +158,7 @@ export function AIConfig({ data, updateData, isDark, upstreamVariables, loopCont
                     </button>
                 </div>
                 <p className={`text-[10px] mt-1.5 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                    🔒 Token được mã hóa và chỉ gửi khi thực thi
+                    {t('flows.editor.config.api_token_encrypted')}
                 </p>
             </ConfigSection>
 
@@ -216,7 +216,7 @@ export function AIConfig({ data, updateData, isDark, upstreamVariables, loopCont
 
             {/* Custom API URL (for custom provider) */}
             {provider === 'custom' && (
-                <ConfigSection title="API Endpoint" isDark={isDark}>
+                <ConfigSection title={t('flows.editor.config.api_endpoint')} isDark={isDark}>
                     <input
                         type="url"
                         value={data.apiEndpoint || ''}
@@ -255,7 +255,7 @@ export function AIConfig({ data, updateData, isDark, upstreamVariables, loopCont
                     loopContext={loopContext}
                 />
                 <p className={`text-[10px] mt-1.5 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                    💡 Sử dụng {'{{variable}}'} để chèn dữ liệu động
+                    {t('flows.editor.config.prompt_variable_hint')}
                 </p>
             </ConfigSection>
 
@@ -267,7 +267,7 @@ export function AIConfig({ data, updateData, isDark, upstreamVariables, loopCont
                     : 'border-gray-200 hover:border-gray-300 text-gray-500'
                     }`}
             >
-                <span className="text-sm font-medium">⚙️ Advanced Settings</span>
+                <span className="text-sm font-medium">{t('flows.editor.config.advanced_settings')}</span>
                 <svg
                     className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
                     fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -359,7 +359,7 @@ export function AIConfig({ data, updateData, isDark, upstreamVariables, loopCont
 
             {/* Output Rules Section */}
             <ConfigSection
-                title="📋 Output Rules"
+                title={t('flows.editor.config.output_rules')}
                 isDark={isDark}
                 badge={data.outputRules?.length > 0 ? (
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-400 font-medium">
@@ -370,7 +370,7 @@ export function AIConfig({ data, updateData, isDark, upstreamVariables, loopCont
                 {/* Quick Rule Presets */}
                 <div className="mb-3">
                     <p className={`text-[10px] uppercase font-semibold mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        Quick Presets
+                        {t('flows.editor.config.quick_presets')}
                     </p>
                     <div className="flex flex-wrap gap-1.5">
                         {[
@@ -412,7 +412,7 @@ export function AIConfig({ data, updateData, isDark, upstreamVariables, loopCont
                 {(data.outputRules?.length > 0) && (
                     <div className={`p-2.5 rounded-xl mb-3 ${isDark ? 'bg-violet-500/10 border border-violet-500/20' : 'bg-violet-50 border border-violet-200'}`}>
                         <p className={`text-[10px] uppercase font-semibold mb-1.5 ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
-                            Active Rules
+                            {t('flows.editor.config.active_rules')}
                         </p>
                         <ul className="space-y-1">
                             {data.outputRules.map((rule, idx) => (
@@ -428,14 +428,14 @@ export function AIConfig({ data, updateData, isDark, upstreamVariables, loopCont
                 {/* Custom Rule Input */}
                 <div>
                     <p className={`text-[10px] uppercase font-semibold mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        Custom Rule
+                        {t('flows.editor.config.custom_rule')}
                     </p>
                     <div className="flex gap-2">
                         <input
                             type="text"
                             value={data.customRule || ''}
                             onChange={(e) => updateData('customRule', e.target.value)}
-                            placeholder="Add your own rule..."
+                            placeholder={t('flows.editor.config.add_custom_rule_placeholder')}
                             className={`flex-1 px-3 py-2 text-sm rounded-lg border ${isDark
                                 ? 'bg-[#0f0f0f] border-[#2a2a2a] text-white placeholder-gray-600'
                                 : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'
@@ -462,7 +462,7 @@ export function AIConfig({ data, updateData, isDark, upstreamVariables, loopCont
                                 }`}
                             disabled={!data.customRule?.trim()}
                         >
-                            + Add
+                            + {t('common.create')}
                         </button>
                     </div>
                 </div>
@@ -471,7 +471,7 @@ export function AIConfig({ data, updateData, isDark, upstreamVariables, loopCont
                 {data.responseFormat === 'json' && (
                     <div className="mt-3 pt-3 border-t border-dashed" style={{ borderColor: isDark ? '#2a2a2a' : '#e5e7eb' }}>
                         <p className={`text-[10px] uppercase font-semibold mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Output Fields
+                            {t('flows.editor.config.output_fields')}
                         </p>
                         <div className="space-y-2">
                             {(data.outputFields || []).map((field, idx) => (
@@ -531,7 +531,7 @@ export function AIConfig({ data, updateData, isDark, upstreamVariables, loopCont
                                     : 'border-gray-200 text-gray-400 hover:border-cyan-500 hover:text-cyan-600'
                                     }`}
                             >
-                                + Add Field
+                                + {t('flows.editor.config.add_field')}
                             </button>
                         </div>
                     </div>
@@ -550,7 +550,7 @@ export function AIConfig({ data, updateData, isDark, upstreamVariables, loopCont
                         } focus:outline-none focus:ring-2 focus:ring-cyan-500/50`}
                 />
                 <p className={`text-[10px] mt-1.5 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                    Kết quả sẽ được lưu vào: <code className="text-cyan-400">{`{{${data.outputVariable || 'aiResult'}}}`}</code>
+                    {t('flows.editor.config.result_saved_to')}: <code className="text-cyan-400">{`{{${data.outputVariable || 'aiResult'}}}`}</code>
                 </p>
             </ConfigSection>
         </div>

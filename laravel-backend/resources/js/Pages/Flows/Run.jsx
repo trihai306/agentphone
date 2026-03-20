@@ -33,7 +33,7 @@ export default function Run({ flow, devices = [], dataSource = null }) {
         e.preventDefault();
 
         if (!selectedDevice) {
-            setError('Vui lòng chọn thiết bị');
+            setError(t('flows.editor.run_page.select_device_error'));
             return;
         }
 
@@ -51,7 +51,7 @@ export default function Run({ flow, devices = [], dataSource = null }) {
                 // Redirect handled by controller
             },
             onError: (errors) => {
-                setError(Object.values(errors)[0] || 'Có lỗi xảy ra');
+                setError(Object.values(errors)[0] || t('flows.editor.run_page.generic_error'));
                 setIsSubmitting(false);
             },
             onFinish: () => {
@@ -83,10 +83,10 @@ export default function Run({ flow, devices = [], dataSource = null }) {
                         </Link>
                         <div>
                             <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                Chạy Workflow
+                                {t('flows.editor.run_page.title')}
                             </h1>
                             <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                Cấu hình và chạy workflow trên thiết bị
+                                {t('flows.editor.run_page.subtitle')}
                             </p>
                         </div>
                     </div>
@@ -104,14 +104,14 @@ export default function Run({ flow, devices = [], dataSource = null }) {
                                     {flow.name}
                                 </h2>
                                 <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                    {flow.description || 'Không có mô tả'}
+                                    {flow.description || t('flows.editor.run_page.no_description')}
                                 </p>
                                 <div className="flex items-center gap-4 mt-3">
                                     <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                                         {flow.action_nodes_count || flow.nodes_count} actions
                                     </span>
                                     <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                        Cập nhật {flow.updated_at}
+                                        {t('flows.editor.run_page.updated')} {flow.updated_at}
                                     </span>
                                 </div>
                             </div>
@@ -119,7 +119,7 @@ export default function Run({ flow, devices = [], dataSource = null }) {
                                 href={`/flows/${flow.id}/edit`}
                                 className={`px-4 py-2 text-sm font-medium rounded-xl transition-all ${isDark ? 'text-gray-400 hover:text-white hover:bg-white/10' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'}`}
                             >
-                                Chỉnh sửa
+                                {t('flows.editor.run_page.edit')}
                             </Link>
                         </div>
                     </div>
@@ -128,7 +128,7 @@ export default function Run({ flow, devices = [], dataSource = null }) {
                         {/* Job Name */}
                         <div className={`rounded-2xl p-6 backdrop-blur-xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white/80 border-gray-200/50 shadow-lg'}`}>
                             <label className={`block text-sm font-medium mb-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                Tên Job
+                                {t('flows.editor.run_page.job_name')}
                             </label>
                             <input
                                 type="text"
@@ -138,7 +138,7 @@ export default function Run({ flow, devices = [], dataSource = null }) {
                                     ? 'bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-violet-500'
                                     : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-violet-500'
                                     } border focus:outline-none focus:ring-2 focus:ring-violet-500/20 transition-all`}
-                                placeholder="Nhập tên job..."
+                                placeholder={t('flows.editor.run_page.job_name_placeholder')}
                             />
                         </div>
 
@@ -146,10 +146,10 @@ export default function Run({ flow, devices = [], dataSource = null }) {
                         <div className={`rounded-2xl p-6 backdrop-blur-xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white/80 border-gray-200/50 shadow-lg'}`}>
                             <div className="flex items-center justify-between mb-4">
                                 <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    Chọn Thiết Bị <span className="text-red-500">*</span>
+                                    {t('flows.editor.run_page.select_device')} <span className="text-red-500">*</span>
                                 </label>
                                 <Link href="/devices" className={`text-xs ${isDark ? 'text-violet-400' : 'text-violet-600'} hover:underline`}>
-                                    Quản lý thiết bị →
+                                    {t('flows.editor.run_page.manage_devices')}
                                 </Link>
                             </div>
 
@@ -159,7 +159,7 @@ export default function Run({ flow, devices = [], dataSource = null }) {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                     </svg>
                                     <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                        Chưa có thiết bị nào
+                                        {t('flows.editor.run_page.no_devices')}
                                     </p>
                                 </div>
                             ) : (
@@ -216,11 +216,11 @@ export default function Run({ flow, devices = [], dataSource = null }) {
                         <div className={`rounded-2xl p-6 backdrop-blur-xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white/80 border-gray-200/50 shadow-lg'}`}>
                             <div className="flex items-center justify-between mb-4">
                                 <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    Nguồn Dữ Liệu
+                                    {t('flows.editor.run_page.data_source')}
                                 </label>
                                 {dataSource && (
                                     <Link href={`/data-collections/${dataSource.id}`} className={`text-xs ${isDark ? 'text-violet-400' : 'text-violet-600'} hover:underline`}>
-                                        Xem chi tiết →
+                                        {t('flows.editor.run_page.view_details')}
                                     </Link>
                                 )}
                             </div>
@@ -238,11 +238,11 @@ export default function Run({ flow, devices = [], dataSource = null }) {
                                             {dataSource.name}
                                         </p>
                                         <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                            {dataSource.records_count} records - APK sẽ tự động lặp qua tất cả
+                                            {t('flows.editor.run_page.records_auto_loop', { count: dataSource.records_count })}
                                         </p>
                                     </div>
                                     <div className={`px-3 py-1.5 rounded-lg text-xs font-medium ${isDark ? 'bg-violet-500/20 text-violet-400' : 'bg-violet-100 text-violet-600'}`}>
-                                        Từ workflow
+                                        {t('flows.editor.run_page.from_workflow')}
                                     </div>
                                 </div>
                             ) : (
@@ -254,10 +254,10 @@ export default function Run({ flow, devices = [], dataSource = null }) {
                                     </div>
                                     <div className="flex-1">
                                         <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                            Không có nguồn dữ liệu
+                                            {t('flows.editor.run_page.no_data_source')}
                                         </p>
                                         <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                            Workflow sẽ chạy 1 lần duy nhất
+                                            {t('flows.editor.run_page.will_run_once')}
                                         </p>
                                     </div>
                                 </div>
@@ -267,7 +267,7 @@ export default function Run({ flow, devices = [], dataSource = null }) {
                         {/* Summary & Submit */}
                         <div className={`rounded-2xl p-6 backdrop-blur-xl border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white/80 border-gray-200/50 shadow-lg'}`}>
                             <h3 className={`text-sm font-medium mb-4 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                Tóm tắt
+                                {t('flows.editor.run_page.summary')}
                             </h3>
 
                             <div className={`grid grid-cols-3 gap-4 p-4 rounded-xl mb-6 ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
@@ -276,7 +276,7 @@ export default function Run({ flow, devices = [], dataSource = null }) {
                                         {getIterationCount()}
                                     </p>
                                     <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                        Lần chạy
+                                        {t('flows.editor.run_page.iterations')}
                                     </p>
                                 </div>
                                 <div className="text-center">
@@ -284,7 +284,7 @@ export default function Run({ flow, devices = [], dataSource = null }) {
                                         {flow.action_nodes_count || flow.nodes_count}
                                     </p>
                                     <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                        Actions/lần
+                                        {t('flows.editor.run_page.actions_per_run')}
                                     </p>
                                 </div>
                                 <div className="text-center">
@@ -292,7 +292,7 @@ export default function Run({ flow, devices = [], dataSource = null }) {
                                         {getIterationCount() * (flow.action_nodes_count || flow.nodes_count)}
                                     </p>
                                     <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                        Tổng actions
+                                        {t('flows.editor.run_page.total_actions')}
                                     </p>
                                 </div>
                             </div>
@@ -308,7 +308,7 @@ export default function Run({ flow, devices = [], dataSource = null }) {
                                     href="/flows"
                                     className={`flex-1 py-3 text-center text-sm font-medium rounded-xl transition-all ${isDark ? 'text-gray-400 hover:text-white hover:bg-white/5' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'}`}
                                 >
-                                    Huỷ
+                                    {t('flows.editor.run_page.cancel')}
                                 </Link>
                                 <button
                                     type="submit"
@@ -321,7 +321,7 @@ export default function Run({ flow, devices = [], dataSource = null }) {
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                             </svg>
-                                            Đang tạo job...
+                                            {t('flows.editor.run_page.creating_job')}
                                         </>
                                     ) : (
                                         <>
@@ -329,7 +329,7 @@ export default function Run({ flow, devices = [], dataSource = null }) {
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
-                                            Chạy Workflow
+                                            {t('flows.editor.run_page.run_workflow')}
                                         </>
                                     )}
                                 </button>

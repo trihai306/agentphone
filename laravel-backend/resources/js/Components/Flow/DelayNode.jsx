@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { NodeStatus } from '@/hooks/useExecutionState';
 
 /**
@@ -10,6 +11,7 @@ import { NodeStatus } from '@/hooks/useExecutionState';
 function DelayNode({ data, selected }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const { t } = useTranslation();
 
     const executionState = data?.executionState || NodeStatus.IDLE;
     const isRunning = executionState === NodeStatus.RUNNING;
@@ -74,10 +76,10 @@ function DelayNode({ data, selected }) {
                     </div>
                     <div className="flex-1">
                         <h3 className="text-sm font-bold" style={{ color }}>
-                            {isRunning ? '⏳ Đang chờ...' : '⏱️ Delay'}
+                            {isRunning ? t('flows.editor.node_status.waiting') : t('flows.editor.nodes.delay')}
                         </h3>
                         <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {data?.label || 'Chờ'}
+                            {data?.label || t('flows.editor.nodes.wait')}
                         </p>
                     </div>
                     {/* Duration Badge */}

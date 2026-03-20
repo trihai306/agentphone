@@ -62,31 +62,21 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
         const amount = parseFloat(customAmount);
 
         if (amount < 10000) {
-            addToast(t('ai_credits.custom_amount.min_amount_error', {
-                defaultValue: 'Số tiền tối thiểu là 10,000 VND'
-            }), 'error');
+            addToast(t('ai_credits.custom_amount.min_amount_error'), 'error');
             return;
         }
 
         if (amount > walletBalance) {
-            addToast(t('ai_credits.custom_amount.insufficient_balance', {
-                defaultValue: 'Số dư ví không đủ'
-            }), 'error');
+            addToast(t('ai_credits.custom_amount.insufficient_balance'), 'error');
             return;
         }
 
         const confirmed = await showConfirm({
-            title: t('ai_credits.custom_amount.confirm_title', { defaultValue: 'Xác Nhận Mua Credits' }),
-            message: `${t('ai_credits.custom_amount.confirm_message', {
-                defaultValue: 'Bạn sẽ chi'
-            })} ${formatCurrency(amount)} ${t('ai_credits.custom_amount.to_receive', {
-                defaultValue: 'để nhận'
-            })} ${formatNumber(credits)} credits. ${t('ai_credits.custom_amount.confirm_question', {
-                defaultValue: 'Xác nhận?'
-            })}`,
+            title: t('ai_credits.custom_amount.confirm_title'),
+            message: `${t('ai_credits.custom_amount.confirm_message')} ${formatCurrency(amount)} ${t('ai_credits.custom_amount.to_receive')} ${formatNumber(credits)} credits. ${t('ai_credits.custom_amount.confirm_question')}`,
             type: 'info',
-            confirmText: t('common.confirm', { defaultValue: 'Xác Nhận' }),
-            cancelText: t('common.cancel', { defaultValue: 'Hủy' }),
+            confirmText: t('common.confirm'),
+            cancelText: t('common.cancel'),
         });
 
         if (!confirmed) return;
@@ -98,15 +88,11 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
         }, {
             preserveScroll: true,
             onSuccess: () => {
-                addToast(t('ai_credits.custom_amount.success', {
-                    defaultValue: 'Đã mua credits thành công!'
-                }), 'success');
+                addToast(t('ai_credits.custom_amount.success'), 'success');
                 setCustomAmount('');
             },
             onError: (errors) => {
-                addToast(errors.message || t('common.error', {
-                    defaultValue: 'Có lỗi xảy ra'
-                }), 'error');
+                addToast(errors.message || t('common.error'), 'error');
             },
             onFinish: () => setProcessing(false),
         });
@@ -168,10 +154,8 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
                     {/* Custom Amount Purchase */}
                     <div className="mb-8">
                         <SectionHeader
-                            title={t('ai_credits.custom_amount.title', { defaultValue: 'Mua Theo Số Tiền Tùy Chỉnh' })}
-                            subtitle={t('ai_credits.custom_amount.subtitle', {
-                                defaultValue: 'Nhập số tiền bạn muốn chuyển đổi thành credits'
-                            })}
+                            title={t('ai_credits.custom_amount.title')}
+                            subtitle={t('ai_credits.custom_amount.subtitle')}
                         />
 
                         <GlassCard className="p-6">
@@ -179,7 +163,7 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
                                 {/* Amount Input */}
                                 <div>
                                     <Input
-                                        label={t('ai_credits.custom_amount.amount_label', { defaultValue: 'Số Tiền (VND)' })}
+                                        label={t('ai_credits.custom_amount.amount_label')}
                                         type="number"
                                         value={customAmount}
                                         onChange={(e) => setCustomAmount(e.target.value)}
@@ -188,7 +172,7 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
                                         placeholder="100,000"
                                     />
                                     <p className="text-xs text-gray-500 mt-1">
-                                        {t('ai_credits.custom_amount.min_amount', { defaultValue: 'Tối thiểu: 10,000 VND' })}
+                                        {t('ai_credits.custom_amount.min_amount')}
                                     </p>
                                 </div>
 
@@ -198,15 +182,13 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
                                     : 'bg-gradient-to-br from-violet-50 to-purple-50'
                                     }`}>
                                     <div className={`text-sm mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                        {t('ai_credits.custom_amount.will_receive', { defaultValue: 'Bạn sẽ nhận được' })}
+                                        {t('ai_credits.custom_amount.will_receive')}
                                     </div>
                                     <div className={`text-3xl font-bold ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
                                         {formatNumber(calculateCredits(customAmount))} Credits
                                     </div>
                                     <div className="text-xs text-gray-500 mt-2">
-                                        {t('ai_credits.custom_amount.rate', {
-                                            defaultValue: 'Tỷ lệ: 500 VND = 1 Credit'
-                                        })}
+                                        {t('ai_credits.custom_amount.rate')}
                                     </div>
                                 </div>
                             </div>
@@ -222,18 +204,14 @@ export default function AiCreditsIndex({ packages = [], currentCredits = 0, wall
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                     </svg>
-                                    {processing ? t('packages.processing') : t('ai_credits.custom_amount.purchase_button', {
-                                        defaultValue: 'Mua Credits Ngay'
-                                    })}
+                                    {processing ? t('packages.processing') : t('ai_credits.custom_amount.purchase_button')}
                                 </span>
                             </Button>
 
                             {/* Error Message */}
                             {customAmount && parseFloat(customAmount) > walletBalance && (
                                 <Alert type="error" className="mt-3">
-                                    {t('ai_credits.custom_amount.insufficient_balance', {
-                                        defaultValue: 'Số dư ví không đủ. Vui lòng nạp thêm tiền.'
-                                    })}
+                                    {t('ai_credits.custom_amount.insufficient_balance')}
                                 </Alert>
                             )}
                         </GlassCard>

@@ -143,7 +143,7 @@ export default function EditorToolbar({
                                     ? 'bg-[#1a1a1a]/80 border-[#2a2a2a] text-gray-400 hover:text-white hover:border-[#3a3a3a]'
                                     : 'bg-white/80 border-gray-200 text-gray-600 hover:text-gray-900 hover:border-gray-300'
                                 }`}
-                            title={selectedDevice ? `Connected: ${selectedDevice.name}` : `${devices.length} device(s) available`}
+                            title={selectedDevice ? t('flows.editor.toolbar.connected_device', { name: selectedDevice.name }) : t('flows.editor.toolbar.devices_available', { count: devices.length })}
                             aria-label="Device selector"
                             aria-expanded={modals.deviceSelector.isOpen}
                         >
@@ -243,7 +243,7 @@ export default function EditorToolbar({
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                             </svg>
                         )}
-                        <span className="hidden sm:inline">{selectedDevice ? `${selectedDevice.name.substring(0, 8)}` : 'Run'}</span>
+                        <span className="hidden sm:inline">{selectedDevice ? `${selectedDevice.name.substring(0, 8)}` : t('flows.editor.toolbar.run')}</span>
                     </Button>
                 )}
 
@@ -256,7 +256,7 @@ export default function EditorToolbar({
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                             </svg>
-                            Pause
+                            {t('flows.editor.toolbar.pause')}
                         </Button>
                         <Button
                             onClick={stopExecution}
@@ -320,7 +320,7 @@ export default function EditorToolbar({
                             ? 'bg-[#1a1a1a] border-[#2a2a2a] text-gray-600 cursor-not-allowed'
                             : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
                         }`}
-                    title="Preview recorded workflow as slideshow"
+                    title={t('flows.editor.toolbar.preview_hint')}
                 >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -346,7 +346,7 @@ export default function EditorToolbar({
                                 ? 'bg-[#1a1a1a] hover:bg-[#252525] text-gray-300 border-[#2a2a2a]'
                                 : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200'
                         }`}
-                    title={saving ? 'Saving...' : lastSaved ? 'Saved' : 'Save workflow'}
+                    title={saving ? t('flows.editor.toolbar.saving') : lastSaved ? t('flows.editor.toolbar.saved') : t('flows.editor.toolbar.save')}
                 >
                     {saving ? (
                         <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -382,7 +382,7 @@ export default function EditorToolbar({
                             ? 'bg-[#1a1a1a] hover:bg-[#252525] text-gray-300 border-[#2a2a2a] hover:border-[#3a3a3a]'
                             : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-300'
                             }`}
-                        title="Change Language"
+                        title={t('flows.editor.toolbar.change_language')}
                     >
                         <span className="text-sm">{getCurrentLanguage() === 'vi' ? '🇻🇳' : '🇺🇸'}</span>
                         <span className="hidden sm:inline uppercase">{getCurrentLanguage()}</span>

@@ -5,7 +5,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
 import { useToast } from '@/Components/Layout/ToastProvider';
-import { Button } from '@/Components/UI';
+import { Button, Icon } from '@/Components/UI';
 
 export default function Show({ collection, records, filters }) {
     const { t } = useTranslation();
@@ -53,7 +53,7 @@ export default function Show({ collection, records, filters }) {
     // Sort options
     const sortOptions = useMemo(() => [
         { value: 'created_at', label: t('data_collections.sort.date_created'), iconName: 'calendar' },
-        { value: 'id', label: 'ID', iconName: 'hash' },
+        { value: 'id', label: t('data_collections.sort.id'), iconName: 'hash' },
         ...(collection.schema || []).map(field => ({
             value: `data.${field.name}`,
             label: field.name,
@@ -247,15 +247,13 @@ export default function Show({ collection, records, filters }) {
                     {/* Header */}
                     <div className="flex items-start gap-4 mb-8">
                         <Button variant="ghost" size="icon" href="/data-collections" as="Link">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
+                            <Icon name="chevronLeft" className="w-5 h-5" />
                         </Button>
 
                         <div className="flex-1">
                             <div className="flex items-center gap-4 mb-2">
                                 <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/25`}>
-                                    {collection.icon ? <span className="text-2xl">{collection.icon}</span> : <Icon name="database" className="w-6 h-6" />}
+                                    <Icon name="database" className="w-6 h-6 text-white" />
                                 </div>
                                 <div>
                                     <h1 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -291,9 +289,7 @@ export default function Show({ collection, records, filters }) {
                             {/* Search */}
                             <div className="flex items-center gap-3 flex-1">
                                 <div className="relative flex-1 max-w-md">
-                                    <svg className={`w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
+                                    <Icon name="search" className={`w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
                                     <input
                                         type="text"
                                         value={searchQuery}
@@ -310,9 +306,7 @@ export default function Show({ collection, records, filters }) {
                                             onClick={() => { setSearchQuery(''); handleSearch(); }}
                                             className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg ${isDark ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-gray-200 text-gray-400'}`}
                                         >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
+                                            <Icon name="close" className="w-4 h-4" />
                                         </button>
                                     )}
                                 </div>
@@ -326,9 +320,7 @@ export default function Show({ collection, records, filters }) {
                                             : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200'
                                             }`}
                                     >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
-                                        </svg>
+                                        <Icon name="filter" className="w-4 h-4" />
                                         <span>{sortOptions.find(o => o.value === sortField)?.label || t('data_collections.sort.date_created')}</span>
                                         <span className={`text-xs px-1.5 py-0.5 rounded ${isDark ? 'bg-white/10' : 'bg-gray-200'}`}>
                                             {sortOrder === 'asc' ? '↑' : '↓'}
@@ -370,9 +362,7 @@ export default function Show({ collection, records, filters }) {
                                             }`}
                                     >
                                         <span>{perPage} {t('data_collections.per_page')}</span>
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
+                                        <Icon name="chevronDown" className="w-4 h-4" />
                                     </button>
 
                                     {showPerPageDropdown && (
@@ -415,9 +405,7 @@ export default function Show({ collection, records, filters }) {
                                         title={t('data_collections.density.compact')}
                                     >
                                         {/* Compact icon: 3 thin horizontal lines */}
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                                        </svg>
+                                        <Icon name="list" className="w-5 h-5" />
                                     </button>
 
                                     {/* Standard */}
@@ -434,9 +422,7 @@ export default function Show({ collection, records, filters }) {
                                         title={t('data_collections.density.standard')}
                                     >
                                         {/* Standard icon: 3 medium lines */}
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
-                                        </svg>
+                                        <Icon name="menu" className="w-5 h-5" />
                                     </button>
 
                                     {/* Comfortable */}
@@ -453,9 +439,7 @@ export default function Show({ collection, records, filters }) {
                                         title={t('data_collections.density.comfortable')}
                                     >
                                         {/* Comfortable icon: 3 thick lines with more spacing */}
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 5h16M4 12h16M4 19h16" />
-                                        </svg>
+                                        <Icon name="grid" className="w-5 h-5" />
                                     </button>
                                 </div>
                             </div>
@@ -465,11 +449,7 @@ export default function Show({ collection, records, filters }) {
                                 <Button
                                     variant="ghost"
                                     onClick={handleExport}
-                                    icon={
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                        </svg>
-                                    }
+                                    icon={<Icon name="download" className="w-4 h-4" />}
                                 >
                                     {t('data_collections.export')}
                                 </Button>
@@ -477,11 +457,7 @@ export default function Show({ collection, records, filters }) {
                                     variant="gradient"
                                     onClick={() => setShowAddRow(!showAddRow)}
                                     className="bg-gradient-to-r from-blue-500 to-cyan-500 shadow-blue-500/25"
-                                    icon={
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                        </svg>
-                                    }
+                                    icon={<Icon name="plus" className="w-4 h-4" />}
                                 >
                                     {t('data_collections.add_row')}
                                 </Button>
@@ -525,7 +501,7 @@ export default function Show({ collection, records, filters }) {
                                                     }`}
                                             >
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-sm">{getFieldIcon(field.type)}</span>
+                                                    <Icon name={getFieldIcon(field.type)} className="w-4 h-4 flex-shrink-0" />
                                                     <span>{field.name}</span>
                                                     {field.required && <span className="text-red-500">*</span>}
                                                     {sortField === `data.${field.name}` && (
@@ -585,9 +561,7 @@ export default function Show({ collection, records, filters }) {
                                                             ? 'text-emerald-400 hover:bg-emerald-500/20'
                                                             : 'text-emerald-600 hover:bg-emerald-50'}`}
                                                     >
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                        </svg>
+                                                        <Icon name="check" className="w-5 h-5" />
                                                     </button>
                                                     <button
                                                         onClick={() => setShowAddRow(false)}
@@ -595,9 +569,7 @@ export default function Show({ collection, records, filters }) {
                                                             ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
                                                             : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
                                                     >
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                        </svg>
+                                                        <Icon name="close" className="w-5 h-5" />
                                                     </button>
                                                 </div>
                                             </td>
@@ -651,9 +623,7 @@ export default function Show({ collection, records, filters }) {
                                                         ? 'text-gray-500 hover:text-red-400 hover:bg-red-500/10'
                                                         : 'text-gray-400 hover:text-red-500 hover:bg-red-50'}`}
                                                 >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
+                                                    <Icon name="delete" className="w-4 h-4" />
                                                 </button>
                                             </td>
                                         </tr>
@@ -664,9 +634,7 @@ export default function Show({ collection, records, filters }) {
                                         <tr>
                                             <td colSpan={(collection.schema?.length || 0) + 2} className="px-4 py-16 text-center">
                                                 <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
-                                                    <svg className={`w-8 h-8 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                    </svg>
+                                                    <Icon name="file" className={`w-8 h-8 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
                                                 </div>
                                                 <p className={`text-lg font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                                     {searchQuery ? t('data_collections.no_results') : t('data_collections.no_records')}
@@ -679,11 +647,7 @@ export default function Show({ collection, records, filters }) {
                                                         variant="gradient"
                                                         onClick={() => setShowAddRow(true)}
                                                         className="bg-gradient-to-r from-blue-500 to-cyan-500 shadow-blue-500/25"
-                                                        icon={
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                                            </svg>
-                                                        }
+                                                        icon={<Icon name="plus" className="w-4 h-4" />}
                                                     >
                                                         {t('data_collections.add_first_record')}
                                                     </Button>
@@ -710,11 +674,7 @@ export default function Show({ collection, records, filters }) {
                                         size="sm"
                                         onClick={() => loadMore(records.prev_cursor, 'prev')}
                                         disabled={isLoading}
-                                        icon={
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                            </svg>
-                                        }
+                                        icon={<Icon name="chevronLeft" className="w-4 h-4" />}
                                     >
                                         {t('common.previous')}
                                     </Button>
@@ -726,11 +686,7 @@ export default function Show({ collection, records, filters }) {
                                         onClick={() => loadMore(records.next_cursor, 'next')}
                                         disabled={isLoading}
                                         loading={isLoading}
-                                        iconRight={
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                            </svg>
-                                        }
+                                        iconRight={<Icon name="chevronRight" className="w-4 h-4" />}
                                     >
                                         {isLoading ? t('common.loading') : t('common.next')}
                                     </Button>
@@ -748,9 +704,7 @@ export default function Show({ collection, records, filters }) {
                                 }`}>
                                 {/* Selection count */}
                                 <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${isDark ? 'bg-blue-500/20' : 'bg-blue-50'}`}>
-                                    <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
+                                    <Icon name="check" className="w-4 h-4 text-blue-500" />
                                     <span className={`text-sm font-semibold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
                                         {selectedRecords.length} {t('data_collections.selected')}
                                     </span>
@@ -764,11 +718,7 @@ export default function Show({ collection, records, filters }) {
                                     variant="ghost"
                                     size="sm"
                                     onClick={handleBulkExport}
-                                    icon={
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                        </svg>
-                                    }
+                                    icon={<Icon name="download" className="w-4 h-4" />}
                                 >
                                     {t('data_collections.export_selected')}
                                 </Button>
@@ -779,11 +729,7 @@ export default function Show({ collection, records, filters }) {
                                     size="sm"
                                     onClick={handleBulkDelete}
                                     className="bg-red-500/10 text-red-500 hover:bg-red-500/20"
-                                    icon={
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    }
+                                    icon={<Icon name="delete" className="w-4 h-4" />}
                                 >
                                     {t('common.delete')}
                                 </Button>
@@ -795,9 +741,7 @@ export default function Show({ collection, records, filters }) {
                                     onClick={() => setSelectedRecords([])}
                                     title={t('data_collections.clear_selection')}
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
+                                    <Icon name="close" className="w-4 h-4" />
                                 </Button>
                             </div>
                         </div>
@@ -815,19 +759,20 @@ function getFieldIcon(type) {
         number: 'number',
         email: 'mail',
         date: 'calendar',
-        boolean: '✓',
+        boolean: 'checkCircle',
         select: 'clipboard',
         textarea: 'file',
         url: 'link',
         phone: 'device',
         currency: 'coin',
-        rating: '⭐',
+        rating: 'star',
         autonumber: 'hash'
     };
     return icons[type] || 'edit';
 }
 
 function FieldInput({ field, value, onChange, isDark }) {
+    const { t } = useTranslation();
     const baseClass = `w-full px-3 py-2 rounded-lg text-sm transition-all ${isDark
         ? 'bg-white/5 border-white/10 text-white focus:border-blue-500'
         : 'bg-white border-gray-200 text-gray-900 focus:border-blue-500'
@@ -844,14 +789,14 @@ function FieldInput({ field, value, onChange, isDark }) {
                         className="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
                     />
                     <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                        {value ? 'Yes' : 'No'}
+                        {value ? t('common.yes') : t('common.no')}
                     </span>
                 </label>
             );
         case 'select':
             return (
                 <select value={value || ''} onChange={(e) => onChange(e.target.value)} className={baseClass}>
-                    <option value="">Select...</option>
+                    <option value="">{t('common.select')}...</option>
                     {(field.options || []).map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
             );
@@ -885,9 +830,7 @@ function EditableCell({ value, field, isEditing, onEdit, onSave, onCancel, isDar
                         ? 'text-emerald-400 hover:bg-emerald-500/20'
                         : 'text-emerald-600 hover:bg-emerald-50'}`}
                 >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <Icon name="check" className="w-4 h-4" />
                 </button>
                 <button
                     onClick={onCancel}
@@ -895,9 +838,7 @@ function EditableCell({ value, field, isEditing, onEdit, onSave, onCancel, isDar
                         ? 'text-gray-500 hover:bg-white/5'
                         : 'text-gray-400 hover:bg-gray-100'}`}
                 >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <Icon name="close" className="w-4 h-4" />
                 </button>
             </div>
         );
@@ -906,7 +847,7 @@ function EditableCell({ value, field, isEditing, onEdit, onSave, onCancel, isDar
     const displayValue = () => {
         if (field.type === 'boolean') {
             return value ? (
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-500">✓</span>
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-500"><Icon name="check" className="w-3.5 h-3.5" /></span>
             ) : (
                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-500/10 text-gray-400">—</span>
             );

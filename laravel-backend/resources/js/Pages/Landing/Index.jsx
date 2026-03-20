@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { useState, useEffect, lazy, Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
 import LandingLayout from '@/Layouts/LandingLayout';
 import SeoHead, { schemas } from '@/Components/SeoHead';
 import AnimatedSection, { StaggerChildren, AnimatedCounter } from '@/Components/Landing/AnimatedSection';
@@ -7,97 +8,98 @@ import AnimatedSection, { StaggerChildren, AnimatedCounter } from '@/Components/
 // Lazy load R3F scene for performance
 const HeroScene = lazy(() => import('@/Components/Landing/HeroScene'));
 
-// FAQ data for SEO
-const faqData = [
-    { question: 'CLICKAI là gì?', answer: 'CLICKAI là nền tảng No-Code tự động hoá phone farm. Bạn có thể kéo thả tạo workflow, sử dụng Vision AI nhận diện UI và thao tác như người thật 24/7 trên hàng trăm thiết bị cùng lúc.' },
-    { question: 'Có cần biết lập trình không?', answer: 'Không. CLICKAI được thiết kế hoàn toàn No-Code. Bạn chỉ cần kéo thả các block để tạo workflow hoặc ghi lại thao tác thật trên điện thoại.' },
-    { question: 'CLICKAI hỗ trợ bao nhiêu thiết bị?', answer: 'Không giới hạn. Bạn có thể quản lý từ 1 đến hàng nghìn thiết bị Android từ một dashboard duy nhất.' },
-    { question: 'Vision AI hoạt động như thế nào?', answer: 'Vision AI sử dụng công nghệ nhận diện hình ảnh để tìm và tương tác với các phần tử UI trên màn hình thiết bị, giúp thao tác chính xác như người thật mà không cần biết cấu trúc app.' },
-    { question: 'Chi phí sử dụng CLICKAI?', answer: 'CLICKAI cung cấp gói miễn phí 14 ngày đầy đủ tính năng. Sau đó bạn có thể chọn gói phù hợp với nhu cầu, bắt đầu từ các gói cơ bản với giá cạnh tranh.' },
-];
-
-// Feature data
-const features = [
-    {
-        icon: 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z',
-        title: 'Quản Lý Thiết Bị',
-        description: 'Điều khiển hàng trăm điện thoại từ một dashboard. Theo dõi real-time, phân nhóm thông minh, giám sát 24/7.',
-        gradient: 'from-violet-500 to-purple-600',
-    },
-    {
-        icon: 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z',
-        title: 'Visual Workflow',
-        description: 'Kéo thả tạo kịch bản tự động. Ghi lại thao tác thật, chỉnh sửa linh hoạt, tái sử dụng workflow.',
-        gradient: 'from-cyan-500 to-blue-600',
-    },
-    {
-        icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
-        title: 'Vision AI',
-        description: 'AI nhận diện UI, thao tác chính xác như người thật. Template matching thông minh, không cần biết cấu trúc app.',
-        gradient: 'from-amber-500 to-orange-600',
-    },
-    {
-        icon: 'M13 10V3L4 14h7v7l9-11h-7z',
-        title: 'Hiệu Năng Cao',
-        description: 'Xử lý hàng triệu thao tác mỗi ngày. Tối ưu tài nguyên, chạy ổn định không gián đoạn.',
-        gradient: 'from-emerald-500 to-green-600',
-    },
-    {
-        icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
-        title: 'Lên Lịch Thông Minh',
-        description: 'Tạo chiến dịch với lịch trình linh hoạt. Phân phối tải đều, retry tự động khi thất bại.',
-        gradient: 'from-pink-500 to-rose-600',
-    },
-    {
-        icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
-        title: 'Thống Kê Chi Tiết',
-        description: 'Dashboard real-time với biểu đồ trực quan. Theo dõi tỷ lệ thành công, phân tích hiệu suất.',
-        gradient: 'from-indigo-500 to-violet-600',
-    },
-];
-
-// Use case data
-const useCases = [
-    {
-        id: 'nuoi-nick',
-        title: 'Nuôi Nick',
-        description: 'Tự động hoá toàn bộ quy trình nuôi tài khoản mạng xã hội. Tương tác tự nhiên, lên lịch linh hoạt, mô phỏng hành vi người dùng thật.',
-        stats: [
-            { label: 'Tài khoản/ngày', value: '500+' },
-            { label: 'Tỷ lệ sống', value: '95%' },
-            { label: 'Tiết kiệm', value: '90%' },
-        ],
-    },
-    {
-        id: 'test-key',
-        title: 'Test Key',
-        description: 'Kiểm tra hàng loạt license key, activation code trên nhiều thiết bị đồng thời. Báo cáo kết quả chi tiết, export dữ liệu dễ dàng.',
-        stats: [
-            { label: 'Key/giờ', value: '10K+' },
-            { label: 'Độ chính xác', value: '99.9%' },
-            { label: 'Thiết bị song song', value: '100+' },
-        ],
-    },
-    {
-        id: 'auto-farm',
-        title: 'Auto Farm',
-        description: 'Chạy farm tự động 24/7 không cần can thiệp. Vision AI xử lý popup, captcha, và các tình huống bất thường tự động.',
-        stats: [
-            { label: 'Uptime', value: '99.9%' },
-            { label: 'Thao tác/ngày', value: '1M+' },
-            { label: 'Auto-recovery', value: '100%' },
-        ],
-    },
-];
-
 import { useTheme } from '@/Contexts/ThemeContext';
 
 export default function Index() {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
     const [activeUseCase, setActiveUseCase] = useState(0);
     const [openFaq, setOpenFaq] = useState(null);
+
+    // FAQ data for SEO
+    const faqData = [
+        { question: t('landing.faq.q1'), answer: t('landing.faq.a1') },
+        { question: t('landing.faq.q2'), answer: t('landing.faq.a2') },
+        { question: t('landing.faq.q3'), answer: t('landing.faq.a3') },
+        { question: t('landing.faq.q4'), answer: t('landing.faq.a4') },
+        { question: t('landing.faq.q5'), answer: t('landing.faq.a5') },
+    ];
+
+    // Feature data
+    const features = [
+        {
+            icon: 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z',
+            title: t('landing.features.device_management'),
+            description: t('landing.features.device_management_desc'),
+            gradient: 'from-violet-500 to-purple-600',
+        },
+        {
+            icon: 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z',
+            title: t('landing.features.visual_workflow'),
+            description: t('landing.features.visual_workflow_desc'),
+            gradient: 'from-cyan-500 to-blue-600',
+        },
+        {
+            icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+            title: t('landing.features.vision_ai'),
+            description: t('landing.features.vision_ai_desc'),
+            gradient: 'from-amber-500 to-orange-600',
+        },
+        {
+            icon: 'M13 10V3L4 14h7v7l9-11h-7z',
+            title: t('landing.features.high_performance'),
+            description: t('landing.features.high_performance_desc'),
+            gradient: 'from-emerald-500 to-green-600',
+        },
+        {
+            icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
+            title: t('landing.features.smart_scheduling'),
+            description: t('landing.features.smart_scheduling_desc'),
+            gradient: 'from-pink-500 to-rose-600',
+        },
+        {
+            icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+            title: t('landing.features.detailed_analytics'),
+            description: t('landing.features.detailed_analytics_desc'),
+            gradient: 'from-indigo-500 to-violet-600',
+        },
+    ];
+
+    // Use case data
+    const useCases = [
+        {
+            id: 'nuoi-nick',
+            title: t('landing.use_cases.nuoi_nick.title'),
+            description: t('landing.use_cases.nuoi_nick.description'),
+            stats: [
+                { label: t('landing.use_cases.nuoi_nick.stat1_label'), value: '500+' },
+                { label: t('landing.use_cases.nuoi_nick.stat2_label'), value: '95%' },
+                { label: t('landing.use_cases.nuoi_nick.stat3_label'), value: '90%' },
+            ],
+        },
+        {
+            id: 'test-key',
+            title: t('landing.use_cases.test_key.title'),
+            description: t('landing.use_cases.test_key.description'),
+            stats: [
+                { label: t('landing.use_cases.test_key.stat1_label'), value: '10K+' },
+                { label: t('landing.use_cases.test_key.stat2_label'), value: '99.9%' },
+                { label: t('landing.use_cases.test_key.stat3_label'), value: '100+' },
+            ],
+        },
+        {
+            id: 'auto-farm',
+            title: t('landing.use_cases.auto_farm.title'),
+            description: t('landing.use_cases.auto_farm.description'),
+            stats: [
+                { label: t('landing.use_cases.auto_farm.stat1_label'), value: '99.9%' },
+                { label: t('landing.use_cases.auto_farm.stat2_label'), value: '1M+' },
+                { label: t('landing.use_cases.auto_farm.stat3_label'), value: '100%' },
+            ],
+        },
+    ];
 
     const structuredData = [
         schemas.organization,
@@ -110,8 +112,8 @@ export default function Index() {
         <LandingLayout>
             <div className="overflow-x-hidden">
                 <SeoHead
-                    title="CLICKAI - Nền Tảng Tự Động Hoá Phone Farm #1 Việt Nam"
-                    description="Nền tảng No-Code tự động hoá phone farm hàng đầu. Kéo thả workflow, Vision AI nhận diện UI, thao tác như người thật 24/7. Dùng thử miễn phí 14 ngày."
+                    title={t('landing.seo_title')}
+                    description={t('landing.seo_description')}
                     keywords="phone farm, tự động hoá, workflow automation, nuôi nick, test key, clickai, no-code automation, vision AI, phone farm automation"
                     url="https://clickai.vn"
                     structuredData={structuredData}
@@ -136,24 +138,27 @@ export default function Index() {
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75" />
                                         <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500" />
                                     </span>
-                                    <span className="text-xs font-semibold text-violet-600 dark:text-violet-300 tracking-wider uppercase">No-Code Automation Platform</span>
+                                    <span className="text-xs font-semibold text-violet-600 dark:text-violet-300 tracking-wider uppercase">{t('landing.badge')}</span>
                                 </div>
 
                                 {/* Title */}
                                 <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 dark:text-white leading-[1.1] tracking-tight">
-                                    Tự Động Hoá
+                                    {t('landing.hero_title_1')}
                                     <span className="block bg-gradient-to-r from-violet-600 via-purple-500 to-cyan-500 bg-clip-text text-transparent">
                                         Phone Farm
                                     </span>
                                     <span className="block text-2xl sm:text-3xl lg:text-4xl font-medium text-gray-500 dark:text-gray-400 mt-2">
-                                        Thông Minh & Hiệu Quả
+                                        {t('landing.hero_subtitle')}
                                     </span>
                                 </h1>
 
                                 {/* Description */}
                                 <p className="text-lg text-gray-600 dark:text-gray-400 max-w-xl leading-relaxed">
-                                    Nền tảng <strong className="text-gray-900 dark:text-white">No-Code</strong> kéo thả workflow.{' '}
-                                    <strong className="text-gray-900 dark:text-white">Vision AI</strong> nhận diện UI, thao tác như người thật 24/7 trên hàng trăm thiết bị.
+                                    {t('landing.hero_desc_prefix')}{' '}
+                                    <strong className="text-gray-900 dark:text-white">No-Code</strong>{' '}
+                                    {t('landing.hero_desc_middle')}{' '}
+                                    <strong className="text-gray-900 dark:text-white">Vision AI</strong>{' '}
+                                    {t('landing.hero_desc_suffix')}
                                 </p>
 
                                 {/* CTA */}
@@ -162,7 +167,7 @@ export default function Index() {
                                         href="/register"
                                         className="group inline-flex items-center justify-center px-8 py-4 font-semibold text-white bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 rounded-2xl transition-all duration-300 shadow-xl shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-[1.02]"
                                     >
-                                        Dùng Thử Miễn Phí
+                                        {t('landing.start_free_trial')}
                                         <svg className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                         </svg>
@@ -174,13 +179,13 @@ export default function Index() {
                                         <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                                         </svg>
-                                        Xem Demo
+                                        {t('landing.watch_demo')}
                                     </Link>
                                 </div>
 
                                 {/* Trust badges */}
                                 <div className="flex flex-wrap gap-6 justify-center lg:justify-start text-sm">
-                                    {['Setup 5 phút', 'Không cần code', '14 ngày miễn phí'].map((text) => (
+                                    {[t('landing.trust_setup'), t('landing.trust_no_code'), t('landing.trust_free_trial')].map((text) => (
                                         <span key={text} className="flex items-center gap-2">
                                             <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -223,7 +228,7 @@ export default function Index() {
 
                     {/* Scroll indicator */}
                     <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-gray-400 dark:text-gray-500 animate-bounce">
-                        <span className="text-xs tracking-widest uppercase">Scroll</span>
+                        <span className="text-xs tracking-widest uppercase">{t('landing.scroll')}</span>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                         </svg>
@@ -231,15 +236,15 @@ export default function Index() {
                 </section>
 
                 {/* ═══ SECTION 2: STATS ═══ */}
-                <section className="relative py-20 border-y border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-gray-900/50" aria-label="Thống kê">
+                <section className="relative py-20 border-y border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-gray-900/50" aria-label={t('landing.stats_section')}>
                     <div className="absolute inset-0 bg-gradient-to-r from-violet-500/3 dark:from-violet-600/5 via-transparent to-cyan-500/3 dark:to-cyan-500/5" />
                     <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
                             {[
-                                { value: '10000', suffix: '+', label: 'Thiết bị đang chạy' },
-                                { value: '99.9', suffix: '%', label: 'Uptime hệ thống' },
-                                { value: '1', suffix: 'M+', label: 'Thao tác/ngày' },
-                                { value: '98', suffix: '%', label: 'Tỷ lệ thành công' },
+                                { value: '10000', suffix: '+', label: t('landing.stats.devices_running') },
+                                { value: '99.9', suffix: '%', label: t('landing.stats.system_uptime') },
+                                { value: '1', suffix: 'M+', label: t('landing.stats.actions_per_day') },
+                                { value: '98', suffix: '%', label: t('landing.stats.success_rate') },
                             ].map((stat, i) => (
                                 <AnimatedSection key={stat.label} animation="fadeUp" delay={i * 100}>
                                     <div className="text-center group">
@@ -255,21 +260,21 @@ export default function Index() {
                 </section>
 
                 {/* ═══ SECTION 3: FEATURES ═══ */}
-                <section className="py-24 lg:py-32 bg-white dark:bg-[#030712]" aria-label="Tính năng" id="features">
+                <section className="py-24 lg:py-32 bg-white dark:bg-[#030712]" aria-label={t('landing.features_label')} id="features">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <AnimatedSection animation="fadeUp" className="text-center mb-16 lg:mb-20">
-                            <span className="inline-block text-xs font-semibold text-violet-600 dark:text-violet-400 tracking-widest uppercase mb-4">Tính Năng</span>
+                            <span className="inline-block text-xs font-semibold text-violet-600 dark:text-violet-400 tracking-widest uppercase mb-4">{t('landing.features_label')}</span>
                             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-                                Tất Cả Những Gì Bạn Cần
+                                {t('landing.everything_you_need')}
                             </h2>
                             <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
-                                Nền tảng tích hợp đầy đủ để tự động hoá mọi tác vụ phone farm với công nghệ AI tiên tiến
+                                {t('landing.features_desc')}
                             </p>
                         </AnimatedSection>
 
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {features.map((feature, i) => (
-                                <AnimatedSection key={feature.title} animation="fadeUp" delay={i * 80}>
+                                <AnimatedSection key={i} animation="fadeUp" delay={i * 80}>
                                     <div className="group relative h-full p-6 lg:p-8 bg-gray-50 dark:bg-white/[0.03] hover:bg-gray-100 dark:hover:bg-white/[0.06] border border-gray-200 dark:border-white/[0.06] hover:border-gray-300 dark:hover:border-white/[0.12] rounded-2xl transition-all duration-500">
                                         {/* Gradient glow on hover */}
                                         <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-[0.04] rounded-2xl transition-opacity duration-500`} />
@@ -291,13 +296,13 @@ export default function Index() {
                 </section>
 
                 {/* ═══ SECTION 4: HOW IT WORKS ═══ */}
-                <section className="py-24 lg:py-32 relative bg-gray-50 dark:bg-[#030712]" aria-label="Cách hoạt động" id="how-it-works">
+                <section className="py-24 lg:py-32 relative bg-gray-50 dark:bg-[#030712]" aria-label={t('landing.how_it_works')} id="how-it-works">
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-violet-500/[0.02] dark:via-violet-600/[0.03] to-transparent" />
                     <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <AnimatedSection animation="fadeUp" className="text-center mb-16 lg:mb-20">
-                            <span className="inline-block text-xs font-semibold text-cyan-600 dark:text-cyan-400 tracking-widest uppercase mb-4">Cách Hoạt Động</span>
+                            <span className="inline-block text-xs font-semibold text-cyan-600 dark:text-cyan-400 tracking-widest uppercase mb-4">{t('landing.how_it_works')}</span>
                             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-                                Bắt Đầu Trong 3 Bước
+                                {t('landing.start_in_3_steps')}
                             </h2>
                         </AnimatedSection>
 
@@ -306,9 +311,9 @@ export default function Index() {
                             <div className="hidden md:block absolute top-16 left-[20%] right-[20%] h-px bg-gradient-to-r from-violet-500/20 dark:from-violet-500/30 via-purple-500/20 dark:via-purple-500/30 to-cyan-500/20 dark:to-cyan-500/30" />
 
                             {[
-                                { step: '01', title: 'Cài Agent', description: 'Tải app CLICKAI lên điện thoại Android. Kết nối tự động qua mạng trong vài giây.', icon: 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4' },
-                                { step: '02', title: 'Tạo Workflow', description: 'Ghi lại thao tác thật trên thiết bị hoặc kéo thả các block để xây dựng kịch bản tự động.', icon: 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z' },
-                                { step: '03', title: 'Chạy 24/7', description: 'Lên lịch hoặc chạy ngay. Hệ thống tự động xử lý lỗi, retry và hoạt động liên tục.', icon: 'M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664zM21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+                                { step: '01', title: t('landing.steps.step1_title'), description: t('landing.steps.step1_desc'), icon: 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4' },
+                                { step: '02', title: t('landing.steps.step2_title'), description: t('landing.steps.step2_desc'), icon: 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z' },
+                                { step: '03', title: t('landing.steps.step3_title'), description: t('landing.steps.step3_desc'), icon: 'M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664zM21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
                             ].map((item, i) => (
                                 <AnimatedSection key={item.step} animation="fadeUp" delay={i * 150}>
                                     <div className="relative text-center">
@@ -333,12 +338,12 @@ export default function Index() {
                 </section>
 
                 {/* ═══ SECTION 5: USE CASES ═══ */}
-                <section className="py-24 lg:py-32 bg-white dark:bg-[#030712]" aria-label="Ứng dụng" id="use-cases">
+                <section className="py-24 lg:py-32 bg-white dark:bg-[#030712]" aria-label={t('landing.use_cases_label')} id="use-cases">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <AnimatedSection animation="fadeUp" className="text-center mb-16">
-                            <span className="inline-block text-xs font-semibold text-emerald-600 dark:text-emerald-400 tracking-widest uppercase mb-4">Ứng Dụng Thực Tế</span>
+                            <span className="inline-block text-xs font-semibold text-emerald-600 dark:text-emerald-400 tracking-widest uppercase mb-4">{t('landing.real_use_cases')}</span>
                             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-                                Dùng Cho Mọi Nhu Cầu
+                                {t('landing.use_for_every_need')}
                             </h2>
                         </AnimatedSection>
 
@@ -373,7 +378,7 @@ export default function Index() {
                                             href="/register"
                                             className="inline-flex items-center px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl hover:shadow-lg hover:shadow-violet-500/25 transition-all"
                                         >
-                                            Bắt đầu ngay
+                                            {t('landing.start_now')}
                                             <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                             </svg>
@@ -396,10 +401,10 @@ export default function Index() {
                 </section>
 
                 {/* ═══ SECTION 6: TRUSTED BY ═══ */}
-                <section className="py-16 border-y border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-gray-900/30" aria-label="Đối tác">
+                <section className="py-16 border-y border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-gray-900/30" aria-label={t('landing.partners')}>
                     <AnimatedSection animation="fadeIn">
                         <div className="text-center mb-8">
-                            <span className="text-sm text-gray-500">Được tin dùng bởi hàng nghìn doanh nghiệp</span>
+                            <span className="text-sm text-gray-500">{t('landing.trusted_by')}</span>
                         </div>
                         <div className="relative overflow-hidden">
                             <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-gray-50 dark:from-gray-900/80 to-transparent z-10" />
@@ -418,12 +423,12 @@ export default function Index() {
                 </section>
 
                 {/* ═══ SECTION 7: FAQ ═══ */}
-                <section className="py-24 lg:py-32 bg-white dark:bg-[#030712]" aria-label="Câu hỏi thường gặp" id="faq">
+                <section className="py-24 lg:py-32 bg-white dark:bg-[#030712]" aria-label={t('landing.faq_label')} id="faq">
                     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
                         <AnimatedSection animation="fadeUp" className="text-center mb-16">
                             <span className="inline-block text-xs font-semibold text-amber-600 dark:text-amber-400 tracking-widest uppercase mb-4">FAQ</span>
                             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-                                Câu Hỏi Thường Gặp
+                                {t('landing.faq_title')}
                             </h2>
                         </AnimatedSection>
 
@@ -455,7 +460,7 @@ export default function Index() {
                 </section>
 
                 {/* ═══ SECTION 8: CTA ═══ */}
-                <section className="py-24 lg:py-32 relative overflow-hidden bg-gray-50 dark:bg-[#030712]" aria-label="Bắt đầu ngay">
+                <section className="py-24 lg:py-32 relative overflow-hidden bg-gray-50 dark:bg-[#030712]" aria-label={t('landing.start_now')}>
                     {/* Background effects */}
                     <div className="absolute inset-0">
                         <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 dark:from-violet-600/10 via-purple-500/3 dark:via-purple-600/5 to-cyan-500/5 dark:to-cyan-500/10" />
@@ -465,17 +470,17 @@ export default function Index() {
                     <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                         <AnimatedSection animation="scaleUp">
                             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-                                Sẵn Sàng Tự Động Hoá?
+                                {t('landing.ready_to_start')}
                             </h2>
                             <p className="text-lg text-gray-600 dark:text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-                                Tham gia cùng hàng nghìn doanh nghiệp đang sử dụng CLICKAI. Bắt đầu miễn phí, không cần thẻ tín dụng.
+                                {t('landing.cta_desc')}
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                 <Link
                                     href="/register"
                                     className="group inline-flex items-center justify-center px-10 py-4 font-bold text-white bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 rounded-2xl transition-all duration-300 shadow-2xl shadow-violet-500/30 hover:shadow-violet-500/50 hover:scale-[1.03]"
                                 >
-                                    Bắt Đầu Miễn Phí
+                                    {t('landing.get_started')}
                                     <svg className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                     </svg>
@@ -484,7 +489,7 @@ export default function Index() {
                                     href="/contact"
                                     className="inline-flex items-center justify-center px-10 py-4 font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20 rounded-2xl transition-all duration-300"
                                 >
-                                    Liên Hệ Tư Vấn
+                                    {t('landing.contact_sales')}
                                 </Link>
                             </div>
                         </AnimatedSection>

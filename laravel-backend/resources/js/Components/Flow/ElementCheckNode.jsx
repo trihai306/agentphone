@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 /**
  * ElementCheckNode - Kiểm tra element tồn tại/text content và branching
@@ -9,6 +10,7 @@ import { useTheme } from '@/Contexts/ThemeContext';
 function ElementCheckNode({ data, selected }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const { t } = useTranslation();
 
     const checkType = data?.checkType || 'exists';
     const executionState = data?.executionState || 'idle';
@@ -21,11 +23,11 @@ function ElementCheckNode({ data, selected }) {
     const color = '#f59e0b'; // Amber
 
     const checkTypeLabels = {
-        'exists': '✓ Tồn tại',
-        'not_exists': '✗ Không tồn tại',
-        'text_equals': '= Text bằng',
-        'contains': '⊃ Chứa text',
-        'visible': '👁 Hiển thị',
+        'exists': t('flows.editor.node_status.exists'),
+        'not_exists': t('flows.editor.node_status.not_exists'),
+        'text_equals': t('flows.editor.node_status.text_equals'),
+        'contains': t('flows.editor.node_status.contains_text'),
+        'visible': t('flows.editor.node_status.visible'),
     };
 
     return (
@@ -92,7 +94,7 @@ function ElementCheckNode({ data, selected }) {
                     </div>
                     <div className="flex-1">
                         <h3 className="text-sm font-bold" style={{ color: isTrue ? '#10b981' : isFalse ? '#ef4444' : color }}>
-                            {isRunning ? '🔍 Đang kiểm tra...' : isTrue ? '✓ Đúng' : isFalse ? '✗ Sai' : '❓ Kiểm Tra'}
+                            {isRunning ? t('flows.editor.node_status.checking') : isTrue ? t('flows.editor.node_status.correct') : isFalse ? t('flows.editor.node_status.incorrect') : t('flows.editor.node_status.check')}
                         </h3>
                         <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                             {data?.label || 'Element Check'}

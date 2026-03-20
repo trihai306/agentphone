@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
 import { useTheme } from '../Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 export default function LandingLayout({ children }) {
+    const { t } = useTranslation();
     const { theme, toggleTheme } = useTheme();
     const { url, auth } = usePage().props;
     const [showUserMenu, setShowUserMenu] = useState(false);
@@ -29,18 +31,18 @@ export default function LandingLayout({ children }) {
                                     CLICKAI
                                 </span>
                                 <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider -mt-1">
-                                    Automation Platform
+                                    {t('landing.badge_system')}
                                 </span>
                             </div>
                         </Link>
 
                         {/* Desktop Navigation */}
                         <div className="hidden md:flex items-center gap-2">
-                            <NavLink href="/" active={url === '/'}>Home</NavLink>
-                            <NavLink href="/features" active={url === '/features'}>Features</NavLink>
-                            <NavLink href="/pricing" active={url === '/pricing'}>Pricing</NavLink>
-                            <NavLink href="/about" active={url === '/about'}>About</NavLink>
-                            <NavLink href="/contact" active={url === '/contact'}>Contact</NavLink>
+                            <NavLink href="/" active={url === '/'}>{t('navigation.home')}</NavLink>
+                            <NavLink href="/features" active={url === '/features'}>{t('navigation.features')}</NavLink>
+                            <NavLink href="/pricing" active={url === '/pricing'}>{t('navigation.pricing')}</NavLink>
+                            <NavLink href="/about" active={url === '/about'}>{t('navigation.about')}</NavLink>
+                            <NavLink href="/contact" active={url === '/contact'}>{t('navigation.contact')}</NavLink>
                         </div>
 
                         {/* Right Actions */}
@@ -74,7 +76,7 @@ export default function LandingLayout({ children }) {
 
                                 {/* Tooltip */}
                                 <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                                    {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                                    {theme === 'dark' ? t('theme.light_mode') : t('theme.dark_mode')}
                                 </div>
                             </button>
 
@@ -122,7 +124,7 @@ export default function LandingLayout({ children }) {
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                                                         </svg>}
                                                     >
-                                                        Dashboard
+                                                        {t('navigation.dashboard')}
                                                     </DropdownLink>
                                                     <DropdownLink
                                                         href="/devices"
@@ -130,7 +132,7 @@ export default function LandingLayout({ children }) {
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                                         </svg>}
                                                     >
-                                                        My Devices
+                                                        {t('navigation.my_devices')}
                                                     </DropdownLink>
                                                     <DropdownLink
                                                         href="/profile"
@@ -138,7 +140,7 @@ export default function LandingLayout({ children }) {
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                                         </svg>}
                                                     >
-                                                        Profile
+                                                        {t('navigation.profile')}
                                                     </DropdownLink>
                                                 </div>
 
@@ -151,7 +153,7 @@ export default function LandingLayout({ children }) {
                                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                                         </svg>
-                                                        Sign Out
+                                                        {t('navigation.sign_out')}
                                                     </button>
                                                 </div>
                                             </div>
@@ -164,13 +166,13 @@ export default function LandingLayout({ children }) {
                                         href="/login"
                                         className="hidden md:inline-flex items-center px-5 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white bg-gray-100/80 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 rounded-xl border border-gray-200/50 dark:border-white/10 backdrop-blur-sm transition-all duration-300 hover:scale-105"
                                     >
-                                        Login
+                                        {t('navigation.login')}
                                     </Link>
                                     <Link
                                         href="/register"
                                         className="relative inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 hover:from-purple-500 hover:via-blue-500 hover:to-cyan-500 text-white font-extrabold text-sm rounded-xl shadow-xl shadow-purple-500/30 hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105 overflow-hidden group"
                                     >
-                                        <span className="relative z-10">Get Started</span>
+                                        <span className="relative z-10">{t('navigation.get_started')}</span>
                                         {/* Shimmer effect */}
                                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                                     </Link>
@@ -207,7 +209,7 @@ export default function LandingLayout({ children }) {
                                 </span>
                             </div>
                             <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed max-w-md">
-                                Nền tảng tự động hoá phone farm chuyên nghiệp. Kéo thả workflow, nuôi nick tự động, chạy 24/7.
+                                {t('footer.landing_description')}
                             </p>
                             <div className="flex gap-3">
                                 <SocialLink href="#" icon="twitter" />
@@ -219,26 +221,26 @@ export default function LandingLayout({ children }) {
                         {/* Product */}
                         <div>
                             <h3 className="text-sm font-extrabold text-gray-900 dark:text-white uppercase tracking-wider mb-6">
-                                Product
+                                {t('footer.product')}
                             </h3>
                             <ul className="space-y-3">
-                                <FooterLink href="/features">Features</FooterLink>
-                                <FooterLink href="/pricing">Pricing</FooterLink>
-                                <FooterLink href="/docs">Documentation</FooterLink>
-                                <FooterLink href="/api">API</FooterLink>
+                                <FooterLink href="/features">{t('footer.features')}</FooterLink>
+                                <FooterLink href="/pricing">{t('footer.pricing')}</FooterLink>
+                                <FooterLink href="/docs">{t('footer.documentation')}</FooterLink>
+                                <FooterLink href="/api">{t('footer.api')}</FooterLink>
                             </ul>
                         </div>
 
                         {/* Company */}
                         <div>
                             <h3 className="text-sm font-extrabold text-gray-900 dark:text-white uppercase tracking-wider mb-6">
-                                Company
+                                {t('footer.company')}
                             </h3>
                             <ul className="space-y-3">
-                                <FooterLink href="/about">About</FooterLink>
-                                <FooterLink href="/blog">Blog</FooterLink>
-                                <FooterLink href="/careers">Careers</FooterLink>
-                                <FooterLink href="/contact">Contact</FooterLink>
+                                <FooterLink href="/about">{t('footer.about')}</FooterLink>
+                                <FooterLink href="/blog">{t('footer.blog')}</FooterLink>
+                                <FooterLink href="/careers">{t('footer.careers')}</FooterLink>
+                                <FooterLink href="/contact">{t('footer.contact')}</FooterLink>
                             </ul>
                         </div>
                     </div>
@@ -246,7 +248,7 @@ export default function LandingLayout({ children }) {
                     {/* Bottom Bar */}
                     <div className="mt-16 pt-8 border-t border-gray-200/50 dark:border-white/10">
                         <p className="text-center text-gray-500 dark:text-gray-400 text-sm font-medium">
-                            © {new Date().getFullYear()} CLICKAI. All rights reserved. Built with ❤️ in Vietnam
+                            © {new Date().getFullYear()} CLICKAI. {t('footer.all_rights_reserved')}. {t('footer.built_with_love')}
                         </p>
                     </div>
                 </div>

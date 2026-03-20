@@ -37,7 +37,7 @@ export default function Index({ reports, currentStatus, statusCounts, statuses, 
     };
 
     return (
-        <AppLayout title="Error Reports">
+        <AppLayout title={t('error_reports.title')}>
             <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
                 <div className="max-w-[1100px] mx-auto px-6 py-6">
                     {/* Header */}
@@ -116,10 +116,10 @@ export default function Index({ reports, currentStatus, statusCounts, statuses, 
                             <table className="w-full">
                                 <thead>
                                     <tr className={`border-b ${isDark ? 'border-[#2a2a2a]' : 'border-gray-100'}`}>
-                                        <th className={`text-left py-3 px-4 text-xs font-medium uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Report</th>
-                                        <th className={`text-center py-3 px-4 text-xs font-medium uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Status</th>
-                                        <th className={`text-center py-3 px-4 text-xs font-medium uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Severity</th>
-                                        <th className={`text-left py-3 px-4 text-xs font-medium uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Date</th>
+                                        <th className={`text-left py-3 px-4 text-xs font-medium uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('error_reports.report')}</th>
+                                        <th className={`text-center py-3 px-4 text-xs font-medium uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('error_reports.status')}</th>
+                                        <th className={`text-center py-3 px-4 text-xs font-medium uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('error_reports.severity')}</th>
+                                        <th className={`text-left py-3 px-4 text-xs font-medium uppercase ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('error_reports.date')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className={`divide-y ${isDark ? 'divide-[#2a2a2a]' : 'divide-gray-100'}`}>

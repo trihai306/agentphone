@@ -1,13 +1,15 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { NodeStatus } from '@/hooks/useExecutionState';
 
 /**
  * GlassElementCheckNode - Premium glassmorphic element check with branching
- * Horizontal layout: Input (Left) → True/False (Right Top/Bottom)
+ * Horizontal layout: Input (Left) -> True/False (Right Top/Bottom)
  */
 function GlassElementCheckNode({ id, data, selected }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
@@ -76,11 +78,13 @@ function GlassElementCheckNode({ id, data, selected }) {
                             boxShadow: `0 4px 12px rgba(59, 130, 246, 0.3)`,
                         }}
                     >
-                        <span className="text-lg">{config.icon}</span>
+                        <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
                     </div>
                     <div className="flex-1 min-w-0">
                         <h3 className="text-sm font-bold text-blue-400">
-                            Element Check
+                            {t('flows.editor.glass_nodes.element_check')}
                         </h3>
                         <p className={`text-[10px] truncate ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
                             {data?.label || config.label}
@@ -104,7 +108,7 @@ function GlassElementCheckNode({ id, data, selected }) {
                         </div>
                     ) : (
                         <p className={`text-xs italic ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                            Chưa chọn element
+                            {t('flows.editor.glass_nodes.no_element_selected')}
                         </p>
                     )}
                     {data?.expectedValue && (
@@ -119,10 +123,10 @@ function GlassElementCheckNode({ id, data, selected }) {
                 <div className={`flex justify-between items-center px-4 py-2 text-[10px] font-bold border-t ${isDark ? 'border-white/5' : 'border-black/5'}`}>
                     <div className="flex items-center gap-1.5">
                         <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                        <span className="text-emerald-500">Found</span>
+                        <span className="text-emerald-500">{t('flows.editor.glass_nodes.found')}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                        <span className="text-red-400">Not Found</span>
+                        <span className="text-red-400">{t('flows.editor.glass_nodes.not_found')}</span>
                         <div className="w-2 h-2 rounded-full bg-red-500" />
                     </div>
                 </div>

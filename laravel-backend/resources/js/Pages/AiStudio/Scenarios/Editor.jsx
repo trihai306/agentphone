@@ -27,11 +27,11 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
 
         // Validate file
         if (!file.type.startsWith('image/')) {
-            showToast('Chỉ chấp nhận file ảnh', 'error');
+            showToast(t('ai_studio.scenario.only_image_files'), 'error');
             return;
         }
         if (file.size > 10 * 1024 * 1024) {
-            showToast('Ảnh phải nhỏ hơn 10MB', 'error');
+            showToast(t('ai_studio.scenario.image_max_10mb'), 'error');
             return;
         }
 
@@ -42,7 +42,7 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
                 source_image: e.target.result,
                 source_image_name: file.name
             });
-            showToast('Đã thêm ảnh tham chiếu', 'success');
+            showToast(t('ai_studio.scenario.added_reference_image'), 'success');
         };
         reader.readAsDataURL(file);
     };
@@ -61,7 +61,7 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
     const handleGenerateImage = async (index) => {
         const scene = scenes[index];
         if (!scene?.prompt) {
-            showToast('Vui lòng nhập prompt trước', 'error');
+            showToast(t('ai_studio.scenario.enter_prompt_first'), 'error');
             return;
         }
 
@@ -77,13 +77,13 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
 
             const genData = genResponse.data;
             if (!genData.success) {
-                throw new Error(genData.error || 'Không thể tạo ảnh');
+                throw new Error(genData.error || t('ai_studio.scenario.cannot_generate_image'));
             }
 
             const generationId = genData.generation?.id;
             if (!generationId) throw new Error('Invalid generation response');
 
-            showToast('Đang tạo ảnh... Vui lòng đợi', 'info');
+            showToast(t('ai_studio.scenario.generating_image_wait'), 'info');
 
             // Poll for completion
             let attempts = 0;
@@ -101,15 +101,15 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
                             source_image_name: 'AI Generated',
                         });
                         setGeneratingImageIndex(null);
-                        showToast('Đã tạo ảnh thành công!', 'success');
+                        showToast(t('ai_studio.scenario.image_generated_success'), 'success');
                     } else if (statusData.status === 'failed') {
                         clearInterval(pollInterval);
                         setGeneratingImageIndex(null);
-                        showToast('Tạo ảnh thất bại: ' + (statusData.error || 'Unknown error'), 'error');
+                        showToast(t('ai_studio.scenario.image_generation_failed', { error: statusData.error || 'Unknown error' }), 'error');
                     } else if (attempts >= maxAttempts) {
                         clearInterval(pollInterval);
                         setGeneratingImageIndex(null);
-                        showToast('Tạo ảnh quá lâu, vui lòng thử lại', 'error');
+                        showToast(t('ai_studio.scenario.image_generation_timeout'), 'error');
                     }
                 } catch (e) {
                     console.error('Polling error:', e);
@@ -117,7 +117,7 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
             }, 3000); // Poll every 3 seconds
 
         } catch (error) {
-            showToast('Lỗi: ' + error.message, 'error');
+            showToast(t('ai_studio.scenario.error_prefix', { message: error.message }), 'error');
             setGeneratingImageIndex(null);
         }
     };
@@ -149,7 +149,7 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
 
     const handleDeleteScene = (index) => {
         if (scenes.length <= 1) {
-            showToast('Cần ít nhất 1 cảnh', 'error');
+            showToast(t('ai_studio.scenario.need_at_least_1_scene'), 'error');
             return;
         }
         setScenes(prev => prev.filter((_, i) => i !== index).map((s, i) => ({ ...s, order: i + 1 })));
@@ -160,7 +160,7 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
 
     const handleGenerate = async () => {
         if (scenes.length === 0) {
-            showToast('Chưa có cảnh nào', 'error');
+            showToast(t('ai_studio.no_scenes'), 'error');
             return;
         }
 
@@ -182,7 +182,7 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
 
             const saveData = saveResponse.data;
             if (!saveData.success) {
-                throw new Error(saveData.error || 'Không thể lưu');
+                throw new Error(saveData.error || t('ai_studio.scenario.cannot_save'));
             }
 
             // Start generation
@@ -190,13 +190,13 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
 
             const genData = genResponse.data;
             if (genData.success) {
-                showToast('Đã bắt đầu tạo! Đang chuyển trang...', 'success');
+                showToast(t('ai_studio.scenario.started_generating_redirect'), 'success');
                 router.visit(`/ai-studio/scenarios/${saveData.scenario.id}`);
             } else {
-                throw new Error(genData.error || 'Không thể tạo');
+                throw new Error(genData.error || t('ai_studio.scenario.cannot_start_generation'));
             }
         } catch (error) {
-            showToast('Lỗi: ' + error.message, 'error');
+            showToast(t('ai_studio.scenario.error_prefix', { message: error.message }), 'error');
         } finally {
             setGenerating(false);
         }
@@ -205,8 +205,8 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
     const activeScene = scenes[activeSceneIndex] || null;
 
     return (
-        <AppLayout title="Chỉnh Sửa Scenes">
-            <Head title="Chỉnh Sửa Scenes" />
+        <AppLayout title={t('ai_studio.scenario.edit_scenes_title')}>
+            <Head title={t('ai_studio.scenario.edit_scenes_title')} />
 
             <div className={`min-h-screen ${isDark ? 'bg-[#0a0a0a]' : 'bg-slate-50'}`}>
                 <div className="max-w-7xl mx-auto px-6 py-8">
@@ -223,10 +223,10 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
                             </Link>
                             <div>
                                 <h1 className={`text-2xl font-bold ${themeClasses.textPrimary}`}>
-                                    {scenario?.title || 'Chỉnh Sửa Scenes'}
+                                    {scenario?.title || t('ai_studio.scenario.edit_scenes_title')}
                                 </h1>
                                 <p className={`text-sm ${themeClasses.textMuted}`}>
-                                    Bước 3/4 • {scenes.length} cảnh • {estimatedCredits} credits
+                                    {t('ai_studio.scenario.step_3_of_4', { count: scenes.length, credits: estimatedCredits })}
                                 </p>
                             </div>
                         </div>
@@ -241,7 +241,7 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
                                 disabled={generating || scenes.length === 0}
                                 className="px-6 py-2 rounded-xl text-sm font-bold bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all disabled:opacity-50"
                             >
-                                {generating ? 'Đang tạo...' : `Tạo (${estimatedCredits} credits)`}
+                                {generating ? t('ai_studio.generating') : t('ai_studio.scenario.generate_credits', { credits: estimatedCredits })}
                             </button>
                         </div>
                     </div>
@@ -252,7 +252,7 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
                             <div className={`sticky top-24 p-4 rounded-2xl ${themeClasses.cardBg} border`}>
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className={`font-bold ${themeClasses.textPrimary}`}>
-                                        Timeline ({scenes.length} cảnh)
+                                        {t('ai_studio.scenario.timeline_scenes', { count: scenes.length })}
                                     </h3>
                                     <button
                                         onClick={handleAddScene}
@@ -283,7 +283,7 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className={`text-sm font-medium truncate ${themeClasses.textPrimary}`}>
-                                                        {scene.description || 'Chưa có mô tả'}
+                                                        {scene.description || t('ai_studio.scenario.no_description')}
                                                     </p>
                                                     <p className={`text-xs ${themeClasses.textMuted}`}>
                                                         {scene.duration || 5}s
@@ -309,18 +309,18 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
                             {activeScene ? (
                                 <div className={`p-6 rounded-2xl ${themeClasses.cardBg} border`}>
                                     <h3 className={`text-xl font-bold mb-6 ${themeClasses.textPrimary}`}>
-                                        Cảnh {activeSceneIndex + 1}
+                                        {t('ai_studio.scenario.scene_number', { number: activeSceneIndex + 1 })}
                                     </h3>
 
                                     {/* Description */}
                                     <div className="mb-6">
                                         <label className={`block text-sm font-bold mb-2 ${themeClasses.textMuted}`}>
-                                            Mô tả cảnh
+                                            {t('ai_studio.scenario.scene_description_label')}
                                         </label>
                                         <textarea
                                             value={activeScene.description || ''}
                                             onChange={(e) => handleUpdateScene(activeSceneIndex, { description: e.target.value })}
-                                            placeholder="Mô tả ngắn gọn nội dung cảnh..."
+                                            placeholder={t('ai_studio.scenario.scene_desc_short_placeholder')}
                                             rows={3}
                                             className={`w-full px-4 py-3 rounded-xl border-2 text-sm resize-none ${themeClasses.inputBg} focus:outline-none focus:ring-2 focus:ring-violet-500/50`}
                                         />
@@ -329,11 +329,11 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
                                     {/* Reference Image Upload */}
                                     <div className="mb-6">
                                         <label className={`block text-sm font-bold mb-2 ${themeClasses.textMuted}`}>
-                                            Ảnh tham chiếu (tùy chọn)
+                                            {t('ai_studio.scenario.reference_image_label')}
                                         </label>
                                         <div className="flex items-center justify-between mb-3">
                                             <p className={`text-xs ${themeClasses.textMuted}`}>
-                                                Thêm ảnh để AI tạo video chính xác hơn
+                                                {t('ai_studio.scenario.add_image_for_accuracy')}
                                             </p>
                                             <button
                                                 onClick={() => handleGenerateImage(activeSceneIndex)}
@@ -353,14 +353,14 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
                                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                         </svg>
-                                                        Đang tạo...
+                                                        {t('ai_studio.generating')}
                                                     </>
                                                 ) : (
                                                     <>
                                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                                                         </svg>
-                                                        Tạo ảnh với AI
+                                                        {t('ai_studio.scenario.generate_image_with_ai')}
                                                     </>
                                                 )}
                                             </button>
@@ -370,7 +370,7 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
                                             <div className="relative group">
                                                 <img
                                                     src={activeScene.source_image || activeScene.source_image_path}
-                                                    alt="Ảnh tham chiếu"
+                                                    alt={t('ai_studio.scenario.reference_image_alt')}
                                                     className="w-full h-48 object-cover rounded-xl border-2 border-violet-500/30"
                                                 />
                                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 rounded-xl transition-all flex items-center justify-center gap-3">
@@ -381,17 +381,17 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
                                                             className="hidden"
                                                             onChange={(e) => handleImageUpload(activeSceneIndex, e.target.files[0])}
                                                         />
-                                                        Đổi ảnh
+                                                        {t('ai_studio.scenario.change_image')}
                                                     </label>
                                                     <button
                                                         onClick={() => handleRemoveImage(activeSceneIndex)}
                                                         className="px-4 py-2 bg-rose-500/80 rounded-lg text-white text-sm font-medium hover:bg-rose-500 transition-all"
                                                     >
-                                                        Xóa
+                                                        {t('ai_studio.scenario.delete_btn')}
                                                     </button>
                                                 </div>
                                                 <p className={`text-xs mt-2 ${themeClasses.textMuted}`}>
-                                                    {activeScene.source_image_name || 'Ảnh tham chiếu'}
+                                                    {activeScene.source_image_name || t('ai_studio.scenario.reference_image_alt')}
                                                 </p>
                                             </div>
                                         ) : (
@@ -409,8 +409,8 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
                                                 <svg className={`w-10 h-10 mb-2 ${isDark ? 'text-violet-400' : 'text-violet-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                 </svg>
-                                                <p className={`text-sm ${themeClasses.textMuted}`}>Kéo thả hoặc click để tải ảnh</p>
-                                                <p className={`text-xs mt-1 ${themeClasses.textMuted}`}>PNG, JPG tối đa 10MB</p>
+                                                <p className={`text-sm ${themeClasses.textMuted}`}>{t('ai_studio.scenario.drag_drop_upload')}</p>
+                                                <p className={`text-xs mt-1 ${themeClasses.textMuted}`}>{t('ai_studio.scenario.png_jpg_max_10mb')}</p>
                                             </label>
                                         )}
                                     </div>
@@ -418,12 +418,12 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
                                     {/* Prompt */}
                                     <div className="mb-6">
                                         <label className={`block text-sm font-bold mb-2 ${themeClasses.textMuted}`}>
-                                            Prompt cho AI
+                                            {t('ai_studio.scenario.ai_prompt_label')}
                                         </label>
                                         <textarea
                                             value={activeScene.prompt || ''}
                                             onChange={(e) => handleUpdateScene(activeSceneIndex, { prompt: e.target.value })}
-                                            placeholder="Prompt chi tiết cho AI tạo ảnh/video..."
+                                            placeholder={t('ai_studio.scenario.prompt_for_ai_placeholder')}
                                             rows={6}
                                             className={`w-full px-4 py-3 rounded-xl border-2 text-sm resize-none ${themeClasses.inputBg} focus:outline-none focus:ring-2 focus:ring-violet-500/50`}
                                         />
@@ -433,15 +433,15 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
                                     {scenario?.output_type === 'video' && (
                                         <div className="mb-6">
                                             <label className={`block text-sm font-bold mb-2 ${themeClasses.textMuted}`}>
-                                                Thời lượng (giây)
+                                                {t('ai_studio.scenario.duration_seconds')}
                                             </label>
                                             <select
                                                 value={activeScene.duration || 5}
                                                 onChange={(e) => handleUpdateScene(activeSceneIndex, { duration: parseInt(e.target.value) })}
                                                 className={`w-full px-4 py-3 rounded-xl border ${themeClasses.inputBg} focus:outline-none focus:ring-2 focus:ring-violet-500/50`}
                                             >
-                                                <option value={5}>5 giây</option>
-                                                <option value={10}>10 giây</option>
+                                                <option value={5}>{t('ai_studio.scenario.seconds_5')}</option>
+                                                <option value={10}>{t('ai_studio.scenario.seconds_10')}</option>
                                             </select>
                                         </div>
                                     )}
@@ -449,7 +449,7 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
                                     {/* Model Selection */}
                                     <div>
                                         <label className={`block text-sm font-bold mb-2 ${themeClasses.textMuted}`}>
-                                            Model AI
+                                            {t('ai_studio.scenario.ai_model_label')}
                                         </label>
                                         <select
                                             value={model}
@@ -464,7 +464,7 @@ export default function Editor({ scenario, currentCredits = 0, videoModels = [],
                                 </div>
                             ) : (
                                 <div className={`p-12 rounded-2xl ${themeClasses.cardBg} border text-center`}>
-                                    <p className={themeClasses.textMuted}>Chọn một cảnh để chỉnh sửa</p>
+                                    <p className={themeClasses.textMuted}>{t('ai_studio.scenario.select_scene_to_edit')}</p>
                                 </div>
                             )}
                         </div>

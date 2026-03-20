@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 /**
  * WaitForElementNode - Chờ element xuất hiện với timeout
@@ -9,6 +10,7 @@ import { useTheme } from '@/Contexts/ThemeContext';
 function WaitForElementNode({ data, selected }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const { t } = useTranslation();
 
     const executionState = data?.executionState || 'idle';
     const progress = data?.progress || 0;
@@ -23,19 +25,17 @@ function WaitForElementNode({ data, selected }) {
     const color = '#3b82f6'; // Blue
 
     const getStatusIcon = () => {
-        if (isRunning) return '⏳';
         if (isSuccess) return '✓';
-        if (isTimeout) return '⏱';
         if (isError) return '✗';
-        return '⏳';
+        return null;
     };
 
     const getStatusLabel = () => {
-        if (isRunning) return 'Đang chờ...';
-        if (isSuccess) return 'Đã tìm thấy';
-        if (isTimeout) return 'Hết thời gian';
-        if (isError) return 'Lỗi';
-        return 'Chờ Element';
+        if (isRunning) return t('flows.editor.node_status.waiting');
+        if (isSuccess) return t('flows.editor.node_status.found');
+        if (isTimeout) return t('flows.editor.node_status.timeout');
+        if (isError) return t('flows.editor.node_status.error');
+        return t('flows.editor.node_status.wait_element');
     };
 
     return (
@@ -82,7 +82,19 @@ function WaitForElementNode({ data, selected }) {
                             boxShadow: `0 4px 12px ${color}30`,
                         }}
                     >
-                        <span className="text-lg">{getStatusIcon()}</span>
+                        {isSuccess ? (
+                            <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        ) : isError ? (
+                            <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        ) : (
+                            <svg className="w-5 h-5" fill="none" stroke={color} viewBox="0 0 24 24" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        )}
                     </div>
                     <div className="flex-1">
                         <h3 className="text-sm font-bold" style={{ color: isSuccess ? '#10b981' : isError ? '#ef4444' : color }}>
@@ -119,14 +131,16 @@ function WaitForElementNode({ data, selected }) {
                     {/* Config row */}
                     <div className="flex items-center justify-between mt-2">
                         <div className={`flex items-center gap-1.5 text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            <span>⏱</span>
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
                             <span>{timeout / 1000}s</span>
                         </div>
                         <div className={`text-[10px] px-2 py-0.5 rounded ${onTimeout === 'skip'
                             ? isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600'
                             : isDark ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-600'
                             }`}>
-                            {onTimeout === 'skip' ? '→ Skip' : '✗ Fail'}
+                            {onTimeout === 'skip' ? 'Skip' : 'Fail'}
                         </div>
                     </div>
                 </div>

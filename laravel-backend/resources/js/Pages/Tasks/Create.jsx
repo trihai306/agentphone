@@ -157,7 +157,7 @@ export default function Create({ campaigns = [] }) {
                                                         setData('campaign_id', campaign.id);
                                                         // Auto-fill title from campaign name
                                                         if (!data.title) {
-                                                            setData('title', `Chạy ${campaign.name}`);
+                                                            setData('title', `${t('tasks.run_prefix', 'Run')} ${campaign.name}`);
                                                         }
                                                     }}
                                                     className={`flex items-center gap-4 p-4 rounded-xl border transition-all text-left ${data.campaign_id === campaign.id
@@ -188,7 +188,7 @@ export default function Create({ campaigns = [] }) {
                                                             </span>
                                                             <span className={`inline-flex items-center gap-1.5 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                                                 <Icon path={ICONS.device} className="w-3.5 h-3.5" />
-                                                                {campaign.devices_count || 0} thiết bị
+                                                                {campaign.devices_count || 0} {t('packages.devices')}
                                                             </span>
                                                             {campaign.data_collection && (
                                                                 <span className={`inline-flex items-center gap-1.5 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -294,7 +294,7 @@ export default function Create({ campaigns = [] }) {
                                             </span>
                                         </div>
                                         <p className={`text-xs mt-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                            = {formatVND(data.price_per_device)} × {data.required_devices} thiết bị
+                                            = {formatVND(data.price_per_device)} x {data.required_devices} {t('packages.devices')}
                                         </p>
                                     </div>
                                     {errors.reward_amount && <p className="text-red-500 text-sm mt-2">{errors.reward_amount}</p>}
@@ -373,7 +373,7 @@ export default function Create({ campaigns = [] }) {
                                                         ? 'bg-white/5 border-white/10 text-white placeholder-gray-500'
                                                         : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'
                                                         } focus:outline-none focus:ring-2 focus:ring-emerald-500/50`}
-                                                    placeholder="Nhập tag và Enter"
+                                                    placeholder={t('tasks.tag_placeholder', 'Enter tag and press Enter')}
                                                 />
                                                 <button
                                                     type="button"

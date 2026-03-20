@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import Button from '@/Components/UI/Button';
 
 /**
@@ -5,8 +6,8 @@ import Button from '@/Components/UI/Button';
  * Features detailed explanation of the automation system with benefits list
  */
 
-// Benefits data for the automation platform
-const benefits = [
+// Benefits data - icons and keys only, text from i18n
+const benefitKeys = [
     {
         id: 'save-time',
         icon: (
@@ -24,8 +25,8 @@ const benefits = [
                 />
             </svg>
         ),
-        title: 'Save Valuable Time',
-        description: 'Reduce manual work by up to 80% and focus on what truly matters for your business growth.',
+        titleKey: 'about.save_time',
+        descKey: 'about.save_time_desc',
     },
     {
         id: 'reduce-errors',
@@ -44,8 +45,8 @@ const benefits = [
                 />
             </svg>
         ),
-        title: 'Eliminate Human Errors',
-        description: 'Automated agents follow precise instructions every time, ensuring consistent and accurate results.',
+        titleKey: 'about.eliminate_errors',
+        descKey: 'about.eliminate_errors_desc',
     },
     {
         id: 'scale-operations',
@@ -64,8 +65,8 @@ const benefits = [
                 />
             </svg>
         ),
-        title: 'Scale Operations Effortlessly',
-        description: 'Handle increased workloads without adding headcount. Your automation grows with your business.',
+        titleKey: 'about.scale_operations',
+        descKey: 'about.scale_operations_desc',
     },
     {
         id: 'work-247',
@@ -84,12 +85,14 @@ const benefits = [
                 />
             </svg>
         ),
-        title: 'Operate 24/7',
-        description: 'Your agents never sleep. Tasks run continuously, even outside business hours and on weekends.',
+        titleKey: 'about.operate_247',
+        descKey: 'about.operate_247_desc',
     },
 ];
 
 export default function AboutSection() {
+    const { t } = useTranslation();
+
     const handleGetStarted = (e) => {
         e.preventDefault();
         const target = document.querySelector('#contact');
@@ -116,29 +119,25 @@ export default function AboutSection() {
                         {/* Badge */}
                         <div className="mb-6 inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-4 py-1.5 dark:border-purple-800 dark:bg-purple-900/30">
                             <span className="text-sm font-medium text-purple-700 dark:text-purple-300">
-                                About Our Platform
+                                {t('about.about_us')}
                             </span>
                         </div>
 
                         {/* Title */}
                         <h2 className="mb-6 text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl lg:text-5xl">
-                            Revolutionize How You{' '}
+                            {t('about.revolutionize_how_you')}{' '}
                             <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-blue-400">
-                                Work
+                                {t('about.work')}
                             </span>
                         </h2>
 
                         {/* Description paragraphs */}
                         <div className="space-y-4 mb-8">
                             <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
-                                In today's fast-paced digital world, businesses need to stay ahead of the competition.
-                                Our intelligent agent automation platform empowers you to automate repetitive tasks,
-                                streamline workflows, and unlock new levels of productivity.
+                                {t('about.description_p1')}
                             </p>
                             <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
-                                Whether you're managing data entry, web scraping, form submissions, or complex
-                                multi-step processes, our platform provides the tools you need to build powerful
-                                automations without writing a single line of code.
+                                {t('about.description_p2')}
                             </p>
                         </div>
 
@@ -150,7 +149,7 @@ export default function AboutSection() {
                                 onClick={handleGetStarted}
                                 className="shadow-lg shadow-blue-500/25 dark:shadow-blue-500/15"
                             >
-                                Start Automating Today
+                                {t('about.start_automating_today')}
                                 <svg
                                     className="ml-2 h-5 w-5"
                                     fill="none"
@@ -170,7 +169,7 @@ export default function AboutSection() {
 
                     {/* Right column - Benefits grid */}
                     <div className="grid gap-6 sm:grid-cols-2">
-                        {benefits.map((benefit) => (
+                        {benefitKeys.map((benefit) => (
                             <div
                                 key={benefit.id}
                                 className="group rounded-xl border border-gray-200 bg-gray-50 p-6 transition-all hover:border-blue-300 hover:bg-white hover:shadow-lg dark:border-gray-800 dark:bg-gray-900 dark:hover:border-blue-700 dark:hover:bg-gray-800"
@@ -182,12 +181,12 @@ export default function AboutSection() {
 
                                 {/* Title */}
                                 <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                    {benefit.title}
+                                    {t(benefit.titleKey)}
                                 </h3>
 
                                 {/* Description */}
                                 <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                                    {benefit.description}
+                                    {t(benefit.descKey)}
                                 </p>
                             </div>
                         ))}
@@ -197,29 +196,27 @@ export default function AboutSection() {
                 {/* Bottom section - Mission statement */}
                 <div className="mt-20 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-center text-white shadow-xl sm:p-12 dark:from-blue-700 dark:to-indigo-700">
                     <h3 className="mb-4 text-2xl font-bold sm:text-3xl">
-                        Our Mission
+                        {t('about.our_mission')}
                     </h3>
                     <p className="mx-auto max-w-3xl text-lg text-blue-100">
-                        We believe that everyone deserves access to powerful automation tools.
-                        Our mission is to democratize automation technology, making it accessible
-                        to businesses of all sizes. No technical expertise required—just results.
+                        {t('about.mission_statement')}
                     </p>
                     <div className="mt-8 flex flex-wrap justify-center gap-8">
                         <div className="text-center">
                             <div className="text-3xl font-bold">50+</div>
-                            <div className="text-sm text-blue-200">Countries Served</div>
+                            <div className="text-sm text-blue-200">{t('about.countries_served')}</div>
                         </div>
                         <div className="text-center">
                             <div className="text-3xl font-bold">1M+</div>
-                            <div className="text-sm text-blue-200">Hours Saved</div>
+                            <div className="text-sm text-blue-200">{t('about.hours_saved')}</div>
                         </div>
                         <div className="text-center">
                             <div className="text-3xl font-bold">4.9/5</div>
-                            <div className="text-sm text-blue-200">Customer Rating</div>
+                            <div className="text-sm text-blue-200">{t('about.customer_rating')}</div>
                         </div>
                         <div className="text-center">
                             <div className="text-3xl font-bold">500+</div>
-                            <div className="text-sm text-blue-200">Enterprise Clients</div>
+                            <div className="text-sm text-blue-200">{t('about.enterprise_clients')}</div>
                         </div>
                     </div>
                 </div>

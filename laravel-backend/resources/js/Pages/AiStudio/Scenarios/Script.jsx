@@ -27,7 +27,7 @@ export default function Script({ scenario, currentCredits = 0, videoModels = [],
 
     const handleParseAndContinue = async () => {
         if (script.length < 20) {
-            showToast('Kịch bản phải có ít nhất 20 ký tự', 'error');
+            showToast(t('ai_studio.scenario.script_must_min_20'), 'error');
             return;
         }
 
@@ -43,7 +43,7 @@ export default function Script({ scenario, currentCredits = 0, videoModels = [],
             // Backend returns {success, data: {scenes, ...}}
             // So actual backend response is at parseResponse.data (wrapper) -> parseResponse.data.success (backend success) -> parseResponse.data.data.scenes (scenes)
             if (!parseResponse.success || !parseResponse.data?.success) {
-                throw new Error(parseResponse.data?.error || parseResponse.error || 'Không thể phân tích kịch bản');
+                throw new Error(parseResponse.data?.error || parseResponse.error || t('ai_studio.scenario.cannot_analyze_script'));
             }
 
             const scenes = parseResponse.data.data?.scenes || parseResponse.data.scenes || [];
@@ -66,13 +66,13 @@ export default function Script({ scenario, currentCredits = 0, videoModels = [],
 
             const saveData = saveResponse.data;
             if (saveData.success) {
-                showToast(`Đã phân tích ${scenes.length} cảnh`, 'success');
+                showToast(t('ai_studio.scenario.analyzed_scenes_count', { count: scenes.length }), 'success');
                 router.visit(`/ai-studio/scenarios/${saveData.scenario.id}/edit`);
             } else {
-                throw new Error(saveData.error || 'Không thể lưu kịch bản');
+                throw new Error(saveData.error || t('ai_studio.scenario.cannot_save_script'));
             }
         } catch (error) {
-            showToast('Lỗi: ' + error.message, 'error');
+            showToast(t('ai_studio.scenario.error_prefix', { message: error.message }), 'error');
         } finally {
             setParsing(false);
         }
@@ -82,17 +82,17 @@ export default function Script({ scenario, currentCredits = 0, videoModels = [],
         setSaving(true);
         try {
             await aiStudioApi.updateScenario(scenario.id, { title, script });
-            showToast('Đã lưu nháp', 'success');
+            showToast(t('ai_studio.scenario.saved_draft_success'), 'success');
         } catch (error) {
-            showToast('Lỗi: ' + error.message, 'error');
+            showToast(t('ai_studio.scenario.error_prefix', { message: error.message }), 'error');
         } finally {
             setSaving(false);
         }
     };
 
     return (
-        <AppLayout title="Nhập Kịch Bản">
-            <Head title="Nhập Kịch Bản" />
+        <AppLayout title={t('ai_studio.scenario.enter_script_title')}>
+            <Head title={t('ai_studio.scenario.enter_script_title')} />
 
             <div className={`min-h-screen ${isDark ? 'bg-[#0a0a0a]' : 'bg-slate-50'}`}>
                 <div className="max-w-4xl mx-auto px-6 py-8">
@@ -109,10 +109,10 @@ export default function Script({ scenario, currentCredits = 0, videoModels = [],
                             </Link>
                             <div>
                                 <h1 className={`text-2xl font-bold ${themeClasses.textPrimary}`}>
-                                    Nhập Kịch Bản
+                                    {t('ai_studio.scenario.enter_script_title')}
                                 </h1>
                                 <p className={`text-sm ${themeClasses.textMuted}`}>
-                                    Bước 2/4 • {scenario.output_type === 'video' ? 'Video' : 'Hình ảnh'}
+                                    {t('ai_studio.scenario.script_step_info', { type: scenario.output_type === 'video' ? t('ai_studio.scenario.video_label') : t('ai_studio.scenario.images_label') })}
                                 </p>
                             </div>
                         </div>
@@ -128,13 +128,13 @@ export default function Script({ scenario, currentCredits = 0, videoModels = [],
                         {/* Title */}
                         <div className="mb-6">
                             <label className={`block text-sm font-bold mb-2 ${themeClasses.textMuted}`}>
-                                Tiêu đề
+                                {t('ai_studio.scenario.title_label')}
                             </label>
                             <input
                                 type="text"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                placeholder="Nhập tiêu đề cho kịch bản..."
+                                placeholder={t('ai_studio.scenario.title_placeholder')}
                                 className={`w-full px-4 py-3 rounded-xl border ${themeClasses.inputBg} focus:outline-none focus:ring-2 focus:ring-violet-500/50`}
                             />
                         </div>
@@ -142,19 +142,12 @@ export default function Script({ scenario, currentCredits = 0, videoModels = [],
                         {/* Script Textarea */}
                         <div>
                             <label className={`block text-sm font-bold mb-2 ${themeClasses.textMuted}`}>
-                                Nội dung kịch bản
+                                {t('ai_studio.scenario.script_content_label')}
                             </label>
                             <textarea
                                 value={script}
                                 onChange={(e) => setScript(e.target.value)}
-                                placeholder={`Mô tả chi tiết cảnh quay của bạn...
-
-Ví dụ:
-Cảnh 1: Một cô gái trẻ đang đi bộ trong công viên lúc hoàng hôn, ánh nắng vàng chiếu qua tán lá.
-Cảnh 2: Cô ấy dừng lại bên một quán cà phê nhỏ, nhìn vào menu.
-Cảnh 3: Close-up ly cà phê đang được pha, hơi nóng bốc lên.
-
-Mẹo: Mô tả càng chi tiết, kết quả càng chính xác!`}
+                                placeholder={t('ai_studio.scenario.script_placeholder')}
                                 rows={14}
                                 className={`w-full px-4 py-4 rounded-xl border-2 text-sm resize-none transition-all focus:outline-none focus:ring-4 ${isDark
                                     ? 'bg-black/30 border-white/10 text-white placeholder-slate-500 focus:border-violet-500/50 focus:ring-violet-500/10'
@@ -163,10 +156,10 @@ Mẹo: Mô tả càng chi tiết, kết quả càng chính xác!`}
                             />
                             <div className="flex justify-between mt-2">
                                 <span className={`text-xs ${themeClasses.textMuted}`}>
-                                    {script.length.toLocaleString()} ký tự
+                                    {t('ai_studio.scenario.characters_count', { count: script.length.toLocaleString() })}
                                 </span>
                                 <span className={`text-xs font-medium ${script.length >= 20 ? 'text-emerald-500' : themeClasses.textMuted}`}>
-                                    {script.length >= 20 ? 'Đủ độ dài' : 'Tối thiểu 20 ký tự'}
+                                    {script.length >= 20 ? t('ai_studio.scenario.sufficient_length') : t('ai_studio.scenario.min_20_chars')}
                                 </span>
                             </div>
                         </div>
@@ -179,14 +172,14 @@ Mẹo: Mô tả càng chi tiết, kết quả càng chính xác!`}
                             disabled={saving}
                             className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 text-white border border-white/10' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'}`}
                         >
-                            {saving ? 'Đang lưu...' : 'Lưu nháp'}
+                            {saving ? t('ai_studio.scenario.saving_draft') : t('ai_studio.scenario.save_draft_btn')}
                         </button>
                         <button
                             onClick={handleParseAndContinue}
                             disabled={script.length < 20 || parsing}
                             className="px-8 py-3 rounded-xl text-base font-bold bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {parsing ? 'Đang phân tích...' : 'Phân tích với AI'}
+                            {parsing ? t('ai_studio.scenario.analyzing_with_ai') : t('ai_studio.scenario.analyze_with_ai_btn')}
                         </button>
                     </div>
                 </div>

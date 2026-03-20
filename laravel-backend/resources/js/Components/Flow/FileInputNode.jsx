@@ -2,6 +2,7 @@ import { memo, useState } from 'react';
 import { Handle, Position } from 'reactflow';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { NodeStatus } from '@/hooks/useExecutionState';
+import { useTranslation } from 'react-i18next';
 
 /**
  * FileInputNode - Premium file/folder selector node for workflow automation
@@ -12,6 +13,7 @@ import { NodeStatus } from '@/hooks/useExecutionState';
 function FileInputNode({ data, selected, id }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const { t } = useTranslation();
     const [isHovered, setIsHovered] = useState(false);
 
     const executionState = data?.executionState || NodeStatus.IDLE;
@@ -134,10 +136,10 @@ function FileInputNode({ data, selected, id }) {
                             </div>
                             <div>
                                 <span className={`text-xs font-semibold uppercase tracking-wide`} style={{ color: statusColor.primary }}>
-                                    {selectionType === 'folder' ? 'Folder (Random)' : 'Media File'}
+                                    {selectionType === 'folder' ? t('flows.editor.nodes.folder_random') : t('flows.editor.nodes.media_file')}
                                 </span>
                                 <p className={`text-[10px] mt-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    {isRunning ? 'Đang xử lý...' : isSuccess ? 'Đã load' : hasSelection ? 'Đã chọn' : 'Chưa chọn'}
+                                    {isRunning ? t('flows.editor.node_status.processing') : isSuccess ? t('flows.editor.node_status.loaded') : hasSelection ? t('flows.editor.node_status.selected') : t('flows.editor.node_status.not_selected')}
                                 </p>
                             </div>
                         </div>
@@ -145,7 +147,7 @@ function FileInputNode({ data, selected, id }) {
                         {/* Status/Random Badge */}
                         {selectionType === 'folder' && hasSelection && (
                             <span className={`text-[9px] font-bold uppercase px-2 py-1 rounded-full ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600'}`}>
-                                🎲 Random
+                                {t('flows.editor.node_status.random')}
                             </span>
                         )}
 
@@ -186,7 +188,7 @@ function FileInputNode({ data, selected, id }) {
                                             {folderName}
                                         </p>
                                         <p className={`text-xs ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
-                                            Random file mỗi lần chạy
+                                            {t('flows.editor.node_status.random_file_each_run')}
                                         </p>
                                     </div>
 
@@ -196,7 +198,7 @@ function FileInputNode({ data, selected, id }) {
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                             </svg>
-                                            Đổi folder
+                                            {t('flows.editor.node_status.change_folder')}
                                         </div>
                                     </div>
                                 </div>
@@ -223,7 +225,7 @@ function FileInputNode({ data, selected, id }) {
                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                                     </svg>
-                                                    Đổi file
+                                                    {t('flows.editor.node_status.change_file')}
                                                 </div>
                                             </div>
                                         </div>
@@ -239,7 +241,7 @@ function FileInputNode({ data, selected, id }) {
                                             </div>
                                             <div className={`absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity`}>
                                                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/20 backdrop-blur-sm text-white text-xs font-medium">
-                                                    Đổi file
+                                                    {t('flows.editor.node_status.change_file')}
                                                 </div>
                                             </div>
                                         </div>
@@ -309,10 +311,10 @@ function FileInputNode({ data, selected, id }) {
                                 </div>
 
                                 <p className={`text-sm font-semibold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    Chọn File hoặc Folder
+                                    {t('flows.editor.node_status.select_file_or_folder')}
                                 </p>
                                 <p className={`text-xs text-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    File cố định hoặc Folder để random
+                                    {t('flows.editor.node_status.fixed_file_or_random_folder')}
                                 </p>
 
                                 <div className={`mt-4 flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all ${isDark
@@ -322,7 +324,7 @@ function FileInputNode({ data, selected, id }) {
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
-                                    Mở Media Library
+                                    {t('flows.editor.node_status.open_media_library')}
                                 </div>
                             </div>
                         </button>

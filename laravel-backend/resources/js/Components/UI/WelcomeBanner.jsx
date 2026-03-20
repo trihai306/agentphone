@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * WelcomeBanner - Animated gradient welcome section
@@ -9,11 +10,12 @@ export default function WelcomeBanner({
     stats = {},
     className = ''
 }) {
+    const { t } = useTranslation();
     const getGreeting = () => {
         const hour = new Date().getHours();
-        if (hour < 12) return 'Chào buổi sáng';
-        if (hour < 18) return 'Chào buổi chiều';
-        return 'Chào buổi tối';
+        if (hour < 12) return t('welcome_banner.good_morning');
+        if (hour < 18) return t('welcome_banner.good_afternoon');
+        return t('welcome_banner.good_evening');
     };
 
     return (
@@ -50,7 +52,7 @@ export default function WelcomeBanner({
                             {user?.name || 'User'}! 👋
                         </h1>
                         <p className="text-purple-100/80 max-w-md">
-                            Đây là tổng quan hoạt động của bạn hôm nay. Tiếp tục phát triển!
+                            {t('welcome_banner.overview_message')}
                         </p>
                     </div>
 
@@ -59,12 +61,12 @@ export default function WelcomeBanner({
                         <QuickStat
                             icon="💰"
                             value={stats.balance || '0 ₫'}
-                            label="Số dư"
+                            label={t('welcome_banner.balance')}
                         />
                         <QuickStat
                             icon="📱"
                             value={stats.devices || '0'}
-                            label="Thiết bị"
+                            label={t('welcome_banner.devices')}
                         />
                         <QuickStat
                             icon="⚡"
@@ -77,13 +79,13 @@ export default function WelcomeBanner({
                 {/* Quick actions */}
                 <div className="flex flex-wrap gap-3 mt-6">
                     <QuickActionPill href="/topup" icon="💳">
-                        Nạp tiền
+                        {t('welcome_banner.top_up')}
                     </QuickActionPill>
                     <QuickActionPill href="/packages" icon="📦">
-                        Mua gói
+                        {t('welcome_banner.buy_package')}
                     </QuickActionPill>
                     <QuickActionPill href="/devices" icon="📱">
-                        Thiết bị
+                        {t('welcome_banner.devices')}
                     </QuickActionPill>
                 </div>
             </div>

@@ -1,5 +1,6 @@
 import { memo, useMemo } from 'react';
 import { Handle, Position } from 'reactflow';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { NodeStatus } from '@/hooks/useExecutionState';
 
@@ -12,6 +13,7 @@ import { NodeStatus } from '@/hooks/useExecutionState';
  * - Collapsible when many conditions
  */
 function GlassConditionNode({ id, data, selected }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
@@ -132,10 +134,10 @@ function GlassConditionNode({ id, data, selected }) {
                     </div>
                     <div className="flex-1 min-w-0">
                         <h3 className="text-sm font-bold" style={{ color }}>
-                            Condition
+                            {t('flows.editor.glass_nodes.condition')}
                         </h3>
                         <p className={`text-[10px] truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {data?.label || `${conditionCount} điều kiện`}
+                            {data?.label || t('flows.editor.glass_nodes.n_conditions', { count: conditionCount })}
                         </p>
                     </div>
 
@@ -166,7 +168,7 @@ function GlassConditionNode({ id, data, selected }) {
                 <div className={`px-3 py-2.5 border-t ${isDark ? 'border-white/5' : 'border-black/5'}`}>
                     {displayConditions.length === 0 ? (
                         <p className={`text-xs italic text-center py-2 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                            Chưa cấu hình điều kiện
+                            {t('flows.editor.glass_nodes.condition_not_configured')}
                         </p>
                     ) : (
                         <div className={`flex flex-wrap gap-1.5 ${showCompact ? 'max-h-[80px] overflow-y-auto custom-scrollbar' : ''}`}>

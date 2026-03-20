@@ -14,37 +14,37 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
     // Navigation sections - professional compact layout
     const navSections = [
         {
-            title: t('navigation.main', { defaultValue: 'Chính' }),
+            title: t('navigation.main'),
             items: [
                 { href: '/dashboard', icon: 'home', label: t('navigation.dashboard'), active: url === '/dashboard' },
                 { href: '/devices', icon: 'device', label: t('navigation.devices'), active: url?.startsWith('/devices') },
             ]
         },
         {
-            title: t('navigation.automation', { defaultValue: 'Tự động hóa' }),
+            title: t('navigation.automation'),
             highlight: true,
             items: [
                 { href: '/flows', icon: 'flow', label: t('navigation.workflows'), active: url?.startsWith('/flows'), highlight: true },
                 { href: '/campaigns', icon: 'seed', label: t('navigation.campaigns'), active: url?.startsWith('/campaigns'), highlight: true },
-                { href: '/tasks', icon: 'tasks', label: t('navigation.tasks', { defaultValue: 'Nhiệm Vụ' }), active: url?.startsWith('/tasks'), highlight: true },
+                { href: '/tasks', icon: 'tasks', label: t('navigation.tasks'), active: url?.startsWith('/tasks'), highlight: true },
                 { href: '/jobs', icon: 'play', label: t('navigation.jobs'), active: url?.startsWith('/jobs') },
                 { href: '/data-collections', icon: 'database', label: t('navigation.data_collections'), active: url?.startsWith('/data-collections') },
             ]
         },
         {
-            title: t('navigation.resources', { defaultValue: 'Tài nguyên' }),
+            title: t('navigation.resources'),
             items: [
-                { href: '/ai-studio', icon: 'ai', label: t('navigation.ai_studio', { defaultValue: 'AI Studio' }), active: url?.startsWith('/ai-studio'), highlight: true },
-                { href: '/marketplace', icon: 'shop', label: t('navigation.marketplace', { defaultValue: 'Marketplace' }), active: url?.startsWith('/marketplace') },
+                { href: '/ai-studio', icon: 'ai', label: t('navigation.ai_studio'), active: url?.startsWith('/ai-studio'), highlight: true },
+                { href: '/marketplace', icon: 'shop', label: t('navigation.marketplace'), active: url?.startsWith('/marketplace') },
                 { href: '/media', icon: 'media', label: t('navigation.media'), active: url?.startsWith('/media') },
             ]
         },
         {
-            title: t('navigation.finance', { defaultValue: 'Tài chính' }),
+            title: t('navigation.finance'),
             items: [
-                { href: '/wallet', icon: 'wallet', label: t('navigation.wallet', { defaultValue: 'Ví tiền' }), active: url === '/wallet' },
-                { href: '/ai-credits', icon: 'credits', label: t('navigation.ai_credits', { defaultValue: 'Nạp Credit' }), active: url?.startsWith('/ai-credits') },
-                { href: '/packages', icon: 'package', label: t('navigation.packages', { defaultValue: 'Gói dịch vụ' }), active: url?.startsWith('/packages') },
+                { href: '/wallet', icon: 'wallet', label: t('navigation.wallet'), active: url === '/wallet' },
+                { href: '/ai-credits', icon: 'credits', label: t('navigation.ai_credits'), active: url?.startsWith('/ai-credits') },
+                { href: '/packages', icon: 'package', label: t('navigation.packages'), active: url?.startsWith('/packages') },
             ]
         },
     ];
@@ -52,7 +52,7 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
     // Quick access items for collapsed mode
     const quickAccessItems = [
         { href: '/notifications', icon: 'bell', label: t('navigation.notifications'), active: url?.startsWith('/notifications'), badge: unreadCount > 0 ? (unreadCount > 99 ? '99+' : unreadCount) : null },
-        { href: '/error-reports', icon: 'bug', label: t('navigation.error_reports', { defaultValue: 'Báo lỗi' }), active: url?.startsWith('/error-reports') },
+        { href: '/error-reports', icon: 'bug', label: t('navigation.error_reports'), active: url?.startsWith('/error-reports') },
     ];
 
     return (
@@ -139,7 +139,7 @@ export default function Sidebar({ user, url, sidebarOpen, setSidebarOpen, collap
                     <div className={`pt-4 border-t ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
                         {!collapsed && (
                             <p className={`px-2 mb-2 text-[10px] font-semibold uppercase tracking-wider ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                {t('navigation.quick_access', { defaultValue: 'Quick Access' })}
+                                {t('navigation.quick_access')}
                             </p>
                         )}
                         <div className="space-y-0.5">

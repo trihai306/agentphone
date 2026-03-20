@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Button from '@/Components/UI/Button';
 
 /**
@@ -6,6 +7,8 @@ import Button from '@/Components/UI/Button';
  * Features gradient background, contact form, and compelling CTA messaging
  */
 export default function CTASection() {
+    const { t } = useTranslation();
+
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -67,32 +70,30 @@ export default function CTASection() {
                         <div className="mb-6 inline-flex items-center rounded-full border border-blue-400/30 bg-blue-500/20 px-4 py-1.5">
                             <span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-green-400" />
                             <span className="text-sm font-medium text-blue-100">
-                                Get Started Today
+                                {t('contact.get_started_today')}
                             </span>
                         </div>
 
                         {/* Title */}
                         <h2 className="mb-6 text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
-                            Ready to Transform{' '}
+                            {t('contact.ready_to_transform')}{' '}
                             <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
-                                Your Workflow?
+                                {t('contact.your_workflow')}
                             </span>
                         </h2>
 
                         {/* Description */}
                         <p className="mb-8 text-lg text-blue-100/80 leading-relaxed">
-                            Join thousands of businesses already saving time and boosting productivity
-                            with our intelligent automation platform. Start your free trial today and
-                            experience the future of work.
+                            {t('contact.cta_description')}
                         </p>
 
                         {/* Benefits list */}
                         <ul className="mb-8 space-y-4">
                             {[
-                                'Free 14-day trial, no credit card required',
-                                'Full access to all automation features',
-                                'Dedicated onboarding support',
-                                'Cancel anytime, no questions asked',
+                                t('contact.benefit_free_trial'),
+                                t('contact.benefit_full_access'),
+                                t('contact.benefit_onboarding'),
+                                t('contact.benefit_cancel_anytime'),
                             ].map((benefit, index) => (
                                 <li
                                     key={index}
@@ -125,23 +126,23 @@ export default function CTASection() {
                                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                 </svg>
                                 <span className="text-sm text-blue-100">
-                                    4.9/5 Rating
+                                    {t('contact.rating')}
                                 </span>
                             </div>
                             <div className="text-sm text-blue-200/60">|</div>
-                            <div className="text-sm text-blue-100">10,000+ Happy Users</div>
+                            <div className="text-sm text-blue-100">{t('contact.happy_users')}</div>
                             <div className="text-sm text-blue-200/60">|</div>
-                            <div className="text-sm text-blue-100">Enterprise Ready</div>
+                            <div className="text-sm text-blue-100">{t('contact.enterprise_ready')}</div>
                         </div>
                     </div>
 
                     {/* Right column - Contact form */}
                     <div className="rounded-2xl bg-white/10 p-8 backdrop-blur-sm border border-white/10 shadow-2xl">
                         <h3 className="mb-2 text-2xl font-bold text-white">
-                            Contact Us
+                            {t('contact.title')}
                         </h3>
                         <p className="mb-6 text-blue-100/70">
-                            Fill out the form below and we'll get back to you within 24 hours.
+                            {t('contact.form_description')}
                         </p>
 
                         {formStatus === 'success' ? (
@@ -160,10 +161,10 @@ export default function CTASection() {
                                     />
                                 </svg>
                                 <h4 className="mb-2 text-xl font-bold text-white">
-                                    Thank You!
+                                    {t('contact.thank_you')}
                                 </h4>
                                 <p className="text-green-100">
-                                    Your message has been sent. We'll be in touch soon!
+                                    {t('contact.success_message')}
                                 </p>
                                 <Button
                                     variant="ghost"
@@ -171,7 +172,7 @@ export default function CTASection() {
                                     onClick={() => setFormStatus('idle')}
                                     className="mt-4 text-green-300 hover:text-white hover:bg-green-500/20"
                                 >
-                                    Send Another Message
+                                    {t('contact.send_another')}
                                 </Button>
                             </div>
                         ) : (
@@ -182,7 +183,7 @@ export default function CTASection() {
                                         htmlFor="name"
                                         className="block text-sm font-medium text-blue-100 mb-2"
                                     >
-                                        Full Name
+                                        {t('contact.name')}
                                     </label>
                                     <input
                                         type="text"
@@ -191,7 +192,7 @@ export default function CTASection() {
                                         value={formData.name}
                                         onChange={handleInputChange}
                                         required
-                                        placeholder="John Doe"
+                                        placeholder={t('contact.name_placeholder')}
                                         className="w-full rounded-lg border border-white/20 bg-white/10 px-4 py-3 text-white placeholder-blue-200/50 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-colors"
                                     />
                                 </div>
@@ -202,7 +203,7 @@ export default function CTASection() {
                                         htmlFor="email"
                                         className="block text-sm font-medium text-blue-100 mb-2"
                                     >
-                                        Email Address
+                                        {t('contact.email')}
                                     </label>
                                     <input
                                         type="email"
@@ -211,7 +212,7 @@ export default function CTASection() {
                                         value={formData.email}
                                         onChange={handleInputChange}
                                         required
-                                        placeholder="john@example.com"
+                                        placeholder={t('contact.email_placeholder')}
                                         className="w-full rounded-lg border border-white/20 bg-white/10 px-4 py-3 text-white placeholder-blue-200/50 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-colors"
                                     />
                                 </div>
@@ -222,8 +223,8 @@ export default function CTASection() {
                                         htmlFor="company"
                                         className="block text-sm font-medium text-blue-100 mb-2"
                                     >
-                                        Company{' '}
-                                        <span className="text-blue-300/50">(Optional)</span>
+                                        {t('contact.company')}{' '}
+                                        <span className="text-blue-300/50">({t('contact.optional')})</span>
                                     </label>
                                     <input
                                         type="text"
@@ -231,7 +232,7 @@ export default function CTASection() {
                                         name="company"
                                         value={formData.company}
                                         onChange={handleInputChange}
-                                        placeholder="Acme Inc."
+                                        placeholder={t('contact.company_placeholder')}
                                         className="w-full rounded-lg border border-white/20 bg-white/10 px-4 py-3 text-white placeholder-blue-200/50 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-colors"
                                     />
                                 </div>
@@ -242,7 +243,7 @@ export default function CTASection() {
                                         htmlFor="message"
                                         className="block text-sm font-medium text-blue-100 mb-2"
                                     >
-                                        Message
+                                        {t('contact.message')}
                                     </label>
                                     <textarea
                                         id="message"
@@ -251,7 +252,7 @@ export default function CTASection() {
                                         onChange={handleInputChange}
                                         required
                                         rows={4}
-                                        placeholder="Tell us about your automation needs..."
+                                        placeholder={t('contact.message_placeholder')}
                                         className="w-full rounded-lg border border-white/20 bg-white/10 px-4 py-3 text-white placeholder-blue-200/50 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-colors resize-none"
                                     />
                                 </div>
@@ -285,11 +286,11 @@ export default function CTASection() {
                                                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                                 />
                                             </svg>
-                                            <span>Sending...</span>
+                                            <span>{t('contact.sending')}</span>
                                         </>
                                     ) : (
                                         <>
-                                            <span>Send Message</span>
+                                            <span>{t('contact.send')}</span>
                                             <svg
                                                 className="ml-2 h-5 w-5"
                                                 fill="none"
@@ -309,19 +310,19 @@ export default function CTASection() {
 
                                 {/* Privacy note */}
                                 <p className="text-center text-xs text-blue-200/50">
-                                    By submitting this form, you agree to our{' '}
+                                    {t('contact.privacy_note')}{' '}
                                     <a
                                         href="#"
                                         className="underline hover:text-blue-300 transition-colors"
                                     >
-                                        Privacy Policy
+                                        {t('contact.privacy_policy')}
                                     </a>{' '}
-                                    and{' '}
+                                    {t('common.and')}{' '}
                                     <a
                                         href="#"
                                         className="underline hover:text-blue-300 transition-colors"
                                     >
-                                        Terms of Service
+                                        {t('contact.terms_of_service')}
                                     </a>
                                     .
                                 </p>
@@ -349,7 +350,7 @@ export default function CTASection() {
                                 />
                             </svg>
                         </div>
-                        <h4 className="mb-1 font-bold text-white">Email Us</h4>
+                        <h4 className="mb-1 font-bold text-white">{t('contact.email_us')}</h4>
                         <p className="text-sm text-blue-200/70">support@agentauto.com</p>
                     </div>
 
@@ -370,7 +371,7 @@ export default function CTASection() {
                                 />
                             </svg>
                         </div>
-                        <h4 className="mb-1 font-bold text-white">Call Us</h4>
+                        <h4 className="mb-1 font-bold text-white">{t('contact.call_us')}</h4>
                         <p className="text-sm text-blue-200/70">+1 (555) 123-4567</p>
                     </div>
 
@@ -391,8 +392,8 @@ export default function CTASection() {
                                 />
                             </svg>
                         </div>
-                        <h4 className="mb-1 font-bold text-white">Live Chat</h4>
-                        <p className="text-sm text-blue-200/70">Available 24/7</p>
+                        <h4 className="mb-1 font-bold text-white">{t('contact.live_chat')}</h4>
+                        <p className="text-sm text-blue-200/70">{t('contact.available_247')}</p>
                     </div>
                 </div>
             </div>

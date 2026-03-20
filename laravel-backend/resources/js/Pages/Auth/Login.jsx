@@ -123,7 +123,7 @@ export default function Login() {
 
     return (
         <>
-            <Head title="Đăng Nhập - CLICKAI" />
+            <Head title={t('auth.login.head_title', { defaultValue: 'Login - CLICKAI' })} />
             <div className={`min-h-screen relative overflow-hidden ${isDark
                 ? 'bg-gradient-to-br from-[#0a0a0f] via-[#0d0d15] to-[#0a0a12]'
                 : 'bg-gradient-to-br from-slate-50 via-white to-purple-50/30'
@@ -192,14 +192,14 @@ export default function Login() {
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
                                 </span>
-                                Nền tảng tự động hóa #1 Việt Nam
+                                {t('auth.login.badge', { defaultValue: '#1 automation platform in Vietnam' })}
                             </div>
 
                             <h1 className={`text-3xl sm:text-4xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                {t('auth.login.title', { defaultValue: 'Chào mừng trở lại' })}
+                                {t('auth.login.title', { defaultValue: 'Login' })}
                             </h1>
                             <p className={`text-base ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                {t('auth.login.subtitle', { defaultValue: 'Đăng nhập để tiếp tục quản lý workflow của bạn' })}
+                                {t('auth.login.subtitle', { defaultValue: 'Sign in to your account' })}
                             </p>
                         </div>
 
@@ -274,7 +274,7 @@ export default function Login() {
                                 {/* Password */}
                                 <div>
                                     <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                        {t('auth.login.password', { defaultValue: 'Mật khẩu' })}
+                                        {t('auth.login.password', { defaultValue: 'Password' })}
                                     </label>
                                     <div className="relative">
                                         <div className={`absolute left-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
@@ -348,7 +348,7 @@ export default function Login() {
                                             )}
                                         </div>
                                         <span className={`ml-2.5 text-sm ${isDark ? 'text-gray-400 group-hover:text-gray-300' : 'text-gray-600 group-hover:text-gray-800'}`}>
-                                            {t('auth.login.remember_me', { defaultValue: 'Ghi nhớ đăng nhập' })}
+                                            {t('auth.login.remember_me', { defaultValue: 'Remember me' })}
                                         </span>
                                     </label>
                                     <Link
@@ -358,7 +358,7 @@ export default function Login() {
                                             : 'text-violet-600 hover:text-violet-700'
                                             }`}
                                     >
-                                        {t('auth.login.forgot_password', { defaultValue: 'Quên mật khẩu?' })}
+                                        {t('auth.login.forgot_password', { defaultValue: 'Forgot password?' })}
                                     </Link>
                                 </div>
 
@@ -381,11 +381,11 @@ export default function Login() {
                                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                                 </svg>
-                                                Đang đăng nhập...
+                                                {t('auth.login.processing', { defaultValue: 'Logging in...' })}
                                             </>
                                         ) : (
                                             <>
-                                                {t('auth.login.submit', { defaultValue: 'Đăng Nhập' })}
+                                                {t('auth.login.submit', { defaultValue: 'Login' })}
                                                 <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                                 </svg>
@@ -405,7 +405,7 @@ export default function Login() {
                                         ? 'bg-[#0d0d15] text-gray-500'
                                         : 'bg-white text-gray-400'
                                         }`}>
-                                        hoặc tiếp tục với
+                                        {t('auth.login.or_continue_with', { defaultValue: 'or continue with' })}
                                     </span>
                                 </div>
                             </div>
@@ -444,7 +444,7 @@ export default function Login() {
 
                         {/* Sign Up Link */}
                         <p className={`mt-8 text-center text-sm ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
-                            {t('auth.login.no_account', { defaultValue: 'Chưa có tài khoản?' })}{' '}
+                            {t('auth.login.no_account', { defaultValue: "Don't have an account?" })}{' '}
                             <Link
                                 href="/register"
                                 className={`font-semibold transition-colors ${isDark
@@ -452,7 +452,7 @@ export default function Login() {
                                     : 'text-violet-600 hover:text-violet-700'
                                     }`}
                             >
-                                {t('auth.login.register', { defaultValue: 'Đăng ký miễn phí' })}
+                                {t('auth.login.register', { defaultValue: 'Register now' })}
                             </Link>
                         </p>
 
@@ -465,7 +465,7 @@ export default function Login() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                     </svg>
                                 }
-                                text="Bảo mật SSL"
+                                text={t('auth.login.ssl_security', { defaultValue: 'SSL Security' })}
                             />
                             <FeatureBadge
                                 isDark={isDark}
@@ -474,7 +474,7 @@ export default function Login() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                     </svg>
                                 }
-                                text="Đăng nhập nhanh"
+                                text={t('auth.login.quick_login', { defaultValue: 'Quick login' })}
                             />
                             <FeatureBadge
                                 isDark={isDark}
@@ -483,7 +483,7 @@ export default function Login() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                     </svg>
                                 }
-                                text="Mã hóa 2 lớp"
+                                text={t('auth.login.two_factor', { defaultValue: 'Two-factor encryption' })}
                             />
                         </div>
                     </div>
@@ -492,7 +492,7 @@ export default function Login() {
                 {/* Footer */}
                 <footer className="relative z-10 pb-8 text-center">
                     <p className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                        © {new Date().getFullYear()} CLICKAI. Bản quyền thuộc về CLICKAI.
+                        © {new Date().getFullYear()} CLICKAI. {t('auth.login.copyright', { defaultValue: 'Copyright belongs to CLICKAI.' })}
                     </p>
                 </footer>
             </div>

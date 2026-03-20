@@ -52,10 +52,10 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
 
     const handleDelete = async (scenario) => {
         const confirmed = await showConfirm({
-            title: 'Xóa kịch bản',
-            message: `Bạn có chắc muốn xóa kịch bản "${scenario.title || 'Không tiêu đề'}"?`,
-            confirmText: 'Xóa',
-            cancelText: 'Hủy',
+            title: t('ai_studio.scenario.delete_scenario_title'),
+            message: t('ai_studio.scenario.delete_scenario_confirm', { title: scenario.title || t('ai_studio.scenario.untitled_scenario') }),
+            confirmText: t('common.delete'),
+            cancelText: t('common.cancel'),
             type: 'danger',
             icon: 'delete',
         });
@@ -65,9 +65,9 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
         try {
             await aiStudioApi.deleteScenario(scenario.id);
             setScenarioList(prev => prev.filter(s => s.id !== scenario.id));
-            addToast('Đã xóa kịch bản', 'success');
+            addToast(t('ai_studio.scenario.deleted_scenario'), 'success');
         } catch (error) {
-            addToast('Không thể xóa', 'error');
+            addToast(t('ai_studio.scenario.cannot_delete'), 'error');
         } finally {
             setDeleting(null);
         }
@@ -75,13 +75,13 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
 
     const getStatusConfig = (status) => {
         const configs = {
-            draft: { label: 'Bản nháp', color: 'slate', icon: 'edit' },
-            parsed: { label: 'Đã phân tích', color: 'blue', icon: 'ai' },
-            queued: { label: 'Đang chờ', color: 'purple', icon: 'clock' },
-            generating: { label: 'Đang tạo', color: 'amber', icon: 'credits' },
-            completed: { label: 'Hoàn thành', color: 'emerald', icon: 'checkCircle' },
-            failed: { label: 'Thất bại', color: 'red', icon: 'xCircle' },
-            partial: { label: 'Một phần', color: 'orange', icon: 'exclamation' },
+            draft: { label: t('ai_studio.scenario.draft'), color: 'slate', icon: 'edit' },
+            parsed: { label: t('ai_studio.scenario.analyzed'), color: 'blue', icon: 'ai' },
+            queued: { label: t('ai_studio.scenario.waiting'), color: 'purple', icon: 'clock' },
+            generating: { label: t('ai_studio.scenario.generating'), color: 'amber', icon: 'credits' },
+            completed: { label: t('ai_studio.scenario.completed'), color: 'emerald', icon: 'checkCircle' },
+            failed: { label: t('ai_studio.scenario.failed'), color: 'red', icon: 'xCircle' },
+            partial: { label: t('ai_studio.scenario.partial'), color: 'orange', icon: 'exclamation' },
         };
         return configs[status] || configs.draft;
     };
@@ -92,7 +92,7 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
         : 'bg-white/80 backdrop-blur-xl border border-slate-200/60 shadow-lg';
 
     return (
-        <AppLayout title="Quản lý kịch bản">
+        <AppLayout title={t('ai_studio.scenario.manage_scenarios')}>
             <div className={`min-h-screen ${isDark ? 'bg-[#050505]' : 'bg-gradient-to-br from-slate-50 to-slate-100'}`}>
                 {/* Background Effects */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -111,10 +111,10 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
                             </Link>
                             <div>
                                 <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                    <Icon name="video" className="w-5 h-5 inline-block mr-1" /> Quản lý Kịch bản
+                                    <Icon name="video" className="w-5 h-5 inline-block mr-1" /> {t('ai_studio.scenario.manage_scenarios')}
                                 </h1>
                                 <p className={`text-sm ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
-                                    {scenarioList.length} kịch bản
+                                    {t('ai_studio.scenario.scenarios_count', { count: scenarioList.length })}
                                 </p>
                             </div>
                         </div>
@@ -123,7 +123,7 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
                             <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl ${glassCard}`}>
                                 <Icon name="ai" className="w-5 h-5" />
                                 <div>
-                                    <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Credits</p>
+                                    <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{t('ai_studio.credits')}</p>
                                     <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
                                         {currentCredits.toLocaleString()}
                                     </p>
@@ -133,7 +133,7 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
                                 href="/ai-studio/scenarios/create"
                                 className="px-5 py-3 rounded-xl font-medium bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:shadow-lg hover:shadow-violet-500/25 transition-all"
                             >
-                                + Tạo kịch bản mới
+                                {t('ai_studio.scenario.create_scenario_new')}
                             </Link>
                         </div>
                     </header>
@@ -143,27 +143,27 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
                         <div className={`text-center py-20 rounded-2xl ${glassCard}`}>
                             <div className="mb-4"><Icon name="video" className="w-14 h-14 mx-auto" /></div>
                             <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                Chưa có kịch bản nào
+                                {t('ai_studio.scenario.no_scenarios_yet')}
                             </h3>
                             <p className={`mb-6 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
-                                Bắt đầu tạo video từ kịch bản của bạn
+                                {t('ai_studio.scenario.start_creating_from_script')}
                             </p>
                             <Link
                                 href="/ai-studio/scenarios/create"
                                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium bg-gradient-to-r from-violet-600 to-indigo-600 text-white"
                             >
-                                <Icon name="ai" className="w-5 h-5 inline-block mr-1" /> Tạo kịch bản đầu tiên
+                                <Icon name="ai" className="w-5 h-5 inline-block mr-1" /> {t('ai_studio.scenario.create_first_scenario')}
                             </Link>
                         </div>
                     ) : (
                         <div className={`rounded-2xl ${glassCard} overflow-hidden`}>
                             {/* Table Header */}
                             <div className={`grid grid-cols-12 gap-4 px-6 py-4 text-xs font-semibold uppercase tracking-wider border-b ${isDark ? 'border-white/5 text-slate-500' : 'border-slate-200 text-slate-500'}`}>
-                                <div className="col-span-4">Kịch bản</div>
-                                <div className="col-span-2">Trạng thái</div>
-                                <div className="col-span-2">Tiến độ</div>
-                                <div className="col-span-2">Ngày tạo</div>
-                                <div className="col-span-2 text-right">Thao tác</div>
+                                <div className="col-span-4">{t('ai_studio.scenario.scenario_col')}</div>
+                                <div className="col-span-2">{t('ai_studio.scenario.status_col')}</div>
+                                <div className="col-span-2">{t('ai_studio.scenario.progress_col')}</div>
+                                <div className="col-span-2">{t('ai_studio.scenario.created_date_col')}</div>
+                                <div className="col-span-2 text-right">{t('ai_studio.scenario.actions_col')}</div>
                             </div>
 
                             {/* Table Body */}
@@ -184,11 +184,11 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
                                                     href={`/ai-studio/scenarios/${scenario.id}`}
                                                     className={`font-medium hover:underline ${isDark ? 'text-white' : 'text-slate-900'}`}
                                                 >
-                                                    {scenario.title || 'Kịch bản không tiêu đề'}
+                                                    {scenario.title || t('ai_studio.scenario.untitled_scenario')}
                                                 </Link>
                                                 <div className="flex items-center gap-3 mt-1">
                                                     <span className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                                        <>{scenario.output_type === 'video' ? <Icon name="video" className="w-3.5 h-3.5 inline-block mr-0.5" /> : <Icon name="media" className="w-3.5 h-3.5 inline-block mr-0.5" />} {scenario.total_scenes} cảnh</>
+                                                        <>{scenario.output_type === 'video' ? <Icon name="video" className="w-3.5 h-3.5 inline-block mr-0.5" /> : <Icon name="media" className="w-3.5 h-3.5 inline-block mr-0.5" />} {t('ai_studio.scenario.scenes_count', { count: scenario.total_scenes })}</>
                                                     </span>
                                                     <span className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                                                         <Icon name="diamond" className="w-3.5 h-3.5 inline-block mr-0.5" /> {scenario.total_credits} credits
@@ -226,7 +226,7 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
                                                     </span>
                                                 </div>
                                                 <p className={`text-xs mt-1 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-                                                    {scenario.completed_scenes || 0}/{scenario.total_scenes} cảnh
+                                                    {t('ai_studio.scenario.done_count', { count: `${scenario.completed_scenes || 0}/${scenario.total_scenes}` })}
                                                 </p>
                                             </div>
 
@@ -246,7 +246,7 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
                                                     href={`/ai-studio/scenarios/${scenario.id}`}
                                                     className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-white/10 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-500 hover:text-slate-700'
                                                         }`}
-                                                    title="Xem chi tiết"
+                                                    title={t('ai_studio.scenario.view_details')}
                                                 >
                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -258,7 +258,7 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
                                                     disabled={deleting === scenario.id}
                                                     className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-red-500/20 text-slate-400 hover:text-red-400' : 'hover:bg-red-100 text-slate-500 hover:text-red-600'
                                                         } disabled:opacity-50`}
-                                                    title="Xóa"
+                                                    title={t('common.delete')}
                                                 >
                                                     {deleting === scenario.id ? (
                                                         <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -278,7 +278,7 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
                             {scenarios.last_page > 1 && (
                                 <div className={`px-6 py-4 border-t ${isDark ? 'border-white/5' : 'border-slate-200'} flex items-center justify-between`}>
                                     <p className={`text-sm ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
-                                        Trang {scenarios.current_page} / {scenarios.last_page}
+                                        {t('ai_studio.scenario.page_of', { current: scenarios.current_page, total: scenarios.last_page })}
                                     </p>
                                     <div className="flex gap-2">
                                         {scenarios.prev_page_url && (
@@ -286,7 +286,7 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
                                                 href={scenarios.prev_page_url}
                                                 className={`px-4 py-2 rounded-lg text-sm ${glassCard}`}
                                             >
-                                                ← Trước
+                                                ← {t('ai_studio.scenario.prev_page')}
                                             </Link>
                                         )}
                                         {scenarios.next_page_url && (
@@ -294,7 +294,7 @@ export default function Scenarios({ scenarios = {}, currentCredits = 0 }) {
                                                 href={scenarios.next_page_url}
                                                 className={`px-4 py-2 rounded-lg text-sm ${glassCard}`}
                                             >
-                                                Sau →
+                                                {t('ai_studio.scenario.next_page')} →
                                             </Link>
                                         )}
                                     </div>

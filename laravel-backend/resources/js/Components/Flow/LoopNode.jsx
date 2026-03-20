@@ -2,6 +2,7 @@ import { memo, useState } from 'react';
 import { Handle, Position } from 'reactflow';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { NodeStatus } from '@/hooks/useExecutionState';
+import { useTranslation } from 'react-i18next';
 
 /**
  * LoopNode - Enhanced with Data Source integration
@@ -10,6 +11,7 @@ import { NodeStatus } from '@/hooks/useExecutionState';
 function LoopNode({ id, data, selected }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const { t } = useTranslation();
     const [isConfiguring, setIsConfiguring] = useState(false);
 
     // Execution state
@@ -81,7 +83,7 @@ function LoopNode({ id, data, selected }) {
                     </div>
                     <div className="flex-1">
                         <span className="text-xs font-bold uppercase tracking-wider" style={{ color }}>
-                            {isRunning ? 'Iterating...' : 'Loop'}
+                            {isRunning ? t('flows.editor.node_status.iterating') : t('flows.editor.nodes.loop')}
                         </span>
                     </div>
                     {/* Iteration Counter - Always show iterations */}
@@ -98,7 +100,7 @@ function LoopNode({ id, data, selected }) {
                 {/* Body */}
                 <div className={`px-3 py-3 border-t space-y-2 ${isDark ? 'border-[#252525]' : 'border-gray-200'}`}>
                     <p className={`text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
-                        {data?.label || 'For Each'}
+                        {data?.label || t('flows.editor.node_status.for_each')}
                     </p>
 
                     {/* Source Info */}
@@ -133,7 +135,7 @@ function LoopNode({ id, data, selected }) {
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
-                            <span>Completed all iterations</span>
+                            <span>{t('flows.editor.node_status.completed_all_iterations')}</span>
                         </div>
                     )}
                     {isError && (
@@ -141,15 +143,15 @@ function LoopNode({ id, data, selected }) {
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
-                            <span>Error in iteration</span>
+                            <span>{t('flows.editor.node_status.error_in_iteration')}</span>
                         </div>
                     )}
                 </div>
 
                 {/* Branch Labels */}
                 <div className={`flex justify-between px-3 py-2 text-[10px] font-semibold border-t ${isDark ? 'border-[#252525]' : 'border-gray-100'}`}>
-                    <span style={{ color }}>Each Item ↓</span>
-                    <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>Complete →</span>
+                    <span style={{ color }}>{t('flows.editor.node_status.each_item')}</span>
+                    <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{t('flows.editor.node_status.completed')}</span>
                 </div>
             </div>
 

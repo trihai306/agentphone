@@ -63,21 +63,24 @@ const LiveRecordingPanel = lazy(() => import('@/Components/Flow/LiveRecordingPan
 const FloatingPhonePreview = lazy(() => import('@/Components/Flow/FloatingPhonePreview'));
 
 // Premium loading fallback for lazy modals
-const ModalLoader = () => (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="bg-white/10 dark:bg-white/5 backdrop-blur-xl rounded-2xl p-8 shadow-2xl border border-white/20">
-            <div className="relative w-12 h-12 mx-auto">
-                {/* Outer ring */}
-                <div className="absolute inset-0 rounded-full border-2 border-violet-500/20" />
-                {/* Spinning gradient ring */}
-                <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-violet-500 border-r-indigo-500 animate-spin" />
-                {/* Inner pulse */}
-                <div className="absolute inset-2 rounded-full bg-gradient-to-br from-violet-500/30 to-indigo-500/30 animate-pulse" />
+const ModalLoader = () => {
+    const { t } = useTranslation();
+    return (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white/10 dark:bg-white/5 backdrop-blur-xl rounded-2xl p-8 shadow-2xl border border-white/20">
+                <div className="relative w-12 h-12 mx-auto">
+                    {/* Outer ring */}
+                    <div className="absolute inset-0 rounded-full border-2 border-violet-500/20" />
+                    {/* Spinning gradient ring */}
+                    <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-violet-500 border-r-indigo-500 animate-spin" />
+                    {/* Inner pulse */}
+                    <div className="absolute inset-2 rounded-full bg-gradient-to-br from-violet-500/30 to-indigo-500/30 animate-pulse" />
+                </div>
+                <p className="text-sm text-white/70 mt-4 text-center">{t('common.loading')}</p>
             </div>
-            <p className="text-sm text-white/70 mt-4 text-center">Loading...</p>
         </div>
-    </div>
-);
+    );
+};
 
 // nodeTypes, edgeTypes, defaultEdgeOptions are imported from constants/
 
@@ -625,7 +628,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
                     // Auto-create "Open App" node as the first node in workflow
                     const targetApp = e.session?.target_app || e.session?.session?.target_app || 'App';
-                    const appName = targetApp === 'manual' ? 'Manual Navigation' :
+                    const appName = targetApp === 'manual' ? t('flows.editor.recording.manual_navigation') :
                         targetApp.split('.').pop() || targetApp; // Get last part of package name
 
                     const openAppEvent = {
@@ -639,7 +642,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                     const openAppSuggestion = {
                         type: 'open_app',
                         data: {
-                            label: `Open ${appName}`,
+                            label: t('flows.editor.recording.open_app_label', { app: appName }),
                             color: 'green',
                         }
                     };
@@ -783,7 +786,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
                     // Show progress toast
                     if (event.status === 'error') {
-                        addToast(`Action failed: ${event.message || 'Unknown error'}`, 'error');
+                        addToast(t('flows.editor.action_failed', { error: event.message || t('common.unknown_error') }), 'error');
                     }
                 });
 
@@ -1315,7 +1318,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
 
     return (
         <MouseDragProvider onDropInCanvas={onMouseDropInCanvas} isDark={isDark}>
-            <Head title={`${flowName} - Flow Editor`} />
+            <Head title={`${flowName} - ${t('flows.flow_editor')}`} />
             <div className={`h-screen flex flex-col transition-colors duration-300 ${themeClasses.bgPrimary}`}>
                 {/* Top Toolbar */}
                 <EditorToolbar
@@ -1399,7 +1402,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                             {isDraggingOver && (
                                 <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center bg-indigo-500/5">
                                     <div className={`px-6 py-4 border-2 border-dashed border-indigo-500 rounded-2xl text-indigo-500 font-semibold text-sm shadow-2xl ${themeClasses.bgSecondary}`}>
-                                        Drop to add node
+                                        {t('flows.editor.drop_to_add_node')}
                                     </div>
                                 </div>
                             )}

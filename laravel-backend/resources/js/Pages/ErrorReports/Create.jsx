@@ -6,24 +6,24 @@ import { useState, useRef, useEffect } from 'react';
 import { Button, Icon } from '@/Components/UI';
 import { errorReportApi } from '@/services/api';
 
-const typeOptions = [
-    { value: 'bug', label: 'Bug', icon: 'bug' },
-    { value: 'ui_issue', label: 'UI Issue', icon: 'palette' },
-    { value: 'performance', label: 'Performance', icon: 'credits' },
-    { value: 'feature_request', label: 'Feature Request', icon: 'lightbulb' },
-    { value: 'other', label: 'Other', icon: 'questionMark' },
-];
-
-const severityOptions = [
-    { value: 'low', label: 'Low' },
-    { value: 'medium', label: 'Medium' },
-    { value: 'high', label: 'High' },
-    { value: 'critical', label: 'Critical' },
-];
-
 export default function Create() {
     const { theme } = useTheme();
     const { t } = useTranslation();
+
+    const typeOptions = [
+        { value: 'bug', label: t('error_reports.types.bug', 'Bug'), icon: 'bug' },
+        { value: 'ui_issue', label: t('error_reports.types.ui_issue', 'UI Issue'), icon: 'palette' },
+        { value: 'performance', label: t('error_reports.types.performance', 'Performance'), icon: 'credits' },
+        { value: 'feature_request', label: t('error_reports.types.feature_request', 'Feature Request'), icon: 'lightbulb' },
+        { value: 'other', label: t('error_reports.types.other', 'Other'), icon: 'questionMark' },
+    ];
+
+    const severityOptions = [
+        { value: 'low', label: t('error_reports.low') },
+        { value: 'medium', label: t('error_reports.medium') },
+        { value: 'high', label: t('error_reports.high') },
+        { value: 'critical', label: t('error_reports.critical') },
+    ];
     const isDark = theme === 'dark';
     const fileInputRef = useRef(null);
     const [screenshots, setScreenshots] = useState([]);

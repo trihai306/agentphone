@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import Button from '@/Components/UI/Button';
 
 /**
@@ -5,6 +6,8 @@ import Button from '@/Components/UI/Button';
  * Features gradient background, responsive layout, and agent automation messaging
  */
 export default function HeroSection() {
+    const { t } = useTranslation();
+
     const handleGetStarted = (e) => {
         e.preventDefault();
         const target = document.querySelector('#contact');
@@ -48,23 +51,21 @@ export default function HeroSection() {
                     <div className="mb-8 inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-4 py-2 dark:border-blue-800 dark:bg-blue-900/30">
                         <span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-blue-600 dark:bg-blue-400" />
                         <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                            Intelligent Automation Platform
+                            {t('landing.intelligent_automation_platform')}
                         </span>
                     </div>
 
                     {/* Main Headline */}
                     <h1 className="mb-6 text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl md:text-6xl lg:text-7xl">
-                        <span className="block">Automate Your</span>
+                        <span className="block">{t('landing.automate_your')}</span>
                         <span className="block bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400">
-                            Digital Workflows
+                            {t('landing.digital_workflows')}
                         </span>
                     </h1>
 
                     {/* Subheadline */}
                     <p className="mx-auto mb-10 max-w-2xl text-lg text-gray-600 dark:text-gray-300 sm:text-xl">
-                        Harness the power of intelligent agents to streamline repetitive tasks,
-                        boost productivity, and unlock new possibilities for your business.
-                        No coding required.
+                        {t('landing.hero_subheadline')}
                     </p>
 
                     {/* CTA Buttons */}
@@ -75,7 +76,7 @@ export default function HeroSection() {
                             onClick={handleGetStarted}
                             className="min-w-[200px] shadow-lg shadow-blue-500/25 dark:shadow-blue-500/15"
                         >
-                            <span>Get Started Free</span>
+                            <span>{t('landing.get_started')}</span>
                             <svg
                                 className="ml-2 h-5 w-5"
                                 fill="none"
@@ -115,7 +116,7 @@ export default function HeroSection() {
                                     d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                 />
                             </svg>
-                            <span>See How It Works</span>
+                            <span>{t('landing.see_how_it_works')}</span>
                         </Button>
                     </div>
 
@@ -133,7 +134,7 @@ export default function HeroSection() {
                                     clipRule="evenodd"
                                 />
                             </svg>
-                            <span className="text-sm font-medium">No credit card required</span>
+                            <span className="text-sm font-medium">{t('landing.no_credit_card')}</span>
                         </div>
                         <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
                             <svg
@@ -147,7 +148,7 @@ export default function HeroSection() {
                                     clipRule="evenodd"
                                 />
                             </svg>
-                            <span className="text-sm font-medium">Setup in minutes</span>
+                            <span className="text-sm font-medium">{t('landing.setup_in_minutes')}</span>
                         </div>
                         <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
                             <svg
@@ -161,7 +162,7 @@ export default function HeroSection() {
                                     clipRule="evenodd"
                                 />
                             </svg>
-                            <span className="text-sm font-medium">24/7 automation</span>
+                            <span className="text-sm font-medium">{t('landing.247_automation')}</span>
                         </div>
                     </div>
                 </div>
@@ -172,7 +173,7 @@ export default function HeroSection() {
                 <button
                     onClick={handleLearnMore}
                     className="rounded-full p-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
-                    aria-label="Scroll to features"
+                    aria-label={t('landing.scroll_to_features')}
                 >
                     <svg
                         className="h-6 w-6"

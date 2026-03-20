@@ -241,12 +241,12 @@ export default function MediaLibraryModal({
                             {title || t('media.select_media', 'Chọn Media')}
                         </h2>
                         <span className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {media.total || 0} files
+                            {media.total || 0} {t('media.files')}
                         </span>
                         {selectedItems.length > 0 && (
                             <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${isDark ? 'bg-violet-900/50 text-violet-300' : 'bg-violet-100 text-violet-700'
                                 }`}>
-                                {selectedItems.length} đã chọn
+                                {t('media.selected_count', { count: selectedItems.length })}
                             </span>
                         )}
                     </div>
@@ -270,10 +270,10 @@ export default function MediaLibraryModal({
 
                         {/* View Toggle */}
                         <div className={`flex p-1 rounded-lg ${isDark ? 'bg-[#121212]' : 'bg-gray-100'}`}>
-                            [
-                                    { mode: 'grid', icon: 'grid' },
-                                    { mode: 'list', icon: 'list' }
-                                ].map(({ mode, icon }) => (
+                            {[
+                                { mode: 'grid', icon: 'grid' },
+                                { mode: 'list', icon: 'list' }
+                            ].map(({ mode, icon }) => (
                                 <button
                                     key={mode}
                                     onClick={() => setViewMode(mode)}
@@ -549,7 +549,7 @@ export default function MediaLibraryModal({
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className={`font-medium text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.original_name}</p>
-                                                    <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{item.type === 'image' ? 'Image' : 'Video'}</p>
+                                                    <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{item.type === 'image' ? t('media.images') : t('media.videos')}</p>
                                                 </div>
                                                 <div className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{item.formatted_size}</div>
                                             </div>
@@ -601,7 +601,7 @@ export default function MediaLibraryModal({
                                             {t('media.type', 'Loại')}
                                         </p>
                                         <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                                            {activeItem.type === 'video' ? 'Video' : 'Image'}
+                                            {activeItem.type === 'video' ? t('media.videos') : t('media.images')}
                                         </p>
                                     </div>
                                     <div>

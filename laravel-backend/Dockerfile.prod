@@ -1,0 +1,92 @@
+# ============================================
+# Multi-stage Dockerfile for Production
+# Laravel Octane/Swoole
+# ============================================
+
+# Stage 1: Build frontend assets
+FROM node:20-alpine AS frontend
+WORKDIR /build
+COPY package.json package-lock.json ./
+RUN npm ci --production=false
+COPY vite.config.js tailwind.config.js postcss.config.js ./
+COPY resources/ resources/
+RUN npm run build
+
+# Stage 2: Install PHP dependencies
+FROM composer:2 AS composer
+WORKDIR /build
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction --prefer-dist
+COPY . .
+RUN composer dump-autoload --optimize
+
+# Stage 3: Production runtime
+FROM php:8.4-cli-alpine
+
+# Install system dependencies
+RUN apk add --no-cache \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    libxml2-dev \
+    libzip-dev \
+    icu-dev \
+    openssl-dev \
+    linux-headers \
+    oniguruma-dev \
+    curl \
+    supervisor \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+        pdo_mysql mbstring exif pcntl bcmath gd zip intl sockets opcache
+
+# Install Redis extension
+RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
+    && pecl install redis swoole \
+    && docker-php-ext-enable redis swoole \
+    && apk del .build-deps
+
+# PHP production config
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+COPY docker/php.ini /usr/local/etc/php/conf.d/99-custom.ini
+
+# OPcache production settings
+RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini \
+    && echo "opcache.memory_consumption=256" >> /usr/local/etc/php/conf.d/opcache.ini \
+    && echo "opcache.max_accelerated_files=20000" >> /usr/local/etc/php/conf.d/opcache.ini \
+    && echo "opcache.validate_timestamps=0" >> /usr/local/etc/php/conf.d/opcache.ini \
+    && echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/opcache.ini
+
+WORKDIR /var/www/html
+
+# Copy PHP dependencies from composer stage
+COPY --from=composer /build/vendor vendor/
+
+# Copy application code
+COPY . .
+
+# Copy built frontend assets from frontend stage
+COPY --from=frontend /build/public/build public/build/
+
+# Create required directories
+RUN mkdir -p storage/framework/{cache,sessions,views} \
+    && mkdir -p storage/logs \
+    && mkdir -p bootstrap/cache
+
+# Set permissions
+RUN addgroup -g 1000 -S www-data 2>/dev/null || true \
+    && adduser -u 1000 -S www-data -G www-data 2>/dev/null || true \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 storage bootstrap/cache
+
+# Copy supervisor config for production
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD curl -f http://localhost:9000 || exit 1
+
+EXPOSE 9000
+
+# Start supervisor (manages Octane + Queue + Scheduler)
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

@@ -32,12 +32,12 @@ export default function Edit({ device }) {
     const statusOptions = [
         { value: 'active', label: t('devices.status.online') },
         { value: 'inactive', label: t('devices.status.offline') },
-        { value: 'maintenance', label: 'Maintenance' },
+        { value: 'maintenance', label: t('devices.status.maintenance', 'Maintenance') },
     ];
 
     return (
-        <AppLayout title={t('devices.edit_device', { defaultValue: 'Edit Device' })}>
-            <Head title={t('devices.edit_device', { defaultValue: 'Edit Device' })} />
+        <AppLayout title={t('devices.edit_device')}>
+            <Head title={t('devices.edit_device')} />
 
             <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
                 <div className="max-w-[600px] mx-auto px-6 py-6">
@@ -45,14 +45,14 @@ export default function Edit({ device }) {
                     <Breadcrumb
                         items={[
                             { label: t('devices.title'), href: '/devices' },
-                            { label: device.name || t('devices.edit_device', { defaultValue: 'Edit Device' }) },
+                            { label: device.name || t('devices.edit_device') },
                         ]}
                         className="mb-4"
                     />
 
                     {/* Header */}
                     <PageHeader
-                        title={t('devices.edit_device', { defaultValue: 'Edit Device' })}
+                        title={t('devices.edit_device')}
                         subtitle={t('devices.update_description', { defaultValue: 'Update device information' })}
                         backHref="/devices"
                     />
@@ -91,7 +91,7 @@ export default function Edit({ device }) {
                             />
 
                             <Select
-                                label={t('common.status', { defaultValue: 'Status' })}
+                                label={t('common.status')}
                                 value={data.status}
                                 onChange={(e) => setData('status', e.target.value)}
                                 options={statusOptions}
@@ -100,7 +100,7 @@ export default function Edit({ device }) {
                             {/* Last Active (Read-only) */}
                             <Input
                                 label={t('devices.last_active', { defaultValue: 'Last Active' })}
-                                value={device.last_active_at ? new Date(device.last_active_at).toLocaleString() : 'Never'}
+                                value={device.last_active_at ? new Date(device.last_active_at).toLocaleString() : t('devices.never')}
                                 disabled
                             />
 

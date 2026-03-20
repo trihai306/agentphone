@@ -33,7 +33,7 @@ export default function ResetPassword({ token, email }) {
     const iconClass = isDark ? 'text-gray-500' : 'text-gray-400';
 
     return (<>
-        <Head title="Đặt Lại Mật Khẩu - CLICKAI" />
+        <Head title={t('auth.reset_password.head_title', { defaultValue: 'Reset Password - CLICKAI' })} />
         <div className={`min-h-screen relative overflow-hidden ${isDark ? 'bg-gradient-to-br from-[#0a0a0f] via-[#0d0d15] to-[#0a0a12]' : 'bg-gradient-to-br from-slate-50 via-white to-cyan-50/30'}`}>
             <FloatingParticles isDark={isDark} />
             <GradientOrbs isDark={isDark} />
@@ -66,8 +66,8 @@ export default function ResetPassword({ token, email }) {
                             <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5 ${isDark ? 'bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/30' : 'bg-gradient-to-br from-cyan-600 to-blue-700 shadow-lg shadow-cyan-600/30'}`}>
                                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
                             </div>
-                            <h1 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Đặt lại mật khẩu</h1>
-                            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Nhập mật khẩu mới cho tài khoản của bạn</p>
+                            <h1 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('auth.reset_password.title', { defaultValue: 'Reset Password' })}</h1>
+                            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{t('auth.reset_password.subtitle', { defaultValue: 'Enter a new password for your account' })}</p>
                         </div>
 
                         {flash?.error && <div className={`relative mb-6 p-4 rounded-xl text-sm flex items-center gap-3 ${isDark ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-red-50 text-red-600 border border-red-200'}`}><svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>{flash.error}</div>}
@@ -75,7 +75,7 @@ export default function ResetPassword({ token, email }) {
                         <form onSubmit={handleSubmit} className="relative space-y-5">
                             {/* Email readonly */}
                             <div>
-                                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Email</label>
+                                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{t('auth.reset_password.email', { defaultValue: 'Email' })}</label>
                                 <div className="relative">
                                     <div className={`absolute left-4 top-1/2 -translate-y-1/2 ${iconClass}`}><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg></div>
                                     <input type="email" value={data.email} readOnly className={`w-full pl-12 pr-4 py-3.5 rounded-xl text-sm cursor-not-allowed ${isDark ? 'bg-white/5 border-white/10 text-gray-500' : 'bg-gray-50 border-gray-200 text-gray-500'} border`} />
@@ -83,7 +83,7 @@ export default function ResetPassword({ token, email }) {
                             </div>
                             {/* Password */}
                             <div>
-                                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Mật khẩu mới</label>
+                                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{t('auth.reset_password.password', { defaultValue: 'New password' })}</label>
                                 <div className="relative">
                                     <div className={`absolute left-4 top-1/2 -translate-y-1/2 ${iconClass}`}><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg></div>
                                     <input type={showPassword ? 'text' : 'password'} value={data.password} onChange={e => setData('password', e.target.value)} className={`${inputClass(errors.password)} pr-12`} placeholder="••••••••" autoFocus />
@@ -95,7 +95,7 @@ export default function ResetPassword({ token, email }) {
                             </div>
                             {/* Confirm */}
                             <div>
-                                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Xác nhận mật khẩu</label>
+                                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{t('auth.reset_password.password_confirmation', { defaultValue: 'Confirm password' })}</label>
                                 <div className="relative">
                                     <div className={`absolute left-4 top-1/2 -translate-y-1/2 ${iconClass}`}><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg></div>
                                     <input type="password" value={data.password_confirmation} onChange={e => setData('password_confirmation', e.target.value)} className={inputClass(errors.password_confirmation)} placeholder="••••••••" />
@@ -105,7 +105,7 @@ export default function ResetPassword({ token, email }) {
                             <button type="submit" disabled={processing} className={`relative w-full py-3.5 text-sm font-semibold rounded-xl transition-all duration-300 overflow-hidden group bg-gradient-to-r from-cyan-600 to-blue-600 text-white hover:shadow-lg hover:shadow-cyan-500/30 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}>
                                 <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                                 <span className="relative flex items-center justify-center gap-2">
-                                    {processing ? <><svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Đang xử lý...</> : <>Đặt Lại Mật Khẩu<svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></>}
+                                    {processing ? <><svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>{t('auth.reset_password.processing', { defaultValue: 'Processing...' })}</> : <>{t('auth.reset_password.submit', { defaultValue: 'Reset password' })}<svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></>}
                                 </span>
                             </button>
                         </form>

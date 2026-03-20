@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '@/Components/Layout/ToastProvider';
 import { Button } from '@/Components/UI';
 import { flowApi } from '@/services/api';
@@ -17,6 +18,7 @@ export default function BatchJobModal({
 }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const { t } = useTranslation();
     const { addToast } = useToast();
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,7 +57,7 @@ export default function BatchJobModal({
 
     const handleSubmit = async () => {
         if (selectedDevices.length === 0) {
-            addToast('Please select at least one device', 'warning');
+            addToast(t('flows.editor.batch.select_device_warning'), 'warning');
             return;
         }
 
@@ -70,11 +72,11 @@ export default function BatchJobModal({
                 execution_mode: config.executionMode,
             });
 
-            addToast(`Created ${response.jobs?.length || selectedDevices.length} jobs successfully!`, 'success');
+            addToast(t('flows.editor.batch.jobs_created', { count: response.jobs?.length || selectedDevices.length }), 'success');
             onClose();
         } catch (error) {
             console.error('Failed to create batch jobs:', error);
-            addToast('Failed to create jobs: ' + (error.message || 'Unknown error'), 'error');
+            addToast(t('flows.editor.batch.create_failed') + ': ' + (error.message || t('common.unknown_error')), 'error');
         } finally {
             setIsSubmitting(false);
         }
@@ -110,7 +112,7 @@ export default function BatchJobModal({
                             </div>
                             <div>
                                 <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    Run Batch Jobs
+                                    {t('flows.editor.batch.title')}
                                 </h2>
                                 <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                                     {flow?.name}
@@ -128,7 +130,7 @@ export default function BatchJobModal({
                     {/* Job Name */}
                     <div>
                         <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                            Batch Name
+                            {t('flows.editor.batch.batch_name')}
                         </label>
                         <input
                             type="text"
@@ -145,7 +147,7 @@ export default function BatchJobModal({
                     <div>
                         <div className="flex items-center justify-between mb-2">
                             <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                Select Devices ({selectedDevices.length}/{onlineDevices.length})
+                                {t('flows.editor.batch.select_devices')} ({selectedDevices.length}/{onlineDevices.length})
                             </label>
                             <button
                                 onClick={handleSelectAll}
@@ -153,7 +155,7 @@ export default function BatchJobModal({
                                     ? 'bg-violet-500/20 text-violet-400 hover:bg-violet-500/30'
                                     : 'bg-violet-50 text-violet-600 hover:bg-violet-100'}`}
                             >
-                                {selectedDevices.length === onlineDevices.length ? 'Deselect All' : 'Select All'}
+                                {selectedDevices.length === onlineDevices.length ? t('common.deselect_all') : t('common.select_all')}
                             </button>
                         </div>
 
@@ -195,7 +197,7 @@ export default function BatchJobModal({
                             {offlineDevices.length > 0 && (
                                 <div className={`p-2 border-t ${isDark ? 'border-[#2a2a2a]' : 'border-gray-200'}`}>
                                     <p className={`text-[10px] uppercase font-medium mb-2 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                        Offline ({offlineDevices.length})
+                                        {t('flows.editor.batch.offline')} ({offlineDevices.length})
                                     </p>
                                     <div className="flex gap-2 flex-wrap">
                                         {offlineDevices.map(device => (
@@ -209,7 +211,7 @@ export default function BatchJobModal({
 
                             {devices.length === 0 && (
                                 <div className={`p-6 text-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    No devices available
+                                    {t('flows.editor.batch.no_devices')}
                                 </div>
                             )}
                         </div>
@@ -219,7 +221,7 @@ export default function BatchJobModal({
                     {dataCollections.length > 0 && (
                         <div>
                             <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                Data Collection (Optional)
+                                {t('flows.editor.batch.data_collection_optional')}
                             </label>
                             <select
                                 value={selectedCollection || ''}
@@ -229,7 +231,7 @@ export default function BatchJobModal({
                                     : 'bg-white border-gray-200 text-gray-900'
                                     } focus:outline-none focus:ring-2 focus:ring-violet-500/50`}
                             >
-                                <option value="">No data collection</option>
+                                <option value="">{t('flows.editor.batch.no_data_collection')}</option>
                                 {dataCollections.map(dc => (
                                     <option key={dc.id} value={dc.id}>
                                         {dc.name} ({dc.records_count || 0} records)
@@ -243,7 +245,7 @@ export default function BatchJobModal({
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                Priority
+                                {t('flows.editor.batch.priority')}
                             </label>
                             <select
                                 value={config.priority}
@@ -253,15 +255,15 @@ export default function BatchJobModal({
                                     : 'bg-white border-gray-200 text-gray-900'
                                     } focus:outline-none`}
                             >
-                                <option value={1}>Low</option>
-                                <option value={5}>Normal</option>
-                                <option value={8}>High</option>
-                                <option value={10}>Urgent</option>
+                                <option value={1}>{t('flows.editor.batch.priority_low')}</option>
+                                <option value={5}>{t('flows.editor.batch.priority_normal')}</option>
+                                <option value={8}>{t('flows.editor.batch.priority_high')}</option>
+                                <option value={10}>{t('flows.editor.batch.priority_urgent')}</option>
                             </select>
                         </div>
                         <div>
                             <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                Execution
+                                {t('flows.editor.batch.execution')}
                             </label>
                             <select
                                 value={config.executionMode}
@@ -271,8 +273,8 @@ export default function BatchJobModal({
                                     : 'bg-white border-gray-200 text-gray-900'
                                     } focus:outline-none`}
                             >
-                                <option value="sequential">Sequential</option>
-                                <option value="parallel">Parallel</option>
+                                <option value="sequential">{t('flows.editor.batch.sequential')}</option>
+                                <option value="parallel">{t('flows.editor.batch.parallel')}</option>
                             </select>
                         </div>
                     </div>
@@ -282,18 +284,18 @@ export default function BatchJobModal({
                 <div className={`px-6 py-4 border-t flex justify-between items-center
                     ${isDark ? 'bg-[#0a0a0a] border-[#1a1a1a]' : 'bg-gray-50 border-gray-100'}`}>
                     <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        {selectedDevices.length} device(s) selected
+                        {t('flows.editor.batch.devices_selected', { count: selectedDevices.length })}
                     </p>
                     <div className="flex gap-3">
                         <Button variant="secondary" onClick={onClose}>
-                            Cancel
+                            {t('common.cancel')}
                         </Button>
                         <Button
                             variant="gradient"
                             onClick={handleSubmit}
                             disabled={isSubmitting || selectedDevices.length === 0}
                         >
-                            {isSubmitting ? 'Creating...' : `Run on ${selectedDevices.length} Device(s)`}
+                            {isSubmitting ? t('common.creating') : t('flows.editor.batch.run_on_devices', { count: selectedDevices.length })}
                         </Button>
                     </div>
                 </div>

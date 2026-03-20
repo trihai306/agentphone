@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import { aiStudioApi } from '@/services/api';
 import { Button } from '@/Components/UI';
 
@@ -17,6 +18,7 @@ export default function JobsQueuePanel({
     const [generations, setGenerations] = useState(initialGenerations);
     const [scenarios, setScenarios] = useState(initialScenarios);
     const [selectedMedia, setSelectedMedia] = useState(null);
+    const { t } = useTranslation();
 
     const totalJobs = generations.length + scenarios.length;
 
@@ -66,7 +68,7 @@ export default function JobsQueuePanel({
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
                                 <h3 className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                    Đang xử lý ({totalJobs})
+                                    {t('ai_studio.jobs.processing_count', { count: totalJobs })}
                                 </h3>
                             </div>
                             <span className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-white/5 text-slate-500' : 'bg-slate-100 text-slate-500'}`}>
@@ -85,13 +87,13 @@ export default function JobsQueuePanel({
                             >
                                 <div className="flex items-center justify-between mb-2">
                                     <span className={`font-medium text-sm truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                        🎬 {s.title || 'Kịch bản mới'}
+                                        🎬 {s.title || t('ai_studio.jobs.new_scenario')}
                                     </span>
                                     <span className={`text-xs px-2 py-0.5 rounded ${s.status === 'queued'
                                         ? isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-700'
                                         : isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'
                                         }`}>
-                                        {s.status === 'queued' ? 'Chờ' : 'Đang tạo'}
+                                        {s.status === 'queued' ? t('ai_studio.jobs.queued') : t('ai_studio.jobs.generating')}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -119,7 +121,7 @@ export default function JobsQueuePanel({
                                         {g.type === 'video' ? '🎥' : '🖼️'} {g.prompt?.substring(0, 25) || 'Generation'}...
                                     </span>
                                     <span className={`text-xs px-2 py-0.5 rounded animate-pulse ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'}`}>
-                                        {g.status === 'pending' ? 'Chờ' : 'Đang tạo'}
+                                        {g.status === 'pending' ? t('ai_studio.jobs.queued') : t('ai_studio.jobs.generating')}
                                     </span>
                                 </div>
                                 <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
@@ -136,10 +138,10 @@ export default function JobsQueuePanel({
                 <div className={`p-4 rounded-2xl text-center ${glassCard}`}>
                     <div className="text-2xl mb-2">✨</div>
                     <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                        Sẵn sàng tạo
+                        {t('ai_studio.jobs.ready_to_create')}
                     </p>
                     <p className={`text-xs mt-1 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-                        Nhập prompt và click Generate
+                        {t('ai_studio.jobs.enter_prompt_and_generate')}
                     </p>
                 </div>
             )}
@@ -149,7 +151,7 @@ export default function JobsQueuePanel({
                 <div className={`rounded-2xl ${glassCard} overflow-hidden`}>
                     <div className={`px-4 py-3 border-b ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
                         <h3 className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                            📜 Gần đây
+                            {t('ai_studio.jobs.recent')}
                         </h3>
                     </div>
                     <div className="max-h-[250px] overflow-y-auto">
@@ -200,7 +202,7 @@ export default function JobsQueuePanel({
                         href="/ai-studio/generations"
                         className={`block px-4 py-3 text-center text-sm font-medium transition-colors ${isDark ? 'text-violet-400 hover:bg-white/[0.02]' : 'text-violet-600 hover:bg-slate-50'}`}
                     >
-                        Xem tất cả →
+                        {t('common.view_all')} →
                     </Link>
                 </div>
             )}
@@ -259,14 +261,14 @@ export default function JobsQueuePanel({
                                         ? 'bg-sky-500/20 text-sky-300 border-sky-500/30'
                                         : 'bg-sky-50 text-sky-600 border-sky-200'
                                     }`}>
-                                    {selectedMedia.type === 'video' ? '🎬 Video' : '🖼️ Hình ảnh'}
+                                    {selectedMedia.type === 'video' ? t('ai_studio.jobs.video_type') : t('ai_studio.jobs.image_type')}
                                 </span>
 
                                 <span className={`px-2.5 py-1 text-xs font-semibold rounded-lg border ${isDark
                                     ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
                                     : 'bg-emerald-50 text-emerald-600 border-emerald-200'
                                     }`}>
-                                    ✓ Hoàn thành
+                                    {t('ai_studio.jobs.completed')}
                                 </span>
 
                                 {selectedMedia.model_name && (

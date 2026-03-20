@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '@/Components/Layout/ToastProvider';
 import { router } from '@inertiajs/react';
 import { Button } from '@/Components/UI';
@@ -17,6 +18,7 @@ export default function MultiWorkflowJobModal({
 }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const { t } = useTranslation();
     const { addToast } = useToast();
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,11 +42,11 @@ export default function MultiWorkflowJobModal({
 
     const handleSubmit = async () => {
         if (!selectedDevice) {
-            addToast('Vui lòng chọn thiết bị', 'warning');
+            addToast(t('flows.editor.multi_job.select_device_warning'), 'warning');
             return;
         }
         if (selectedWorkflows.length === 0) {
-            addToast('Vui lòng chọn ít nhất 1 workflow', 'warning');
+            addToast(t('flows.editor.multi_job.select_workflow_warning'), 'warning');
             return;
         }
 
@@ -63,7 +65,7 @@ export default function MultiWorkflowJobModal({
                 },
                 onError: (errors) => {
                     console.error('Failed to create job:', errors);
-                    addToast('Lỗi: ' + Object.values(errors).flat().join(', '), 'error');
+                    addToast(t('common.error') + ': ' + Object.values(errors).flat().join(', '), 'error');
                 },
                 onFinish: () => {
                     setIsSubmitting(false);
@@ -102,10 +104,10 @@ export default function MultiWorkflowJobModal({
                             </div>
                             <div>
                                 <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    Multi-Workflow Job
+                                    {t('flows.editor.multi_job.title')}
                                 </h2>
                                 <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    Chain multiple workflows together
+                                    {t('flows.editor.multi_job.subtitle')}
                                 </p>
                             </div>
                         </div>
@@ -120,7 +122,7 @@ export default function MultiWorkflowJobModal({
                     {/* Job Name */}
                     <div>
                         <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                            Job Name
+                            {t('flows.editor.multi_job.job_name')}
                         </label>
                         <input
                             type="text"
@@ -137,7 +139,7 @@ export default function MultiWorkflowJobModal({
                     {/* Device Selection */}
                     <div>
                         <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                            Target Device
+                            {t('flows.editor.multi_job.target_device')}
                         </label>
                         <div className={`rounded-xl border overflow-hidden ${isDark ? 'border-[#2a2a2a]' : 'border-gray-200'}`}>
                             {onlineDevices.length > 0 ? (
@@ -172,7 +174,7 @@ export default function MultiWorkflowJobModal({
                                 </div>
                             ) : (
                                 <div className={`p-6 text-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    No devices online
+                                    {t('flows.editor.multi_job.no_devices_online')}
                                 </div>
                             )}
                         </div>
@@ -190,7 +192,7 @@ export default function MultiWorkflowJobModal({
                     {dataCollections.length > 0 && (
                         <div>
                             <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                Data Collection (Optional)
+                                {t('flows.editor.batch.data_collection_optional')}
                             </label>
                             <select
                                 value={selectedCollection || ''}
@@ -200,7 +202,7 @@ export default function MultiWorkflowJobModal({
                                     : 'bg-white border-gray-200 text-gray-900'
                                     } focus:outline-none focus:ring-2 focus:ring-violet-500/50`}
                             >
-                                <option value="">No data collection</option>
+                                <option value="">{t('flows.editor.batch.no_data_collection')}</option>
                                 {dataCollections.map(dc => (
                                     <option key={dc.id} value={dc.id}>
                                         {dc.name} ({dc.records_count || 0} records)
@@ -214,7 +216,7 @@ export default function MultiWorkflowJobModal({
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                Priority
+                                {t('flows.editor.batch.priority')}
                             </label>
                             <select
                                 value={config.priority}
@@ -224,15 +226,15 @@ export default function MultiWorkflowJobModal({
                                     : 'bg-white border-gray-200 text-gray-900'
                                     } focus:outline-none`}
                             >
-                                <option value={1}>Low</option>
-                                <option value={5}>Normal</option>
-                                <option value={8}>High</option>
-                                <option value={10}>Urgent</option>
+                                <option value={1}>{t('flows.editor.batch.priority_low')}</option>
+                                <option value={5}>{t('flows.editor.batch.priority_normal')}</option>
+                                <option value={8}>{t('flows.editor.batch.priority_high')}</option>
+                                <option value={10}>{t('flows.editor.batch.priority_urgent')}</option>
                             </select>
                         </div>
                         <div>
                             <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                Execution
+                                {t('flows.editor.batch.execution')}
                             </label>
                             <select
                                 value={config.executionMode}
@@ -242,7 +244,7 @@ export default function MultiWorkflowJobModal({
                                     : 'bg-white border-gray-200 text-gray-900'
                                     } focus:outline-none`}
                             >
-                                <option value="sequential">Sequential</option>
+                                <option value="sequential">{t('flows.editor.batch.sequential')}</option>
                             </select>
                         </div>
                     </div>
@@ -252,18 +254,18 @@ export default function MultiWorkflowJobModal({
                 <div className={`px-6 py-4 border-t flex justify-between items-center
                     ${isDark ? 'bg-[#0a0a0a] border-[#1a1a1a]' : 'bg-gray-50 border-gray-100'}`}>
                     <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        {selectedWorkflows.length} workflow(s) • {selectedDevice ? '1 device' : 'No device'}
+                        {t('flows.editor.multi_job.summary', { workflows: selectedWorkflows.length, device: selectedDevice ? 1 : 0 })}
                     </p>
                     <div className="flex gap-3">
                         <Button variant="secondary" onClick={onClose}>
-                            Cancel
+                            {t('common.cancel')}
                         </Button>
                         <Button
                             variant="gradient"
                             onClick={handleSubmit}
                             disabled={isSubmitting || selectedWorkflows.length === 0 || !selectedDevice}
                         >
-                            {isSubmitting ? 'Creating...' : `Create Job (${selectedWorkflows.length} workflows)`}
+                            {isSubmitting ? t('common.creating') : t('flows.editor.multi_job.create_job', { count: selectedWorkflows.length })}
                         </Button>
                     </div>
                 </div>

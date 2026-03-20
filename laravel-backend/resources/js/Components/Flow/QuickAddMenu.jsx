@@ -1,5 +1,6 @@
 import { memo, useState, useEffect } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 /**
  * QuickAddMenu - Context-aware menu for quickly adding nodes
@@ -14,6 +15,7 @@ function QuickAddMenu({
 }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const { t } = useTranslation();
 
     // Context-aware suggestions based on current node type
     const getSuggestions = () => {
@@ -34,8 +36,8 @@ function QuickAddMenu({
             case 'condition':
                 return [
                     { type: 'http', icon: '🌐', label: 'HTTP Request', description: 'API call' },
-                    { type: 'element_check', icon: '🔍', label: 'Element Check', description: 'Kiểm tra element' },
-                    { type: 'wait_for_element', icon: '⏳', label: 'Wait For', description: 'Chờ element' },
+                    { type: 'element_check', icon: '🔍', label: 'Element Check', description: 'Check element' },
+                    { type: 'wait_for_element', icon: '⏳', label: 'Wait For', description: 'Wait for element' },
                     { type: 'wait', icon: '⏱️', label: 'Wait', description: 'Delay execution' },
                 ];
             case 'http':
@@ -50,14 +52,14 @@ function QuickAddMenu({
             case 'recorded_action':
                 return [
                     { type: 'element_check', icon: '🔍', label: 'Element Check', description: 'Check popup/dialog' },
-                    { type: 'wait_for_element', icon: '⏳', label: 'Wait For', description: 'Chờ element xuất hiện' },
+                    { type: 'wait_for_element', icon: '⏳', label: 'Wait For', description: 'Wait for element' },
                     { type: 'wait', icon: '⏱️', label: 'Wait', description: 'Delay' },
                     { type: 'condition', icon: '❓', label: 'Condition', description: 'Branch logic' },
                 ];
             default:
                 return [
-                    { type: 'element_check', icon: '🔍', label: 'Element Check', description: 'Kiểm tra element/text', highlight: true },
-                    { type: 'wait_for_element', icon: '⏳', label: 'Wait For Element', description: 'Chờ element', highlight: true },
+                    { type: 'element_check', icon: '🔍', label: 'Element Check', description: 'Check element/text', highlight: true },
+                    { type: 'wait_for_element', icon: '⏳', label: 'Wait For Element', description: 'Wait for element', highlight: true },
                     { type: 'data_source', icon: '📊', label: 'Data Source', description: 'Fetch data' },
                     { type: 'loop', icon: '🔄', label: 'Loop', description: 'Iterate' },
                     { type: 'condition', icon: '❓', label: 'Condition', description: 'Branch' },
@@ -101,7 +103,7 @@ function QuickAddMenu({
                     {/* Header */}
                     <div className={`px-4 py-3 border-b ${isDark ? 'border-white/10' : 'border-black/5'}`}>
                         <h3 className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                            Add Node
+                            {t('flows.editor.quick_add.title')}
                         </h3>
                     </div>
 

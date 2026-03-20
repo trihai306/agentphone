@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { NodeStatus } from '@/hooks/useExecutionState';
 
@@ -7,6 +8,7 @@ import { NodeStatus } from '@/hooks/useExecutionState';
  * GlassHttpNode - Premium glassmorphic HTTP request node
  */
 function GlassHttpNode({ id, data, selected }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
@@ -80,10 +82,10 @@ function GlassHttpNode({ id, data, selected }) {
                     </div>
                     <div className="flex-1 min-w-0">
                         <h3 className="text-sm font-bold" style={{ color }}>
-                            🌐 HTTP Request
+                            🌐 {t('flows.editor.glass_nodes.http_request')}
                         </h3>
                         <p className={`text-[10px] truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {data?.label || 'API Call'}
+                            {data?.label || t('flows.editor.glass_nodes.api_call')}
                         </p>
                     </div>
                     {/* Method Badge */}
@@ -130,7 +132,7 @@ function GlassHttpNode({ id, data, selected }) {
 
                     {/* Output */}
                     <div className={`mt-3 flex items-center gap-2 text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        <span>Output:</span>
+                        <span>{t('flows.editor.glass_nodes.output_label')}</span>
                         <code className="text-cyan-400">{`{{response}}`}</code>
                     </div>
                 </div>

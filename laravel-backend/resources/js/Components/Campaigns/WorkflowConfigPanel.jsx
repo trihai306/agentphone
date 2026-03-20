@@ -3,10 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { Button } from '@/Components/UI';
 
-const EXECUTION_MODES = [
-    { value: 'once', icon: '🟢', label: 'Chạy 1 lần', color: 'emerald' },
-    { value: 'repeat', icon: '🔵', label: 'Lặp lại', color: 'blue' },
-    { value: 'conditional', icon: '🟣', label: 'Điều kiện', color: 'purple' }, // ENABLED: Conditional Loop with stop conditions
+const getExecutionModes = (t) => [
+    { value: 'once', icon: '🟢', label: t('workflow_config.mode_once'), color: 'emerald' },
+    { value: 'repeat', icon: '🔵', label: t('workflow_config.mode_repeat'), color: 'blue' },
+    { value: 'conditional', icon: '🟣', label: t('workflow_config.mode_conditional'), color: 'purple' }, // ENABLED: Conditional Loop with stop conditions
 ];
 
 export default function WorkflowConfigPanel({ workflow, config, onChange, onClose, availableCollections = [], campaignDataCollectionId = null }) {
@@ -14,6 +14,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
+    const EXECUTION_MODES = getExecutionModes(t);
     const [localConfig, setLocalConfig] = useState(config);
 
     const updateConfig = (key, value) => {
@@ -42,7 +43,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                     <div className="flex items-center justify-between">
                         <div>
                             <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                🔧 Cấu hình Workflow
+                                {t('workflow_config.title')}
                             </h3>
                             <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                 {workflow.name}
@@ -60,7 +61,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                     <div>
                         <label className={`block text-sm font-medium mb-3 ${isDark ? 'text-gray-300' : 'text-gray-700'
                             }`}>
-                            🔄 Chế độ thực thi
+                            {t('workflow_config.execution_mode')}
                         </label>
                         <div className="grid grid-cols-1 gap-2">
                             {EXECUTION_MODES.map(mode => (
@@ -87,7 +88,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                                                     {mode.disabled && (
                                                         <span className={`ml-2 text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'
                                                             }`}>
-                                                            (Sắp ra mắt)
+                                                            ({t('workflow_config.coming_soon')})
                                                         </span>
                                                     )}
                                                 </div>
@@ -113,7 +114,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                             <div>
                                 <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'
                                     }`}>
-                                    🔢 Số lần lặp
+                                    {t('workflow_config.repeat_count')}
                                 </label>
                                 <div className="flex items-center gap-3">
                                     <input
@@ -129,7 +130,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                                     />
                                     <span className={`text-sm whitespace-nowrap ${isDark ? 'text-gray-400' : 'text-gray-600'
                                         }`}>
-                                        lần/tài khoản
+                                        {t('workflow_config.times_per_account')}
                                     </span>
                                 </div>
                             </div>
@@ -137,7 +138,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                             {/* Variable Source Collection (NEW) */}
                             <div>
                                 <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    🎲 Nguồn dữ liệu biến (tuỳ chọn)
+                                    {t('workflow_config.variable_source')}
                                 </label>
                                 <select
                                     value={localConfig.variable_source_collection_id || ''}
@@ -147,7 +148,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                                         : 'bg-white border-gray-300 text-gray-900'
                                         }`}
                                 >
-                                    <option value="">Không chọn (dùng dữ liệu chính)</option>
+                                    <option value="">{t('workflow_config.no_source')}</option>
                                     {variableSourceOptions.map(collection => (
                                         <option key={collection.id} value={collection.id}>
                                             {collection.name} ({collection.records_count || 0} records)
@@ -155,7 +156,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                                     ))}
                                 </select>
                                 <p className={`text-xs mt-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    Nếu chọn, mỗi lần lặp sẽ lấy dữ liệu từ record khác nhau
+                                    {t('workflow_config.variable_source_hint_repeat')}
                                 </p>
                             </div>
 
@@ -163,7 +164,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                             {localConfig.variable_source_collection_id && (
                                 <div>
                                     <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                        🔄 Chiến lược lặp
+                                        {t('workflow_config.iteration_strategy')}
                                     </label>
                                     <div className="flex gap-3">
                                         <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${localConfig.iteration_strategy === 'sequential'
@@ -178,7 +179,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                                                 className="text-blue-500"
                                             />
                                             <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                                Tuần tự (1→2→3)
+                                                {t('workflow_config.sequential')}
                                             </span>
                                         </label>
                                         <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${localConfig.iteration_strategy === 'random'
@@ -193,7 +194,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                                                 className="text-blue-500"
                                             />
                                             <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                                Ngẫu nhiên
+                                                {t('workflow_config.random')}
                                             </span>
                                         </label>
                                     </div>
@@ -204,7 +205,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                             <div>
                                 <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'
                                     }`}>
-                                    ⏱️ Thời gian nghỉ (tùy chọn)
+                                    {t('workflow_config.delay_optional')}
                                 </label>
                                 <div className="flex items-center gap-3">
                                     <input
@@ -221,11 +222,11 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                                     />
                                     <span className={`text-sm whitespace-nowrap ${isDark ? 'text-gray-400' : 'text-gray-600'
                                         }`}>
-                                        giây
+                                        {t('workflow_config.seconds')}
                                     </span>
                                 </div>
                                 <p className={`text-xs mt-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    Thời gian chờ giữa các lần lặp (để giống người thật)
+                                    {t('workflow_config.delay_hint')}
                                 </p>
                             </div>
                         </div>
@@ -237,7 +238,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                             {/* Max Iterations */}
                             <div>
                                 <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    🔢 Số lần thử tối đa
+                                    {t('workflow_config.max_attempts')}
                                 </label>
                                 <div className="flex items-center gap-3">
                                     <input
@@ -252,18 +253,18 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                                             }`}
                                     />
                                     <span className={`text-sm whitespace-nowrap ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                        lần
+                                        {t('workflow_config.times')}
                                     </span>
                                 </div>
                                 <p className={`text-xs mt-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    Workflow sẽ chạy tối đa số lần này nếu điều kiện dừng chưa được đáp ứng
+                                    {t('workflow_config.max_attempts_hint')}
                                 </p>
                             </div>
 
                             {/* Variable Source Collection (for data-driven workflows) */}
                             <div>
                                 <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    🎲 Nguồn dữ liệu biến (tuỳ chọn)
+                                    {t('workflow_config.variable_source')}
                                 </label>
                                 <select
                                     value={localConfig.variable_source_collection_id || ''}
@@ -273,7 +274,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                                         : 'bg-white border-gray-300 text-gray-900'
                                         }`}
                                 >
-                                    <option value="">Không chọn (dùng dữ liệu chính)</option>
+                                    <option value="">{t('workflow_config.no_source')}</option>
                                     {variableSourceOptions.map(collection => (
                                         <option key={collection.id} value={collection.id}>
                                             {collection.name} ({collection.records_count || 0} records)
@@ -281,7 +282,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                                     ))}
                                 </select>
                                 <p className={`text-xs mt-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    Nếu chọn, mỗi lần thử sẽ lấy dữ liệu từ record khác nhau
+                                    {t('workflow_config.variable_source_hint_conditional')}
                                 </p>
                             </div>
 
@@ -289,7 +290,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                             {localConfig.variable_source_collection_id && (
                                 <div>
                                     <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                        🔄 Chiến lược lặp
+                                        {t('workflow_config.iteration_strategy')}
                                     </label>
                                     <div className="flex gap-3">
                                         <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${localConfig.iteration_strategy === 'sequential'
@@ -304,7 +305,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                                                 className="text-purple-500"
                                             />
                                             <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                                Tuần tự (1→2→3)
+                                                {t('workflow_config.sequential')}
                                             </span>
                                         </label>
                                         <label className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all ${localConfig.iteration_strategy === 'random'
@@ -319,7 +320,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                                                 className="text-purple-500"
                                             />
                                             <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                                Ngẫu nhiên
+                                                {t('workflow_config.random')}
                                             </span>
                                         </label>
                                     </div>
@@ -329,7 +330,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                             {/* Stop Conditions */}
                             <div>
                                 <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    ⛔ Điều kiện dừng
+                                    {t('workflow_config.stop_conditions')}
                                 </label>
                                 <div className="space-y-2">
                                     <label className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}>
@@ -341,10 +342,10 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                                         />
                                         <div className="flex-1">
                                             <div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                                Dừng khi workflow thành công
+                                                {t('workflow_config.stop_on_success')}
                                             </div>
                                             <div className={`text-xs mt-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                Ngừng thực thi ngay khi workflow hoàn thành không lỗi
+                                                {t('workflow_config.stop_on_success_hint')}
                                             </div>
                                         </div>
                                     </label>
@@ -358,10 +359,10 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                                         />
                                         <div className="flex-1">
                                             <div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                                Dừng khi có lỗi nghiêm trọng
+                                                {t('workflow_config.stop_on_error')}
                                             </div>
                                             <div className={`text-xs mt-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                Ngừng retry nếu gặp lỗi không thể khắc phục
+                                                {t('workflow_config.stop_on_error_hint')}
                                             </div>
                                         </div>
                                     </label>
@@ -371,7 +372,7 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                             {/* Delay Between Attempts */}
                             <div>
                                 <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    ⏱️ Thời gian chờ giữa các lần thử
+                                    {t('workflow_config.delay_between_attempts')}
                                 </label>
                                 <div className="flex items-center gap-3">
                                     <input
@@ -387,11 +388,11 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                                             }`}
                                     />
                                     <span className={`text-sm whitespace-nowrap ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                        giây
+                                        {t('workflow_config.seconds')}
                                     </span>
                                 </div>
                                 <p className={`text-xs mt-1.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    Thời gian nghỉ trước khi thử lại (để tránh spam)
+                                    {t('workflow_config.delay_between_attempts_hint')}
                                 </p>
                             </div>
                         </div>
@@ -402,10 +403,10 @@ export default function WorkflowConfigPanel({ workflow, config, onChange, onClos
                 <div className={`px-6 py-4 border-t flex items-center justify-end gap-3 ${isDark ? 'border-gray-700 bg-gray-900/50' : 'border-gray-200 bg-gray-50'
                     }`}>
                     <Button variant="secondary" onClick={onClose}>
-                        Hủy
+                        {t('common.cancel')}
                     </Button>
                     <Button variant="gradient" onClick={handleSave}>
-                        ✓ Lưu
+                        {t('common.save')}
                     </Button>
                 </div>
             </div>

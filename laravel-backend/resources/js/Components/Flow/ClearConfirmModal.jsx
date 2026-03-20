@@ -39,25 +39,24 @@ export default function ClearConfirmModal({
                             </svg>
                         </div>
                         <div>
-                            <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Clear All Nodes</h3>
-                            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>This action cannot be undone</p>
+                            <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('flows.editor.clear_confirm.title')}</h3>
+                            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('flows.editor.clear_confirm.cannot_undo')}</p>
                         </div>
                     </div>
                 </div>
                 {/* Content */}
                 <div className="px-6 py-4">
                     <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                        Are you sure you want to delete <span className="font-bold text-red-500">{nodeCount}</span> node{nodeCount !== 1 ? 's' : ''}?
-                        All workflow data will be permanently removed.
+                        {t('flows.editor.clear_confirm.message', { count: nodeCount })}
                     </p>
                 </div>
                 {/* Actions */}
                 <div className={`px-6 py-4 flex gap-3 border-t ${isDark ? 'border-[#2a2a2a]' : 'border-gray-200'}`}>
                     <Button variant="secondary" className="flex-1" onClick={onClose}>
-                        Cancel
+                        {t('common.cancel')}
                     </Button>
                     <Button variant="danger" className="flex-1" onClick={onConfirm}>
-                        Delete All
+                        {t('flows.editor.clear_confirm.delete_all')}
                     </Button>
                 </div>
             </div>

@@ -1,20 +1,23 @@
 import { useState } from 'react';
 import { Link, router, Head } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import ConfirmModal from '@/Components/UI/ConfirmModal';
 import { Button, Icon } from '@/Components/UI';
 
-const statusConfig = {
-    draft: { bg: 'bg-gray-500/10', text: 'text-gray-400', label: 'Nháp', iconName: 'edit' },
-    active: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', label: 'Đang chạy', iconName: 'play' },
-    paused: { bg: 'bg-amber-500/10', text: 'text-amber-400', label: 'Tạm dừng', iconName: 'clock' },
-    completed: { bg: 'bg-violet-500/10', text: 'text-violet-400', label: 'Hoàn thành', iconName: 'checkCircle' },
-};
+const getStatusConfig = (t) => ({
+    draft: { bg: 'bg-gray-500/10', text: 'text-gray-400', label: t('campaigns.status.draft'), iconName: 'edit' },
+    active: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', label: t('campaigns.status.active'), iconName: 'play' },
+    paused: { bg: 'bg-amber-500/10', text: 'text-amber-400', label: t('campaigns.status.paused'), iconName: 'clock' },
+    completed: { bg: 'bg-violet-500/10', text: 'text-violet-400', label: t('campaigns.status.completed'), iconName: 'checkCircle' },
+});
 
 export default function Show({ campaign }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const statusConfig = getStatusConfig(t);
     const status = statusConfig[campaign?.status] || statusConfig.draft;
 
     const [confirmModal, setConfirmModal] = useState({ isOpen: false });
@@ -28,9 +31,9 @@ export default function Show({ campaign }) {
         setConfirmModal({
             isOpen: true,
             type: 'success',
-            title: 'Chạy Campaign',
-            message: `Bắt đầu chạy campaign "${campaign.name}"?`,
-            confirmText: 'Bắt đầu',
+            title: t('campaigns.confirm.run_title'),
+            message: t('campaigns.confirm.run_message', { name: campaign.name }),
+            confirmText: t('campaigns.actions.start'),
             onConfirm: () => {
                 setIsProcessing(true);
                 router.post(`/campaigns/${campaign.id}/run`, {}, {
@@ -44,9 +47,9 @@ export default function Show({ campaign }) {
         setConfirmModal({
             isOpen: true,
             type: 'warning',
-            title: 'Tạm dừng Campaign',
-            message: `Tạm dừng campaign "${campaign.name}"?`,
-            confirmText: 'Tạm dừng',
+            title: t('campaigns.confirm.pause_title'),
+            message: t('campaigns.confirm.pause_message', { name: campaign.name }),
+            confirmText: t('campaigns.actions.pause'),
             onConfirm: () => {
                 setIsProcessing(true);
                 router.post(`/campaigns/${campaign.id}/pause`, {}, {
@@ -60,7 +63,7 @@ export default function Show({ campaign }) {
         return (
             <AppLayout title="Campaign">
                 <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#09090b]' : 'bg-gray-50'}`}>
-                    <p className={isDark ? 'text-gray-500' : 'text-gray-400'}>Không tìm thấy campaign</p>
+                    <p className={isDark ? 'text-gray-500' : 'text-gray-400'}>{t('campaigns.not_found')}</p>
                 </div>
             </AppLayout>
         );
@@ -92,18 +95,18 @@ export default function Show({ campaign }) {
                                     </span>
                                 </div>
                                 <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                    {campaign.description || 'Chưa có mô tả'}
+                                    {campaign.description || t('campaigns.no_description')}
                                 </p>
                             </div>
                         </div>
                         <div className="flex gap-3">
                             {campaign.status === 'active' ? (
                                 <Button variant="secondary" onClick={handlePause} className={isDark ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' : 'bg-amber-100 text-amber-600 hover:bg-amber-200'}>
-                                    Tạm dừng
+                                    {t('campaigns.actions.pause')}
                                 </Button>
                             ) : (
                                 <Button variant="gradient" onClick={handleRun} className="bg-gradient-to-r from-emerald-500 to-teal-600">
-                                    Chạy Campaign
+                                    {t('campaigns.run_campaign')}
                                 </Button>
                             )}
                         </div>
@@ -112,11 +115,11 @@ export default function Show({ campaign }) {
                     {/* Stats Grid */}
                     <div className="grid grid-cols-5 gap-4 mb-8">
                         {[
-                            { label: 'Records', value: campaign.total_records || 0, icon: 'chartBar', color: 'violet' },
-                            { label: 'Đã xử lý', value: campaign.records_processed || 0, icon: 'check', color: 'blue' },
-                            { label: 'Thành công', value: campaign.records_success || 0, icon: 'checkCircle', color: 'emerald' },
-                            { label: 'Thất bại', value: campaign.records_failed || 0, icon: 'xCircle', color: 'red' },
-                            { label: 'Lặp/record', value: campaign.repeat_per_record || 1, icon: 'refresh', color: 'amber' },
+                            { label: t('campaigns.show.records'), value: campaign.total_records || 0, icon: 'chartBar', color: 'violet' },
+                            { label: t('campaigns.show.processed'), value: campaign.records_processed || 0, icon: 'check', color: 'blue' },
+                            { label: t('campaigns.show.success'), value: campaign.records_success || 0, icon: 'checkCircle', color: 'emerald' },
+                            { label: t('campaigns.show.failed'), value: campaign.records_failed || 0, icon: 'xCircle', color: 'red' },
+                            { label: t('campaigns.show.repeat_per_record'), value: campaign.repeat_per_record || 1, icon: 'refresh', color: 'amber' },
                         ].map(stat => (
                             <div key={stat.label} className={`p-4 rounded-2xl ${isDark ? 'bg-white/5' : 'bg-white shadow-sm'}`}>
                                 <div className="flex items-center justify-between mb-2">
@@ -131,7 +134,7 @@ export default function Show({ campaign }) {
                     {/* Progress Bar */}
                     <div className={`p-6 rounded-2xl mb-8 ${isDark ? 'bg-white/5' : 'bg-white shadow-sm'}`}>
                         <div className="flex items-center justify-between mb-3">
-                            <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Tiến độ tổng thể</span>
+                            <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('campaigns.show.overall_progress')}</span>
                             <span className={`text-sm font-bold ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>{progress}%</span>
                         </div>
                         <div className={`h-3 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-gray-100'}`}>
@@ -142,7 +145,7 @@ export default function Show({ campaign }) {
                         </div>
                         <div className={`flex justify-between text-xs mt-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                             <span>{campaign.records_processed || 0} / {campaign.total_records || 0} records</span>
-                            <span>Tỷ lệ thành công: {campaign.records_processed > 0 ? Math.round((campaign.records_success / campaign.records_processed) * 100) : 0}%</span>
+                            <span>{t('campaigns.show.success_rate')}: {campaign.records_processed > 0 ? Math.round((campaign.records_success / campaign.records_processed) * 100) : 0}%</span>
                         </div>
                     </div>
 
@@ -150,7 +153,7 @@ export default function Show({ campaign }) {
                     <div className="grid grid-cols-3 gap-6">
                         {/* Left: Configuration */}
                         <div className={`col-span-2 rounded-2xl p-6 ${isDark ? 'bg-white/5' : 'bg-white shadow-sm'}`}>
-                            <h2 className={`text-lg font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}><Icon name="settings" className="w-5 h-5 inline-block mr-1" /> Cấu hình</h2>
+                            <h2 className={`text-lg font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}><Icon name="settings" className="w-5 h-5 inline-block mr-1" /> {t('campaigns.show.configuration')}</h2>
 
                             {/* Data Collection */}
                             <div className="mb-6">
@@ -158,7 +161,7 @@ export default function Show({ campaign }) {
                                 <div className={`mt-2 p-4 rounded-xl flex items-center gap-4 ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
                                     {campaign.data_collection?.icon ? <span className="text-2xl">{campaign.data_collection.icon}</span> : <Icon name="database" className="w-6 h-6" />}
                                     <div>
-                                        <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{campaign.data_collection?.name || 'Chưa chọn'}</p>
+                                        <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{campaign.data_collection?.name || t('campaigns.show.not_selected')}</p>
                                         <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{campaign.data_collection?.total_records || 0} records</p>
                                     </div>
                                 </div>
@@ -174,14 +177,14 @@ export default function Show({ campaign }) {
                                             <span className={isDark ? 'text-white' : 'text-gray-900'}>{wf.name}</span>
                                         </div>
                                     )) : (
-                                        <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Chưa chọn workflow</p>
+                                        <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('campaigns.show.no_workflow')}</p>
                                     )}
                                 </div>
                             </div>
 
                             {/* Devices */}
                             <div>
-                                <label className={`text-xs font-medium uppercase tracking-wide ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Thiết bị ({campaign.devices?.length || 0})</label>
+                                <label className={`text-xs font-medium uppercase tracking-wide ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('campaigns.show.devices')} ({campaign.devices?.length || 0})</label>
                                 <div className="mt-2 grid grid-cols-3 gap-2">
                                     {campaign.devices?.length > 0 ? campaign.devices.map(device => (
                                         <div key={device.id} className={`p-3 rounded-xl flex items-center gap-2 ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
@@ -192,7 +195,7 @@ export default function Show({ campaign }) {
                                             <span className={`text-sm truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{device.name}</span>
                                         </div>
                                     )) : (
-                                        <p className={`text-sm col-span-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Chưa chọn thiết bị</p>
+                                        <p className={`text-sm col-span-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('campaigns.show.no_devices')}</p>
                                     )}
                                 </div>
                             </div>
@@ -201,8 +204,8 @@ export default function Show({ campaign }) {
                         {/* Right: Recent Jobs */}
                         <div className={`rounded-2xl p-6 ${isDark ? 'bg-white/5' : 'bg-white shadow-sm'}`}>
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}><Icon name="clipboard" className="w-5 h-5 inline-block mr-1" /> Jobs gần đây</h2>
-                                <Button variant="link" size="xs" href="/jobs" as="Link" className={isDark ? 'text-violet-400' : 'text-violet-600'}>Xem tất cả →</Button>
+                                <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}><Icon name="clipboard" className="w-5 h-5 inline-block mr-1" /> {t('campaigns.show.recent_jobs')}</h2>
+                                <Button variant="link" size="xs" href="/jobs" as="Link" className={isDark ? 'text-violet-400' : 'text-violet-600'}>{t('campaigns.show.view_all')} →</Button>
                             </div>
                             {campaign.jobs?.length > 0 ? (
                                 <div className="space-y-2">
@@ -222,7 +225,7 @@ export default function Show({ campaign }) {
                             ) : (
                                 <div className={`text-center py-8 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                                     <Icon name="inbox" className="w-8 h-8 mx-auto mb-2" />
-                                    <p className="text-sm">Chưa có job nào</p>
+                                    <p className="text-sm">{t('campaigns.show.no_jobs')}</p>
                                 </div>
                             )}
                         </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/Components/UI';
 
 /**
@@ -15,6 +16,7 @@ export default function EdgeDelayPopover({
     isDark = true,
     initialDelay = { mode: 'none', fixedMs: 500, minMs: 500, maxMs: 1500 }
 }) {
+    const { t } = useTranslation();
     const [mode, setMode] = useState(initialDelay.mode);
     const [fixedMs, setFixedMs] = useState(initialDelay.fixedMs);
     const [minMs, setMinMs] = useState(initialDelay.minMs);
@@ -59,7 +61,7 @@ export default function EdgeDelayPopover({
                 <h3 className={`text-sm font-semibold flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'
                     }`}>
                     <span>⏱️</span>
-                    Delay Time
+                    {t('flows.editor.edge_delay.title')}
                 </h3>
                 <Button variant="ghost" size="icon-xs" onClick={onClose}>
                     ✕
@@ -163,10 +165,10 @@ export default function EdgeDelayPopover({
             {/* Actions */}
             <div className="flex gap-2">
                 <Button variant="secondary" className="flex-1" onClick={onClose}>
-                    Cancel
+                    {t('common.cancel')}
                 </Button>
                 <Button variant="gradient" className="flex-1" onClick={handleSave}>
-                    Apply
+                    {t('common.apply')}
                 </Button>
             </div>
         </div>

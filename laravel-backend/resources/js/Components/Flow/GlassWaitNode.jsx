@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { NodeStatus } from '@/hooks/useExecutionState';
 
@@ -8,6 +9,7 @@ import { NodeStatus } from '@/hooks/useExecutionState';
  * Horizontal layout: Input (Left) → Output (Right)
  */
 function GlassWaitNode({ id, data, selected }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
@@ -79,10 +81,10 @@ function GlassWaitNode({ id, data, selected }) {
                     </div>
                     <div className="flex-1 min-w-0">
                         <h3 className={`text-sm font-bold ${isRunning ? 'text-indigo-400' : 'text-gray-500'}`}>
-                            {isRunning ? 'Waiting...' : 'Wait'}
+                            {isRunning ? t('flows.editor.glass_nodes.wait_running') : t('flows.editor.glass_nodes.wait_idle')}
                         </h3>
                         <p className={`text-[10px] truncate ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                            {data?.label || 'Delay Execution'}
+                            {data?.label || t('flows.editor.glass_nodes.delay_execution')}
                         </p>
                     </div>
                     {/* Status Badge */}

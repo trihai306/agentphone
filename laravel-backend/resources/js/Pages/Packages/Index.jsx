@@ -168,7 +168,7 @@ export default function Index({ packages = [], myPackages = [], stats = {} }) {
                                                             <div className="flex justify-between text-sm mb-2">
                                                                 <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{t('packages.time_remaining')}</span>
                                                                 <span className={`font-medium ${isExpired ? 'text-red-500' : isExpiringSoon ? 'text-amber-500' : isDark ? 'text-white' : 'text-gray-900'}`}>
-                                                                    {isExpired ? 'Expired' : `${userPkg.days_remaining || 0} days left`}
+                                                                    {isExpired ? t('packages.expired') : t('packages.days_remaining', { count: userPkg.days_remaining || 0 })}
                                                                 </span>
                                                             </div>
                                                             <div className={`h-2 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-gray-100'}`}>
@@ -183,7 +183,7 @@ export default function Index({ packages = [], myPackages = [], stats = {} }) {
 
                                                     {pkg?.max_devices && (
                                                         <div className="flex justify-between text-sm">
-                                                            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>Device slots used</span>
+                                                            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{t('packages.device_slots')}</span>
                                                             <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                                                 {userPkg.used_devices || 0} / {pkg.max_devices === -1 ? '∞' : pkg.max_devices}
                                                             </span>

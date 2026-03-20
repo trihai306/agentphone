@@ -1,21 +1,24 @@
+import { useTranslation } from 'react-i18next';
+
 export default function Footer() {
+    const { t } = useTranslation();
     const currentYear = new Date().getFullYear();
 
     const footerLinks = {
         product: [
-            { href: '#features', label: 'Features' },
-            { href: '#how-it-works', label: 'How It Works' },
-            { href: '#about', label: 'About' },
+            { href: '#features', label: t('footer.features') },
+            { href: '#how-it-works', label: t('footer.how_it_works') },
+            { href: '#about', label: t('footer.about') },
         ],
         company: [
-            { href: '#contact', label: 'Contact' },
-            { href: '#', label: 'Careers' },
-            { href: '#', label: 'Blog' },
+            { href: '#contact', label: t('footer.contact') },
+            { href: '#', label: t('footer.careers') },
+            { href: '#', label: t('footer.blog') },
         ],
         legal: [
-            { href: '#', label: 'Privacy Policy' },
-            { href: '#', label: 'Terms of Service' },
-            { href: '#', label: 'Cookie Policy' },
+            { href: '#', label: t('footer.privacy_policy') },
+            { href: '#', label: t('footer.terms_of_service') },
+            { href: '#', label: t('footer.cookie_policy') },
         ],
     };
 
@@ -85,8 +88,7 @@ export default function Footer() {
                             </span>
                         </div>
                         <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-                            Powerful automation tools to streamline your workflows and boost productivity.
-                            Transform the way you work with intelligent agent automation.
+                            {t('footer.description')}
                         </p>
                         {/* Social Links */}
                         <div className="mt-6 flex space-x-4">
@@ -106,7 +108,7 @@ export default function Footer() {
                     {/* Product Links */}
                     <div>
                         <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-900 dark:text-white">
-                            Product
+                            {t('footer.product')}
                         </h3>
                         <ul className="mt-4 space-y-3">
                             {footerLinks.product.map((link) => (
@@ -126,7 +128,7 @@ export default function Footer() {
                     {/* Company Links */}
                     <div>
                         <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-900 dark:text-white">
-                            Company
+                            {t('footer.company')}
                         </h3>
                         <ul className="mt-4 space-y-3">
                             {footerLinks.company.map((link) => (
@@ -146,7 +148,7 @@ export default function Footer() {
                     {/* Legal Links */}
                     <div>
                         <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-900 dark:text-white">
-                            Legal
+                            {t('footer.legal')}
                         </h3>
                         <ul className="mt-4 space-y-3">
                             {footerLinks.legal.map((link) => (
@@ -168,10 +170,10 @@ export default function Footer() {
                 <div className="mt-12 border-t border-gray-200 pt-8 dark:border-gray-800">
                     <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                            &copy; {currentYear} Agent Automation. All rights reserved.
+                            &copy; {currentYear} Agent Automation. {t('footer.all_rights_reserved')}.
                         </p>
                         <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-                            <span>Made with</span>
+                            <span>{t('footer.made_with')}</span>
                             <svg
                                 className="h-4 w-4 text-red-500"
                                 fill="currentColor"
@@ -179,7 +181,7 @@ export default function Footer() {
                             >
                                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                             </svg>
-                            <span>for automation</span>
+                            <span>{t('footer.for_automation')}</span>
                         </div>
                     </div>
                 </div>

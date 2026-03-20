@@ -107,7 +107,7 @@ export default function Index({
                                 {t('wallet.title')}
                             </h1>
                             <p className={`mt-1 text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                {t('wallet.description', { defaultValue: 'Quản lý ví và xem lịch sử giao dịch' })}
+                                {t('wallet.description')}
                             </p>
                         </div>
                         <div className="flex gap-3">
@@ -160,7 +160,7 @@ export default function Index({
                         </div>
                         <div className={`p-5 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
                             <p className={`text-xs font-medium mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                {t('wallet.total_deposits', { defaultValue: 'Tổng nạp' })}
+                                {t('wallet.total_deposits')}
                             </p>
                             <p className={`text-xl font-bold text-emerald-500`}>
                                 +{formatCurrency(stats.total_deposits || 0)}
@@ -168,7 +168,7 @@ export default function Index({
                         </div>
                         <div className={`p-5 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
                             <p className={`text-xs font-medium mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                {t('wallet.total_withdrawals', { defaultValue: 'Tổng rút' })}
+                                {t('wallet.total_withdrawals')}
                             </p>
                             <p className={`text-xl font-bold text-red-500`}>
                                 -{formatCurrency(stats.total_withdrawals || 0)}
@@ -176,7 +176,7 @@ export default function Index({
                         </div>
                         <div className={`p-5 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
                             <p className={`text-xs font-medium mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                {t('wallet.pending_count', { defaultValue: 'Đang chờ' })}
+                                {t('wallet.pending_count')}
                             </p>
                             <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                 {stats.pending_count || 0}
@@ -223,7 +223,7 @@ export default function Index({
                             </div>
                             <div className="flex-1 min-w-[150px]">
                                 <label className={`block text-xs font-medium mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                    {t('common.from_date', { defaultValue: 'Từ ngày' })}
+                                    {t('common.from_date')}
                                 </label>
                                 <input
                                     type="date"
@@ -237,7 +237,7 @@ export default function Index({
                             </div>
                             <div className="flex-1 min-w-[150px]">
                                 <label className={`block text-xs font-medium mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                    {t('common.to_date', { defaultValue: 'Đến ngày' })}
+                                    {t('common.to_date')}
                                 </label>
                                 <input
                                     type="date"
@@ -256,7 +256,7 @@ export default function Index({
                                     : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700'
                                     }`}
                             >
-                                {t('common.clear', { defaultValue: 'Xóa lọc' })}
+                                {t('common.clear')}
                             </button>
                         </div>
                     </div>
@@ -272,7 +272,7 @@ export default function Index({
                                 <svg className="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                 </svg>
-                                <p>{t('wallet.no_transactions', { defaultValue: 'Chưa có giao dịch nào' })}</p>
+                                <p>{t('wallet.no_transactions')}</p>
                             </div>
                         ) : (
                             <>
@@ -284,7 +284,7 @@ export default function Index({
                                                 <th className="pb-3 pr-4">{t('transaction.type')}</th>
                                                 <th className="pb-3 pr-4">{t('transaction.amount')}</th>
                                                 <th className="pb-3 pr-4">{t('transaction.status')}</th>
-                                                <th className="pb-3 pr-4">{t('common.details', { defaultValue: 'Chi tiết' })}</th>
+                                                <th className="pb-3 pr-4">{t('common.details')}</th>
                                                 <th className="pb-3">{t('transaction.date')}</th>
                                             </tr>
                                         </thead>

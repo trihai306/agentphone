@@ -19,9 +19,9 @@ export default function Index({ stats, team }) {
     return (
         <LandingLayout>
             <SeoHead
-                title="Về Chúng Tôi - CLICKAI"
-                description="Tìm hiểu về CLICKAI - đội ngũ và sứ mệnh của chúng tôi. Kiến tạo tương lai số, đơn giản hoá quản lý thiết bị cho mọi doanh nghiệp từ năm 2020."
-                keywords="về clickai, about us, đội ngũ, sứ mệnh, lịch sử phát triển"
+                title={t('about.seo_title', 'About Us - CLICKAI')}
+                description={t('about.seo_description', 'Learn about CLICKAI - our team and mission. Building a digital future, simplifying device management for all businesses since 2020.')}
+                keywords={t('about.seo_keywords', 'about clickai, about us, team, mission, development history')}
                 url="https://clickai.vn/about"
             />
             {/* Hero Section - Premium Glassmorphic Design */}
@@ -64,19 +64,19 @@ export default function Index({ stats, team }) {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
                         </span>
-                        <span className="text-sm font-medium text-purple-200">{t('about.about_us', { defaultValue: 'Về Chúng Tôi' })}</span>
+                        <span className="text-sm font-medium text-purple-200">{t('about.about_us')}</span>
                     </div>
 
                     {/* Main Heading */}
                     <h1 className="text-5xl sm:text-7xl lg:text-8xl font-bold text-white mb-6 tracking-tight">
-                        <span className="block">{t('about.hero_title_1', { defaultValue: 'Kiến Tạo' })}</span>
+                        <span className="block">{t('about.hero_title_1')}</span>
                         <span className="block mt-2 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent animate-gradient-x bg-[length:200%_auto]">
-                            {t('about.hero_title_2', { defaultValue: 'Tương Lai Số' })}
+                            {t('about.hero_title_2')}
                         </span>
                     </h1>
 
                     <p className="text-xl sm:text-2xl text-gray-300/90 max-w-3xl mx-auto leading-relaxed mb-12">
-                        {t('about.hero_desc', { defaultValue: 'Chúng tôi xây dựng nền tảng quản lý thiết bị thông minh, giúp doanh nghiệp tối ưu hóa hiệu suất và vận hành trơn tru.' })}
+                        {t('about.hero_desc')}
                     </p>
 
                     {/* CTA Buttons */}
@@ -88,7 +88,7 @@ export default function Index({ stats, team }) {
                             <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 transition-all duration-300 group-hover:scale-105" />
                             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500" />
                             <span className="relative flex items-center gap-2">
-                                {t('about.get_started', { defaultValue: 'Bắt Đầu Ngay' })}
+                                {t('about.get_started')}
                                 <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                 </svg>
@@ -98,7 +98,7 @@ export default function Index({ stats, team }) {
                             href="/contact"
                             className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:bg-white/10 hover:border-white/20 transition-all duration-300"
                         >
-                            {t('about.contact_us', { defaultValue: 'Liên Hệ Tư Vấn' })}
+                            {t('about.contact_us')}
                         </a>
                     </div>
                 </div>
@@ -122,10 +122,10 @@ export default function Index({ stats, team }) {
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-sm font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-3">
-                            {t('about.achievements', { defaultValue: 'Thành Tựu' })}
+                            {t('about.achievements')}
                         </h2>
                         <h3 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white">
-                            {t('about.impressive_numbers', { defaultValue: 'Con Số Ấn Tượng' })}
+                            {t('about.impressive_numbers')}
                         </h3>
                     </div>
 
@@ -147,31 +147,29 @@ export default function Index({ stats, team }) {
                                 <svg className="w-4 h-4 text-purple-600 dark:text-purple-400" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" />
                                 </svg>
-                                <span className="text-sm font-medium text-purple-700 dark:text-purple-300">{t('about.mission', { defaultValue: 'Sứ Mệnh' })}</span>
+                                <span className="text-sm font-medium text-purple-700 dark:text-purple-300">{t('about.mission')}</span>
                             </div>
 
                             <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
-                                {t('about.simplify', { defaultValue: 'Đơn Giản Hóa' })}
-                                <span className="text-purple-600 dark:text-purple-400"> {t('about.device_management', { defaultValue: 'Quản Lý Thiết Bị' })}</span>
+                                {t('about.simplify')}
+                                <span className="text-purple-600 dark:text-purple-400"> {t('about.device_management')}</span>
                             </h2>
 
                             <div className="space-y-6 text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
                                 <p>
-                                    DeviceHub ra đời từ năm 2020 với một tầm nhìn rõ ràng: biến quản lý thiết bị
-                                    trở nên đơn giản và hiệu quả cho mọi doanh nghiệp, bất kể quy mô.
+                                    {t('about.description_p1')}
                                 </p>
                                 <p>
-                                    Chúng tôi tin rằng công nghệ mạnh mẽ không nhất thiết phải phức tạp.
-                                    Đó là lý do chúng tôi xây dựng một nền tảng kết hợp sức mạnh với sự thân thiện.
+                                    {t('about.description_p2')}
                                 </p>
                             </div>
 
                             {/* Feature Points */}
                             <div className="mt-10 grid grid-cols-2 gap-6">
-                                <FeaturePoint icon="shield" text="Bảo mật cấp doanh nghiệp" />
-                                <FeaturePoint icon="clock" text="Hoạt động 24/7" />
-                                <FeaturePoint icon="globe" text="Hỗ trợ toàn cầu" />
-                                <FeaturePoint icon="zap" text="Công nghệ tiên tiến" />
+                                <FeaturePoint icon="shield" text={t('about.enterprise_security', 'Enterprise-grade security')} />
+                                <FeaturePoint icon="clock" text={t('about.operate_247')} />
+                                <FeaturePoint icon="globe" text={t('about.global_support', 'Global support')} />
+                                <FeaturePoint icon="zap" text={t('about.cutting_edge_tech', 'Cutting-edge technology')} />
                             </div>
                         </div>
 
@@ -191,7 +189,7 @@ export default function Index({ stats, team }) {
                                     </div>
                                     <h3 className="text-3xl font-bold mb-3">DeviceHub</h3>
                                     <p className="text-white/80 text-center text-lg">
-                                        Nền tảng quản lý thiết bị<br />thế hệ mới
+                                        {t('about.next_gen_platform', 'Next-gen device management platform')}
                                     </p>
 
                                     {/* Decorative Elements */}
@@ -209,10 +207,10 @@ export default function Index({ stats, team }) {
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-sm font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-3">
-                            Lịch Sử
+                            {t('about.history', 'History')}
                         </h2>
                         <h3 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white">
-                            Hành Trình Phát Triển
+                            {t('about.development_journey', 'Development Journey')}
                         </h3>
                     </div>
 
@@ -223,36 +221,36 @@ export default function Index({ stats, team }) {
                         <div className="space-y-16">
                             <TimelineItem
                                 year="2020"
-                                title="Khởi Nguồn"
-                                description="DeviceHub được thành lập với tầm nhìn cách mạng hóa quản lý thiết bị di động."
+                                title={t('about.timeline_2020_title', 'The Beginning')}
+                                description={t('about.timeline_2020_desc', 'DeviceHub was founded with a vision to revolutionize mobile device management.')}
                                 icon="rocket"
                                 position="left"
                             />
                             <TimelineItem
                                 year="2021"
-                                title="Cột Mốc 1.000 Người Dùng"
-                                description="Đạt 1.000 người dùng đầu tiên từ 20+ quốc gia khác nhau."
+                                title={t('about.timeline_2021_title', '1,000 Users Milestone')}
+                                description={t('about.timeline_2021_desc', 'Reached 1,000 users from 20+ different countries.')}
                                 icon="users"
                                 position="right"
                             />
                             <TimelineItem
                                 year="2022"
-                                title="Vòng Gọi Vốn Series A"
-                                description="Huy động vốn thành công để mở rộng đội ngũ và phát triển sản phẩm."
+                                title={t('about.timeline_2022_title', 'Series A Funding')}
+                                description={t('about.timeline_2022_desc', 'Successfully raised funding to expand the team and develop the product.')}
                                 icon="chart"
                                 position="left"
                             />
                             <TimelineItem
                                 year="2023"
-                                title="Ra Mắt Phiên Bản Doanh Nghiệp"
-                                description="Giới thiệu các tính năng doanh nghiệp bao gồm SSO và bảo mật nâng cao."
+                                title={t('about.timeline_2023_title', 'Enterprise Edition Launch')}
+                                description={t('about.timeline_2023_desc', 'Introduced enterprise features including SSO and advanced security.')}
                                 icon="building"
                                 position="right"
                             />
                             <TimelineItem
                                 year="2024"
-                                title="Mở Rộng Toàn Cầu"
-                                description="Phục vụ khách hàng tại hơn 120 quốc gia trên toàn thế giới."
+                                title={t('about.timeline_2024_title', 'Global Expansion')}
+                                description={t('about.timeline_2024_desc', 'Serving customers in over 120 countries worldwide.')}
                                 icon="globe"
                                 position="left"
                             />
@@ -266,33 +264,33 @@ export default function Index({ stats, team }) {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-sm font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-3">
-                            Giá Trị Cốt Lõi
+                            {t('about.core_values', 'Core Values')}
                         </h2>
                         <h3 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-                            Điều Chúng Tôi Tin Tưởng
+                            {t('about.what_we_believe', 'What We Believe')}
                         </h3>
                         <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                            Những nguyên tắc định hướng mọi quyết định và hành động của chúng tôi
+                            {t('about.values_description', 'The principles that guide every decision and action we take')}
                         </p>
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-8">
                         <ValueCard
                             icon="heart"
-                            title="Khách Hàng Là Trọng Tâm"
-                            description="Mọi quyết định đều bắt đầu từ khách hàng. Thành công của họ chính là thành công của chúng tôi."
+                            title={t('about.value_customer_title', 'Customer First')}
+                            description={t('about.value_customer_desc', 'Every decision starts with the customer. Their success is our success.')}
                             gradient="from-rose-500 to-pink-600"
                         />
                         <ValueCard
                             icon="lightbulb"
-                            title="Đổi Mới Không Ngừng"
-                            description="Chúng tôi không ngừng đột phá giới hạn để mang đến những giải pháp tiên tiến nhất."
+                            title={t('about.value_innovation_title', 'Continuous Innovation')}
+                            description={t('about.value_innovation_desc', 'We constantly push boundaries to deliver the most advanced solutions.')}
                             gradient="from-amber-500 to-orange-600"
                         />
                         <ValueCard
                             icon="shield"
-                            title="Chính Trực & Minh Bạch"
-                            description="Xây dựng niềm tin thông qua sự minh bạch, trung thực và đạo đức trong kinh doanh."
+                            title={t('about.value_integrity_title', 'Integrity & Transparency')}
+                            description={t('about.value_integrity_desc', 'Building trust through transparency, honesty and business ethics.')}
                             gradient="from-emerald-500 to-teal-600"
                         />
                     </div>
@@ -304,13 +302,13 @@ export default function Index({ stats, team }) {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-sm font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-3">
-                            Đội Ngũ
+                            {t('about.our_team')}
                         </h2>
                         <h3 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-                            Những Người Đồng Hành
+                            {t('about.team_title', 'Our Companions')}
                         </h3>
                         <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                            Đội ngũ tài năng và nhiệt huyết đứng sau DeviceHub
+                            {t('about.team_description', 'The talented and passionate team behind DeviceHub')}
                         </p>
                     </div>
 
@@ -336,11 +334,10 @@ export default function Index({ stats, team }) {
                 {/* Content */}
                 <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
-                        {t('about.ready_to_start', { defaultValue: 'Sẵn Sàng Bắt Đầu?' })}
+                        {t('about.ready_to_start')}
                     </h2>
                     <p className="text-xl text-purple-200 mb-12 max-w-2xl mx-auto">
-                        Tham gia cùng hàng nghìn doanh nghiệp đã tin tưởng DeviceHub
-                        để quản lý hệ thống thiết bị của họ.
+                        {t('about.cta_description', 'Join thousands of businesses that trust DeviceHub to manage their device fleet.')}
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -348,7 +345,7 @@ export default function Index({ stats, team }) {
                             href="/register"
                             className="group inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-purple-900 bg-white rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
                         >
-                            {t('about.try_free', { defaultValue: 'Dùng Thử Miễn Phí' })}
+                            {t('about.try_free')}
                             <svg className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                             </svg>
@@ -357,7 +354,7 @@ export default function Index({ stats, team }) {
                             href="/contact"
                             className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl hover:bg-white/20 transition-all duration-300"
                         >
-                            {t('about.book_demo', { defaultValue: 'Đặt Lịch Demo' })}
+                            {t('about.book_demo')}
                         </a>
                     </div>
                 </div>

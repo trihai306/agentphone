@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { NodeStatus } from '@/hooks/useExecutionState';
 
@@ -20,6 +21,7 @@ function GlassNode({
     handles = { left: true, right: true },
     className = '',
 }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
@@ -131,7 +133,7 @@ function GlassNode({
                             className="text-sm font-bold truncate"
                             style={{ color: stateColor }}
                         >
-                            {title || data?.label || 'Node'}
+                            {title || data?.label || t('flows.editor.glass_nodes.node_label')}
                         </h3>
                         {subtitle && (
                             <p className={`text-[10px] truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>

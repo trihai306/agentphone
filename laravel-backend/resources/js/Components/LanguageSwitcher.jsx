@@ -19,7 +19,7 @@ const languages = [
 ];
 
 export default function LanguageSwitcher({ className = '' }) {
-    const { i18n } = useTranslation();
+    const { i18n, t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [isChanging, setIsChanging] = useState(false);
 
@@ -36,12 +36,10 @@ export default function LanguageSwitcher({ className = '' }) {
         // Use the centralized changeLanguage function
         changeLanguage(langCode);
 
-        // Small delay for UI feedback, then refresh to sync with Laravel session
+        // Small delay for UI feedback
         setTimeout(() => {
             setIsChanging(false);
-            // Reload page to ensure Laravel session is synced
-            window.location.reload();
-        }, 200);
+        }, 300);
     };
 
     return (
@@ -120,7 +118,7 @@ export default function LanguageSwitcher({ className = '' }) {
                         {/* Footer Hint */}
                         <div className="px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700">
                             <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                                {i18n.language === 'vi' ? 'Ngôn ngữ sẽ được lưu' : 'Language preference will be saved'}
+                                {t('common.language_saved', 'Language preference will be saved')}
                             </p>
                         </div>
                     </div>

@@ -62,7 +62,7 @@ success "Git pull completed"
 cd "$BACKEND_DIR"
 
 # Step 4: Install/update Composer dependencies (if composer.lock changed)
-if git diff HEAD@{1} --name-only | grep -q "composer.lock"; then
+if git diff HEAD@{1} --name-only 2>/dev/null | grep -q "composer.lock"; then
     log "📦 composer.lock changed, installing dependencies..."
     composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
     success "Composer install completed"
@@ -70,16 +70,26 @@ else
     log "📦 No composer.lock changes, skipping composer install"
 fi
 
-# Step 5: Run database migrations (if any)
+# Step 5: Build frontend assets (if package.json or resources changed)
+if git diff HEAD@{1} --name-only 2>/dev/null | grep -qE "(package-lock\.json|resources/js|resources/css|vite\.config)"; then
+    log "🏗️  Frontend changes detected, rebuilding assets..."
+    npm ci --production=false 2>/dev/null || npm install
+    npm run build
+    success "Frontend build completed"
+else
+    log "🏗️  No frontend changes, skipping build"
+fi
+
+# Step 6: Run database migrations (if any)
 log "🗄️  Running database migrations..."
 php artisan migrate --force || warning "No new migrations"
 
-# Step 6: Clear ALL caches (critical for Swoole/Octane)
+# Step 7: Clear ALL caches (critical for Swoole/Octane)
 log "🧹 Clearing all caches..."
 php artisan optimize:clear
 success "optimize:clear completed"
 
-# Step 7: Rebuild caches
+# Step 8: Rebuild caches
 log "⚡ Rebuilding caches..."
 
 # Config cache
@@ -102,7 +112,7 @@ success "event:cache completed"
 php artisan filament:cache-components
 success "filament:cache-components completed"
 
-# Step 8: Restart Laravel Octane (critical for Swoole to load new code)
+# Step 9: Restart Laravel Octane (critical for Swoole to load new code)
 log "🔄 Restarting Laravel Octane..."
 if supervisorctl status octane 2>/dev/null | grep -q "RUNNING"; then
     supervisorctl restart octane
@@ -119,14 +129,14 @@ else
     php artisan octane:reload 2>/dev/null || php artisan octane:restart 2>/dev/null || warning "Could not restart Octane automatically"
 fi
 
-# Step 9: Restart queue workers (if using)
+# Step 10: Restart queue workers
 if supervisorctl status queue 2>/dev/null | grep -q "RUNNING"; then
     log "🔄 Restarting queue workers..."
     supervisorctl restart queue
     success "Queue workers restarted"
 fi
 
-# Step 10: Restart Soketi (if running)
+# Step 11: Restart Soketi (if running)
 if supervisorctl status soketi 2>/dev/null | grep -q "RUNNING"; then
     log "🔄 Restarting Soketi..."
     supervisorctl restart soketi

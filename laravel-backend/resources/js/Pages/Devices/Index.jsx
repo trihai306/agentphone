@@ -176,7 +176,7 @@ export default function Index({ devices }) {
                                                     </div>
                                                     <div className="absolute bottom-3 left-3">
                                                         <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-black/20 text-white backdrop-blur-md border border-white/10">
-                                                            {device.model || 'Unknown'}
+                                                            {device.model || t('common.unknown', 'Unknown')}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -184,7 +184,7 @@ export default function Index({ devices }) {
                                                 {/* Content */}
                                                 <div className="p-5">
                                                     <h3 className={`font-semibold text-lg truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                                        {device.name || 'Unnamed Device'}
+                                                        {device.name || t('devices.unnamed_device', 'Unnamed Device')}
                                                     </h3>
                                                     <p className={`text-xs font-mono mt-1 truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                                                         {device.device_id?.slice(0, 24)}...
@@ -245,12 +245,12 @@ export default function Index({ devices }) {
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-3">
-                                                        <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{device.name || 'Unnamed Device'}</h3>
+                                                        <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{device.name || t('devices.unnamed_device', 'Unnamed Device')}</h3>
                                                         <Badge variant={isOnline ? 'success' : 'default'} dot size="sm">
                                                             {isOnline ? t('devices.status.online') : t('devices.status.offline')}
                                                         </Badge>
                                                     </div>
-                                                    <p className={`text-sm truncate mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>{device.model || 'Unknown model'}</p>
+                                                    <p className={`text-sm truncate mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>{device.model || t('devices.unknown_model', 'Unknown model')}</p>
                                                 </div>
                                                 <div className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{getTimeAgo(device.last_active_at)}</div>
                                                 <div className="flex items-center gap-1">
@@ -272,7 +272,7 @@ export default function Index({ devices }) {
                             <EmptyState
                                 icon={deviceIcon}
                                 title={searchQuery ? t('devices.no_results') : t('devices.no_devices')}
-                                description={searchQuery ? `No results for "${searchQuery}"` : 'Download the CLICKAI Portal app on your Android device to get started'}
+                                description={searchQuery ? t('devices.no_results_desc') : t('devices.download_description')}
                                 actionLabel={!searchQuery ? t('devices.download_apk') : undefined}
                                 actionHref={!searchQuery ? '/download/apk' : undefined}
                             />
@@ -287,7 +287,7 @@ export default function Index({ devices }) {
                                     </Link>
                                 )}
                                 <span className={`px-4 py-2 text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    Page {devices.current_page} of {devices.last_page}
+                                    {t('common.page')} {devices.current_page} / {devices.last_page}
                                 </span>
                                 {devices.next_page_url && (
                                     <Link href={devices.next_page_url} className="px-4 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25">

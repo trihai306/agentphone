@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * SeoHead - Reusable SEO component for meta tags
@@ -14,13 +15,16 @@ import { Head } from '@inertiajs/react';
  */
 export default function SeoHead({
     title,
-    description = 'CLICKAI - Nền tảng tự động hoá quy trình doanh nghiệp với AI. Quản lý thiết bị thông minh, workflow automation, tiết kiệm 80% thời gian vận hành.',
-    keywords = 'tự động hoá, automation, workflow, quản lý thiết bị, AI, clickai',
+    description,
+    keywords,
     image = '/images/og-default.jpg',
     url,
     type = 'website',
     structuredData = null,
 }) {
+    const { t } = useTranslation();
+    description = description || t('seo.default_description');
+    keywords = keywords || t('seo.default_keywords');
     const siteName = 'CLICKAI';
     const twitterHandle = '@clickai_vn';
 

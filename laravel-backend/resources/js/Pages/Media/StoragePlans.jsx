@@ -32,7 +32,7 @@ export default function StoragePlans({ currentPlan, plans, usage }) {
     };
 
     const formatPrice = (price) => {
-        if (price === 0) return 'Miễn phí';
+        if (price === 0) return t('storage_plans.free');
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(price);
     };
 
@@ -44,31 +44,31 @@ export default function StoragePlans({ currentPlan, plans, usage }) {
         setIsUpgrading(true);
         router.post('/media/storage-plans/upgrade', { plan_id: plan.id }, {
             onSuccess: () => {
-                addToast('Đã nâng cấp gói thành công!', 'success');
+                addToast(t('storage_plans.upgrade_success'), 'success');
                 setSelectedPlan(null);
             },
             onError: () => {
-                addToast('Không thể nâng cấp. Vui lòng thử lại.', 'error');
+                addToast(t('storage_plans.upgrade_error'), 'error');
             },
             onFinish: () => setIsUpgrading(false),
         });
     };
 
     const stats = [
-        { label: 'Số file', value: usage?.file_count || 0, suffix: `/ ${currentPlan?.max_files || '∞'}` },
-        { label: 'File tối đa', value: formatBytes(currentPlan?.max_file_size_bytes || 0) },
-        { label: 'Giá/tháng', value: formatPrice(currentPlan?.price || 0) },
+        { label: t('storage_plans.file_count'), value: usage?.file_count || 0, suffix: `/ ${currentPlan?.max_files || '∞'}` },
+        { label: t('storage_plans.max_file_size'), value: formatBytes(currentPlan?.max_file_size_bytes || 0) },
+        { label: t('storage_plans.price_per_month'), value: formatPrice(currentPlan?.price || 0) },
     ];
 
     return (
-        <AppLayout title="Gói lưu trữ">
-            <Head title="Gói lưu trữ" />
+        <AppLayout title={t('storage_plans.title')}>
+            <Head title={t('storage_plans.title')} />
             <div className={`min-h-screen ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#fafafa]'}`}>
                 <div className="max-w-[1200px] mx-auto px-6 py-8">
                     {/* Header */}
                     <PageHeader
-                        title="Gói lưu trữ Media"
-                        subtitle="Quản lý dung lượng và nâng cấp gói của bạn"
+                        title={t('storage_plans.page_title')}
+                        subtitle={t('storage_plans.page_subtitle')}
                         backHref="/media"
                     />
 
@@ -77,20 +77,20 @@ export default function StoragePlans({ currentPlan, plans, usage }) {
                         <div className="flex items-center justify-between mb-4">
                             <div>
                                 <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    Gói hiện tại: {currentPlan?.name || 'Free'}
+                                    {t('storage_plans.current_plan')}: {currentPlan?.name || 'Free'}
                                 </h2>
                                 <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    {currentPlan?.description || 'Gói miễn phí cơ bản'}
+                                    {currentPlan?.description || t('storage_plans.free_plan_desc')}
                                 </p>
                             </div>
-                            <Badge variant="success" size="md">Đang sử dụng</Badge>
+                            <Badge variant="success" size="md">{t('storage_plans.active')}</Badge>
                         </div>
 
                         {/* Usage Progress */}
                         <div className="mb-4">
                             <div className="flex items-center justify-between mb-2">
                                 <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                    Dung lượng đã dùng
+                                    {t('storage_plans.storage_used')}
                                 </span>
                                 <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                     {formatBytes(usage?.storage_used || 0)} / {formatBytes(currentPlan?.max_storage_bytes || 0)}
@@ -110,8 +110,8 @@ export default function StoragePlans({ currentPlan, plans, usage }) {
                             {usagePercent > 70 && (
                                 <p className={`mt-2 text-xs ${usagePercent > 90 ? 'text-red-400' : 'text-amber-400'}`}>
                                     {usagePercent > 90
-                                        ? 'Dung lượng sắp hết! Nâng cấp ngay để tiếp tục upload.'
-                                        : 'Dung lượng đang sử dụng hơn 70%. Cân nhắc nâng cấp gói.'}
+                                        ? t('storage_plans.storage_almost_full')
+                                        : t('storage_plans.storage_warning_70')}
                                 </p>
                             )}
                         </div>
@@ -133,7 +133,7 @@ export default function StoragePlans({ currentPlan, plans, usage }) {
                     </GlassCard>
 
                     {/* Plans Grid */}
-                    <SectionHeader title="Các gói có sẵn" />
+                    <SectionHeader title={t('storage_plans.available_plans')} />
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {plans?.map((plan) => {
                             const isCurrentPlan = currentPlan?.id === plan.id;
@@ -149,7 +149,7 @@ export default function StoragePlans({ currentPlan, plans, usage }) {
                                     {/* Popular Badge */}
                                     {plan.slug === 'pro' && (
                                         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                            <Badge variant="warning" size="sm">Phổ biến</Badge>
+                                            <Badge variant="warning" size="sm">{t('storage_plans.popular')}</Badge>
                                         </div>
                                     )}
 
@@ -165,7 +165,7 @@ export default function StoragePlans({ currentPlan, plans, usage }) {
                                             {formatPrice(plan.price)}
                                         </span>
                                         {plan.price > 0 && (
-                                            <span className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>/tháng</span>
+                                            <span className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>/{t('storage_plans.month')}</span>
                                         )}
                                     </div>
 
@@ -184,15 +184,15 @@ export default function StoragePlans({ currentPlan, plans, usage }) {
                                     {/* Action Button */}
                                     {isCurrentPlan ? (
                                         <Button disabled variant="success" className="w-full">
-                                            Gói hiện tại
+                                            {t('storage_plans.current_plan')}
                                         </Button>
                                     ) : isUpgrade ? (
                                         <Button onClick={() => setSelectedPlan(plan)} className="w-full">
-                                            Nâng cấp
+                                            {t('storage_plans.upgrade')}
                                         </Button>
                                     ) : (
                                         <Button disabled variant="ghost" className="w-full">
-                                            Gói thấp hơn
+                                            {t('storage_plans.lower_plan')}
                                         </Button>
                                     )}
                                 </GlassCard>
@@ -215,17 +215,17 @@ export default function StoragePlans({ currentPlan, plans, usage }) {
                         onClick={(e) => e.stopPropagation()}
                     >
                         <h3 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            Xác nhận nâng cấp
+                            {t('storage_plans.confirm_upgrade')}
                         </h3>
                         <p className={`mt-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                            Bạn muốn nâng cấp lên gói <strong className={isDark ? 'text-white' : 'text-gray-900'}>{selectedPlan.name}</strong>?
+                            {t('storage_plans.confirm_upgrade_message')} <strong className={isDark ? 'text-white' : 'text-gray-900'}>{selectedPlan.name}</strong>?
                         </p>
 
                         <DataList
                             items={[
-                                { label: 'Dung lượng', value: formatBytes(selectedPlan.max_storage_bytes) },
-                                { label: 'Số file tối đa', value: selectedPlan.max_files || 'Không giới hạn' },
-                                { label: 'Giá', value: `${formatPrice(selectedPlan.price)}/tháng` },
+                                { label: t('storage_plans.storage_capacity'), value: formatBytes(selectedPlan.max_storage_bytes) },
+                                { label: t('storage_plans.max_files'), value: selectedPlan.max_files || t('storage_plans.unlimited') },
+                                { label: t('storage_plans.price'), value: `${formatPrice(selectedPlan.price)}/${t('storage_plans.month')}` },
                             ]}
                             className="mt-4"
                         />
@@ -237,14 +237,14 @@ export default function StoragePlans({ currentPlan, plans, usage }) {
                                 variant="ghost"
                                 className="flex-1"
                             >
-                                Hủy
+                                {t('common.cancel')}
                             </Button>
                             <Button
                                 onClick={() => handleUpgrade(selectedPlan)}
                                 disabled={isUpgrading}
                                 className="flex-1"
                             >
-                                {isUpgrading ? 'Đang xử lý...' : 'Xác nhận nâng cấp'}
+                                {isUpgrading ? t('common.processing') : t('storage_plans.confirm_upgrade')}
                             </Button>
                         </div>
                     </GlassCard>

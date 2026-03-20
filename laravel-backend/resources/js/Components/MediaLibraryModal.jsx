@@ -346,13 +346,13 @@ export default function MediaLibraryModal({
                                 {selectedItems.length > 0 && (
                                     <>
                                         <span className={`text-sm font-medium ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
-                                            • {selectedItems.length} đã chọn
+                                            • {t('media.selected_count', { count: selectedItems.length })}
                                         </span>
                                         <button
                                             onClick={clearSelection}
                                             className={`text-xs px-2 py-1 rounded ${isDark ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' : 'bg-red-50 text-red-600 hover:bg-red-100'}`}
                                         >
-                                            Bỏ chọn
+                                            {t('common.deselect_all')}
                                         </button>
                                     </>
                                 )}
@@ -361,7 +361,7 @@ export default function MediaLibraryModal({
                                         onClick={selectAll}
                                         className={`text-xs px-2 py-1 rounded ${isDark ? 'bg-violet-500/20 text-violet-400 hover:bg-violet-500/30' : 'bg-violet-50 text-violet-600 hover:bg-violet-100'}`}
                                     >
-                                        Chọn tất cả
+                                        {t('common.select_all')}
                                     </button>
                                 )}
                             </div>
@@ -490,7 +490,7 @@ export default function MediaLibraryModal({
                                             <svg className={`w-10 h-10 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 17l-5-5m0 0l5-5m-5 5h12" />
                                             </svg>
-                                            <span className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Quay lại</span>
+                                            <span className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('common.back')}</span>
                                         </div>
                                     )}
 
@@ -692,7 +692,7 @@ export default function MediaLibraryModal({
                                             {selectedItems.length > 1 && (
                                                 <div className={`p-3 rounded-lg ${isDark ? 'bg-violet-500/10' : 'bg-violet-50'}`}>
                                                     <p className={`text-sm font-medium ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
-                                                        {selectedItems.length} files đã chọn
+                                                        {t('media.selected_count', { count: selectedItems.length })}
                                                     </p>
                                                 </div>
                                             )}
@@ -765,11 +765,11 @@ export default function MediaLibraryModal({
                                 </div>
                                 <div>
                                     <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                        {selectedItems.length} file đã chọn
+                                        {t('media.selected_count', { count: selectedItems.length })}
                                     </p>
                                     <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                         {selectedItems.map(i => i.original_name).slice(0, 2).join(', ')}
-                                        {selectedItems.length > 2 && ` +${selectedItems.length - 2} khác`}
+                                        {selectedItems.length > 2 && ` +${selectedItems.length - 2} ${t('common.more')}`}
                                     </p>
                                 </div>
                             </div>
@@ -785,7 +785,7 @@ export default function MediaLibraryModal({
                                         {currentFolder.split('/').filter(Boolean).pop()}
                                     </p>
                                     <p className={`text-xs ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
-                                        Chọn folder → Lấy {filteredFiles.length} file trong folder
+                                        {t('media.select_folder_files', { count: filteredFiles.length })}
                                     </p>
                                 </div>
                             </div>
@@ -810,7 +810,7 @@ export default function MediaLibraryModal({
                                 onClick={handleSelectFolder}
                                 className="px-6 py-2.5 rounded-xl font-medium transition-all bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/30 hover:scale-105"
                             >
-                                Chọn Folder ({filteredFiles.length} files)
+                                {t('media.select_folder')} ({filteredFiles.length} files)
                             </button>
                         )}
 
@@ -824,8 +824,8 @@ export default function MediaLibraryModal({
                                 }`}
                         >
                             {selectedItems.length > 0
-                                ? `Chọn ${selectedItems.length} File`
-                                : t('media.select_file', 'Chọn File')}
+                                ? t('media.select_n_files', { count: selectedItems.length })
+                                : t('media.select_file', 'Select File')}
                         </button>
                     </div>
                 </div>

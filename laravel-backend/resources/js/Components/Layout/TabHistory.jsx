@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, router, usePage } from '@inertiajs/react';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { Button } from '@/Components/UI';
@@ -9,25 +10,26 @@ import { Button } from '@/Components/UI';
  */
 
 // Map of routes to display names and icons (matching NavLink icon keys)
-const PAGE_CONFIG = {
-    '/dashboard': { name: 'Bảng Điều Khiển', icon: 'home' },
-    '/devices': { name: 'Thiết Bị', icon: 'device' },
-    '/flows': { name: 'Flows', icon: 'flow' },
-    '/campaigns': { name: 'Campaigns', icon: 'seed' },
-    '/jobs': { name: 'Jobs', icon: 'play' },
-    '/data-collections': { name: 'Dữ Liệu', icon: 'database' },
-    '/ai-studio': { name: 'AI Studio', icon: 'ai' },
-    '/ai-credits': { name: 'AI Credits', icon: 'credits' },
-    '/marketplace': { name: 'Marketplace', icon: 'shop' },
-    '/media': { name: 'Thư Viện', icon: 'media' },
-    '/wallet': { name: 'Ví Tiền', icon: 'wallet' },
-    '/topup': { name: 'Nạp Tiền', icon: 'plus' },
-    '/withdraw': { name: 'Rút Tiền', icon: 'withdraw' },
-    '/bank-accounts': { name: 'Tài Khoản NH', icon: 'bank' },
-    '/packages': { name: 'Gói Dịch Vụ', icon: 'package' },
-    '/notifications': { name: 'Thông Báo', icon: 'bell' },
-    '/error-reports': { name: 'Báo Lỗi', icon: 'bug' },
-};
+// Returns config with translated names - must be called with t() from useTranslation
+const getPageConfig = (t) => ({
+    '/dashboard': { name: t('navigation.dashboard'), icon: 'home' },
+    '/devices': { name: t('navigation.devices'), icon: 'device' },
+    '/flows': { name: t('navigation.workflows'), icon: 'flow' },
+    '/campaigns': { name: t('navigation.campaigns'), icon: 'seed' },
+    '/jobs': { name: t('navigation.jobs'), icon: 'play' },
+    '/data-collections': { name: t('navigation.data_collections'), icon: 'database' },
+    '/ai-studio': { name: t('navigation.ai_studio'), icon: 'ai' },
+    '/ai-credits': { name: t('navigation.ai_credits'), icon: 'credits' },
+    '/marketplace': { name: t('navigation.marketplace'), icon: 'shop' },
+    '/media': { name: t('navigation.media'), icon: 'media' },
+    '/wallet': { name: t('navigation.wallet'), icon: 'wallet' },
+    '/topup': { name: t('navigation.topup'), icon: 'plus' },
+    '/withdraw': { name: t('navigation.withdraw'), icon: 'withdraw' },
+    '/bank-accounts': { name: t('navigation.bank_accounts'), icon: 'bank' },
+    '/packages': { name: t('navigation.packages'), icon: 'package' },
+    '/notifications': { name: t('navigation.notifications'), icon: 'bell' },
+    '/error-reports': { name: t('navigation.error_reports'), icon: 'bug' },
+});
 
 // SVG icon paths (same as NavLink)
 const ICONS = {
@@ -52,17 +54,18 @@ const ICONS = {
 };
 
 // Get page info from URL
-function getPageInfo(url) {
+function getPageInfo(url, t) {
     // Remove query string
     const path = url.split('?')[0];
+    const pageConfig = getPageConfig(t);
 
     // Check exact match first
-    if (PAGE_CONFIG[path]) {
-        return { ...PAGE_CONFIG[path], path };
+    if (pageConfig[path]) {
+        return { ...pageConfig[path], path };
     }
 
     // Check prefix matches for nested routes
-    for (const [route, config] of Object.entries(PAGE_CONFIG)) {
+    for (const [route, config] of Object.entries(pageConfig)) {
         if (path.startsWith(route + '/')) {
             // Extract ID or sub-path for more specific title
             const subPath = path.replace(route + '/', '');
@@ -75,13 +78,14 @@ function getPageInfo(url) {
     }
 
     // Default fallback
-    return { name: path.split('/').filter(Boolean)[0] || 'Trang', icon: 'default', path };
+    return { name: path.split('/').filter(Boolean)[0] || t('common.page'), icon: 'default', path };
 }
 
 const MAX_TABS = 8;
 const STORAGE_KEY = 'tabHistory';
 
 export default function TabHistory() {
+    const { t } = useTranslation();
     const { url } = usePage();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
@@ -121,11 +125,11 @@ export default function TabHistory() {
     useEffect(() => {
         if (!url) return;
 
-        const pageInfo = getPageInfo(url);
+        const pageInfo = getPageInfo(url, t);
 
         setTabs(prevTabs => {
             // Check if tab already exists
-            const existingIndex = prevTabs.findIndex(t => t.path === pageInfo.path);
+            const existingIndex = prevTabs.findIndex(tab => tab.path === pageInfo.path);
 
             let newTabs;
             if (existingIndex !== -1) {
@@ -153,7 +157,7 @@ export default function TabHistory() {
 
             return newTabs;
         });
-    }, [url]);
+    }, [url, t]);
 
     // Close a tab
     const closeTab = (e, path) => {
@@ -161,7 +165,7 @@ export default function TabHistory() {
         e.stopPropagation();
 
         setTabs(prevTabs => {
-            const newTabs = prevTabs.filter(t => t.path !== path);
+            const newTabs = prevTabs.filter(tab => tab.path !== path);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(newTabs));
             return newTabs;
         });
@@ -225,7 +229,7 @@ export default function TabHistory() {
                         variant="ghost"
                         size="icon-sm"
                         onClick={clearAllTabs}
-                        title="Đóng tất cả tabs"
+                        title={t('navigation.close_all_tabs')}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

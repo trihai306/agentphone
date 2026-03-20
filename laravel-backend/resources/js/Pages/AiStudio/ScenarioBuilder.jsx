@@ -9,7 +9,7 @@ import { useTheme } from '@/Contexts/ThemeContext';
 
 /**
  * ScenarioBuilder - Professional Video/Image Scenario Builder
- * 
+ *
  * Features:
  * - Visual timeline editor
  * - Drag & drop scenes
@@ -97,7 +97,7 @@ export default function ScenarioBuilder({
         setScript(template.script);
         setTitle(template.name);
         setShowTemplates(false);
-        addToast(`Đã chọn template "${template.name}"`, 'success');
+        addToast(t('ai_studio.scenario.selected_template', { name: template.name }), 'success');
     };
 
     // ============================================
@@ -108,18 +108,18 @@ export default function ScenarioBuilder({
     const handleImageSelect = (files) => {
         const validFiles = Array.from(files).filter(file => {
             if (!file.type.startsWith('image/')) {
-                addToast(`${file.name} không phải là ảnh`, 'warning');
+                addToast(t('ai_studio.scenario.not_an_image', { name: file.name }), 'warning');
                 return false;
             }
             if (file.size > 10 * 1024 * 1024) { // 10MB limit
-                addToast(`${file.name} quá lớn(tối đa 10MB)`, 'warning');
+                addToast(t('ai_studio.scenario.file_too_large', { name: file.name }), 'warning');
                 return false;
             }
             return true;
         });
 
         if (uploadedImages.length + validFiles.length > 10) {
-            addToast('Tối đa 10 ảnh', 'warning');
+            addToast(t('ai_studio.scenario.max_10_images'), 'warning');
             return;
         }
 
@@ -166,7 +166,7 @@ export default function ScenarioBuilder({
     // Parse images with AI
     const handleParseImages = async () => {
         if (uploadedImages.length === 0) {
-            addToast('Vui lòng upload ít nhất 1 ảnh', 'warning');
+            addToast(t('ai_studio.scenario.please_upload_image'), 'warning');
             return;
         }
 
@@ -192,15 +192,15 @@ export default function ScenarioBuilder({
                     source_image_preview: uploadedImages[index]?.preview || null,
                 }));
                 setScenes(parsedScenes);
-                setTitle(response.data.title || 'Video từ ảnh');
-                setScript(`Video được tạo từ ${uploadedImages.length} ảnh`);
+                setTitle(response.data.title || t('ai_studio.scenario.video_from_images'));
+                setScript(t('ai_studio.scenario.video_created_from_images', { count: uploadedImages.length }));
                 setStep('editor');
-                addToast(`Đã phân tích ${parsedScenes.length} ảnh thành cảnh`, 'success');
+                addToast(t('ai_studio.scenario.analyzed_images_to_scenes', { count: parsedScenes.length }), 'success');
             } else {
-                throw new Error(response.error || 'Không thể phân tích ảnh');
+                throw new Error(response.error || t('ai_studio.scenario.cannot_analyze_images'));
             }
         } catch (error) {
-            addToast(error.message || 'Không thể phân tích ảnh', 'error');
+            addToast(error.message || t('ai_studio.scenario.cannot_analyze_images'), 'error');
         } finally {
             setParsing(false);
         }
@@ -213,7 +213,7 @@ export default function ScenarioBuilder({
     // Parse script with AI
     const handleParseScript = async () => {
         if (!script.trim() || script.length < 20) {
-            addToast('Vui lòng nhập kịch bản chi tiết hơn (ít nhất 20 ký tự)', 'warning');
+            addToast(t('ai_studio.scenario.please_enter_detailed_script'), 'warning');
             return;
         }
 
@@ -236,14 +236,14 @@ export default function ScenarioBuilder({
                     status: 'pending',
                 }));
                 setScenes(parsedScenes);
-                setTitle(responseData.data?.title || responseData.title || title || 'Kịch bản mới');
+                setTitle(responseData.data?.title || responseData.title || title || t('ai_studio.scenario.new_scenario'));
                 setStep('editor');
-                addToast(`Đã phân tích thành ${parsedScenes.length} cảnh`, 'success');
+                addToast(t('ai_studio.scenario.analyzed_to_scenes', { count: parsedScenes.length }), 'success');
             } else {
-                throw new Error(responseData.error || 'Không thể phân tích kịch bản');
+                throw new Error(responseData.error || t('ai_studio.scenario.cannot_analyze_script'));
             }
         } catch (error) {
-            addToast(error.response?.data?.error || 'Không thể phân tích kịch bản', 'error');
+            addToast(error.response?.data?.error || t('ai_studio.scenario.cannot_analyze_script'), 'error');
         } finally {
             setParsing(false);
         }
@@ -272,14 +272,14 @@ export default function ScenarioBuilder({
     // Delete scene
     const handleDeleteScene = async (index) => {
         if (scenes.length <= 1) {
-            addToast('Phải có ít nhất 1 cảnh', 'warning');
+            addToast(t('ai_studio.scenario.must_have_at_least_1_scene'), 'warning');
             return;
         }
 
         const confirmed = await showConfirm({
-            title: 'Xóa cảnh',
-            message: `Xóa cảnh ${index + 1}?`,
-            confirmText: 'Xóa',
+            title: t('ai_studio.scenario.delete_scene'),
+            message: t('ai_studio.scenario.delete_scene_confirm', { number: index + 1 }),
+            confirmText: t('common.delete'),
             type: 'danger',
         });
 
@@ -332,7 +332,7 @@ export default function ScenarioBuilder({
     const handleGeneratePrompt = async (index) => {
         const scene = scenes[index];
         if (!scene.description) {
-            addToast('Vui lòng nhập mô tả cảnh trước', 'warning');
+            addToast(t('ai_studio.scenario.please_enter_scene_desc'), 'warning');
             return;
         }
 
@@ -345,10 +345,10 @@ export default function ScenarioBuilder({
 
             if (response.success) {
                 handleUpdateScene(index, { prompt: response.prompt });
-                addToast('Đã tạo prompt!', 'success');
+                addToast(t('ai_studio.scenario.prompt_generated'), 'success');
             }
         } catch (error) {
-            addToast('Không thể tạo prompt', 'error');
+            addToast(t('ai_studio.scenario.cannot_generate_prompt'), 'error');
         }
     };
 
@@ -375,12 +375,12 @@ export default function ScenarioBuilder({
     // Save scenario
     const handleSave = async (asDraft = true) => {
         if (!title.trim()) {
-            addToast('Vui lòng nhập tiêu đề', 'warning');
+            addToast(t('ai_studio.scenario.please_enter_title'), 'warning');
             return;
         }
 
         if (scenes.length === 0) {
-            addToast('Chưa có cảnh nào', 'warning');
+            addToast(t('ai_studio.scenario.no_scenes_yet'), 'warning');
             return;
         }
 
@@ -422,12 +422,12 @@ export default function ScenarioBuilder({
             const responseData = response.data || response;
             if (responseData.success && responseData.scenario) {
                 setScenario(responseData.scenario);
-                addToast(asDraft ? 'Đã lưu bản nháp' : 'Đã lưu kịch bản', 'success');
+                addToast(asDraft ? t('ai_studio.scenario.saved_draft') : t('ai_studio.scenario.saved_scenario'), 'success');
             } else {
-                throw new Error(responseData.error || 'Không thể lưu');
+                throw new Error(responseData.error || t('ai_studio.scenario.cannot_save'));
             }
         } catch (error) {
-            addToast('Không thể lưu', 'error');
+            addToast(t('ai_studio.scenario.cannot_save'), 'error');
         } finally {
             setSaving(false);
         }
@@ -436,7 +436,7 @@ export default function ScenarioBuilder({
     // Start generation
     const handleGenerate = async () => {
         if (currentCredits < estimatedCredits) {
-            addToast(`Không đủ credits.Cần ${estimatedCredits}, hiện có ${currentCredits} `, 'warning');
+            addToast(t('ai_studio.scenario.insufficient_credits', { needed: estimatedCredits, have: currentCredits }), 'warning');
             return;
         }
 
@@ -450,7 +450,7 @@ export default function ScenarioBuilder({
             if (!scenarioId) {
                 const saveResult = await handleSaveAndGetId();
                 if (!saveResult) {
-                    throw new Error('Không thể lưu kịch bản');
+                    throw new Error(t('ai_studio.scenario.cannot_save_scenario'));
                 }
                 scenarioId = saveResult;
             }
@@ -460,13 +460,13 @@ export default function ScenarioBuilder({
 
             if (responseData.success && responseData.scenario) {
                 setScenario(responseData.scenario);
-                addToast('Đang tạo video...', 'success');
+                addToast(t('ai_studio.scenario.creating_video'), 'success');
                 startPolling(responseData.scenario.id);
             } else {
-                throw new Error(responseData.error || 'Không thể bắt đầu tạo');
+                throw new Error(responseData.error || t('ai_studio.scenario.cannot_start_generation'));
             }
         } catch (error) {
-            addToast(error.message || 'Không thể bắt đầu tạo', 'error');
+            addToast(error.message || t('ai_studio.scenario.cannot_start_generation'), 'error');
             setGenerating(false);
             setStep('editor');
         }
@@ -475,12 +475,12 @@ export default function ScenarioBuilder({
     // Save and return the scenario ID (for handleGenerate)
     const handleSaveAndGetId = async () => {
         if (!title.trim()) {
-            addToast('Vui lòng nhập tiêu đề', 'warning');
+            addToast(t('ai_studio.scenario.please_enter_title'), 'warning');
             return null;
         }
 
         if (scenes.length === 0) {
-            addToast('Chưa có cảnh nào', 'warning');
+            addToast(t('ai_studio.scenario.no_scenes_yet'), 'warning');
             return null;
         }
 
@@ -550,12 +550,12 @@ export default function ScenarioBuilder({
                         setGenerating(false);
 
                         if (responseData.scenario.status === 'completed') {
-                            addToast('Tất cả cảnh đã hoàn thành!', 'success');
+                            addToast(t('ai_studio.scenario.all_scenes_completed'), 'success');
                             setStep('preview');
                         } else if (responseData.scenario.status === 'partial') {
-                            addToast('Một số cảnh thất bại', 'warning');
+                            addToast(t('ai_studio.scenario.some_scenes_failed'), 'warning');
                         } else {
-                            addToast('Tạo thất bại', 'error');
+                            addToast(t('ai_studio.scenario.generation_failed'), 'error');
                             setStep('editor');
                         }
                     }
@@ -578,7 +578,7 @@ export default function ScenarioBuilder({
     // ============================================
 
     return (
-        <AppLayout title="Scenario Builder">
+        <AppLayout title={t('ai_studio.scenario_builder')}>
             <div className={`min - h - screen ${themeClasses.pageBg} `}>
                 {/* Background decorations */}
                 <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -599,10 +599,10 @@ export default function ScenarioBuilder({
                             </Link>
                             <div>
                                 <h1 className={`text - xl sm: text - 2xl font - bold ${themeClasses.textPrimary} `}>
-                                    {step === 'start' ? 'Tạo Kịch Bản Mới' : title || 'Scenario Builder'}
+                                    {step === 'start' ? t('ai_studio.scenario.create_new_scenario_title') : title || t('ai_studio.scenario_builder')}
                                 </h1>
                                 <p className={`text - sm ${themeClasses.textMuted} `}>
-                                    Tạo video/ảnh chuyên nghiệp theo kịch bản
+                                    {t('ai_studio.scenario.create_pro_video_by_script')}
                                 </p>
                             </div>
                         </div>
@@ -611,7 +611,7 @@ export default function ScenarioBuilder({
                         <div className="flex items-center gap-3">
                             <div className={`px - 4 py - 2 rounded - xl ${isDark ? 'bg-violet-600/20 border border-violet-500/30' : 'bg-violet-100 border border-violet-200'} `}>
                                 <span className={`text - sm font - bold ${isDark ? 'text-violet-300' : 'text-violet-700'} `}>
-                                    {currentCredits.toLocaleString()} credits
+                                    {currentCredits.toLocaleString()} {t('ai_studio.credits')}
                                 </span>
                             </div>
 
@@ -622,7 +622,7 @@ export default function ScenarioBuilder({
                                         disabled={saving}
                                         className={`px - 4 py - 2 rounded - xl text - sm font - semibold transition - all ${isDark ? 'bg-white/5 hover:bg-white/10 text-white border border-white/10' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'} `}
                                     >
-                                        {saving ? '...' : 'Lưu nháp'}
+                                        {saving ? '...' : t('ai_studio.scenario.save_draft')}
                                     </button>
                                     {step === 'editor' && (
                                         <button
@@ -630,7 +630,7 @@ export default function ScenarioBuilder({
                                             disabled={generating || scenes.length === 0}
                                             className="px-6 py-2 rounded-xl text-sm font-bold bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all disabled:opacity-50"
                                         >
-                                            Tạo ({estimatedCredits} credits)
+                                            {t('ai_studio.scenario.generate_credits', { credits: estimatedCredits })}
                                         </button>
                                     )}
                                 </>
@@ -641,11 +641,11 @@ export default function ScenarioBuilder({
                     {/* Step Progress */}
                     <div className={`flex items - center justify - center gap - 2 p - 3 mb - 6 rounded - 2xl ${themeClasses.cardBg} border`}>
                         {[
-                            { key: 'start', label: 'Bắt đầu', num: '1' },
-                            { key: 'script', label: 'Kịch bản', num: '2', alt: 'images' },
-                            { key: 'editor', label: 'Chỉnh sửa', num: '3' },
-                            { key: 'generating', label: 'Đang tạo', num: '4' },
-                            { key: 'preview', label: 'Xem kết quả', num: '5' },
+                            { key: 'start', label: t('ai_studio.scenario.step_start'), num: '1' },
+                            { key: 'script', label: t('ai_studio.scenario.step_script'), num: '2', alt: 'images' },
+                            { key: 'editor', label: t('ai_studio.scenario.step_edit'), num: '3' },
+                            { key: 'generating', label: t('ai_studio.scenario.step_generating'), num: '4' },
+                            { key: 'preview', label: t('ai_studio.scenario.step_preview'), num: '5' },
                         ].map((s, i, arr) => {
                             const currentStep = step === 'images' ? 'script' : step; // Treat 'images' as same level as 'script'
                             const currentIndex = arr.findIndex(x => x.key === currentStep);
@@ -700,10 +700,10 @@ export default function ScenarioBuilder({
                                         </svg>
                                     </div>
                                     <h3 className={`text - xl font - bold mb - 2 ${themeClasses.textPrimary} `}>
-                                        Viết Kịch Bản
+                                        {t('ai_studio.scenario.write_script')}
                                     </h3>
                                     <p className={themeClasses.textSecondary}>
-                                        Nhập ý tưởng, AI tự chia thành các cảnh và tạo prompt chuyên nghiệp.
+                                        {t('ai_studio.scenario.write_script_desc')}
                                     </p>
                                 </button>
 
@@ -721,10 +721,10 @@ export default function ScenarioBuilder({
                                         </svg>
                                     </div>
                                     <h3 className={`text - xl font - bold mb - 2 ${themeClasses.textPrimary} `}>
-                                        Từ Ảnh Có Sẵn
+                                        {t('ai_studio.scenario.from_existing_images')}
                                     </h3>
                                     <p className={themeClasses.textSecondary}>
-                                        Upload ảnh, AI phân tích và tạo video/slideshow chuyên nghiệp.
+                                        {t('ai_studio.scenario.from_images_desc')}
                                     </p>
                                 </button>
 
@@ -742,22 +742,22 @@ export default function ScenarioBuilder({
                                         </svg>
                                     </div>
                                     <h3 className={`text - xl font - bold mb - 2 ${themeClasses.textPrimary} `}>
-                                        Chọn Template
+                                        {t('ai_studio.scenario.choose_template')}
                                     </h3>
                                     <p className={themeClasses.textSecondary}>
-                                        Mẫu có sẵn cho quảng cáo, giới thiệu sản phẩm, v.v.
+                                        {t('ai_studio.scenario.choose_template_desc')}
                                     </p>
                                 </button>
 
                                 {/* Output Type Selection */}
                                 <div className={`md: col - span - 3 p - 6 rounded - 2xl ${themeClasses.cardBg} border`}>
                                     <label className={`block text - sm font - bold mb - 4 ${themeClasses.textMuted} uppercase tracking - wide`}>
-                                        Loại Output
+                                        {t('ai_studio.scenario.output_type')}
                                     </label>
                                     <div className="grid grid-cols-2 gap-4">
                                         {[
-                                            { type: 'video', label: 'Video', desc: 'Tạo video từ kịch bản', iconPath: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' },
-                                            { type: 'image', label: 'Hình ảnh', desc: 'Tạo series ảnh', iconPath: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
+                                            { type: 'video', label: t('ai_studio.scenario.video_label'), desc: t('ai_studio.scenario.create_video_from_script'), iconPath: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' },
+                                            { type: 'image', label: t('ai_studio.scenario.images_label'), desc: t('ai_studio.scenario.create_image_series'), iconPath: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
                                         ].map((opt) => (
                                             <button
                                                 key={opt.type}
@@ -793,14 +793,14 @@ export default function ScenarioBuilder({
                                 <div className="flex items-center justify-between mb-6">
                                     <div>
                                         <h2 className={`text - xl font - bold ${themeClasses.textPrimary} `}>
-                                            Upload Ảnh
+                                            {t('ai_studio.scenario.upload_images')}
                                         </h2>
                                         <p className={`text - sm ${themeClasses.textMuted} `}>
-                                            Upload tối đa 10 ảnh, AI sẽ phân tích và tạo kịch bản video
+                                            {t('ai_studio.scenario.upload_max_10_ai_analyze')}
                                         </p>
                                     </div>
                                     <span className={`px - 3 py - 1 rounded - full text - sm font - medium ${isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-700'} `}>
-                                        {uploadedImages.length}/10 ảnh
+                                        {t('ai_studio.scenario.images_count', { count: uploadedImages.length })}
                                     </span>
                                 </div>
 
@@ -834,10 +834,10 @@ export default function ScenarioBuilder({
                                         </svg>
                                     </div>
                                     <p className={`text - lg font - semibold mb - 2 ${themeClasses.textPrimary} `}>
-                                        {dragOverUpload ? 'Thả ảnh vào đây!' : 'Kéo thả ảnh hoặc click để chọn'}
+                                        {dragOverUpload ? t('ai_studio.scenario.drop_images_here') : t('ai_studio.scenario.drag_drop_or_click')}
                                     </p>
                                     <p className={`text - sm ${themeClasses.textMuted} `}>
-                                        JPG, PNG, WEBP - Tối đa 10MB mỗi ảnh
+                                        {t('ai_studio.scenario.jpg_png_webp_max_10mb')}
                                     </p>
                                 </div>
 
@@ -845,7 +845,7 @@ export default function ScenarioBuilder({
                                 {uploadedImages.length > 0 && (
                                     <div className="mt-6">
                                         <h3 className={`text - sm font - bold mb - 3 ${themeClasses.textMuted} uppercase tracking - wide`}>
-                                            Ảnh đã upload (kéo để sắp xếp)
+                                            {t('ai_studio.scenario.uploaded_images_drag_sort')}
                                         </h3>
                                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                                             {uploadedImages.map((img, index) => (
@@ -879,7 +879,7 @@ export default function ScenarioBuilder({
                                                     </button>
                                                     {/* Drag handle overlay */}
                                                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                                        <span className="text-white text-xs opacity-0 group-hover:opacity-70 transition-opacity font-bold">DRAG</span>
+                                                        <span className="text-white text-xs opacity-0 group-hover:opacity-70 transition-opacity font-bold">{t('ai_studio.scenario.drag')}</span>
                                                     </div>
                                                 </div>
                                             ))}
@@ -893,7 +893,7 @@ export default function ScenarioBuilder({
                                         onClick={() => { setStep('start'); setUploadedImages([]); }}
                                         className={`px - 6 py - 3 rounded - xl text - sm font - semibold transition - all ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'} `}
                                     >
-                                        ← Quay lại
+                                        ← {t('ai_studio.scenario.go_back')}
                                     </button>
 
                                     <button
@@ -907,10 +907,10 @@ export default function ScenarioBuilder({
                                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                                 </svg>
-                                                Đang phân tích...
+                                                {t('ai_studio.scenario.analyzing')}
                                             </span>
                                         ) : (
-                                            `Phân tích ${uploadedImages.length} ảnh`
+                                            t('ai_studio.scenario.analyze_images', { count: uploadedImages.length })
                                         )}
                                     </button>
                                 </div>
@@ -927,13 +927,13 @@ export default function ScenarioBuilder({
                                 {/* Title Input */}
                                 <div className="mb-6">
                                     <label className={`block text - sm font - bold mb - 2 ${themeClasses.textMuted} uppercase tracking - wide`}>
-                                        Tiêu đề kịch bản
+                                        {t('ai_studio.scenario.script_title')}
                                     </label>
                                     <input
                                         type="text"
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
-                                        placeholder="VD: Quảng cáo sản phẩm mới..."
+                                        placeholder={t('ai_studio.scenario.script_title_placeholder')}
                                         className={`w - full px - 4 py - 3 rounded - xl border - 2 text - lg font - medium transition - all focus: outline - none focus: ring - 4 ${isDark
                                             ? 'bg-black/30 border-white/10 text-white placeholder-slate-500 focus:border-violet-500/50 focus:ring-violet-500/10'
                                             : 'bg-white/70 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-violet-400 focus:ring-violet-400/10'
@@ -944,20 +944,12 @@ export default function ScenarioBuilder({
                                 {/* Script Textarea */}
                                 <div className="mb-6">
                                     <label className={`block text - sm font - bold mb - 2 ${themeClasses.textMuted} uppercase tracking - wide`}>
-                                        Nội dung kịch bản
+                                        {t('ai_studio.scenario.script_content')}
                                     </label>
                                     <textarea
                                         value={script}
                                         onChange={(e) => setScript(e.target.value)}
-                                        placeholder={`Mô tả chi tiết kịch bản của bạn...
-
-VD: 
-Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa sổ phòng ngủ hiện đại.
-    Cảnh 2: Một cô gái trẻ tỉnh dậy, vươn vai và mỉm cười rạng rỡ.
-        Cảnh 3: Cô ấy cầm ly cà phê, đi ra ban công ngắm nhìn thành phố.
-            Cảnh 4: Close - up sản phẩm với logo thương hiệu.
-
-                Mẹo: Mô tả càng chi tiết, kết quả càng chính xác!`}
+                                        placeholder={t('ai_studio.scenario.script_placeholder')}
                                         rows={12}
                                         className={`w - full px - 4 py - 4 rounded - xl border - 2 text - sm resize - none transition - all focus: outline - none focus: ring - 4 ${isDark
                                             ? 'bg-black/30 border-white/10 text-white placeholder-slate-500 focus:border-violet-500/50 focus:ring-violet-500/10'
@@ -966,10 +958,10 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                     />
                                     <div className="flex justify-between mt-2">
                                         <span className={`text - xs ${themeClasses.textMuted} `}>
-                                            {script.length.toLocaleString()} ký tự
+                                            {t('ai_studio.scenario.characters_count', { count: script.length.toLocaleString() })}
                                         </span>
                                         <span className={`text - xs font - medium ${script.length >= 20 ? 'text-emerald-500' : themeClasses.textMuted} `}>
-                                            {script.length >= 20 ? 'Đủ độ dài' : 'Tối thiểu 20 ký tự'}
+                                            {script.length >= 20 ? t('ai_studio.scenario.sufficient_length') : t('ai_studio.scenario.min_20_chars')}
                                         </span>
                                     </div>
                                 </div>
@@ -980,7 +972,7 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                         onClick={() => setStep('start')}
                                         className={`px - 6 py - 3 rounded - xl text - sm font - semibold transition - all ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'} `}
                                     >
-                                        ← Quay lại
+                                        ← {t('ai_studio.scenario.go_back')}
                                     </button>
 
                                     <button
@@ -994,10 +986,10 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                                 </svg>
-                                                Đang phân tích...
+                                                {t('ai_studio.scenario.analyzing')}
                                             </span>
                                         ) : (
-                                            'Phân tích với AI'
+                                            t('ai_studio.scenario.analyze_with_ai')
                                         )}
                                     </button>
                                 </div>
@@ -1015,7 +1007,7 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                 <div className={`sticky top - 24 p - 4 rounded - 2xl ${themeClasses.cardBg} border`}>
                                     <div className="flex items-center justify-between mb-4">
                                         <h3 className={`font - bold ${themeClasses.textPrimary} `}>
-                                            Timeline ({scenes.length} cảnh)
+                                            {t('ai_studio.scenario.timeline_scenes', { count: scenes.length })}
                                         </h3>
                                         <button
                                             onClick={handleAddScene}
@@ -1028,11 +1020,11 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                     {/* Total Duration */}
                                     <div className={`mb - 4 p - 3 rounded - xl ${isDark ? 'bg-white/5' : 'bg-slate-50'} `}>
                                         <div className="flex justify-between text-xs">
-                                            <span className={themeClasses.textMuted}>Tổng thời lượng</span>
+                                            <span className={themeClasses.textMuted}>{t('ai_studio.scenario.total_duration')}</span>
                                             <span className={`font - bold ${themeClasses.textPrimary} `}>{formatDuration(totalDuration)}</span>
                                         </div>
                                         <div className="flex justify-between text-xs mt-1">
-                                            <span className={themeClasses.textMuted}>Ước tính credits</span>
+                                            <span className={themeClasses.textMuted}>{t('ai_studio.scenario.estimated_credits')}</span>
                                             <span className="font-bold text-violet-500">{estimatedCredits.toLocaleString()}</span>
                                         </div>
                                     </div>
@@ -1068,10 +1060,10 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
 
                                                     <div className="flex-1 min-w-0">
                                                         <div className={`text - sm font - semibold truncate ${themeClasses.textPrimary} `}>
-                                                            Cảnh {index + 1}
+                                                            {t('ai_studio.scenario.scene_number', { number: index + 1 })}
                                                         </div>
                                                         <div className={`text - xs truncate ${themeClasses.textMuted} `}>
-                                                            {scene.description || 'Chưa có mô tả'}
+                                                            {scene.description || t('ai_studio.scenario.no_description')}
                                                         </div>
                                                         <div className={`text - xs font - medium mt - 1 ${themeClasses.textMuted} `}>
                                                             {formatDuration(scene.duration || settings.default_duration)}
@@ -1098,20 +1090,20 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                         {/* Scene Header */}
                                         <div className="flex items-center justify-between mb-6">
                                             <h3 className={`text - xl font - bold ${themeClasses.textPrimary} `}>
-                                                Cảnh {activeSceneIndex + 1}
+                                                {t('ai_studio.scenario.scene_number', { number: activeSceneIndex + 1 })}
                                             </h3>
                                             <div className="flex items-center gap-2">
                                                 <button
                                                     onClick={() => handleDuplicateScene(activeSceneIndex)}
                                                     className={`px - 3 py - 1.5 rounded - lg text - xs font - medium transition - all ${isDark ? 'bg-white/5 hover:bg-white/10 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'} `}
                                                 >
-                                                    <Icon name="copy" className="w-3.5 h-3.5 inline-block mr-0.5" /> Nhân bản
+                                                    <Icon name="copy" className="w-3.5 h-3.5 inline-block mr-0.5" /> {t('ai_studio.scenario.duplicate')}
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteScene(activeSceneIndex)}
                                                     className={`px - 3 py - 1.5 rounded - lg text - xs font - medium transition - all ${isDark ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400' : 'bg-rose-50 hover:bg-rose-100 text-rose-600'} `}
                                                 >
-                                                    <Icon name="delete" className="w-3.5 h-3.5 inline-block mr-0.5" /> Xóa
+                                                    <Icon name="delete" className="w-3.5 h-3.5 inline-block mr-0.5" /> {t('common.delete')}
                                                 </button>
                                             </div>
                                         </div>
@@ -1122,12 +1114,12 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                                 {/* Description */}
                                                 <div>
                                                     <label className={`block text - sm font - bold mb - 2 ${themeClasses.textMuted} `}>
-                                                        Mô tả cảnh
+                                                        {t('ai_studio.scenario.scene_description')}
                                                     </label>
                                                     <textarea
                                                         value={scenes[activeSceneIndex]?.description || ''}
                                                         onChange={(e) => handleUpdateScene(activeSceneIndex, { description: e.target.value })}
-                                                        placeholder="Mô tả nội dung cảnh..."
+                                                        placeholder={t('ai_studio.scenario.scene_description_placeholder')}
                                                         rows={3}
                                                         className={`w - full px - 4 py - 3 rounded - xl border - 2 text - sm resize - none transition - all focus: outline - none focus: ring - 4 ${isDark
                                                             ? 'bg-black/30 border-white/10 text-white placeholder-slate-500 focus:border-violet-500/50 focus:ring-violet-500/10'
@@ -1140,19 +1132,19 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                                 <div>
                                                     <div className="flex items-center justify-between mb-2">
                                                         <label className={`text - sm font - bold ${themeClasses.textMuted} `}>
-                                                            Prompt cho AI
+                                                            {t('ai_studio.scenario.ai_prompt')}
                                                         </label>
                                                         <button
                                                             onClick={() => handleGeneratePrompt(activeSceneIndex)}
                                                             className={`text - xs font - medium ${isDark ? 'text-violet-400 hover:text-violet-300' : 'text-violet-600 hover:text-violet-700'} `}
                                                         >
-                                                            <Icon name="ai" className="w-3.5 h-3.5 inline-block mr-0.5" /> Tự động tạo
+                                                            <Icon name="ai" className="w-3.5 h-3.5 inline-block mr-0.5" /> {t('ai_studio.scenario.auto_generate')}
                                                         </button>
                                                     </div>
                                                     <textarea
                                                         value={scenes[activeSceneIndex]?.prompt || ''}
                                                         onChange={(e) => handleUpdateScene(activeSceneIndex, { prompt: e.target.value })}
-                                                        placeholder="Prompt chi tiết để AI tạo video/ảnh..."
+                                                        placeholder={t('ai_studio.scenario.prompt_detail_placeholder')}
                                                         rows={5}
                                                         className={`w - full px - 4 py - 3 rounded - xl border - 2 text - sm resize - none transition - all focus: outline - none focus: ring - 4 ${isDark
                                                             ? 'bg-black/30 border-white/10 text-white placeholder-slate-500 focus:border-violet-500/50 focus:ring-violet-500/10'
@@ -1165,7 +1157,7 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                                 {outputType === 'video' && (
                                                     <div>
                                                         <label className={`block text - sm font - bold mb - 3 ${themeClasses.textMuted} `}>
-                                                            <Icon name="clock" className="w-3.5 h-3.5 inline-block mr-0.5" /> Thời lượng: {scenes[activeSceneIndex]?.duration || settings.default_duration}s
+                                                            <Icon name="clock" className="w-3.5 h-3.5 inline-block mr-0.5" /> {t('ai_studio.scenario.duration_label', { seconds: scenes[activeSceneIndex]?.duration || settings.default_duration })}
                                                         </label>
                                                         <input
                                                             type="range"
@@ -1188,7 +1180,7 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                                 {/* Reference Image Upload */}
                                                 <div>
                                                     <label className={`block text - sm font - bold mb - 2 ${themeClasses.textMuted} `}>
-                                                        <Icon name="media" className="w-3.5 h-3.5 inline-block mr-0.5" /> Ảnh tham chiếu (tùy chọn)
+                                                        <Icon name="media" className="w-3.5 h-3.5 inline-block mr-0.5" /> {t('ai_studio.scenario.reference_image_optional')}
                                                     </label>
 
                                                     {scenes[activeSceneIndex]?.source_image_preview ? (
@@ -1224,7 +1216,7 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                                                     </svg>
                                                                 </div>
                                                                 <p className={`text - sm font - medium ${themeClasses.textPrimary} `}>
-                                                                    Click để upload ảnh
+                                                                    {t('ai_studio.scenario.click_to_upload_image')}
                                                                 </p>
                                                                 <p className={`text - xs ${themeClasses.textMuted} `}>
                                                                     JPG, PNG, WEBP
@@ -1238,7 +1230,7 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                                 {scenes[activeSceneIndex]?.generation?.output_url && (
                                                     <div>
                                                         <label className={`block text - sm font - bold mb - 2 ${themeClasses.textMuted} `}>
-                                                            🎥 Kết quả
+                                                            {t('ai_studio.scenario.result')}
                                                         </label>
                                                         {outputType === 'video' ? (
                                                             <video
@@ -1277,10 +1269,10 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                 </div>
 
                                 <h2 className={`text - 2xl font - bold mb - 2 ${themeClasses.textPrimary} `}>
-                                    Đang tạo kịch bản...
+                                    {t('ai_studio.scenario.generating_scenario')}
                                 </h2>
                                 <p className={`mb - 8 ${themeClasses.textMuted} `}>
-                                    AI đang xử lý {scenes.length} cảnh. Vui lòng đợi trong giây lát.
+                                    {t('ai_studio.scenario.ai_processing_scenes', { count: scenes.length })}
                                 </p>
 
                                 {/* Progress */}
@@ -1301,10 +1293,10 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                             >
                                                 <span className={`text - lg ${statusConfig.color} `}>{statusConfig.icon}</span>
                                                 <span className={`flex - 1 text - left text - sm font - medium ${themeClasses.textPrimary} `}>
-                                                    Cảnh {index + 1}
+                                                    {t('ai_studio.scenario.scene_number', { number: index + 1 })}
                                                 </span>
                                                 <span className={`text - xs ${statusConfig.color} `}>
-                                                    {status === 'generating' ? 'Đang tạo...' : status === 'completed' ? 'Hoàn thành' : status === 'failed' ? 'Thất bại' : 'Đang chờ'}
+                                                    {status === 'generating' ? t('ai_studio.scenario.scene_generating') : status === 'completed' ? t('ai_studio.scenario.scene_completed') : status === 'failed' ? t('ai_studio.scenario.scene_failed') : t('ai_studio.scenario.scene_waiting')}
                                                 </span>
                                             </div>
                                         );
@@ -1321,10 +1313,10 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                         <div className="max-w-5xl mx-auto">
                             <div className={`p - 6 rounded - 3xl ${themeClasses.cardBg} border mb - 6`}>
                                 <h2 className={`text - 2xl font - bold mb - 4 ${themeClasses.textPrimary} `}>
-                                    🎉 Kịch bản hoàn thành!
+                                    {t('ai_studio.scenario.scenario_completed')}
                                 </h2>
                                 <p className={themeClasses.textSecondary}>
-                                    Đã tạo thành công {scenes.filter(s => s.status === 'completed').length}/{scenes.length} cảnh.
+                                    {t('ai_studio.scenario.created_scenes_success', { completed: scenes.filter(s => s.status === 'completed').length, total: scenes.length })}
                                 </p>
                             </div>
 
@@ -1352,7 +1344,7 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                             </div>
                                         )}
                                         <div className="p-4">
-                                            <h4 className={`font - semibold ${themeClasses.textPrimary} `}>Cảnh {index + 1}</h4>
+                                            <h4 className={`font - semibold ${themeClasses.textPrimary} `}>{t('ai_studio.scenario.scene_number', { number: index + 1 })}</h4>
                                             <p className={`text - sm truncate ${themeClasses.textMuted} `}>{scene.description}</p>
                                         </div>
                                     </div>
@@ -1365,13 +1357,13 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                                     href="/ai-studio/gallery"
                                     className={`px - 6 py - 3 rounded - xl text - sm font - semibold transition - all ${isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'} `}
                                 >
-                                    📚 Xem Gallery
+                                    {t('ai_studio.scenario.view_gallery')}
                                 </Link>
                                 <button
                                     onClick={() => router.visit('/ai-studio/scenario-builder')}
                                     className="px-6 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg"
                                 >
-                                    Tạo kịch bản mới
+                                    {t('ai_studio.scenario.create_new_scenario_btn')}
                                 </button>
                             </div>
                         </div>
@@ -1384,13 +1376,13 @@ Cảnh 1: Một buổi sáng đẹp trời, ánh nắng vàng chiếu qua cửa 
                         <div className={`w - full max - w - 2xl max - h - [80vh] overflow - hidden rounded - 3xl ${isDark ? 'bg-[#111]' : 'bg-white'} shadow - 2xl`}>
                             <div className="p-6 border-b" style={{ borderColor: isDark ? '#222' : '#e2e8f0' }}>
                                 <div className="flex items-center justify-between">
-                                    <h3 className={`text - xl font - bold ${themeClasses.textPrimary} `}>Chọn Template</h3>
+                                    <h3 className={`text - xl font - bold ${themeClasses.textPrimary} `}>{t('ai_studio.scenario.choose_template')}</h3>
                                     <button onClick={() => setShowTemplates(false)} className={themeClasses.textMuted}>×</button>
                                 </div>
                             </div>
                             <div className="p-6 overflow-y-auto max-h-[60vh]">
                                 {templates.length === 0 ? (
-                                    <p className={`text - center py - 8 ${themeClasses.textMuted} `}>Chưa có template nào</p>
+                                    <p className={`text - center py - 8 ${themeClasses.textMuted} `}>{t('ai_studio.scenario.no_templates')}</p>
                                 ) : (
                                     <div className="grid gap-4">
                                         {templates.map((template) => (

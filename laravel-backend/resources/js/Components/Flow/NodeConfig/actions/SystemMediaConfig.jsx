@@ -10,54 +10,54 @@ export function SystemMediaConfig({ data, updateData, isDark, nodeType }) {
 
     const actionInfo = {
         recents: {
-            title: '📱 Recent Apps',
+            title: t('flows.editor.config.system_recents_title'),
             icon: '📱',
             color: 'blue',
-            description: 'Open the recent apps screen (multitasking view).',
-            hint: 'Equivalent to swiping up from bottom or pressing the square button.',
+            description: t('flows.editor.config.system_recents_desc'),
+            hint: t('flows.editor.config.system_recents_hint'),
         },
         notifications: {
-            title: '🔔 Notifications',
+            title: t('flows.editor.config.system_notifications_title'),
             icon: '🔔',
             color: 'purple',
-            description: 'Pull down the notification shade.',
-            hint: 'Shows all pending notifications and quick toggles.',
+            description: t('flows.editor.config.system_notifications_desc'),
+            hint: t('flows.editor.config.system_notifications_hint'),
         },
         quick_settings: {
-            title: '⚙️ Quick Settings',
+            title: t('flows.editor.config.system_quick_settings_title'),
             icon: '⚙️',
             color: 'cyan',
-            description: 'Open the quick settings panel.',
-            hint: 'Full quick settings view with WiFi, Bluetooth, etc.',
+            description: t('flows.editor.config.system_quick_settings_desc'),
+            hint: t('flows.editor.config.system_quick_settings_hint'),
         },
         volume_up: {
-            title: '🔊 Volume Up',
+            title: t('flows.editor.config.system_volume_up_title'),
             icon: '🔊',
             color: 'green',
-            description: 'Increase the media volume by one step.',
-            hint: 'Equivalent to pressing the physical volume up button.',
+            description: t('flows.editor.config.system_volume_up_desc'),
+            hint: t('flows.editor.config.system_volume_up_hint'),
         },
         volume_down: {
-            title: '🔉 Volume Down',
+            title: t('flows.editor.config.system_volume_down_title'),
             icon: '🔉',
             color: 'amber',
-            description: 'Decrease the media volume by one step.',
-            hint: 'Equivalent to pressing the physical volume down button.',
+            description: t('flows.editor.config.system_volume_down_desc'),
+            hint: t('flows.editor.config.system_volume_down_hint'),
         },
         media_play_pause: {
-            title: '⏯️ Media Play/Pause',
+            title: t('flows.editor.config.system_media_play_pause_title'),
             icon: '⏯️',
             color: 'pink',
-            description: 'Toggle play/pause for the current media.',
-            hint: 'Works with most music and video apps.',
+            description: t('flows.editor.config.system_media_play_pause_desc'),
+            hint: t('flows.editor.config.system_media_play_pause_hint'),
         },
     };
 
     const info = actionInfo[nodeType] || {
-        title: 'System Action',
+        title: t('flows.editor.config.system_action'),
         icon: '⚙️',
         color: 'gray',
-        description: 'Execute a system action.',
+        description: t('flows.editor.config.system_action_desc'),
         hint: '',
     };
 
@@ -94,7 +94,7 @@ export function SystemMediaConfig({ data, updateData, isDark, nodeType }) {
                 {/* Wait After (Optional) */}
                 <div>
                     <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        Wait After (ms)
+                        {t('flows.editor.config.wait_after_ms')}
                     </label>
                     <input
                         type="number"
@@ -117,7 +117,7 @@ export function SystemMediaConfig({ data, updateData, isDark, nodeType }) {
                                         : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
                                     }`}
                             >
-                                {ms === 0 ? 'None' : ms >= 1000 ? `${ms / 1000}s` : `${ms}ms`}
+                                {ms === 0 ? t('common.none') : ms >= 1000 ? `${ms / 1000}s` : `${ms}ms`}
                             </button>
                         ))}
                     </div>
@@ -127,7 +127,7 @@ export function SystemMediaConfig({ data, updateData, isDark, nodeType }) {
                 {(nodeType === 'volume_up' || nodeType === 'volume_down') && (
                     <div>
                         <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Repeat Count
+                            {t('flows.editor.config.keys.repeat_count')}
                         </label>
                         <input
                             type="number"
@@ -138,7 +138,7 @@ export function SystemMediaConfig({ data, updateData, isDark, nodeType }) {
                             className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
                         />
                         <p className={`text-[10px] mt-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                            Number of times to press the volume button
+                            {t('flows.editor.config.volume_repeat_hint')}
                         </p>
                     </div>
                 )}
@@ -146,7 +146,7 @@ export function SystemMediaConfig({ data, updateData, isDark, nodeType }) {
                 {/* No Configuration Required Info */}
                 <div className={`p-3 rounded-lg ${isDark ? 'bg-[#1a1a1a] border border-[#2a2a2a]' : 'bg-gray-50 border border-gray-100'}`}>
                     <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                        ℹ️ This action requires no additional configuration. It will execute immediately when the workflow reaches this node.
+                        {t('flows.editor.config.no_config_required')}
                     </p>
                 </div>
             </div>

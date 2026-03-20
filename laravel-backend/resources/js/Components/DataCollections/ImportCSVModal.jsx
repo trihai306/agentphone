@@ -32,7 +32,7 @@ function detectFieldType(values) {
     if (samples.every(v => /^\d{1,4}[-\/]\d{1,2}[-\/]\d{1,4}$/.test(v))) return 'date';
 
     // Check boolean-like
-    if (samples.every(v => ['yes', 'no', 'true', 'false', '0', '1', 'có', 'không'].includes(v.toLowerCase()))) {
+    if (samples.every(v => ['yes', 'no', 'true', 'false', '0', '1'].includes(v.toLowerCase()))) {
         return 'boolean';
     }
 
@@ -45,7 +45,7 @@ function detectFieldType(values) {
 // Parse CSV content
 function parseCSV(content) {
     const lines = content.trim().split('\n');
-    if (lines.length < 2) return { headers: [], rows: [], error: 'File trống hoặc chỉ có header' };
+    if (lines.length < 2) return { headers: [], rows: [], error: 'FILE_EMPTY_OR_HEADER_ONLY' };
 
     // Detect delimiter
     const firstLine = lines[0];
@@ -152,7 +152,7 @@ export default function ImportCSVModal({ isOpen, onClose }) {
             const parsed = parseCSV(content);
 
             if (parsed.error) {
-                addToast(parsed.error, 'error');
+                addToast(t('data_collections.csv.empty_or_header'), 'error');
                 return;
             }
 

@@ -50,13 +50,13 @@ export function TextOperationsConfig({ data, updateData, updateMultipleData, isD
                     {/* Text */}
                     <div>
                         <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Text
+                            {t('flows.editor.config.text')}
                         </label>
                         <input
                             type="text"
                             value={data.text || ''}
                             onChange={(e) => updateData('text', e.target.value)}
-                            placeholder="Element text..."
+                            placeholder={t('flows.editor.config.element_text_placeholder')}
                             className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-gray-600' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`}
                         />
                     </div>
@@ -64,7 +64,7 @@ export function TextOperationsConfig({ data, updateData, updateMultipleData, isD
                     {/* Resource ID */}
                     <div>
                         <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Resource ID
+                            {t('flows.editor.config.resource_id')}
                         </label>
                         <input
                             type="text"
@@ -78,13 +78,13 @@ export function TextOperationsConfig({ data, updateData, updateMultipleData, isD
                     {/* Content Description */}
                     <div>
                         <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Content Description
+                            {t('flows.editor.config.content_desc')}
                         </label>
                         <input
                             type="text"
                             value={data.contentDescription || ''}
                             onChange={(e) => updateData('contentDescription', e.target.value)}
-                            placeholder="Accessibility label..."
+                            placeholder={t('flows.editor.config.accessibility_label_placeholder')}
                             className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-gray-600' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`}
                         />
                     </div>
@@ -100,7 +100,7 @@ export function TextOperationsConfig({ data, updateData, updateMultipleData, isD
                 <ConfigSection title={t('flows.editor.config.clear_text', { defaultValue: '🗑️ Clear Text' })} isDark={isDark}>
                     <div className={`p-3 rounded-lg ${isDark ? 'bg-red-500/10 border border-red-500/20' : 'bg-red-50 border border-red-100'}`}>
                         <p className={`text-sm ${isDark ? 'text-red-400' : 'text-red-600'}`}>
-                            This action will clear all text from the target input field.
+                            {t('flows.editor.config.clear_text_desc')}
                         </p>
                     </div>
                 </ConfigSection>
@@ -127,7 +127,7 @@ export function TextOperationsConfig({ data, updateData, updateMultipleData, isD
                     <div className="space-y-3">
                         <div>
                             <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Text to Append
+                                {t('flows.editor.config.text_to_append')}
                             </label>
                             <input
                                 type="text"
@@ -144,12 +144,12 @@ export function TextOperationsConfig({ data, updateData, updateMultipleData, isD
                         {/* Append Position */}
                         <div>
                             <label className={`block text-[10px] font-semibold uppercase mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Append Position
+                                {t('flows.editor.config.append_position')}
                             </label>
                             <div className="flex gap-2">
                                 {[
-                                    { value: 'end', label: 'At End' },
-                                    { value: 'start', label: 'At Start' },
+                                    { value: 'end', label: t('flows.editor.config.at_end') },
+                                    { value: 'start', label: t('flows.editor.config.at_start') },
                                 ].map(opt => (
                                     <button
                                         key={opt.value}
@@ -190,7 +190,7 @@ export function TextOperationsConfig({ data, updateData, updateMultipleData, isD
                 <ConfigSection title={t('flows.editor.config.select_all', { defaultValue: '📋 Select All' })} isDark={isDark}>
                     <div className={`p-3 rounded-lg ${isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50 border border-blue-100'}`}>
                         <p className={`text-sm ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
-                            This action will select all text in the target input field.
+                            {t('flows.editor.config.select_all_desc')}
                         </p>
                     </div>
                 </ConfigSection>
@@ -217,13 +217,13 @@ export function TextOperationsConfig({ data, updateData, updateMultipleData, isD
                     <div className="space-y-3">
                         <div className={`p-3 rounded-lg ${isDark ? 'bg-green-500/10 border border-green-500/20' : 'bg-green-50 border border-green-100'}`}>
                             <p className={`text-sm ${isDark ? 'text-green-400' : 'text-green-600'}`}>
-                                Extract text content from an element and store in a variable.
+                                {t('flows.editor.config.get_text_desc')}
                             </p>
                         </div>
 
                         <div>
                             <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Output Variable Name
+                                {t('flows.editor.config.output_variable_name')}
                             </label>
                             <div className="flex items-center gap-2">
                                 <span className={`text-sm font-mono ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{'{{'}</span>

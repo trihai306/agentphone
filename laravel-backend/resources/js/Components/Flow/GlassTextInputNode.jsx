@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { NodeStatus } from '@/hooks/useExecutionState';
 
@@ -7,6 +8,7 @@ import { NodeStatus } from '@/hooks/useExecutionState';
  * GlassTextInputNode - Premium glassmorphic text/data node
  */
 function GlassTextInputNode({ id, data, selected }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
@@ -69,10 +71,10 @@ function GlassTextInputNode({ id, data, selected }) {
                     </div>
                     <div className="flex-1 min-w-0">
                         <h3 className="text-sm font-bold" style={{ color }}>
-                            📝 Text Data
+                            📝 {t('flows.editor.glass_nodes.text_data')}
                         </h3>
                         <p className={`text-[10px] truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {data?.label || 'Static Text Content'}
+                            {data?.label || t('flows.editor.glass_nodes.static_text_content')}
                         </p>
                     </div>
                     {/* Stats */}
@@ -101,20 +103,20 @@ function GlassTextInputNode({ id, data, selected }) {
                             </div>
                         ) : (
                             <div className={isDark ? 'text-gray-600' : 'text-gray-400'}>
-                                No content...
+                                {t('flows.editor.glass_nodes.no_content')}
                             </div>
                         )}
                     </div>
 
                     {/* Output Variable */}
                     <div className="flex items-center justify-between text-xs">
-                        <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>Output:</span>
+                        <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{t('flows.editor.glass_nodes.output_label')}</span>
                         <code className="text-cyan-400">{`{{${outputVariable}}}`}</code>
                     </div>
 
                     {/* Character Count */}
                     <div className={`mt-2 text-[10px] text-right ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                        {charCount} characters
+                        {charCount} {t('flows.editor.glass_nodes.characters')}
                     </div>
                 </div>
 

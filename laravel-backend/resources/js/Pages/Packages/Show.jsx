@@ -64,7 +64,7 @@ export default function Show({ package: pkg = {} }) {
                                             {formatPrice(pkg.original_price)}
                                         </span>
                                         <span className={`px-2 py-0.5 text-xs font-medium rounded ${isDark ? 'bg-red-900/30 text-red-400' : 'bg-red-50 text-red-600'}`}>
-                                            Save {pkg.discount_percent}%
+                                            {t('packages.save_percent', { percent: pkg.discount_percent })}
                                         </span>
                                     </div>
                                 )}

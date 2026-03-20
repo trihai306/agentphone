@@ -52,7 +52,7 @@ export function GestureConfig({ data, updateData, updateMultipleData, isDark, no
                             : 'bg-cyan-50 hover:bg-cyan-100 text-cyan-600 border border-cyan-200'
                             }`}
                     >
-                        📱 Pick Element
+                        {t('flows.editor.config.pick_element_short')}
                     </button>
                 )}
             </div>
@@ -88,7 +88,7 @@ export function GestureConfig({ data, updateData, updateMultipleData, isDark, no
                 <ConfigSection title={t('flows.editor.config.drag_drop', { defaultValue: '🎯 Drag & Drop' })} isDark={isDark}>
                     <div className="space-y-4">
                         <CoordinateInput
-                            label="Start Position"
+                            label={t('flows.editor.config.start_position')}
                             xField="startX"
                             yField="startY"
                             onPickElement={() => { setPickingFor('start'); setShowPicker(true); }}
@@ -100,12 +100,12 @@ export function GestureConfig({ data, updateData, updateMultipleData, isDark, no
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                                 </svg>
-                                Drag to
+                                {t('flows.editor.config.drag_to')}
                             </div>
                         </div>
 
                         <CoordinateInput
-                            label="End Position"
+                            label={t('flows.editor.config.end_position')}
                             xField="endX"
                             yField="endY"
                             onPickElement={() => { setPickingFor('end'); setShowPicker(true); }}
@@ -116,7 +116,7 @@ export function GestureConfig({ data, updateData, updateMultipleData, isDark, no
                 <ConfigSection title={t('flows.editor.config.animation', { defaultValue: '⏱️ Animation' })} isDark={isDark}>
                     <div>
                         <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Duration (ms)
+                            {t('flows.editor.config.duration_ms')}
                         </label>
                         <input
                             type="number"
@@ -167,12 +167,12 @@ export function GestureConfig({ data, updateData, updateMultipleData, isDark, no
                         {/* Direction */}
                         <div>
                             <label className={`block text-[10px] font-semibold uppercase mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Zoom Direction
+                                {t('flows.editor.config.zoom_direction')}
                             </label>
                             <div className="grid grid-cols-2 gap-2">
                                 {[
-                                    { value: 'in', label: '🔎 Zoom In', desc: 'Magnify' },
-                                    { value: 'out', label: '🔍 Zoom Out', desc: 'Shrink' },
+                                    { value: 'in', label: t('flows.editor.config.zoom_in'), desc: t('flows.editor.config.zoom_in_desc') },
+                                    { value: 'out', label: t('flows.editor.config.zoom_out'), desc: t('flows.editor.config.zoom_out_desc') },
                                 ].map(opt => (
                                     <button
                                         key={opt.value}
@@ -194,7 +194,7 @@ export function GestureConfig({ data, updateData, updateMultipleData, isDark, no
                         {/* Scale Factor */}
                         <div>
                             <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Scale Factor
+                                {t('flows.editor.config.scale_factor')}
                             </label>
                             <input
                                 type="number"
@@ -225,7 +225,7 @@ export function GestureConfig({ data, updateData, updateMultipleData, isDark, no
 
                         {/* Center Point */}
                         <CoordinateInput
-                            label="Center Point"
+                            label={t('flows.editor.config.center_point')}
                             xField="centerX"
                             yField="centerY"
                             onPickElement={() => { setPickingFor('center'); setShowPicker(true); }}
@@ -253,14 +253,14 @@ export function GestureConfig({ data, updateData, updateMultipleData, isDark, no
                     {/* Direction */}
                     <div>
                         <label className={`block text-[10px] font-semibold uppercase mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Fling Direction
+                            {t('flows.editor.config.fling_direction')}
                         </label>
                         <div className="grid grid-cols-2 gap-2">
                             {[
-                                { value: 'up', label: '⬆️ Up', desc: 'Scroll down' },
-                                { value: 'down', label: '⬇️ Down', desc: 'Scroll up' },
-                                { value: 'left', label: '⬅️ Left', desc: 'Scroll right' },
-                                { value: 'right', label: '➡️ Right', desc: 'Scroll left' },
+                                { value: 'up', label: t('flows.editor.config.fling_up'), desc: t('flows.editor.scroll.desc_up') },
+                                { value: 'down', label: t('flows.editor.config.fling_down'), desc: t('flows.editor.scroll.desc_down') },
+                                { value: 'left', label: t('flows.editor.config.fling_left'), desc: t('flows.editor.scroll.desc_left') },
+                                { value: 'right', label: t('flows.editor.config.fling_right'), desc: t('flows.editor.scroll.desc_right') },
                             ].map(opt => (
                                 <button
                                     key={opt.value}
@@ -282,7 +282,7 @@ export function GestureConfig({ data, updateData, updateMultipleData, isDark, no
                     {/* Velocity */}
                     <div>
                         <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Velocity (pixels/sec)
+                            {t('flows.editor.config.velocity')}
                         </label>
                         <input
                             type="number"
@@ -295,10 +295,10 @@ export function GestureConfig({ data, updateData, updateMultipleData, isDark, no
                         />
                         <div className="flex gap-1 mt-2">
                             {[
-                                { value: 3000, label: 'Slow' },
-                                { value: 5000, label: 'Normal' },
-                                { value: 8000, label: 'Fast' },
-                                { value: 15000, label: 'Very Fast' },
+                                { value: 3000, label: t('flows.editor.config.slow') },
+                                { value: 5000, label: t('flows.editor.config.normal') },
+                                { value: 8000, label: t('flows.editor.config.fast') },
+                                { value: 15000, label: t('flows.editor.config.very_fast') },
                             ].map(opt => (
                                 <button
                                     key={opt.value}
@@ -319,10 +319,10 @@ export function GestureConfig({ data, updateData, updateMultipleData, isDark, no
                     {/* Start Position (optional) */}
                     <div>
                         <label className={`block text-[10px] font-semibold uppercase mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Start Position (Optional)
+                            {t('flows.editor.config.start_position_optional')}
                         </label>
                         <p className={`text-[10px] mb-2 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                            Leave empty to use screen center
+                            {t('flows.editor.config.leave_empty_center')}
                         </p>
                         <div className="grid grid-cols-2 gap-2">
                             <div>

@@ -115,7 +115,7 @@ export default function MediaSidebar({
                         href="/media/storage-plans"
                         className={`text-xs font-medium transition-colors ${isDark ? 'text-gray-500 hover:text-white' : 'text-gray-400 hover:text-gray-900'}`}
                     >
-                        Chi tiết →
+                        {t('common.details')} →
                     </Link>
                 </div>
                 <div className={`h-2 rounded-full overflow-hidden ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-100'}`}>
@@ -148,7 +148,7 @@ export default function MediaSidebar({
                             ? isDark ? 'text-red-400' : 'text-red-600'
                             : isDark ? 'text-amber-400' : 'text-amber-600'
                             }`}>
-                            {storagePercent > 90 ? '⚠️ Sắp hết dung lượng!' : '⚡ Gần đầy'}
+                            {storagePercent > 90 ? t('media.storage_almost_full') : t('media.storage_nearly_full')}
                         </p>
                         <Link
                             href="/media/storage-plans"
@@ -158,7 +158,7 @@ export default function MediaSidebar({
                                 }`}
                         >
                             <Icon name="arrowRight" className="w-3.5 h-3.5" />
-                            Nâng cấp ngay
+                            {t('media.upgrade_now')}
                         </Link>
                     </div>
                 )}

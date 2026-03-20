@@ -43,7 +43,7 @@ export default function Subscribe({ package: pkg = {}, existingPackage = null, p
                         </Link>
                         <div>
                             <h1 className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                Subscribe to {pkg.name}
+                                {t('packages.subscribe')} - {pkg.name}
                             </h1>
                             <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
                                 {t('packages.complete_subscription', 'Complete your subscription')}

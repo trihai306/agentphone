@@ -1,13 +1,15 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { NodeStatus } from '@/hooks/useExecutionState';
 
 /**
  * GlassAssertNode - Premium glassmorphic assertion/verification node
- * Horizontal layout: Input (Left) → Output (Right)
+ * Horizontal layout: Input (Left) -> Output (Right)
  */
 function GlassAssertNode({ id, data, selected }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
@@ -20,12 +22,12 @@ function GlassAssertNode({ id, data, selected }) {
     const color = '#22c55e'; // Green for assertions
 
     const assertConfigs = {
-        exists: { label: 'Element Exists', icon: '🔍', desc: 'Tồn tại' },
-        not_exists: { label: 'Not Exists', icon: '🚫', desc: 'Không tồn tại' },
-        text: { label: 'Text Equals', icon: '📝', desc: 'Text khớp' },
-        contains: { label: 'Contains', icon: '📄', desc: 'Chứa text' },
-        visible: { label: 'Is Visible', icon: '👁', desc: 'Hiển thị' },
-        enabled: { label: 'Is Enabled', icon: '✓', desc: 'Có thể thao tác' },
+        exists: { label: 'Element Exists', icon: '🔍', desc: t('flows.editor.glass_nodes.assert_exists_desc') },
+        not_exists: { label: 'Not Exists', icon: '🚫', desc: t('flows.editor.glass_nodes.assert_not_exists_desc') },
+        text: { label: 'Text Equals', icon: '📝', desc: t('flows.editor.glass_nodes.assert_text_desc') },
+        contains: { label: 'Contains', icon: '📄', desc: t('flows.editor.glass_nodes.assert_contains_desc') },
+        visible: { label: 'Is Visible', icon: '👁', desc: t('flows.editor.glass_nodes.assert_visible_desc') },
+        enabled: { label: 'Is Enabled', icon: '✓', desc: t('flows.editor.glass_nodes.assert_enabled_desc') },
     };
 
     const config = assertConfigs[assertType] || assertConfigs.exists;
@@ -76,7 +78,7 @@ function GlassAssertNode({ id, data, selected }) {
                                 ? 'rgba(16, 185, 129, 0.15)'
                                 : isRunning
                                     ? 'rgba(99, 102, 241, 0.15)'
-                                    : `rgba(34, 197, 94, 0.1)`
+                                    : 'rgba(34, 197, 94, 0.1)'
                     }}
                 >
                     <div
@@ -105,17 +107,15 @@ function GlassAssertNode({ id, data, selected }) {
                         )}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h3 className={`text-sm font-bold ${isError ? 'text-red-400' : isSuccess ? 'text-emerald-400' : 'text-green-500'
-                            }`}>
-                            {isError ? 'Failed' : isSuccess ? 'Passed' : isRunning ? 'Checking...' : 'Assert'}
+                        <h3 className={`text-sm font-bold ${isError ? 'text-red-400' : isSuccess ? 'text-emerald-400' : 'text-green-500'}`}>
+                            {isError ? t('flows.editor.glass_nodes.assert_failed') : isSuccess ? t('flows.editor.glass_nodes.assert_passed') : isRunning ? t('flows.editor.glass_nodes.assert_checking') : t('flows.editor.glass_nodes.assert_title')}
                         </h3>
                         <p className={`text-[10px] truncate ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
                             {data?.label || config.label}
                         </p>
                     </div>
                     {/* Type Badge */}
-                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600'
-                        }`}>
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600'}`}>
                         {config.icon}
                     </span>
                 </div>
@@ -123,8 +123,7 @@ function GlassAssertNode({ id, data, selected }) {
                 {/* Body - Target Info */}
                 <div className={`px-4 py-2.5 border-t ${isDark ? 'border-white/5' : 'border-black/5'}`}>
                     {data?.resourceId ? (
-                        <div className={`text-xs font-mono px-2.5 py-1.5 rounded-lg truncate ${isDark ? 'bg-[#0f0f0f] text-gray-400' : 'bg-gray-50 text-gray-500'
-                            }`}>
+                        <div className={`text-xs font-mono px-2.5 py-1.5 rounded-lg truncate ${isDark ? 'bg-[#0f0f0f] text-gray-400' : 'bg-gray-50 text-gray-500'}`}>
                             {data.resourceId}
                         </div>
                     ) : data?.expectedValue ? (

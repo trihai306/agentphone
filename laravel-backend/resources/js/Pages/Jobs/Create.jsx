@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, router, usePage, Head } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { Button, Icon } from '@/Components/UI';
 
 export default function Create({ flows = [], devices = [], dataCollections = [] }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const { errors } = usePage().props;
     const isDark = theme === 'dark';
@@ -32,7 +34,7 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
     };
 
     return (
-        <AppLayout title="Tạo Job">
+        <AppLayout title={t('jobs.create_job')}>
             <div className={`min-h-screen ${isDark ? 'bg-[#09090b]' : 'bg-gradient-to-br from-slate-50 via-white to-slate-100'}`}>
                 {/* Background */}
                 <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -44,13 +46,13 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
                     {/* Header - Simpler */}
                     <div className="text-center mb-12">
                         <Button variant="link" href="/jobs" as="Link" className={isDark ? 'text-gray-500 hover:text-white' : 'text-gray-400 hover:text-gray-900'}>
-                            ← Quay lại danh sách
+                            ← {t('common.back_to_list')}
                         </Button>
                         <h1 className={`text-4xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            Chạy Workflow
+                            {t('flows.run_flow')}
                         </h1>
                         <p className={`text-lg ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                            Chọn thiết bị và kịch bản bạn muốn chạy
+                            {t('jobs.create.select_device_and_flow')}
                         </p>
                     </div>
 
@@ -67,10 +69,10 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
                                 </div>
                                 <div>
                                     <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                        Chọn Thiết Bị
+                                        {t('jobs.form.select_device')}
                                     </h2>
                                     <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                        {onlineDevices.length} thiết bị online
+                                        {onlineDevices.length} {t('jobs.create.devices_online')}
                                     </p>
                                 </div>
                             </div>
@@ -102,14 +104,14 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className={`text-lg font-bold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                                        {device.name || 'Thiết bị Android'}
+                                                        {device.name || t('jobs.create.android_device')}
                                                     </p>
                                                     <p className={`text-sm truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                                                         {device.model || device.device_id}
                                                     </p>
                                                     <span className="inline-flex items-center gap-1 mt-2 text-emerald-500 text-sm font-medium">
                                                         <span className="w-2 h-2 bg-emerald-500 rounded-full" />
-                                                        Sẵn sàng
+                                                        {t('jobs.create.ready')}
                                                     </span>
                                                 </div>
                                                 {selectedDevice?.id === device.id && (
@@ -124,13 +126,13 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
                                     <div className="p-12 text-center">
                                         <div className="mb-4"><Icon name="noDevice" className="w-14 h-14 mx-auto" /></div>
                                         <p className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                            Chưa có thiết bị online
+                                            {t('jobs.create.no_devices_online')}
                                         </p>
                                         <p className={`text-sm mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                            Mở app CLICKAI trên điện thoại
+                                            {t('jobs.create.open_app_prompt')}
                                         </p>
                                         <Button variant="primary" size="sm" href="/devices" as="Link">
-                                            Xem hướng dẫn →
+                                            {t('jobs.create.view_guide')} →
                                         </Button>
                                     </div>
                                 )}
@@ -148,10 +150,10 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
                                 </div>
                                 <div>
                                     <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                        Chọn Kịch Bản
+                                        {t('jobs.form.select_flow')}
                                     </h2>
                                     <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                        {flows.length} workflow có sẵn
+                                        {flows.length} {t('jobs.create.workflows_available')}
                                     </p>
                                 </div>
                             </div>
@@ -198,13 +200,13 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
                                     <div className="p-12 text-center">
                                         <div className="mb-4"><Icon name="credits" className="w-14 h-14 mx-auto" /></div>
                                         <p className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                            Chưa có workflow
+                                            {t('jobs.create.no_workflows')}
                                         </p>
                                         <p className={`text-sm mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                            Ghi hình thao tác để tạo workflow đầu tiên
+                                            {t('jobs.create.record_to_create_workflow')}
                                         </p>
                                         <Button variant="primary" size="sm" href="/flows" as="Link">
-                                            Tạo workflow →
+                                            {t('flows.create_flow')} →
                                         </Button>
                                     </div>
                                 )}
@@ -223,7 +225,7 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
                                     <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${isDark ? 'bg-white/10' : 'bg-white'}`}>
                                         <Icon name="device" className="w-6 h-6" />
                                         <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                            {selectedDevice.name || 'Thiết bị'}
+                                            {selectedDevice.name || t('devices.title')}
                                         </span>
                                     </div>
                                     <span className="text-2xl">→</span>
@@ -243,20 +245,20 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
                                     loading={isSubmitting}
                                     className="px-12 py-5 text-xl bg-gradient-to-r from-violet-500 to-purple-600 shadow-2xl shadow-violet-500/40 hover:shadow-violet-500/60 hover:scale-105 active:scale-95"
                                 >
-                                    {isSubmitting ? 'Đang khởi tạo...' : 'Bắt Đầu Chạy'}
+                                    {isSubmitting ? t('jobs.create.initializing') : t('jobs.create.start_run')}
                                 </Button>
                             </>
                         ) : (
                             <div className={`${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                                 <p className="text-lg mb-2">
                                     {!selectedDevice && !selectedFlow
-                                        ? 'Chọn thiết bị và kịch bản ở trên'
+                                        ? t('jobs.create.select_both')
                                         : !selectedDevice
-                                            ? 'Chọn thiết bị để tiếp tục'
-                                            : 'Chọn kịch bản để tiếp tục'}
+                                            ? t('jobs.create.select_device_to_continue')
+                                            : t('jobs.create.select_flow_to_continue')}
                                 </p>
                                 <p className="text-sm">
-                                    Sau khi chọn đủ, nút "Bắt Đầu Chạy" sẽ xuất hiện
+                                    {t('jobs.create.start_button_hint')}
                                 </p>
                             </div>
                         )}

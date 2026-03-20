@@ -54,7 +54,7 @@ export default function Images({ scenario, currentCredits = 0, videoModels = [],
 
     const handleParseAndContinue = async () => {
         if (uploadedImages.length === 0) {
-            showToast('Vui lòng upload ít nhất 1 ảnh', 'error');
+            showToast(t('ai_studio.scenario.please_upload_image'), 'error');
             return;
         }
 
@@ -67,7 +67,7 @@ export default function Images({ scenario, currentCredits = 0, videoModels = [],
             );
 
             if (!parseResponse.success) {
-                throw new Error(parseResponse.error || 'Không thể phân tích ảnh');
+                throw new Error(parseResponse.error || t('ai_studio.scenario.cannot_analyze_images'));
             }
 
             const scenes = parseResponse.data.scenes || [];
@@ -90,21 +90,21 @@ export default function Images({ scenario, currentCredits = 0, videoModels = [],
 
             const saveData = saveResponse.data;
             if (saveData.success) {
-                showToast(`Đã phân tích ${scenes.length} cảnh từ ảnh`, 'success');
+                showToast(t('ai_studio.scenario.analyzed_scenes_from_images', { count: scenes.length }), 'success');
                 router.visit(`/ai-studio/scenarios/${saveData.scenario.id}/edit`);
             } else {
-                throw new Error(saveData.error || 'Không thể lưu');
+                throw new Error(saveData.error || t('ai_studio.scenario.cannot_save'));
             }
         } catch (error) {
-            showToast('Lỗi: ' + error.message, 'error');
+            showToast(t('ai_studio.scenario.error_prefix', { message: error.message }), 'error');
         } finally {
             setParsing(false);
         }
     };
 
     return (
-        <AppLayout title="Upload Ảnh">
-            <Head title="Upload Ảnh" />
+        <AppLayout title={t('ai_studio.scenario.upload_images_title')}>
+            <Head title={t('ai_studio.scenario.upload_images_title')} />
 
             <div className={`min-h-screen ${isDark ? 'bg-[#0a0a0a]' : 'bg-slate-50'}`}>
                 <div className="max-w-4xl mx-auto px-6 py-8">
@@ -120,9 +120,9 @@ export default function Images({ scenario, currentCredits = 0, videoModels = [],
                                 </svg>
                             </Link>
                             <div>
-                                <h1 className={`text-2xl font-bold ${themeClasses.textPrimary}`}>Upload Ảnh</h1>
+                                <h1 className={`text-2xl font-bold ${themeClasses.textPrimary}`}>{t('ai_studio.scenario.upload_images_title')}</h1>
                                 <p className={`text-sm ${themeClasses.textMuted}`}>
-                                    Bước 2/4 • {scenario.output_type === 'video' ? 'Video' : 'Hình ảnh'}
+                                    {t('ai_studio.scenario.step_2_of_4', { type: scenario.output_type === 'video' ? t('ai_studio.scenario.video_label') : t('ai_studio.scenario.images_label') })}
                                 </p>
                             </div>
                         </div>
@@ -135,12 +135,12 @@ export default function Images({ scenario, currentCredits = 0, videoModels = [],
 
                     {/* Title Input */}
                     <div className={`p-6 rounded-2xl ${themeClasses.cardBg} border mb-6`}>
-                        <label className={`block text-sm font-bold mb-2 ${themeClasses.textMuted}`}>Tiêu đề</label>
+                        <label className={`block text-sm font-bold mb-2 ${themeClasses.textMuted}`}>{t('ai_studio.scenario.title_label')}</label>
                         <input
                             type="text"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            placeholder="Nhập tiêu đề cho kịch bản..."
+                            placeholder={t('ai_studio.scenario.title_placeholder')}
                             className={`w-full px-4 py-3 rounded-xl border ${themeClasses.inputBg} focus:outline-none focus:ring-2 focus:ring-violet-500/50`}
                         />
                     </div>
@@ -148,7 +148,7 @@ export default function Images({ scenario, currentCredits = 0, videoModels = [],
                     {/* Upload Area */}
                     <div className={`p-6 rounded-2xl ${themeClasses.cardBg} border mb-6`}>
                         <label className={`block text-sm font-bold mb-4 ${themeClasses.textMuted}`}>
-                            Upload Ảnh ({uploadedImages.length}/10)
+                            {t('ai_studio.scenario.upload_images_count', { count: uploadedImages.length })}
                         </label>
 
                         {/* Dropzone */}
@@ -175,9 +175,9 @@ export default function Images({ scenario, currentCredits = 0, videoModels = [],
                                 </svg>
                             </div>
                             <p className={`text-lg font-semibold mb-2 ${themeClasses.textPrimary}`}>
-                                Kéo thả ảnh hoặc click để chọn
+                                {t('ai_studio.scenario.drag_drop_or_click_select')}
                             </p>
-                            <p className={`text-sm ${themeClasses.textMuted}`}>PNG, JPG, WEBP (tối đa 10 ảnh)</p>
+                            <p className={`text-sm ${themeClasses.textMuted}`}>{t('ai_studio.scenario.png_jpg_webp_max_10')}</p>
                         </label>
 
                         {/* Image Grid */}
@@ -204,14 +204,14 @@ export default function Images({ scenario, currentCredits = 0, videoModels = [],
                             href="/ai-studio/scenario-builder"
                             className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 text-white border border-white/10' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'}`}
                         >
-                            Quay lại
+                            {t('ai_studio.scenario.go_back')}
                         </Link>
                         <button
                             onClick={handleParseAndContinue}
                             disabled={uploadedImages.length === 0 || parsing}
                             className="px-8 py-3 rounded-xl text-base font-bold bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {parsing ? 'Đang phân tích...' : `Phân tích ${uploadedImages.length} ảnh`}
+                            {parsing ? t('ai_studio.scenario.analyzing') : t('ai_studio.scenario.analyze_images', { count: uploadedImages.length })}
                         </button>
                     </div>
                 </div>

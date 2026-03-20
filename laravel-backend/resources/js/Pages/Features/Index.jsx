@@ -10,9 +10,9 @@ export default function Index({ features }) {
     return (
         <LandingLayout>
             <SeoHead
-                title="Tính năng CLICKAI - Workflow Automation & Device Management"
-                description="Khám phá các tính năng mạnh mẽ của CLICKAI: Quản lý thiết bị thông minh, workflow automation, AI Studio, lên lịch tự động và báo cáo phân tích realtime."
-                keywords="tính năng clickai, workflow automation, device management, ai studio, automation platform"
+                title={t('features.seo_title', 'CLICKAI Features - Workflow Automation & Device Management')}
+                description={t('features.seo_description', 'Discover powerful CLICKAI features: Smart device management, workflow automation, AI Studio, auto-scheduling and realtime analytics.')}
+                keywords={t('features.seo_keywords', 'clickai features, workflow automation, device management, ai studio, automation platform')}
                 url="https://clickai.vn/features"
             />
             {/* Hero */}

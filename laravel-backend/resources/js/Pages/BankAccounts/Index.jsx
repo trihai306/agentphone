@@ -104,7 +104,7 @@ export default function Index({ bankAccounts = [], banks = [] }) {
                     {/* Header */}
                     <PageHeader
                         title={t('bank_accounts.title')}
-                        subtitle={t('bank_accounts.description', { defaultValue: 'Quản lý tài khoản ngân hàng để nhận tiền rút' })}
+                        subtitle={t('bank_accounts.description')}
                         actions={!showForm && (
                             <Button onClick={() => setShowForm(true)}>
                                 + {t('bank_accounts.add')}
@@ -116,7 +116,7 @@ export default function Index({ bankAccounts = [], banks = [] }) {
                     {showForm && (
                         <GlassCard gradient="gray" className="mb-6" hover={false}>
                             <SectionHeader
-                                title={editingAccount ? t('bank_accounts.edit', { defaultValue: 'Sửa tài khoản' }) : t('bank_accounts.add')}
+                                title={editingAccount ? t('bank_accounts.edit') : t('bank_accounts.add')}
                             />
 
                             <form onSubmit={handleSubmit} className="space-y-5">
@@ -127,7 +127,7 @@ export default function Index({ bankAccounts = [], banks = [] }) {
                                         value={data.bank_id}
                                         onChange={(e) => setData('bank_id', e.target.value)}
                                         disabled={!!editingAccount}
-                                        placeholder={t('bank_accounts.select_bank', { defaultValue: 'Chọn ngân hàng' })}
+                                        placeholder={t('bank_accounts.select_bank')}
                                         error={errors.bank_id}
                                     />
 
@@ -153,21 +153,21 @@ export default function Index({ bankAccounts = [], banks = [] }) {
                                         label={t('bank_accounts.branch')}
                                         value={data.branch}
                                         onChange={(e) => setData('branch', e.target.value)}
-                                        placeholder={t('bank_accounts.branch_placeholder', { defaultValue: 'Chi nhánh (tùy chọn)' })}
+                                        placeholder={t('bank_accounts.branch_placeholder')}
                                     />
                                 </div>
 
                                 <div className="flex gap-3 pt-2">
                                     <Button type="submit" disabled={processing}>
                                         {processing
-                                            ? t('common.processing', { defaultValue: 'Đang xử lý...' })
+                                            ? t('common.processing')
                                             : editingAccount
-                                                ? t('common.save', { defaultValue: 'Lưu' })
+                                                ? t('common.save')
                                                 : t('bank_accounts.add')
                                         }
                                     </Button>
                                     <Button type="button" onClick={cancelForm} variant="ghost">
-                                        {t('common.cancel', { defaultValue: 'Hủy' })}
+                                        {t('common.cancel')}
                                     </Button>
                                 </div>
                             </form>
@@ -176,12 +176,12 @@ export default function Index({ bankAccounts = [], banks = [] }) {
 
                     {/* Bank Accounts List */}
                     <GlassCard gradient="gray" hover={false}>
-                        <SectionHeader title={t('bank_accounts.your_accounts', { defaultValue: 'Tài khoản của bạn' })} />
+                        <SectionHeader title={t('bank_accounts.your_accounts')} />
 
                         {bankAccounts.length === 0 ? (
                             <EmptyStateCard
                                 icon="💳"
-                                title={t('bank_accounts.no_accounts', { defaultValue: 'Chưa có tài khoản ngân hàng nào' })}
+                                title={t('bank_accounts.no_accounts')}
                                 actionLabel={`+ ${t('bank_accounts.add')}`}
                                 onAction={() => setShowForm(true)}
                             />

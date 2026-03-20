@@ -45,10 +45,10 @@ export default function Index({
 
     const handleCancel = async (transactionId) => {
         const confirmed = await showConfirm({
-            title: t('withdraw.cancel_title', { defaultValue: 'Hủy yêu cầu rút tiền' }),
-            message: t('withdraw.confirm_cancel', { defaultValue: 'Bạn có chắc muốn hủy yêu cầu này?' }),
-            confirmText: t('withdraw.cancel', { defaultValue: 'Hủy yêu cầu' }),
-            cancelText: t('common.close', { defaultValue: 'Đóng' }),
+            title: t('withdraw.cancel_title'),
+            message: t('withdraw.confirm_cancel'),
+            confirmText: t('withdraw.cancel'),
+            cancelText: t('common.close'),
             type: 'warning',
             icon: 'exclamation',
         });
@@ -95,7 +95,7 @@ export default function Index({
                                 {t('withdraw.title')}
                             </h1>
                             <p className={`mt-1 text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                {t('withdraw.description', { defaultValue: 'Rút tiền từ ví về tài khoản ngân hàng của bạn' })}
+                                {t('withdraw.description')}
                             </p>
                         </div>
                         <Link
@@ -141,7 +141,7 @@ export default function Index({
                         {/* Withdrawal Form */}
                         <div className={`p-6 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
                             <h2 className={`text-lg font-semibold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                {t('withdraw.new_request', { defaultValue: 'Tạo yêu cầu rút tiền' })}
+                                {t('withdraw.new_request')}
                             </h2>
 
                             {bankAccounts.length === 0 ? (
@@ -259,7 +259,7 @@ export default function Index({
                                     {/* Note */}
                                     <div>
                                         <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                            {t('withdraw.note', { defaultValue: 'Ghi chú' })}
+                                            {t('withdraw.note')}
                                         </label>
                                         <textarea
                                             value={data.note}
@@ -269,7 +269,7 @@ export default function Index({
                                                 ? 'bg-[#0d0d0d] border-[#2a2a2a] text-white'
                                                 : 'bg-gray-50 border-gray-200 text-gray-900'
                                                 } border focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-colors`}
-                                            placeholder={t('withdraw.note_placeholder', { defaultValue: 'Ghi chú tùy chọn...' })}
+                                            placeholder={t('withdraw.note_placeholder')}
                                         />
                                     </div>
 
@@ -284,7 +284,7 @@ export default function Index({
                                                 : 'bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700'
                                             }`}
                                     >
-                                        {processing ? t('common.processing', { defaultValue: 'Đang xử lý...' }) : t('withdraw.submit')}
+                                        {processing ? t('common.processing') : t('withdraw.submit')}
                                     </button>
                                 </form>
                             )}
@@ -301,7 +301,7 @@ export default function Index({
                                     <svg className="w-12 h-12 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                     </svg>
-                                    <p>{t('withdraw.no_pending', { defaultValue: 'Không có yêu cầu đang chờ' })}</p>
+                                    <p>{t('withdraw.no_pending')}</p>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
@@ -349,13 +349,13 @@ export default function Index({
                         <div className={`mt-8 p-6 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    {t('withdraw.recent_history', { defaultValue: 'Lịch sử rút tiền gần đây' })}
+                                    {t('withdraw.recent_history')}
                                 </h2>
                                 <Link
                                     href="/wallet?type=withdrawal"
                                     className={`text-sm ${isDark ? 'text-violet-400 hover:text-violet-300' : 'text-violet-600 hover:text-violet-700'}`}
                                 >
-                                    {t('common.view_all', { defaultValue: 'Xem tất cả' })} →
+                                    {t('common.view_all')} →
                                 </Link>
                             </div>
 

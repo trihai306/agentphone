@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/Components/UI';
 import { recordingApi } from '@/services/api';
 
@@ -50,6 +51,7 @@ export default function ImportRecordingModal({
     onImport,
     isLoading = false,
 }) {
+    const { t } = useTranslation();
     const [importMode, setImportMode] = useState('append'); // append | replace | sequence
     const [previewNodes, setPreviewNodes] = useState([]);
     const [isConverting, setIsConverting] = useState(false);
@@ -132,9 +134,9 @@ export default function ImportRecordingModal({
                                 <DocumentArrowDownIcon className="w-5 h-5 text-violet-400" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-semibold text-white">Import Recording</h2>
+                                <h2 className="text-lg font-semibold text-white">{t('flows.editor.import_recording.title')}</h2>
                                 <p className="text-sm text-gray-500">
-                                    {session?.eventCount || 0} events captured
+                                    {session?.eventCount || 0} {t('flows.editor.import_recording.events_captured')}
                                 </p>
                             </div>
                         </div>
@@ -146,7 +148,7 @@ export default function ImportRecordingModal({
                     {/* Import Mode Selection */}
                     <div className="px-6 py-4 border-b border-white/5">
                         <label className="block text-sm font-medium text-gray-400 mb-3">
-                            Import Mode
+                            {t('flows.editor.import_recording.import_mode')}
                         </label>
                         <div className="flex gap-2">
                             {importModes.map((mode) => (
@@ -214,7 +216,7 @@ export default function ImportRecordingModal({
                         {!isConverting && previewNodes.length === 0 && (
                             <div className="text-center py-12 text-gray-500">
                                 <CursorArrowRaysIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                                <p>No events to convert</p>
+                                <p>{t('flows.editor.import_recording.no_events')}</p>
                             </div>
                         )}
                     </div>
@@ -222,7 +224,7 @@ export default function ImportRecordingModal({
                     {/* Footer */}
                     <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/5 bg-white/2">
                         <Button variant="secondary" onClick={onClose}>
-                            Cancel
+                            {t('common.cancel')}
                         </Button>
                         <Button
                             variant="gradient"
@@ -230,7 +232,7 @@ export default function ImportRecordingModal({
                             disabled={isLoading || previewNodes.length === 0}
                         >
                             <DocumentArrowDownIcon className="w-4 h-4" />
-                            Import {previewNodes.length} Nodes
+                            {t('flows.editor.import_recording.import_nodes', { count: previewNodes.length })}
                         </Button>
                     </div>
                 </motion.div>

@@ -76,13 +76,13 @@ export function ProbabilityConfig({ data, updateData, isDark }) {
                             {/* Header */}
                             <div className="flex items-center justify-between">
                                 <span className={`text-[10px] font-semibold uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    Path {index + 1}
+                                    {t('flows.editor.config.path_label')} {index + 1}
                                 </span>
                                 {paths.length > 2 && (
                                     <button
                                         onClick={() => handleRemovePath(index)}
                                         className={`p-1 rounded transition-colors ${isDark ? 'hover:bg-red-500/20 text-red-400' : 'hover:bg-red-50 text-red-500'}`}
-                                        title="Remove path"
+                                        title={t('flows.editor.config.remove_path')}
                                     >
                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

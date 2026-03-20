@@ -200,7 +200,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                     result_path: event.result_path,
                 }));
                 setGenerating(false);
-                addToast(t('ai_studio.generation_completed', { defaultValue: 'Generation completed successfully!' }), 'success');
+                addToast(t('ai_studio.generation_completed'), 'success');
             }
         };
 
@@ -232,7 +232,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                     error_message: event.error_message,
                 }));
                 setGenerating(false);
-                addToast(`Generation failed: ${event.error_message}`, 'error');
+                addToast(t('ai_studio.generation_failed', { message: event.error_message }), 'error');
             }
         };
 
@@ -274,13 +274,13 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
 
     const handleGenerate = async () => {
         if (!prompt.trim() || !model) {
-            addToast('Please enter a prompt and select a model', 'warning');
+            addToast(t('ai_studio.enter_prompt_select_model'), 'warning');
             return;
         }
 
         const estimatedCost = calculateEstimatedCost();
         if (currentCredits < estimatedCost) {
-            addToast('Insufficient credits', 'warning');
+            addToast(t('ai_studio.insufficient_credits'), 'warning');
             return;
         }
 
@@ -305,12 +305,12 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                 setCurrentGeneration(result.data.generation);
                 setHistory(prev => [result.data.generation, ...prev]);
                 router.reload({ only: ['currentCredits'] });
-                addToast('Generation queued successfully!', 'success');
+                addToast(t('ai_studio.generation_queued'), 'success');
             } else {
-                addToast(result.error || 'An error occurred', 'error');
+                addToast(result.error || t('ai_studio.an_error_occurred'), 'error');
             }
         } catch (error) {
-            addToast(error.message || 'An error occurred', 'error');
+            addToast(error.message || t('ai_studio.an_error_occurred'), 'error');
         } finally {
             // Stop loading immediately after job is queued
             setGenerating(false);
@@ -345,10 +345,10 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
 
     const handleRetry = async (generationId) => {
         const confirmed = await showConfirm({
-            title: t('ai_studio.retry_title', { defaultValue: 'Xác nhận thử lại' }),
-            message: t('ai_studio.confirm_retry', { defaultValue: 'Thử lại generation này? Credit sẽ bị trừ lại.' }),
-            confirmText: t('ai_studio.retry', { defaultValue: 'Thử lại' }),
-            cancelText: t('common.cancel', { defaultValue: 'Hủy' }),
+            title: t('ai_studio.retry_title'),
+            message: t('ai_studio.confirm_retry'),
+            confirmText: t('ai_studio.retry'),
+            cancelText: t('common.cancel'),
             type: 'warning',
             icon: 'refresh',
         });
@@ -358,10 +358,10 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
         router.post(`/ai-studio/generations/${generationId}/retry`, {}, {
             preserveScroll: true,
             onSuccess: () => {
-                addToast(t('ai_studio.retry_started', { defaultValue: 'Generation retry started!' }), 'success');
+                addToast(t('ai_studio.retry_started'), 'success');
             },
             onError: (errors) => {
-                addToast(errors.message || t('common.error', { defaultValue: 'An error occurred' }), 'error');
+                addToast(errors.message || t('ai_studio.an_error_occurred'), 'error');
             },
         });
     };
@@ -380,7 +380,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
 
     const aspectRatios = type === 'image'
         ? [
-            { label: '1:1', w: 1024, h: 1024, icon: '⬜' },
+            { label: '1:1', w: 1024, h: 1024, icon: 'grid' },
             { label: '16:9', w: 1920, h: 1080, icon: 'tv' },
             { label: '9:16', w: 1080, h: 1920, icon: 'device' },
             { label: '4:3', w: 1024, h: 768, icon: 'tv' },
@@ -437,14 +437,14 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                     }`}>
                                     <Icon name="ai" className="w-5 h-5" />
                                     <span className={`font-bold ${themeClasses.textPrimary}`}>{currentCredits.toLocaleString()}</span>
-                                    <span className={`text-sm ${themeClasses.textMuted}`}>credits</span>
+                                    <span className={`text-sm ${themeClasses.textMuted}`}>{t('ai_studio.credits')}</span>
                                 </div>
 
                                 <Link
                                     href="/ai-credits"
                                     className="px-5 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 transition-all duration-200 shadow-lg shadow-violet-500/25"
                                 >
-                                    Buy Credits
+                                    {t('ai_studio.buy_credits')}
                                 </Link>
 
                                 <Link
@@ -454,7 +454,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                                         }`}
                                 >
-                                    Gallery
+                                    {t('ai_studio.gallery')}
                                 </Link>
 
                                 <Link
@@ -464,7 +464,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                         : 'text-violet-600 hover:text-violet-700 hover:bg-violet-50'
                                         }`}
                                 >
-                                    <Icon name="ai" className="w-4 h-4 inline-block mr-1" /> Scenario Builder
+                                    <Icon name="ai" className="w-4 h-4 inline-block mr-1" /> {t('ai_studio.scenario_builder')}
                                 </Link>
                             </div>
                         </div>
@@ -508,7 +508,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                     {/* Type Selector */}
                                     <div>
                                         <label className={`block text-xs font-semibold mb-3 uppercase tracking-wide ${themeClasses.textMuted}`}>
-                                            Generation Type
+                                            {t('ai_studio.generation_type')}
                                         </label>
                                         <div className="grid grid-cols-2 gap-3">
                                             <button
@@ -526,10 +526,10 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                     <Icon name="video" className="w-5 h-5" />
                                                 </div>
                                                 <div className={`text-sm font-semibold ${type === 'video' ? (isDark ? 'text-violet-300' : 'text-violet-700') : themeClasses.textPrimary}`}>
-                                                    Video
+                                                    {t('ai_studio.video')}
                                                 </div>
                                                 <div className={`text-xs mt-0.5 ${themeClasses.textMuted}`}>
-                                                    Generate videos
+                                                    {t('ai_studio.generate_videos')}
                                                 </div>
                                             </button>
 
@@ -548,10 +548,10 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                     <Icon name="media" className="w-5 h-5" />
                                                 </div>
                                                 <div className={`text-sm font-semibold ${type === 'image' ? (isDark ? 'text-violet-300' : 'text-violet-700') : themeClasses.textPrimary}`}>
-                                                    Image
+                                                    {t('ai_studio.image')}
                                                 </div>
                                                 <div className={`text-xs mt-0.5 ${themeClasses.textMuted}`}>
-                                                    Generate images
+                                                    {t('ai_studio.generate_images')}
                                                 </div>
                                             </button>
                                         </div>
@@ -560,7 +560,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                     {type === 'video' && (
                                         <div>
                                             <label className={`block text-sm font-semibold mb-3 ${themeClasses.textPrimary}`}>
-                                                Generation Mode
+                                                {t('ai_studio.generation_mode')}
                                             </label>
                                             <div className={`flex p-1 rounded-xl transition-colors ${isDark ? 'bg-[#1a1a1a]' : 'bg-slate-100'
                                                 }`}>
@@ -571,7 +571,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                         : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
                                                         }`}
                                                 >
-                                                    <Icon name="edit" className="w-4 h-4 inline-block mr-1" /> Text to Video
+                                                    <Icon name="edit" className="w-4 h-4 inline-block mr-1" /> {t('ai_studio.text_to_video')}
                                                 </button>
                                                 <button
                                                     onClick={() => setGenerationMode('image')}
@@ -580,7 +580,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                         : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
                                                         }`}
                                                 >
-                                                    <Icon name="media" className="w-4 h-4 inline-block mr-1" /> Image to Video
+                                                    <Icon name="media" className="w-4 h-4 inline-block mr-1" /> {t('ai_studio.image_to_video')}
                                                 </button>
                                             </div>
                                         </div>
@@ -590,7 +590,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                     {type === 'video' && generationMode === 'image' && (
                                         <div>
                                             <label className={`block text-sm font-semibold mb-3 ${themeClasses.textPrimary}`}>
-                                                Source Image
+                                                {t('ai_studio.source_image')}
                                             </label>
                                             <div
                                                 className={`relative border-2 border-dashed rounded-xl p-4 text-center transition-all duration-200 ${sourceImagePreview
@@ -613,7 +613,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                         <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                                                         <div className={`py-6 ${themeClasses.textMuted}`}>
                                                             <Icon name="camera" className="w-8 h-8 mx-auto mb-3" />
-                                                            <span className="text-sm font-medium">Click to upload or drag image</span>
+                                                            <span className="text-sm font-medium">{t('ai_studio.click_to_upload_or_drag')}</span>
                                                         </div>
                                                     </label>
                                                 )}
@@ -624,7 +624,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                     {/* Prompt */}
                                     <div>
                                         <label className={`block text-sm font-semibold mb-3 ${themeClasses.textPrimary}`}>
-                                            {generationMode === 'image' ? 'Motion Description' : 'Prompt'}
+                                            {generationMode === 'image' ? t('ai_studio.motion_description') : t('ai_studio.prompt')}
                                         </label>
                                         <div className="relative group">
                                             <textarea
@@ -632,8 +632,8 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                 value={prompt}
                                                 onChange={(e) => setPrompt(e.target.value)}
                                                 placeholder={generationMode === 'image'
-                                                    ? "Describe how the image should animate..."
-                                                    : "Describe what you want to create... Be specific for best results!"
+                                                    ? t('ai_studio.prompt_placeholder_image')
+                                                    : t('ai_studio.prompt_placeholder_text')
                                                 }
                                                 disabled={generating}
                                                 rows={5}
@@ -652,7 +652,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                     {/* Model Selection */}
                                     <div>
                                         <label className={`block text-xs font-semibold mb-3 uppercase tracking-wide ${themeClasses.textMuted}`}>
-                                            AI Model
+                                            {t('ai_studio.ai_model')}
                                         </label>
                                         <div className="space-y-3 max-h-[380px] overflow-y-auto pr-2 custom-scrollbar">
                                             {models.map((m) => {
@@ -694,7 +694,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                                             ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                                                                             : 'bg-amber-100 text-amber-700 border border-amber-200'
                                                                             }`}>
-                                                                            Coming Soon
+                                                                            {t('ai_studio.coming_soon')}
                                                                         </span>
                                                                     )}
                                                                     {m.badge && !m.coming_soon && (
@@ -716,7 +716,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                                     </span>
                                                                     <span className={`px-3 py-1 text-xs font-bold rounded-full ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-700'
                                                                         }`}>
-                                                                        {m.credits_cost} credits/{type === 'video' ? 'sec' : 'img'}
+                                                                        {m.credits_cost} {type === 'video' ? t('ai_studio.credits_per_sec') : t('ai_studio.credits_per_img')}
                                                                     </span>
                                                                 </div>
                                                             </div>
@@ -725,9 +725,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                             {isSelected && !isDisabled && (
                                                                 <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-violet-500' : 'bg-violet-500'
                                                                     }`}>
-                                                                    <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                                                    </svg>
+                                                                    <Icon name="check" className="w-3.5 h-3.5 text-white" />
                                                                 </div>
                                                             )}
                                                         </div>
@@ -744,7 +742,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                             <div>
                                                 <div className="flex items-center justify-between mb-3">
                                                     <label className={`text-xs font-semibold uppercase tracking-wide ${themeClasses.textMuted}`}>
-                                                        Duration
+                                                        {t('ai_studio.duration')}
                                                     </label>
                                                     <span className={`text-sm font-bold ${themeClasses.textPrimary}`}>
                                                         {params.duration}s
@@ -774,10 +772,10 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                     }`}>
                                                     <div>
                                                         <p className={`text-sm font-semibold ${themeClasses.textPrimary}`}>
-                                                            <Icon name="sound" className="w-4 h-4 inline-block mr-1" /> Generate Audio
+                                                            <Icon name="sound" className="w-4 h-4 inline-block mr-1" /> {t('ai_studio.generate_audio')}
                                                         </p>
                                                         <p className={`text-xs mt-0.5 ${themeClasses.textMuted}`}>
-                                                            Include dialogue and sound effects
+                                                            {t('ai_studio.include_audio_description')}
                                                         </p>
                                                     </div>
                                                     <button
@@ -801,7 +799,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                             {/* Aspect Ratio for Images */}
                                             <div>
                                                 <label className={`block text-xs font-semibold mb-3 uppercase tracking-wide ${themeClasses.textMuted}`}>
-                                                    Aspect Ratio
+                                                    {t('ai_studio.aspect_ratio')}
                                                 </label>
                                                 <div className="grid grid-cols-4 gap-2">
                                                     {aspectRatios.map((ar) => (
@@ -817,7 +815,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                                     : 'bg-white text-slate-600 border-slate-200 hover:text-slate-900 hover:border-slate-300 hover:scale-[1.02]'
                                                                 }`}
                                                         >
-                                                            <span className="block text-lg mb-1">{ar.icon}</span>
+                                                            <span className="block text-lg mb-1"><Icon name={ar.icon} className="w-5 h-5 mx-auto" /></span>
                                                             {ar.label}
                                                         </button>
                                                     ))}
@@ -827,12 +825,12 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                             {/* Negative Prompt */}
                                             <div>
                                                 <label className={`block text-xs font-semibold mb-3 uppercase tracking-wide ${themeClasses.textMuted}`}>
-                                                    Negative Prompt
+                                                    {t('ai_studio.negative_prompt')}
                                                 </label>
                                                 <textarea
                                                     value={negativePrompt}
                                                     onChange={(e) => setNegativePrompt(e.target.value)}
-                                                    placeholder="What to avoid..."
+                                                    placeholder={t('ai_studio.negative_prompt_placeholder')}
                                                     rows={2}
                                                     className={`w-full px-4 py-3 rounded-xl resize-none text-sm transition-all duration-200 border focus:outline-none focus:ring-2 ${isDark
                                                         ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-slate-500 focus:border-violet-500 focus:ring-violet-500/20'
@@ -865,10 +863,10 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                     </svg>
-                                                    Đang tạo...
+                                                    {t('ai_studio.generating')}
                                                 </span>
                                             ) : (
-                                                <><Icon name="ai" className="w-4 h-4 inline-block mr-0.5" /> Tạo ngay · {calculateEstimatedCost()} credits</>
+                                                <><Icon name="ai" className="w-4 h-4 inline-block mr-0.5" /> {t('ai_studio.generate_now')} · {calculateEstimatedCost()} {t('ai_studio.credits')}</>
                                             )}
                                         </span>
                                     </button>
@@ -880,13 +878,13 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                 {/* Header */}
                                 <div className="flex items-center justify-between mb-4">
                                     <h2 className={`text-lg font-bold ${themeClasses.textPrimary}`}>
-                                        {type === 'image' ? <><Icon name="media" className="w-4 h-4 inline-block mr-1" /> Ảnh gần đây</> : <><Icon name="video" className="w-4 h-4 inline-block mr-1" /> Video gần đây</>}
+                                        {type === 'image' ? <><Icon name="media" className="w-4 h-4 inline-block mr-1" /> {t('ai_studio.recent_images')}</> : <><Icon name="video" className="w-4 h-4 inline-block mr-1" /> {t('ai_studio.recent_videos')}</>}
                                     </h2>
                                     <Link
                                         href="/ai-studio/generations"
                                         className={`text-sm font-medium ${isDark ? 'text-violet-400 hover:text-violet-300' : 'text-violet-600 hover:text-violet-700'}`}
                                     >
-                                        Xem tất cả →
+                                        {t('ai_studio.view_all')} →
                                     </Link>
                                 </div>
 
@@ -942,7 +940,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                                 ? 'bg-amber-500/90 text-white'
                                                                 : 'bg-rose-500/90 text-white'
                                                             }`}>
-                                                            {gen.status === 'completed' ? '✓' : gen.status === 'processing' ? '⏳' : gen.status === 'pending' ? '⏳' : '✗'}
+                                                            {gen.status === 'completed' ? <Icon name="check" className="w-3 h-3" /> : gen.status === 'processing' ? <Icon name="clock" className="w-3 h-3" /> : gen.status === 'pending' ? <Icon name="clock" className="w-3 h-3" /> : <Icon name="close" className="w-3 h-3" />}
                                                         </span>
                                                     </div>
 
@@ -960,7 +958,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                                 href={gen.result_url}
                                                                 download
                                                                 className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors"
-                                                                title="Download"
+                                                                title={t('ai_studio.download')}
                                                             >
                                                                 <Icon name="download" className="w-4 h-4" />
                                                             </a>
@@ -970,7 +968,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                                     setShowFolderModal(true);
                                                                 }}
                                                                 className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors"
-                                                                title="Save to Media"
+                                                                title={t('ai_studio.save_media')}
                                                             >
                                                                 <Icon name="save" className="w-4 h-4" />
                                                             </button>
@@ -984,7 +982,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                                 onClick={() => handleRetry(gen.id)}
                                                                 className="px-3 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors"
                                                             >
-                                                                <Icon name="refresh" className="w-3.5 h-3.5 inline-block mr-0.5" /> Thử lại
+                                                                <Icon name="refresh" className="w-3.5 h-3.5 inline-block mr-0.5" /> {t('ai_studio.retry')}
                                                             </button>
                                                         </div>
                                                     )}
@@ -1013,10 +1011,10 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                             {type === 'image' ? <Icon name="media" className="w-10 h-10" /> : <Icon name="video" className="w-10 h-10" />}
                                         </div>
                                         <p className={`text-lg font-semibold ${themeClasses.textPrimary}`}>
-                                            Chưa có {type === 'image' ? 'ảnh' : 'video'} nào
+                                            {type === 'image' ? t('ai_studio.no_images_yet') : t('ai_studio.no_videos_yet')}
                                         </p>
                                         <p className={`text-sm mt-2 ${themeClasses.textMuted}`}>
-                                            Nhập prompt và nhấn Generate để bắt đầu
+                                            {t('ai_studio.enter_prompt_to_start')}
                                         </p>
                                         <button
                                             onClick={() => textareaRef.current?.focus()}
@@ -1025,7 +1023,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                                 : 'bg-violet-100 text-violet-700 hover:bg-violet-200 border border-violet-200'
                                                 }`}
                                         >
-                                            <Icon name="ai" className="w-4 h-4 inline-block mr-1" /> Bắt đầu tạo
+                                            <Icon name="ai" className="w-4 h-4 inline-block mr-1" /> {t('ai_studio.start_creating')}
                                         </button>
                                     </div>
                                 )}
@@ -1034,7 +1032,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                 {(activeGenerations?.length > 0 || activeScenarios?.length > 0) && (
                                     <div className="mt-6">
                                         <h3 className={`text-sm font-semibold mb-3 ${themeClasses.textPrimary}`}>
-                                            <Icon name="credits" className="w-4 h-4 inline-block mr-1" /> Đang xử lý
+                                            <Icon name="credits" className="w-4 h-4 inline-block mr-1" /> {t('ai_studio.processing')}
                                         </h3>
                                         <div className="space-y-2">
                                             {activeGenerations?.map((gen) => (
@@ -1094,20 +1092,18 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                         onClick={() => setPreviewGeneration(null)}
                         className="absolute top-4 right-4 z-20 p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all backdrop-blur-sm"
                     >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <Icon name="close" className="w-6 h-6" />
                     </button>
 
                     {/* Media Container - Centered */}
                     <div
-                        className="relative max-w-[80vw] max-h-[60vh]"
+                        className="relative max-w-[85vw] max-h-[80vh]"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {previewGeneration.type === 'video' ? (
                             <video
                                 src={previewGeneration.result_url}
-                                className="max-w-[80vw] max-h-[60vh] rounded-xl shadow-2xl"
+                                className="max-w-[85vw] max-h-[80vh] rounded-2xl shadow-2xl"
                                 controls
                                 autoPlay
                             />
@@ -1115,7 +1111,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                             <img
                                 src={previewGeneration.result_url}
                                 alt={previewGeneration.prompt}
-                                className="max-w-[80vw] max-h-[60vh] rounded-xl shadow-2xl object-contain"
+                                className="max-w-[85vw] max-h-[80vh] rounded-2xl shadow-2xl object-contain"
                             />
                         )}
 
@@ -1123,7 +1119,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 px-4 py-3 rounded-2xl bg-black/70 backdrop-blur-xl border border-white/10">
                             {/* Type Badge */}
                             <span className="px-3 py-1.5 text-xs font-bold rounded-lg bg-violet-500/30 text-violet-300 border border-violet-500/30">
-                                {previewGeneration.type === 'video' ? <><Icon name="video" className="w-4 h-4 inline-block mr-1" /> Video</> : <><Icon name="media" className="w-4 h-4 inline-block mr-1" /> Ảnh</>}
+                                {previewGeneration.type === 'video' ? <><Icon name="video" className="w-4 h-4 inline-block mr-1" /> {t('ai_studio.video')}</> : <><Icon name="media" className="w-4 h-4 inline-block mr-1" /> {t('ai_studio.image')}</>}
                             </span>
 
                             {/* Model */}
@@ -1140,10 +1136,8 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                 download
                                 className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg"
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                </svg>
-                                Tải xuống
+                                <Icon name="download" className="w-4 h-4" />
+                                {t('ai_studio.download')}
                             </a>
 
                             {/* Save to Media */}
@@ -1155,10 +1149,8 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                                 }}
                                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all border border-white/10"
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                Lưu Media
+                                <Icon name="media" className="w-4 h-4" />
+                                {t('ai_studio.save_media')}
                             </button>
                         </div>
                     </div>
@@ -1173,7 +1165,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                     {/* Credits - Bottom Right Corner */}
                     <div className="absolute bottom-4 right-4">
                         <span className="text-sm text-white/60 bg-black/50 backdrop-blur-sm px-3 py-2 rounded-lg">
-                            <><Icon name="ai" className="w-4 h-4 inline-block mr-0.5" /> {previewGeneration.credits_used} credits</>
+                            <><Icon name="ai" className="w-4 h-4 inline-block mr-0.5" /> {previewGeneration.credits_used} {t('ai_studio.credits')}</>
                         </span>
                     </div>
                 </div>,
@@ -1191,7 +1183,7 @@ export default function AiStudioIndex({ currentCredits = 0, imageModels = [], vi
                 }}
                 folders={folders}
                 isDark={isDark}
-                title="Save to Folder"
+                title={t('ai_studio.save_to_folder')}
             />
         </AppLayout >
     );

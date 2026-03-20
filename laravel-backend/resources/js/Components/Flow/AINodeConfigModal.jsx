@@ -217,10 +217,10 @@ export default function AINodeConfigModal({ isOpen, onClose, nodeData, onSave })
                 >
                     <div>
                         <h2 className="text-2xl font-bold" style={{ color: currentProvider.color }}>
-                            🤖 {t('flow.ai.configTitle')}
+                            🤖 {t('flow.ai.config_title')}
                         </h2>
                         <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                            {t('flow.ai.configSubtitle')}
+                            {t('flow.ai.config_subtitle')}
                         </p>
                     </div>
                     <Button variant="ghost" size="icon-xs" onClick={onClose}>
@@ -412,7 +412,7 @@ function LLMTab({ config, updateConfig, providers, currentProvider, availableMod
             {/* API Token */}
             <div>
                 <label className={`block text-sm font-semibold mb-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {t('flow.ai.llm.apiToken')}
+                    {t('flow.ai.llm.api_token')}
                     <span className="ml-2 text-xs text-amber-500">({t('common.secure')})</span>
                 </label>
                 <input

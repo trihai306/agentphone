@@ -69,18 +69,18 @@ export default function ScenarioTab({
 
     // Audio style options
     const audioStyles = [
-        { id: 'natural', label: '🎙️ Tự nhiên', desc: 'Voice và sound effects tự nhiên' },
-        { id: 'dramatic', label: '🎭 Kịch tính', desc: 'Âm thanh sống động, cuốn hút' },
-        { id: 'upbeat', label: '⚡ Năng động', desc: 'Nhịp độ nhanh, tràn đầy năng lượng' },
+        { id: 'natural', label: t('ai_studio.audio_natural'), desc: t('ai_studio.audio_natural_desc') },
+        { id: 'dramatic', label: t('ai_studio.audio_dramatic'), desc: t('ai_studio.audio_dramatic_desc') },
+        { id: 'upbeat', label: t('ai_studio.audio_upbeat'), desc: t('ai_studio.audio_upbeat_desc') },
     ];
 
     // Background music options
     const musicStyles = [
-        { id: 'none', label: 'Không nhạc nền' },
-        { id: 'ambient', label: '🌊 Ambient' },
-        { id: 'upbeat', label: '🎵 Upbeat' },
-        { id: 'dramatic', label: '🎬 Cinematic' },
-        { id: 'lo-fi', label: '🎧 Lo-Fi' },
+        { id: 'none', label: t('ai_studio.no_background_music') },
+        { id: 'ambient', label: 'Ambient' },
+        { id: 'upbeat', label: 'Upbeat' },
+        { id: 'dramatic', label: 'Cinematic' },
+        { id: 'lo-fi', label: 'Lo-Fi' },
     ];
 
     // Set default model
@@ -125,7 +125,7 @@ export default function ScenarioTab({
     const handleParse = async () => {
         // Always require script text
         if (!script.trim() || script.length < 10) {
-            addToast('Vui lòng nhập kịch bản (ít nhất 10 ký tự)', 'warning');
+            addToast(t('ai_studio.script_min_length'), 'warning');
             return;
         }
 
@@ -170,7 +170,7 @@ export default function ScenarioTab({
                 await estimateCredits(parsedScenes);
             }
         } catch (error) {
-            addToast(error.response?.data?.error || 'Không thể phân tích kịch bản', 'error');
+            addToast(error.response?.data?.error || t('ai_studio.parse_failed'), 'error');
         } finally {
             setParsing(false);
         }
@@ -206,17 +206,17 @@ export default function ScenarioTab({
     // Save and generate all scenes
     const handleGenerate = async () => {
         if (scenes.length === 0) {
-            addToast('Không có cảnh nào để tạo', 'warning');
+            addToast(t('ai_studio.no_scenes'), 'warning');
             return;
         }
 
         if (currentCredits < totalCredits) {
-            addToast(`Không đủ credits. Cần ${totalCredits}, hiện có ${currentCredits}`, 'warning');
+            addToast(t('ai_studio.insufficient_credits', { required: totalCredits, current: currentCredits }), 'warning');
             return;
         }
 
         if (!model) {
-            addToast('Vui lòng chọn model', 'warning');
+            addToast(t('ai_studio.please_select_model'), 'warning');
             return;
         }
 
@@ -259,14 +259,14 @@ export default function ScenarioTab({
 
                 if (genResponse.success) {
                     setScenario(genResponse.scenario);
-                    addToast('Đã bắt đầu tạo video cho tất cả các cảnh', 'success');
+                    addToast(t('ai_studio.generation_started'), 'success');
 
                     // Start polling
                     startPolling(savedScenario.id);
                 }
             }
         } catch (error) {
-            addToast(error.response?.data?.error || 'Không thể tạo kịch bản', 'error');
+            addToast(error.response?.data?.error || t('ai_studio.scenario_create_failed'), 'error');
             setStep('scenes');
         }
     };
@@ -286,9 +286,9 @@ export default function ScenarioTab({
                     if (['completed', 'failed', 'partial'].includes(updatedScenario.status)) {
                         clearInterval(pollInterval);
                         if (updatedScenario.status === 'completed') {
-                            addToast('Tất cả các cảnh đã được tạo thành công!', 'success');
+                            addToast(t('ai_studio.all_scenes_completed'), 'success');
                         } else if (updatedScenario.status === 'partial') {
-                            addToast('Một số cảnh tạo thất bại', 'warning');
+                            addToast(t('ai_studio.some_scenes_failed'), 'warning');
                         }
                         onCreditsUpdate?.();
                     }
@@ -349,14 +349,14 @@ export default function ScenarioTab({
     // Character management functions
     const handleAddCharacter = () => {
         if (!newCharacter.name.trim()) {
-            addToast('Vui lòng nhập tên nhân vật', 'warning');
+            addToast(t('ai_studio.enter_character_name'), 'warning');
             return;
         }
         setCharacters([...characters, { ...newCharacter, id: Date.now() }]);
         setNewCharacter({ name: '', description: '', gender: 'female', age: 'young', image: null });
         setCharacterImageMode('upload');
         setShowCharacterForm(false);
-        addToast(`Đã thêm nhân vật "${newCharacter.name}"`, 'success');
+        addToast(t('ai_studio.character_added', { name: newCharacter.name }), 'success');
     };
 
     const handleRemoveCharacter = (id) => {
@@ -373,7 +373,7 @@ export default function ScenarioTab({
         if (!file) return;
 
         if (!file.type.startsWith('image/')) {
-            addToast('Vui lòng chọn file ảnh', 'warning');
+            addToast(t('ai_studio.select_image_file'), 'warning');
             return;
         }
 
@@ -384,7 +384,7 @@ export default function ScenarioTab({
     // Generate character image with AI
     const handleGenerateCharacterImage = async () => {
         if (!newCharacter.description.trim()) {
-            addToast('Vui lòng nhập mô tả để AI tạo hình ảnh', 'warning');
+            addToast(t('ai_studio.enter_description_for_ai'), 'warning');
             return;
         }
 
@@ -406,11 +406,11 @@ export default function ScenarioTab({
                     ...newCharacter,
                     image: { url: response.image_url, file: null, type: 'ai' }
                 });
-                addToast('Đã tạo hình ảnh nhân vật!', 'success');
+                addToast(t('ai_studio.character_image_created'), 'success');
             }
         } catch (error) {
             console.error('Error generating character image:', error);
-            addToast('Không thể tạo hình ảnh. Vui lòng thử lại.', 'error');
+            addToast(t('ai_studio.image_generation_failed'), 'error');
         } finally {
             setGeneratingCharacterImage(false);
         }
@@ -439,7 +439,7 @@ export default function ScenarioTab({
                             {i < ['input', 'scenes', 'generating'].indexOf(step) ? '✓' : i + 1}
                         </div>
                         <span className={`ml-2 md:ml-3 text-xs md:text-sm font-semibold hidden sm:inline transition-colors ${step === s ? (isDark ? 'text-white' : 'text-violet-700') : themeClasses.textMuted}`}>
-                            {s === 'input' ? 'Nhập kịch bản' : s === 'scenes' ? 'Chỉnh sửa cảnh' : 'Đang tạo'}
+                            {s === 'input' ? t('ai_studio.enter_script') : s === 'scenes' ? t('ai_studio.edit_scenes') : t('ai_studio.generating')}
                         </span>
                         {i < 2 && (
                             <div className={`w-8 md:w-16 h-0.5 mx-2 md:mx-4 rounded-full transition-all duration-500 ${i < ['input', 'scenes', 'generating'].indexOf(step)
@@ -463,8 +463,8 @@ export default function ScenarioTab({
                                     <span className="text-2xl">✍️</span>
                                 </div>
                                 <div>
-                                    <h2 className={`text-lg md:text-xl font-bold ${themeClasses.textPrimary}`}>Nhập Kịch Bản</h2>
-                                    <p className={`text-xs md:text-sm ${themeClasses.textMuted}`}>AI sẽ tự động chia thành các cảnh</p>
+                                    <h2 className={`text-lg md:text-xl font-bold ${themeClasses.textPrimary}`}>{t('ai_studio.enter_script')}</h2>
+                                    <p className={`text-xs md:text-sm ${themeClasses.textMuted}`}>{t('ai_studio.ai_auto_split_scenes')}</p>
                                 </div>
                             </div>
 
@@ -472,14 +472,7 @@ export default function ScenarioTab({
                             <textarea
                                 value={script}
                                 onChange={(e) => setScript(e.target.value)}
-                                placeholder="Nhập kịch bản của bạn tại đây...
-
-Ví dụ:
-Cảnh 1: Một buổi sáng đẹp trời, ánh nắng chiếu qua cửa sổ phòng ngủ.
-Cảnh 2: Một cô gái tỉnh dậy, vươn vai và mỉm cười.
-Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
-
-💡 Mẹo: Mô tả chi tiết từng cảnh, AI sẽ tự động tạo prompt cho mỗi cảnh."
+                                placeholder={t('ai_studio.script_placeholder')}
                                 rows={10}
                                 className={`w-full px-4 py-4 rounded-xl border-2 text-sm resize-none transition-all duration-300 focus:outline-none focus:ring-4 ${isDark
                                     ? 'bg-black/30 border-white/10 text-white placeholder-slate-500 focus:border-violet-500/50 focus:ring-violet-500/10'
@@ -488,10 +481,10 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                             />
                             <div className="flex items-center justify-between mt-3">
                                 <p className={`text-xs font-medium ${themeClasses.textMuted}`}>
-                                    {script.length.toLocaleString()}/10,000 ký tự
+                                    {script.length.toLocaleString()}/10,000 {t('ai_studio.characters')}
                                 </p>
                                 <p className={`text-xs font-semibold flex items-center gap-1 ${script.length >= 10 ? 'text-emerald-500' : themeClasses.textMuted}`}>
-                                    {script.length >= 10 ? '✓' : '○'} {script.length >= 10 ? 'Đủ độ dài' : 'Tối thiểu 10 ký tự'}
+                                    {script.length >= 10 ? '✓' : '○'} {script.length >= 10 ? t('ai_studio.sufficient_length') : t('ai_studio.min_10_chars')}
                                 </p>
                             </div>
 
@@ -501,10 +494,10 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                     <span className="text-lg">🖼️</span>
                                     <div>
                                         <h3 className={`text-sm font-semibold ${themeClasses.textPrimary}`}>
-                                            Ảnh tham chiếu <span className={`text-xs font-normal ${themeClasses.textMuted}`}>(tùy chọn)</span>
+                                            {t('ai_studio.reference_images')} <span className={`text-xs font-normal ${themeClasses.textMuted}`}>({t('ai_studio.optional')})</span>
                                         </h3>
                                         <p className={`text-xs ${themeClasses.textMuted}`}>
-                                            Upload ảnh để AI hiểu rõ hơn và tạo video chính xác hơn
+                                            {t('ai_studio.upload_reference_desc')}
                                         </p>
                                     </div>
                                 </div>
@@ -527,10 +520,10 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                         </div>
                                         <div className="text-left">
                                             <p className={`text-sm font-medium ${themeClasses.textPrimary}`}>
-                                                Click để chọn ảnh
+                                                {t('ai_studio.click_to_select_images')}
                                             </p>
                                             <p className={`text-xs ${themeClasses.textMuted}`}>
-                                                JPG, PNG, WEBP • Tối đa 10 ảnh
+                                                {t('ai_studio.max_10_images')}
                                             </p>
                                         </div>
                                     </div>
@@ -541,13 +534,13 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                     <div className="mt-4">
                                         <div className="flex items-center justify-between mb-2">
                                             <p className={`text-xs font-medium ${themeClasses.textMuted}`}>
-                                                {sourceImages.length} ảnh đã chọn
+                                                {t('ai_studio.images_selected', { count: sourceImages.length })}
                                             </p>
                                             <button
                                                 onClick={() => setSourceImages([])}
                                                 className={`text-xs ${isDark ? 'text-rose-400 hover:text-rose-300' : 'text-rose-500 hover:text-rose-600'}`}
                                             >
-                                                Xóa tất cả
+                                                {t('ai_studio.remove_all')}
                                             </button>
                                         </div>
                                         <div className="flex flex-wrap gap-2">
@@ -576,7 +569,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                 {/* Tip */}
                                 <div className={`mt-4 p-3 rounded-lg ${isDark ? 'bg-amber-600/10 border border-amber-500/20' : 'bg-amber-50 border border-amber-100'}`}>
                                     <p className={`text-xs ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
-                                        💡 <strong>Mẹo:</strong> Ảnh sẽ được dùng làm tham chiếu cho Image-to-Video. Số lượng ảnh nên tương ứng với số cảnh trong kịch bản.
+                                        <strong>{t('ai_studio.tip')}:</strong> {t('ai_studio.reference_images_tip')}
                                     </p>
                                 </div>
                             </div>
@@ -587,7 +580,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                             {/* Output Type */}
                             <div className={`p-5 rounded-2xl backdrop-blur-xl ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white/70 border border-white/50 shadow-lg'}`}>
                                 <label className={`block text-xs font-bold mb-3 uppercase tracking-wider ${themeClasses.textMuted}`}>
-                                    Loại Output
+                                    {t('ai_studio.output_type')}
                                 </label>
                                 <div className={`flex p-1.5 rounded-xl ${isDark ? 'bg-black/30' : 'bg-slate-100/80'}`}>
                                     {['video', 'image'].map((type) => (
@@ -599,7 +592,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                                 : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
                                                 }`}
                                         >
-                                            {type === 'video' ? '🎬 Video' : '🖼️ Ảnh'}
+                                            {type === 'video' ? 'Video' : t('ai_studio.image')}
                                         </button>
                                     ))}
                                 </div>
@@ -608,7 +601,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                             {/* Model Selection */}
                             <div className={`p-5 rounded-2xl backdrop-blur-xl ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white/70 border border-white/50 shadow-lg'}`}>
                                 <label className={`block text-xs font-bold mb-3 uppercase tracking-wider ${themeClasses.textMuted}`}>
-                                    Model AI
+                                    {t('ai_studio.ai_model')}
                                 </label>
                                 <select
                                     value={model}
@@ -620,7 +613,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                 >
                                     {models.filter(m => m.enabled && !m.coming_soon).map((m) => (
                                         <option key={m.id} value={m.id}>
-                                            {m.name} ({m.credits_cost} credits/{outputType === 'video' ? 'sec' : 'ảnh'})
+                                            {m.name} ({m.credits_cost} credits/{outputType === 'video' ? t('ai_studio.per_second') : t('ai_studio.per_image')})
                                         </option>
                                     ))}
                                 </select>
@@ -631,7 +624,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                 <div className={`p-5 rounded-2xl backdrop-blur-xl ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white/70 border border-white/50 shadow-lg'}`}>
                                     <div className="flex items-center justify-between mb-4">
                                         <label className={`text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${themeClasses.textMuted}`}>
-                                            <span className="text-base">🔊</span> Audio Settings
+                                            <span className="text-base">🔊</span> {t('ai_studio.audio_settings')}
                                         </label>
                                         <button
                                             onClick={() => setSettings(s => ({ ...s, generate_audio: !s.generate_audio }))}
@@ -665,7 +658,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
 
                                             {/* Background Music - Improved */}
                                             <div className={`flex items-center justify-between py-3 px-4 rounded-xl border ${isDark ? 'bg-black/20 border-white/10' : 'bg-white/50 border-slate-200/50'}`}>
-                                                <span className={`text-xs font-medium ${themeClasses.textSecondary}`}>🎵 Nhạc nền</span>
+                                                <span className={`text-xs font-medium ${themeClasses.textSecondary}`}>{t('ai_studio.background_music')}</span>
                                                 <select
                                                     value={settings.music_style}
                                                     onChange={(e) => setSettings(s => ({ ...s, music_style: e.target.value }))}
@@ -690,8 +683,8 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                     <div className="flex items-center gap-3">
                                         <span className="text-lg">🔗</span>
                                         <div>
-                                            <p className={`text-sm font-bold ${themeClasses.textPrimary}`}>Frame Chain Mode</p>
-                                            <p className={`text-xs ${themeClasses.textMuted}`}>Giữ nhân vật nhất quán</p>
+                                            <p className={`text-sm font-bold ${themeClasses.textPrimary}`}>{t('ai_studio.frame_chain_mode')}</p>
+                                            <p className={`text-xs ${themeClasses.textMuted}`}>{t('ai_studio.keep_characters_consistent')}</p>
                                         </div>
                                     </div>
                                     <button
@@ -707,7 +700,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                 </div>
                                 {frameChainMode && (
                                     <p className={`mt-3 text-xs ${isDark ? 'text-emerald-400/70' : 'text-emerald-600/80'}`}>
-                                        ✓ Nhân vật sẽ được giữ nhất quán xuyên suốt các cảnh
+                                        {t('ai_studio.frame_chain_enabled_desc')}
                                     </p>
                                 )}
                             </div>
@@ -721,9 +714,9 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                             <span className="text-white text-lg">�</span>
                                         </div>
                                         <div>
-                                            <h3 className={`text-sm font-bold ${themeClasses.textPrimary}`}>Nhân Vật Chính</h3>
+                                            <h3 className={`text-sm font-bold ${themeClasses.textPrimary}`}>{t('ai_studio.main_characters')}</h3>
                                             <p className={`text-xs ${themeClasses.textMuted}`}>
-                                                {characters.length > 0 ? `${characters.length} nhân vật đã định nghĩa` : 'Chưa có nhân vật'}
+                                                {characters.length > 0 ? t('ai_studio.characters_defined', { count: characters.length }) : t('ai_studio.no_characters')}
                                             </p>
                                         </div>
                                     </div>
@@ -774,11 +767,11 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                                                     char.age === 'middle' ? (isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-700') :
                                                                         (isDark ? 'bg-slate-500/20 text-slate-400' : 'bg-slate-100 text-slate-700')
                                                                 }`}>
-                                                                {char.age === 'child' ? 'Trẻ em' : char.age === 'young' ? '18-35' : char.age === 'middle' ? 'Trung niên' : 'Lớn tuổi'}
+                                                                {char.age === 'child' ? t('ai_studio.age_child') : char.age === 'young' ? '18-35' : char.age === 'middle' ? t('ai_studio.age_middle') : t('ai_studio.age_old')}
                                                             </span>
                                                         </div>
                                                         <p className={`text-xs leading-relaxed line-clamp-2 ${themeClasses.textMuted}`}>
-                                                            {char.description || 'Chưa có mô tả ngoại hình'}
+                                                            {char.description || t('ai_studio.no_appearance_desc')}
                                                         </p>
                                                     </div>
 
@@ -801,7 +794,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                 {showCharacterForm ? (
                                     <div className={`p-4 rounded-xl border-2 ${isDark ? 'border-violet-500/30 bg-black/20' : 'border-violet-300 bg-white'}`}>
                                         <div className="flex items-center justify-between mb-4">
-                                            <h4 className={`text-sm font-bold ${themeClasses.textPrimary}`}>✨ Thêm nhân vật mới</h4>
+                                            <h4 className={`text-sm font-bold ${themeClasses.textPrimary}`}>{t('ai_studio.add_new_character')}</h4>
                                             <Button variant="ghost" size="icon-xs" onClick={() => setShowCharacterForm(false)}>
                                                 ✕
                                             </Button>
@@ -812,7 +805,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                             <div className="grid grid-cols-3 gap-2">
                                                 <input
                                                     type="text"
-                                                    placeholder="Tên nhân vật"
+                                                    placeholder={t('ai_studio.character_name')}
                                                     value={newCharacter.name}
                                                     onChange={(e) => setNewCharacter({ ...newCharacter, name: e.target.value })}
                                                     className={`col-span-2 px-4 py-2.5 rounded-xl border-2 text-sm font-medium transition-all focus:outline-none focus:ring-2 ${isDark
@@ -828,14 +821,14 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                                         : 'bg-slate-50 border-slate-200 text-slate-900'
                                                         }`}
                                                 >
-                                                    <option value="female">👩 Nữ</option>
-                                                    <option value="male">👨 Nam</option>
+                                                    <option value="female">{t('ai_studio.female')}</option>
+                                                    <option value="male">{t('ai_studio.male')}</option>
                                                 </select>
                                             </div>
 
                                             {/* Description */}
                                             <textarea
-                                                placeholder="Mô tả chi tiết ngoại hình: độ tuổi, tóc, trang phục, đặc điểm nổi bật..."
+                                                placeholder={t('ai_studio.appearance_placeholder')}
                                                 value={newCharacter.description}
                                                 onChange={(e) => setNewCharacter({ ...newCharacter, description: e.target.value })}
                                                 rows={3}
@@ -847,10 +840,10 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
 
                                             {/* Age Selection - Visual Pills */}
                                             <div>
-                                                <label className={`block text-xs font-semibold mb-2 ${themeClasses.textMuted}`}>Độ tuổi</label>
+                                                <label className={`block text-xs font-semibold mb-2 ${themeClasses.textMuted}`}>{t('ai_studio.age')}</label>
                                                 <div className="grid grid-cols-4 gap-2">
                                                     {[
-                                                        { id: 'child', label: '👶', desc: 'Trẻ em' },
+                                                        { id: 'child', label: '👶', desc: t('ai_studio.age_child') },
                                                         { id: 'young', label: '🧑', desc: '18-35' },
                                                         { id: 'middle', label: '🧔', desc: '36-55' },
                                                         { id: 'old', label: '👴', desc: '55+' },
@@ -873,7 +866,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
 
                                             {/* Character Image - Upload or AI Generate */}
                                             <div>
-                                                <label className={`block text-xs font-semibold mb-2 ${themeClasses.textMuted}`}>Hình ảnh nhân vật (tùy chọn)</label>
+                                                <label className={`block text-xs font-semibold mb-2 ${themeClasses.textMuted}`}>{t('ai_studio.character_image')} ({t('ai_studio.optional')})</label>
 
                                                 {/* Mode Toggle */}
                                                 <div className={`flex p-1 rounded-xl mb-3 ${isDark ? 'bg-black/30' : 'bg-slate-100'}`}>
@@ -885,7 +878,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                                             : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
                                                             }`}
                                                     >
-                                                        📤 Tải ảnh lên
+                                                        {t('ai_studio.upload_image')}
                                                     </button>
                                                     <button
                                                         type="button"
@@ -895,7 +888,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                                             : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
                                                             }`}
                                                     >
-                                                        ✨ AI tạo ảnh
+                                                        {t('ai_studio.ai_generate_image')}
                                                     </button>
                                                 </div>
 
@@ -904,7 +897,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                                     <div className="relative group">
                                                         <img src={newCharacter.image.url} alt="Character preview" className="w-full h-40 object-cover rounded-xl border-2 border-violet-500/30" />
                                                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
-                                                            <button type="button" onClick={handleRemoveCharacterImage} className="px-3 py-2 bg-rose-500 text-white text-xs font-semibold rounded-lg hover:bg-rose-400">🗑️ Xóa ảnh</button>
+                                                            <button type="button" onClick={handleRemoveCharacterImage} className="px-3 py-2 bg-rose-500 text-white text-xs font-semibold rounded-lg hover:bg-rose-400">{t('ai_studio.remove_image')}</button>
                                                         </div>
                                                         <span className={`absolute top-2 right-2 px-2 py-1 text-[10px] font-bold rounded-full ${newCharacter.image.type === 'ai' ? 'bg-violet-600 text-white' : 'bg-emerald-600 text-white'}`}>
                                                             {newCharacter.image.type === 'ai' ? '✨ AI' : '📤 Upload'}
@@ -915,8 +908,8 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                                         <input type="file" accept="image/*" onChange={handleCharacterImageUpload} className="hidden" />
                                                         <div className="text-center">
                                                             <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center text-2xl mb-2 ${isDark ? 'bg-violet-600/20' : 'bg-violet-100'}`}>📷</div>
-                                                            <p className={`text-sm font-medium ${themeClasses.textSecondary}`}>Nhấn để chọn ảnh</p>
-                                                            <p className={`text-xs mt-1 ${themeClasses.textMuted}`}>PNG, JPG, WEBP (tối đa 5MB)</p>
+                                                            <p className={`text-sm font-medium ${themeClasses.textSecondary}`}>{t('ai_studio.click_to_select_image')}</p>
+                                                            <p className={`text-xs mt-1 ${themeClasses.textMuted}`}>{t('ai_studio.image_formats_max')}</p>
                                                         </div>
                                                     </label>
                                                 ) : (
@@ -934,15 +927,15 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                                     </svg>
                                                                 </div>
-                                                                <p className={`text-sm font-medium ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>AI đang tạo hình ảnh...</p>
+                                                                <p className={`text-sm font-medium ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>{t('ai_studio.ai_generating_image')}</p>
                                                             </div>
                                                         ) : (
                                                             <div className="text-center">
                                                                 <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center text-2xl mb-2 ${isDark ? 'bg-violet-600/20' : 'bg-violet-100'}`}>✨</div>
                                                                 <p className={`text-sm font-medium ${newCharacter.description.trim() ? (isDark ? 'text-violet-400' : 'text-violet-600') : themeClasses.textMuted}`}>
-                                                                    {newCharacter.description.trim() ? 'Tạo ảnh từ mô tả' : 'Nhập mô tả trước'}
+                                                                    {newCharacter.description.trim() ? t('ai_studio.generate_from_desc') : t('ai_studio.enter_desc_first')}
                                                                 </p>
-                                                                <p className={`text-xs mt-1 ${themeClasses.textMuted}`}>AI sẽ tạo ảnh dựa trên mô tả ngoại hình</p>
+                                                                <p className={`text-xs mt-1 ${themeClasses.textMuted}`}>{t('ai_studio.ai_will_generate_from_desc')}</p>
                                                             </div>
                                                         )}
                                                     </button>
@@ -956,7 +949,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                                 onClick={handleAddCharacter}
                                                 disabled={!newCharacter.name.trim()}
                                             >
-                                                ✨ Thêm vào danh sách
+                                                {t('ai_studio.add_to_list')}
                                             </Button>
                                         </div>
                                     </div>
@@ -974,11 +967,11 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                                 +
                                             </span>
                                             <span className={`text-sm font-semibold ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
-                                                Thêm nhân vật
+                                                {t('ai_studio.add_character')}
                                             </span>
                                         </div>
                                         <p className={`text-xs mt-1 ${themeClasses.textMuted}`}>
-                                            Định nghĩa nhân vật giúp AI tạo video chính xác hơn
+                                            {t('ai_studio.character_helps_ai')}
                                         </p>
                                     </button>
                                 )}
@@ -1001,11 +994,11 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                    Đang phân tích với AI...
+                                    {t('ai_studio.analyzing_with_ai')}
                                 </span>
                             ) : (
                                 <span className="flex items-center justify-center gap-2">
-                                    <span className="text-xl">✨</span> Phân tích kịch bản
+                                    {t('ai_studio.analyze_script')}
                                 </span>
                             )}
                         </Button>
@@ -1024,7 +1017,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                 type="text"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                placeholder="Tiêu đề kịch bản (tùy chọn)"
+                                placeholder={t('ai_studio.scenario_title_placeholder')}
                                 className={`w-full text-lg font-bold bg-transparent border-none focus:outline-none ${themeClasses.textPrimary}`}
                             />
                         </div>
@@ -1055,7 +1048,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                                 {/* Prompt (Editable) */}
                                                 <div>
                                                     <label className={`text-xs font-semibold uppercase tracking-wide ${themeClasses.textMuted}`}>
-                                                        Prompt (có thể chỉnh sửa)
+                                                        {t('ai_studio.prompt_editable')}
                                                     </label>
                                                     <textarea
                                                         value={scene.prompt}
@@ -1072,7 +1065,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                                 {outputType === 'video' && (
                                                     <div className={`flex items-center gap-4 p-3 rounded-xl ${isDark ? 'bg-[#0a0a0a]' : 'bg-slate-50'}`}>
                                                         <div className="flex items-center gap-2">
-                                                            <span className={`text-xs font-medium ${themeClasses.textMuted}`}>⏱️ Thời lượng:</span>
+                                                            <span className={`text-xs font-medium ${themeClasses.textMuted}`}>{t('ai_studio.duration')}:</span>
                                                             <span className={`text-sm font-bold ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
                                                                 {scene.duration || DEFAULT_DURATION}s
                                                             </span>
@@ -1107,7 +1100,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                                                 />
                                                                 <div className="flex-1 min-w-0">
                                                                     <p className={`text-xs font-medium ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
-                                                                        📸 Ảnh tham chiếu
+                                                                        {t('ai_studio.reference_image')}
                                                                     </p>
                                                                     <p className={`text-xs truncate ${themeClasses.textMuted}`}>
                                                                         {scene.image.name || 'Reference image'}
@@ -1116,7 +1109,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                                                 <button
                                                                     onClick={() => handleUpdateScene(index, 'image', null)}
                                                                     className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-rose-500/20 text-rose-400' : 'hover:bg-rose-100 text-rose-500'}`}
-                                                                    title="Xóa ảnh"
+                                                                    title={t('ai_studio.remove_image')}
                                                                 >
                                                                     ✕
                                                                 </button>
@@ -1128,10 +1121,10 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                                                 </div>
                                                                 <div className="flex-1">
                                                                     <p className={`text-xs font-medium ${themeClasses.textSecondary}`}>
-                                                                        Thêm ảnh tham chiếu (tùy chọn)
+                                                                        {t('ai_studio.add_reference_image')}
                                                                     </p>
                                                                     <p className={`text-xs ${themeClasses.textMuted}`}>
-                                                                        Video sẽ được tạo dựa trên ảnh này
+                                                                        {t('ai_studio.video_from_image')}
                                                                     </p>
                                                                 </div>
                                                                 <input
@@ -1147,7 +1140,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                                                     }}
                                                                 />
                                                                 <span className={`px-3 py-1.5 rounded-lg text-xs font-medium ${isDark ? 'bg-[#2a2a2a] text-white' : 'bg-slate-100 text-slate-700'}`}>
-                                                                    Chọn ảnh
+                                                                    {t('ai_studio.select_image')}
                                                                 </span>
                                                             </label>
                                                         )}
@@ -1162,19 +1155,19 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                             {/* Summary Sidebar */}
                             <div className="lg:col-span-1">
                                 <div className={`sticky top-24 p-5 rounded-2xl ${isDark ? 'bg-[#1a1a1a] border border-[#2a2a2a]' : 'bg-white border border-slate-200 shadow-sm'}`}>
-                                    <h3 className={`text-sm font-bold mb-4 ${themeClasses.textPrimary}`}>📊 Tổng quan</h3>
+                                    <h3 className={`text-sm font-bold mb-4 ${themeClasses.textPrimary}`}>{t('ai_studio.overview')}</h3>
 
                                     <div className="space-y-3">
                                         {/* Scenes count */}
                                         <div className={`flex items-center justify-between p-3 rounded-xl ${isDark ? 'bg-[#0a0a0a]' : 'bg-slate-50'}`}>
-                                            <span className={`text-xs ${themeClasses.textMuted}`}>Số cảnh</span>
-                                            <span className={`text-sm font-bold ${themeClasses.textPrimary}`}>{scenes.length} cảnh</span>
+                                            <span className={`text-xs ${themeClasses.textMuted}`}>{t('ai_studio.scene_count')}</span>
+                                            <span className={`text-sm font-bold ${themeClasses.textPrimary}`}>{scenes.length} {t('ai_studio.scenes')}</span>
                                         </div>
 
                                         {/* Total duration */}
                                         {outputType === 'video' && (
                                             <div className={`flex items-center justify-between p-3 rounded-xl ${isDark ? 'bg-[#0a0a0a]' : 'bg-slate-50'}`}>
-                                                <span className={`text-xs ${themeClasses.textMuted}`}>Tổng thời lượng</span>
+                                                <span className={`text-xs ${themeClasses.textMuted}`}>{t('ai_studio.total_duration')}</span>
                                                 <span className={`text-sm font-bold ${themeClasses.textPrimary}`}>{formatDuration(getTotalDuration())}</span>
                                             </div>
                                         )}
@@ -1184,14 +1177,14 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                             <div className={`flex items-center justify-between p-3 rounded-xl ${isDark ? 'bg-[#0a0a0a]' : 'bg-slate-50'}`}>
                                                 <span className={`text-xs ${themeClasses.textMuted}`}>Audio</span>
                                                 <span className={`text-sm font-medium ${settings.generate_audio ? 'text-emerald-500' : themeClasses.textMuted}`}>
-                                                    {settings.generate_audio ? '🔊 Bật' : '🔇 Tắt'}
+                                                    {settings.generate_audio ? t('ai_studio.on') : t('ai_studio.off')}
                                                 </span>
                                             </div>
                                         )}
 
                                         {/* Credits */}
                                         <div className={`flex items-center justify-between p-4 rounded-xl ${isDark ? 'bg-gradient-to-r from-violet-600/10 to-indigo-600/10 border border-violet-500/20' : 'bg-gradient-to-r from-violet-50 to-indigo-50 border border-violet-200'}`}>
-                                            <span className={`text-xs font-medium ${isDark ? 'text-violet-300' : 'text-violet-700'}`}>✨ Tổng credits</span>
+                                            <span className={`text-xs font-medium ${isDark ? 'text-violet-300' : 'text-violet-700'}`}>{t('ai_studio.total_credits')}</span>
                                             <span className={`text-lg font-bold ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>{totalCredits.toLocaleString()}</span>
                                         </div>
 
@@ -1199,7 +1192,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                         {currentCredits < totalCredits && (
                                             <div className={`p-3 rounded-xl ${isDark ? 'bg-rose-500/10 border border-rose-500/20' : 'bg-rose-50 border border-rose-200'}`}>
                                                 <p className="text-xs text-rose-500 text-center">
-                                                    ⚠️ Cần thêm {(totalCredits - currentCredits).toLocaleString()} credits
+                                                    {t('ai_studio.need_more_credits', { count: (totalCredits - currentCredits).toLocaleString() })}
                                                 </p>
                                             </div>
                                         )}
@@ -1213,14 +1206,14 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                             onClick={handleGenerate}
                                             disabled={currentCredits < totalCredits}
                                         >
-                                            🚀 Tạo {scenes.length} {outputType === 'video' ? 'video' : 'ảnh'}
+                                            {t('ai_studio.generate_count', { count: scenes.length, type: outputType === 'video' ? 'video' : t('ai_studio.image') })}
                                         </Button>
                                         <Button
                                             variant="secondary"
                                             className="w-full"
                                             onClick={handleReset}
                                         >
-                                            ← Quay lại
+                                            {t('common.back')}
                                         </Button>
                                     </div>
                                 </div>
@@ -1250,12 +1243,12 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                             </div>
 
                             <h2 className={`text-xl font-bold mb-2 ${themeClasses.textPrimary}`}>
-                                {scenario.status === 'generating' ? 'Đang tạo video...' :
-                                    scenario.status === 'completed' ? 'Hoàn thành!' :
-                                        scenario.status === 'partial' ? 'Hoàn thành một phần' : 'Thất bại'}
+                                {scenario.status === 'generating' ? t('ai_studio.generating_video') :
+                                    scenario.status === 'completed' ? t('ai_studio.generation_completed') :
+                                        scenario.status === 'partial' ? t('ai_studio.partially_completed') : t('ai_studio.status_failed')}
                             </h2>
                             <p className={themeClasses.textSecondary}>
-                                {scenario.completed_scenes} / {scenario.total_scenes} cảnh đã hoàn thành
+                                {t('ai_studio.scenes_completed_count', { completed: scenario.completed_scenes, total: scenario.total_scenes })}
                             </p>
 
                             {/* Progress Bar */}
@@ -1293,7 +1286,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                         {/* Scene Info */}
                                         <div className="flex-1 min-w-0">
                                             <p className={`font-medium truncate ${themeClasses.textPrimary}`}>
-                                                Cảnh {scene.order}
+                                                {t('ai_studio.scene')} {scene.order}
                                             </p>
                                             <p className={`text-xs truncate ${themeClasses.textMuted}`}>
                                                 {scene.description}
@@ -1311,7 +1304,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                                                 rel="noopener noreferrer"
                                                 className="px-3 py-2 rounded-lg text-xs font-semibold bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg shadow-violet-500/25"
                                             >
-                                                👁️ Xem
+                                                {t('common.view')}
                                             </a>
                                         )}
                                     </div>
@@ -1323,10 +1316,10 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                         {scenario.status === 'completed' && (
                             <div className={`p-6 rounded-2xl text-center ${isDark ? 'bg-[#1a1a1a] border border-[#2a2a2a]' : 'bg-white border border-slate-200'}`}>
                                 <p className={`text-sm ${themeClasses.textMuted}`}>
-                                    🎬 Tính năng gộp video đang được phát triển
+                                    {t('ai_studio.merge_video_coming_soon')}
                                 </p>
                                 <p className={`text-xs mt-1 ${themeClasses.textMuted}`}>
-                                    Hiện tại bạn có thể tải từng video riêng lẻ
+                                    {t('ai_studio.download_individual_videos')}
                                 </p>
                             </div>
                         )}
@@ -1335,7 +1328,7 @@ Cảnh 3: Cô ấy đi ra ban công, ngắm nhìn thành phố từ trên cao.
                         {scenario.status !== 'generating' && (
                             <div className="flex justify-center">
                                 <Button variant="secondary" onClick={handleReset}>
-                                    ✨ Tạo kịch bản mới
+                                    {t('ai_studio.create_new_scenario')}
                                 </Button>
                             </div>
                         )}

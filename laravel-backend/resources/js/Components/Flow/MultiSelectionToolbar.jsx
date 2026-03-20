@@ -46,12 +46,12 @@ export default function MultiSelectionToolbar({
                     variant="gradient"
                     onClick={wrapSelectedNodesInLoop}
                     className="group rounded-full"
-                    title="Wrap in Loop (⌘L)"
+                    title={t('flows.editor.multi_selection.wrap_in_loop') + ' (⌘L)'}
                 >
                     <svg className="w-4 h-4 transition-transform group-hover:rotate-180 duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    <span>Loop</span>
+                    <span>{t('flows.editor.nodes.loop')}</span>
                 </Button>
 
                 {/* Divider */}
@@ -63,7 +63,7 @@ export default function MultiSelectionToolbar({
                     size="icon-sm"
                     onClick={deleteSelectedNodes}
                     className="group rounded-full"
-                    title="Delete (⌫)"
+                    title={t('common.delete') + ' (⌫)'}
                 >
                     <svg className="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -76,7 +76,7 @@ export default function MultiSelectionToolbar({
                     size="icon-xs"
                     onClick={clearSelection}
                     className="rounded-full"
-                    title="Deselect all (Esc)"
+                    title={t('flows.editor.multi_selection.deselect_all') + ' (Esc)'}
                 >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

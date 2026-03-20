@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 export default function Navigation() {
+    const { t } = useTranslation();
     const { theme, toggleTheme } = useTheme();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const navLinks = [
-        { href: '#features', label: 'Features' },
-        { href: '#how-it-works', label: 'How It Works' },
-        { href: '#about', label: 'About' },
-        { href: '#contact', label: 'Contact' },
+        { href: '#features', label: t('navigation.features') },
+        { href: '#how-it-works', label: t('navigation.how_it_works') },
+        { href: '#about', label: t('navigation.about') },
+        { href: '#contact', label: t('navigation.contact') },
     ];
 
     const handleNavClick = (e, href) => {
@@ -67,7 +69,7 @@ export default function Navigation() {
                         <button
                             onClick={toggleTheme}
                             className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors"
-                            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                            aria-label={theme === 'dark' ? t('theme.light_mode') : t('theme.dark_mode')}
                         >
                             {theme === 'dark' ? (
                                 // Sun icon for dark mode

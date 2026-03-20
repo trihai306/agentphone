@@ -317,7 +317,7 @@ function ModalHeader({ data, step, onClose, isDark }) {
                         <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             {titles[step]}
                         </h2>
-                        <p className="text-sm text-gray-500">Bước {step}/3 • {data.name || 'Collection mới'}</p>
+                        <p className="text-sm text-gray-500">{t('data_collections.wizard.step_of', { step, total: 3 })} • {data.name || t('data_collections.wizard.new_collection')}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">

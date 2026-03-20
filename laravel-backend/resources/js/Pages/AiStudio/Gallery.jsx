@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, router, Head } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AppLayout from '@/Layouts/AppLayout';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
@@ -7,6 +8,7 @@ import FolderSelectModal from '@/Components/Media/FolderSelectModal';
 import { Icon } from '@/Components/UI';
 
 export default function Gallery({ generations, filters, currentCredits = 0, folders = [] }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const { showConfirm } = useConfirm();
     const isDark = theme === 'dark';
@@ -44,11 +46,11 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
 
     const handleDelete = async (id) => {
         const confirmed = await showConfirm({
-            title: 'Xoá tác phẩm',
-            message: 'Bạn có chắc chắn muốn xoá tác phẩm này không?',
+            title: t('ai_studio.delete_artwork'),
+            message: t('ai_studio.confirm_delete'),
             type: 'danger',
-            confirmText: 'Xoá',
-            cancelText: 'Huỷ',
+            confirmText: t('common.delete'),
+            cancelText: t('common.cancel'),
         });
 
         if (confirmed) {
@@ -74,10 +76,10 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                 : 'bg-rose-50 text-rose-600 border-rose-200',
         };
         const labels = {
-            completed: '✓ Hoàn thành',
-            processing: '⏳ Đang xử lý',
-            pending: '⏳ Chờ xử lý',
-            failed: '✕ Thất bại',
+            completed: t('ai_studio.status_completed'),
+            processing: t('ai_studio.status_processing'),
+            pending: t('ai_studio.status_pending'),
+            failed: t('ai_studio.status_failed'),
         };
         return { style: styles[status] || styles.failed, label: labels[status] || status };
     };
@@ -94,7 +96,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
     };
 
     return (
-        <AppLayout title="AI Gallery">
+        <AppLayout title={t('ai_studio.gallery')}>
             <div className={`min-h-screen transition-colors duration-300 ${themeClasses.pageBg}`}>
                 <div className="max-w-[1600px] mx-auto px-6 py-8">
                     {/* Premium Header */}
@@ -107,11 +109,11 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                     <Icon name="palette" className="w-5 h-5" />
                                 </div>
                                 <h1 className={`text-2xl font-bold ${themeClasses.textPrimary}`}>
-                                    AI Gallery
+                                    {t('ai_studio.gallery')}
                                 </h1>
                             </div>
                             <p className={`text-sm ${themeClasses.textMuted}`}>
-                                {generations.total} tác phẩm đã tạo
+                                {t('ai_studio.artworks_created', { count: generations.total })}
                             </p>
                         </div>
 
@@ -161,7 +163,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                 </svg>
-                                Tạo mới
+                                {t('ai_studio.create_new')}
                             </Link>
                         </div>
                     </div>
@@ -171,7 +173,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                             <div>
                                 <label className={`block text-xs font-semibold mb-2 ${themeClasses.textSecondary}`}>
-                                    Loại
+                                    {t('ai_studio.type')}
                                 </label>
                                 <select
                                     value={localFilters.type || ''}
@@ -180,15 +182,15 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                         ? 'bg-[#0a0a0a] border-[#2a2a2a] text-white focus:ring-violet-500/30 focus:border-violet-500'
                                         : 'bg-slate-50 border-slate-200 text-slate-900 focus:ring-violet-500/20 focus:border-violet-400'}`}
                                 >
-                                    <option value="">Tất cả</option>
-                                    <option value="image">Hình ảnh</option>
-                                    <option value="video">Video</option>
+                                    <option value="">{t('common.all')}</option>
+                                    <option value="image">{t('ai_studio.image')}</option>
+                                    <option value="video">{t('ai_studio.video')}</option>
                                 </select>
                             </div>
 
                             <div>
                                 <label className={`block text-xs font-semibold mb-2 ${themeClasses.textSecondary}`}>
-                                    Trạng thái
+                                    {t('common.status')}
                                 </label>
                                 <select
                                     value={localFilters.status || ''}
@@ -197,16 +199,16 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                         ? 'bg-[#0a0a0a] border-[#2a2a2a] text-white focus:ring-violet-500/30 focus:border-violet-500'
                                         : 'bg-slate-50 border-slate-200 text-slate-900 focus:ring-violet-500/20 focus:border-violet-400'}`}
                                 >
-                                    <option value="">Tất cả</option>
-                                    <option value="completed">✓ Hoàn thành</option>
-                                    <option value="processing">⏳ Đang xử lý</option>
-                                    <option value="failed">✕ Thất bại</option>
+                                    <option value="">{t('common.all')}</option>
+                                    <option value="completed">{t('ai_studio.status_completed')}</option>
+                                    <option value="processing">{t('ai_studio.status_processing')}</option>
+                                    <option value="failed">{t('ai_studio.status_failed')}</option>
                                 </select>
                             </div>
 
                             <div className="md:col-span-2">
                                 <label className={`block text-xs font-semibold mb-2 ${themeClasses.textSecondary}`}>
-                                    Tìm kiếm
+                                    {t('common.search')}
                                 </label>
                                 <div className="relative">
                                     <svg className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${themeClasses.textMuted}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -214,7 +216,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                     </svg>
                                     <input
                                         type="text"
-                                        placeholder="Tìm theo prompt..."
+                                        placeholder={t('ai_studio.search_by_prompt')}
                                         value={localFilters.search || ''}
                                         onChange={(e) => setLocalFilters({ ...localFilters, search: e.target.value })}
                                         className={`w-full pl-11 pr-4 py-2.5 rounded-xl text-sm transition-all duration-200 border focus:outline-none focus:ring-2 ${isDark
@@ -229,7 +231,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                     onClick={applyFilters}
                                     className="flex-1 px-5 py-2.5 text-sm font-semibold rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 transition-all duration-200"
                                 >
-                                    Lọc
+                                    {t('common.filter')}
                                 </button>
                                 <button
                                     onClick={clearFilters}
@@ -237,7 +239,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                         ? 'text-slate-400 hover:text-white hover:bg-[#1a1a1a]'
                                         : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'}`}
                                 >
-                                    Xoá
+                                    {t('common.clear')}
                                 </button>
                             </div>
                         </div>
@@ -280,7 +282,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                                             ? 'border-violet-500/30 border-t-violet-500'
                                                             : 'border-violet-200 border-t-violet-500'}`} />
                                                         <span className={`text-sm font-medium ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
-                                                            Đang tạo...
+                                                            {t('ai_studio.generating')}
                                                         </span>
                                                     </>
                                                 ) : (
@@ -291,7 +293,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                                             <Icon name="xCircle" className="w-5 h-5" />
                                                         </div>
                                                         <span className={`text-sm font-medium ${isDark ? 'text-rose-400' : 'text-rose-600'}`}>
-                                                            Thất bại
+                                                            {t('ai_studio.status_failed')}
                                                         </span>
                                                     </>
                                                 )}
@@ -318,7 +320,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                         {/* Type Badge */}
                                         <div className="absolute top-3 left-3">
                                             <span className={`px-2.5 py-1 text-xs font-semibold rounded-lg border backdrop-blur-sm ${getTypeBadge(gen.type)}`}>
-                                                {gen.type === 'video' ? 'Video' : 'Ảnh'}
+                                                {gen.type === 'video' ? t('ai_studio.video') : t('ai_studio.image')}
                                             </span>
                                         </div>
                                     </div>
@@ -382,10 +384,10 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                 <Icon name="palette" className="w-10 h-10" />
                             </div>
                             <h3 className={`text-xl font-semibold mb-2 ${themeClasses.textPrimary}`}>
-                                Chưa có tác phẩm nào
+                                {t('ai_studio.no_artworks')}
                             </h3>
                             <p className={`text-sm mb-6 max-w-md mx-auto ${themeClasses.textMuted}`}>
-                                Bắt đầu sáng tạo hình ảnh và video tuyệt vời với AI. Chất lượng cao, tốc độ nhanh.
+                                {t('ai_studio.empty_description')}
                             </p>
                             <Link
                                 href="/ai-studio"
@@ -394,7 +396,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                 </svg>
-                                Bắt đầu sáng tạo
+                                {t('ai_studio.start_creating')}
                             </Link>
                         </div>
                     )}
@@ -472,7 +474,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                                 ? 'border-violet-500/30 border-t-violet-500'
                                                 : 'border-violet-200 border-t-violet-500'}`} />
                                             <p className={`text-lg font-medium ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
-                                                Đang tạo...
+                                                {t('ai_studio.generating')}
                                             </p>
                                         </>
                                     ) : (
@@ -481,7 +483,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                                 <Icon name="xCircle" className="w-8 h-8" />
                                             </div>
                                             <p className={`text-lg font-medium ${isDark ? 'text-rose-400' : 'text-rose-600'}`}>
-                                                Tạo thất bại
+                                                {t('ai_studio.generation_failed')}
                                             </p>
                                             {selectedGeneration.error_message && (
                                                 <p className={`text-sm mt-2 max-w-md mx-auto ${themeClasses.textMuted}`}>
@@ -502,7 +504,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
 
                             <div className="flex flex-wrap items-center gap-3 mb-4">
                                 <span className={`px-2.5 py-1 text-xs font-semibold rounded-lg border ${getTypeBadge(selectedGeneration.type)}`}>
-                                    {selectedGeneration.type === 'video' ? 'Video' : 'Hình ảnh'}
+                                    {selectedGeneration.type === 'video' ? t('ai_studio.video') : t('ai_studio.image')}
                                 </span>
                                 <span className={`px-2.5 py-1 text-xs font-semibold rounded-lg border ${getStatusBadge(selectedGeneration.status).style}`}>
                                     {getStatusBadge(selectedGeneration.status).label}
@@ -533,7 +535,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                                 </svg>
-                                                Tải xuống
+                                                {t('common.download')}
                                             </a>
 
                                             {/* Save to Media with Folder Selection */}
@@ -547,7 +549,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                     </svg>
-                                                    Lưu vào Media
+                                                    {t('ai_studio.save_to_media')}
                                                     <svg className={`w-3 h-3 transition-transform ${showSaveDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                                     </svg>
@@ -571,7 +573,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                                                             </svg>
-                                                            <span>Thư mục gốc</span>
+                                                            <span>{t('media.root_folder')}</span>
                                                         </button>
                                                         <button
                                                             onClick={() => {
@@ -586,7 +588,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                                                             </svg>
-                                                            <span>Chọn thư mục...</span>
+                                                            <span>{t('ai_studio.choose_folder')}</span>
                                                         </button>
                                                     </div>
                                                 )}
@@ -604,7 +606,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
-                                    Xoá
+                                    {t('common.delete')}
                                 </button>
                             </div>
                         </div>
@@ -623,7 +625,7 @@ export default function Gallery({ generations, filters, currentCredits = 0, fold
                 }}
                 folders={folders}
                 isDark={isDark}
-                title="Lưu vào thư mục"
+                title={t('ai_studio.save_to_folder')}
             />
         </AppLayout >
     );

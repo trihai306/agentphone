@@ -11,7 +11,7 @@ export function WaitConditionsConfig({ data, updateData, isDark, nodeType }) {
     const TimeoutSection = () => (
         <div>
             <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                Timeout (ms)
+                {t('flows.editor.config.timeout')}
             </label>
             <input
                 type="number"
@@ -48,13 +48,13 @@ export function WaitConditionsConfig({ data, updateData, isDark, nodeType }) {
                 <div className="space-y-4">
                     <div className={`p-3 rounded-lg ${isDark ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-purple-50 border border-purple-100'}`}>
                         <p className={`text-sm ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
-                            Wait until specific text appears on screen.
+                            {t('flows.editor.config.wait_for_text_desc')}
                         </p>
                     </div>
 
                     <div>
                         <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Text to Wait For
+                            {t('flows.editor.config.text_to_wait_for')}
                         </label>
                         <input
                             type="text"
@@ -67,7 +67,7 @@ export function WaitConditionsConfig({ data, updateData, isDark, nodeType }) {
 
                     <div>
                         <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Check Interval (ms)
+                            {t('flows.editor.config.check_interval_ms')}
                         </label>
                         <input
                             type="number"
@@ -79,17 +79,17 @@ export function WaitConditionsConfig({ data, updateData, isDark, nodeType }) {
                             className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
                         />
                         <p className={`text-[10px] mt-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                            How often to check for the text
+                            {t('flows.editor.config.check_interval_desc')}
                         </p>
                     </div>
 
                     <div className="flex items-center justify-between">
                         <div>
                             <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                Case Sensitive
+                                {t('flows.editor.config.case_sensitive')}
                             </p>
                             <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Match exact uppercase/lowercase
+                                {t('flows.editor.config.case_sensitive_desc')}
                             </p>
                         </div>
                         <button
@@ -113,13 +113,13 @@ export function WaitConditionsConfig({ data, updateData, isDark, nodeType }) {
                 <div className="space-y-4">
                     <div className={`p-3 rounded-lg ${isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50 border border-blue-100'}`}>
                         <p className={`text-sm ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
-                            Wait until a specific Android Activity is displayed.
+                            {t('flows.editor.config.wait_for_activity_desc')}
                         </p>
                     </div>
 
                     <div>
                         <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Activity Name
+                            {t('flows.editor.config.activity_name')}
                         </label>
                         <input
                             type="text"
@@ -129,7 +129,7 @@ export function WaitConditionsConfig({ data, updateData, isDark, nodeType }) {
                             className={`w-full border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-blue-500 transition-colors ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-gray-600' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`}
                         />
                         <p className={`text-[10px] mt-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                            💡 Full or partial activity class name
+                            {t('flows.editor.config.activity_name_hint')}
                         </p>
                     </div>
 
@@ -146,13 +146,13 @@ export function WaitConditionsConfig({ data, updateData, isDark, nodeType }) {
                 <div className="space-y-4">
                     <div className={`p-3 rounded-lg ${isDark ? 'bg-green-500/10 border border-green-500/20' : 'bg-green-50 border border-green-100'}`}>
                         <p className={`text-sm ${isDark ? 'text-green-400' : 'text-green-600'}`}>
-                            Wait until a specific app is in foreground.
+                            {t('flows.editor.config.wait_for_package_desc')}
                         </p>
                     </div>
 
                     <div>
                         <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Package Name
+                            {t('flows.editor.config.package_name')}
                         </label>
                         <input
                             type="text"
@@ -162,7 +162,7 @@ export function WaitConditionsConfig({ data, updateData, isDark, nodeType }) {
                             className={`w-full border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-green-500 transition-colors ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-gray-600' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`}
                         />
                         <p className={`text-[10px] mt-1 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                            💡 Use `Open App` node to get package names
+                            {t('flows.editor.config.package_name_hint')}
                         </p>
                     </div>
 
@@ -179,10 +179,10 @@ export function WaitConditionsConfig({ data, updateData, isDark, nodeType }) {
                 <div className="space-y-4">
                     <div className={`p-3 rounded-lg ${isDark ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-amber-50 border border-amber-100'}`}>
                         <p className={`text-sm ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
-                            Wait until the screen becomes idle (no animations or transitions).
+                            {t('flows.editor.config.wait_idle_desc')}
                         </p>
                         <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Useful after app launches or page transitions
+                            {t('flows.editor.config.wait_idle_hint')}
                         </p>
                     </div>
 
@@ -190,7 +190,7 @@ export function WaitConditionsConfig({ data, updateData, isDark, nodeType }) {
 
                     <div className={`p-3 rounded-lg ${isDark ? 'bg-[#1a1a1a] border border-[#2a2a2a]' : 'bg-gray-50 border border-gray-100'}`}>
                         <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                            ℹ️ This action uses Android's <code className="text-cyan-500">waitForIdle()</code> API to detect when the UI has stopped changing.
+                            {t('flows.editor.config.wait_idle_api_info')}
                         </p>
                     </div>
                 </div>

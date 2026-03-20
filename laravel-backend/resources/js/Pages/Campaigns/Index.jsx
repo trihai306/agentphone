@@ -238,7 +238,7 @@ export default function Index({ campaigns, stats }) {
                                             <div className="flex justify-between text-xs mb-1">
                                                 <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>Jobs</span>
                                                 <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-                                                    {campaign.records_processed || 0} / {campaign.total_records || 0} hoàn thành
+                                                    {campaign.records_processed || 0} / {campaign.total_records || 0} {t('campaigns.meta.completed')}
                                                 </span>
                                             </div>
                                             <div className={`h-2 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-gray-100'}`}>
@@ -319,11 +319,11 @@ export default function Index({ campaigns, stats }) {
                                             { icon: '→', isArrow: true },
                                             { icon: 'credits', title: 'Workflow Chain', desc: 'WF1 → WF2 → ...' },
                                             { icon: '→', isArrow: true },
-                                            { icon: 'device', title: 'Devices', desc: 'Phân phối đều' },
+                                            { icon: 'device', title: 'Devices', desc: t('campaigns.empty.distribute_evenly') },
                                             { icon: '→', isArrow: true },
                                             { icon: 'refresh', title: 'Pool Data', desc: 'Loop data' },
                                             { icon: '→', isArrow: true },
-                                            { icon: 'target', title: 'Jobs', desc: 'Tự động chạy' },
+                                            { icon: 'target', title: 'Jobs', desc: t('campaigns.empty.auto_run') },
                                         ].map((item, i) => (
                                             item.isArrow ? (
                                                 <span key={i} className={`text-lg ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>→</span>

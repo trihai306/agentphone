@@ -44,20 +44,20 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
 
     // Style options
     const styleOptions = [
-        { id: 'cinematic', icon: 'film', name: 'Cinematic', desc: 'Hollywood style' },
-        { id: 'documentary', icon: 'video', name: 'Documentary', desc: 'Real & authentic' },
-        { id: 'commercial', icon: 'diamond', name: 'Commercial', desc: 'Premium ads' },
-        { id: 'social_media', icon: 'device', name: 'Social', desc: 'Viral content' },
-        { id: 'storytelling', icon: 'sparkle', name: 'Story', desc: 'Emotional' },
-        { id: 'minimal', icon: '◯', name: 'Minimal', desc: 'Clean & simple' },
+        { id: 'cinematic', icon: 'film', name: t('ai_studio.scenario.style_cinematic'), desc: t('ai_studio.scenario.style_cinematic_desc') },
+        { id: 'documentary', icon: 'video', name: t('ai_studio.scenario.style_documentary'), desc: t('ai_studio.scenario.style_documentary_desc') },
+        { id: 'commercial', icon: 'diamond', name: t('ai_studio.scenario.style_commercial'), desc: t('ai_studio.scenario.style_commercial_desc') },
+        { id: 'social_media', icon: 'device', name: t('ai_studio.scenario.style_social'), desc: t('ai_studio.scenario.style_social_desc') },
+        { id: 'storytelling', icon: 'sparkle', name: t('ai_studio.scenario.style_story'), desc: t('ai_studio.scenario.style_story_desc') },
+        { id: 'minimal', icon: '◯', name: t('ai_studio.scenario.style_minimal'), desc: t('ai_studio.scenario.style_minimal_desc') },
     ];
 
     const platformOptions = [
-        { id: 'general', name: 'Đa nền tảng', icon: 'globe' },
+        { id: 'general', name: t('ai_studio.scenario.multi_platform'), icon: 'globe' },
         { id: 'youtube', name: 'YouTube', icon: 'play' },
         { id: 'tiktok', name: 'TikTok', icon: 'music' },
         { id: 'instagram', name: 'Instagram', icon: 'camera' },
-        { id: 'ads', name: 'Quảng cáo', icon: 'briefcase' },
+        { id: 'ads', name: t('ai_studio.scenario.advertising'), icon: 'briefcase' },
     ];
 
     const models = outputType === 'video' ? videoModels : imageModels;
@@ -97,7 +97,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
     // Handlers
     const handleParse = async () => {
         if (!script.trim() || script.length < 10) {
-            addToast('Vui lòng nhập kịch bản (ít nhất 10 ký tự)', 'warning');
+            addToast(t('ai_studio.scenario.please_enter_script'), 'warning');
             return;
         }
 
@@ -123,7 +123,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                 await estimateCredits(data.scenes);
             }
         } catch (error) {
-            addToast(error.response?.data?.error || 'Không thể phân tích kịch bản', 'error');
+            addToast(error.response?.data?.error || t('ai_studio.scenario.cannot_analyze_script'), 'error');
         } finally {
             setParsing(false);
         }
@@ -143,11 +143,11 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
 
     const handleGenerate = async () => {
         if (scenes.length === 0) {
-            addToast('Không có cảnh nào để tạo', 'warning');
+            addToast(t('ai_studio.scenario.no_scenes_to_generate'), 'warning');
             return;
         }
         if (currentCredits < totalCredits) {
-            addToast(`Không đủ credits. Cần ${totalCredits}, hiện có ${currentCredits}`, 'warning');
+            addToast(t('ai_studio.scenario.insufficient_credits_detail', { needed: totalCredits, have: currentCredits }), 'warning');
             return;
         }
 
@@ -177,11 +177,11 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                     setStep('input');
                     setAiMetadata(null);
 
-                    addToast('Đã bắt đầu tạo video! Theo dõi tiến độ bên dưới.', 'success');
+                    addToast(t('ai_studio.scenario.started_generating'), 'success');
                 }
             }
         } catch (error) {
-            addToast(error.response?.data?.error || 'Không thể tạo kịch bản', 'error');
+            addToast(error.response?.data?.error || t('ai_studio.scenario.cannot_generate_scenario'), 'error');
         } finally {
             setParsing(false);
         }
@@ -217,7 +217,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
         : 'hover:bg-white hover:border-slate-300';
 
     return (
-        <AppLayout title="AI Kịch Bản">
+        <AppLayout title={t('ai_studio.scenario.ai_scenario')}>
             <div className={`min-h-screen ${isDark ? 'bg-[#050505]' : 'bg-gradient-to-br from-slate-50 to-slate-100'}`}>
                 {/* Gradient Background */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -236,10 +236,10 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                             </Link>
                             <div>
                                 <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                    AI Kịch Bản
+                                    {t('ai_studio.scenario.ai_scenario')}
                                 </h1>
                                 <p className={`text-sm ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
-                                    Script → Scenes → Video
+                                    {t('ai_studio.scenario.script_to_scenes_to_video')}
                                 </p>
                             </div>
                         </div>
@@ -250,14 +250,14 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${glassCard} ${glassCardHover}`}
                             >
                                 <Icon name="clipboard" className="w-4 h-4" />
-                                <span className={isDark ? 'text-slate-300' : 'text-slate-700'}>Quản lý</span>
+                                <span className={isDark ? 'text-slate-300' : 'text-slate-700'}>{t('ai_studio.scenario.manage')}</span>
                             </Link>
                             <div className={`flex items-center gap-3 px-5 py-3 rounded-2xl ${glassCard}`}>
                                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
                                     <Icon name="ai" className="w-4 h-4 text-white" />
                                 </div>
                                 <div>
-                                    <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Credits</p>
+                                    <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{t('ai_studio.credits')}</p>
                                     <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
                                         {currentCredits.toLocaleString()}
                                     </p>
@@ -275,11 +275,11 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                     <div className="flex items-center gap-3">
                                         <div className="w-3 h-3 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 animate-pulse" />
                                         <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                            <Icon name="video" className="w-4 h-4 inline-block mr-1" /> Kịch bản đang tạo ({activeScenarios.length})
+                                            <Icon name="video" className="w-4 h-4 inline-block mr-1" /> {t('ai_studio.scenario.scenarios_generating', { count: activeScenarios.length })}
                                         </h3>
                                     </div>
                                     <span className={`text-xs px-3 py-1 rounded-full ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'}`}>
-                                        Auto-refresh 5s
+                                        {t('ai_studio.scenario.auto_refresh')}
                                     </span>
                                 </div>
                             </div>
@@ -299,17 +299,17 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                 </div>
                                                 <div>
                                                     <p className={`font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                                        {s.title || 'Kịch bản mới'}
+                                                        {s.title || t('ai_studio.scenario.new_scenario')}
                                                     </p>
                                                     <div className="flex items-center gap-2 mt-0.5">
                                                         <span className={`text-xs px-2 py-0.5 rounded ${s.status === 'queued'
                                                             ? isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-700'
                                                             : isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-700'
                                                             }`}>
-                                                            {s.status === 'queued' ? 'Đang chờ' : 'Đang tạo'}
+                                                            {s.status === 'queued' ? t('ai_studio.scenario.waiting_status') : t('ai_studio.scenario.generating_status')}
                                                         </span>
                                                         <span className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                                            <>{s.output_type === 'video' ? <Icon name="video" className="w-3.5 h-3.5 inline-block mr-0.5" /> : <Icon name="media" className="w-3.5 h-3.5 inline-block mr-0.5" />} {s.total_scenes} cảnh</>
+                                                            <>{s.output_type === 'video' ? <Icon name="video" className="w-3.5 h-3.5 inline-block mr-0.5" /> : <Icon name="media" className="w-3.5 h-3.5 inline-block mr-0.5" />} {t('ai_studio.scenario.scenes_count', { count: s.total_scenes })}</>
                                                         </span>
                                                     </div>
                                                 </div>
@@ -322,7 +322,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                         {s.progress}%
                                                     </p>
                                                     <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                                        {s.completed_scenes}/{s.total_scenes} xong
+                                                        {t('ai_studio.scenario.done_count', { count: `${s.completed_scenes}/${s.total_scenes}` })}
                                                     </p>
                                                 </div>
                                                 <div className={`w-32 h-3 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
@@ -354,7 +354,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                     <span>
                                                         {scene.status === 'completed' ? '✓' : scene.status === 'generating' ? '⏳' : scene.status === 'failed' ? '✗' : '○'}
                                                     </span>
-                                                    <span>Cảnh {scene.order}</span>
+                                                    <span>{t('ai_studio.scenario.scene_number', { number: scene.order })}</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -372,9 +372,9 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                             <div className={`p-1.5 rounded-2xl ${glassCard}`}>
                                 <div className="flex gap-1">
                                     {[
-                                        { id: 'script', label: 'Kịch bản', icon: 'edit' },
-                                        { id: 'settings', label: 'Cài đặt', icon: 'settings' },
-                                        { id: 'characters', label: 'Nhân vật', icon: 'user' },
+                                        { id: 'script', label: t('ai_studio.scenario.script_tab'), icon: 'edit' },
+                                        { id: 'settings', label: t('ai_studio.scenario.settings_tab'), icon: 'settings' },
+                                        { id: 'characters', label: t('ai_studio.scenario.characters_tab'), icon: 'user' },
                                     ].map(tab => (
                                         <button
                                             key={tab.id}
@@ -394,12 +394,12 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                             {activeTab === 'script' && (
                                 <div className={`p-5 rounded-2xl ${glassCard}`}>
                                     <label className={`block text-sm font-semibold mb-3 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                                        Nhập kịch bản của bạn
+                                        {t('ai_studio.scenario.enter_your_script')}
                                     </label>
                                     <textarea
                                         value={script}
                                         onChange={(e) => setScript(e.target.value)}
-                                        placeholder="Ví dụ: Cảnh 1: Ánh bình minh chiếu rọi thành phố. Cảnh 2: Một cô gái trẻ đang chạy bộ trong công viên..."
+                                        placeholder={t('ai_studio.scenario.script_example_placeholder')}
                                         rows={12}
                                         className={`w-full px-4 py-4 rounded-xl border text-sm resize-none transition-all focus:ring-2 focus:ring-violet-500/50 ${isDark
                                             ? 'bg-black/30 border-white/10 text-white placeholder-slate-600 focus:border-violet-500/50'
@@ -408,10 +408,10 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                     />
                                     <div className="flex items-center justify-between mt-3">
                                         <span className={`text-xs ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-                                            {script.length} ký tự
+                                            {t('ai_studio.scenario.characters_count', { count: script.length })}
                                         </span>
                                         <span className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                            <Icon name="lightbulb" className="w-3.5 h-3.5 inline-block mr-0.5" /> AI sẽ tự phân tách thành các scene
+                                            <Icon name="lightbulb" className="w-3.5 h-3.5 inline-block mr-0.5" /> {t('ai_studio.scenario.ai_will_split_scenes')}
                                         </span>
                                     </div>
                                 </div>
@@ -423,7 +423,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                     {/* Output Type */}
                                     <div>
                                         <label className={`block text-sm font-semibold mb-3 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                                            Output Type
+                                            {t('ai_studio.scenario.output_type')}
                                         </label>
                                         <div className={`flex p-1 rounded-xl ${isDark ? 'bg-black/30' : 'bg-slate-100'}`}>
                                             {['video', 'image'].map((type) => (
@@ -435,7 +435,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                         : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
                                                         }`}
                                                 >
-                                                    {type === 'video' ? <><Icon name="video" className="w-4 h-4 inline-block mr-1" /> Video</> : <><Icon name="media" className="w-4 h-4 inline-block mr-1" /> Ảnh</>}
+                                                    {type === 'video' ? <><Icon name="video" className="w-4 h-4 inline-block mr-1" /> {t('ai_studio.scenario.video_label')}</> : <><Icon name="media" className="w-4 h-4 inline-block mr-1" /> {t('ai_studio.scenario.images_label')}</>}
                                                 </button>
                                             ))}
                                         </div>
@@ -444,7 +444,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                     {/* Model Selection */}
                                     <div>
                                         <label className={`block text-sm font-semibold mb-3 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                                            AI Model
+                                            {t('ai_studio.scenario.ai_model_label')}
                                         </label>
                                         <select
                                             value={model}
@@ -456,7 +456,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                         >
                                             {models.filter(m => m.enabled && !m.coming_soon).map((m) => (
                                                 <option key={m.id} value={m.id}>
-                                                    {m.name} • {m.credits_cost} credits/{outputType === 'video' ? 'sec' : 'ảnh'}
+                                                    {m.name} • {m.credits_cost} {t('ai_studio.credits')}/{outputType === 'video' ? t('ai_studio.per_second') : t('ai_studio.scenario.images_label')}
                                                 </option>
                                             ))}
                                         </select>
@@ -465,7 +465,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                     {/* Style Selection */}
                                     <div>
                                         <label className={`block text-sm font-semibold mb-3 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                                            Phong cách
+                                            {t('ai_studio.scenario.style_label')}
                                         </label>
                                         <div className="grid grid-cols-3 gap-2">
                                             {styleOptions.map((s) => (
@@ -487,7 +487,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                     {/* Platform */}
                                     <div>
                                         <label className={`block text-sm font-semibold mb-3 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                                            Nền tảng
+                                            {t('ai_studio.scenario.platform_label')}
                                         </label>
                                         <div className="flex flex-wrap gap-2">
                                             {platformOptions.map((p) => (
@@ -512,8 +512,8 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                 <div className="flex items-center gap-3">
                                                     <Icon name="link" className="w-5 h-5" />
                                                     <div>
-                                                        <p className={`font-medium text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Frame Chain</p>
-                                                        <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Chuyển cảnh mượt mà</p>
+                                                        <p className={`font-medium text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{t('ai_studio.scenario.frame_chain')}</p>
+                                                        <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{t('ai_studio.scenario.smooth_transition')}</p>
                                                     </div>
                                                 </div>
                                                 <button
@@ -533,13 +533,13 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                 <div className={`p-5 rounded-2xl ${glassCard}`}>
                                     <div className="flex items-center justify-between mb-4">
                                         <label className={`text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                                            Nhân vật xuyên suốt
+                                            {t('ai_studio.scenario.recurring_characters')}
                                         </label>
                                         <button
                                             onClick={() => setCharacters([...characters, { name: '', description: '' }])}
                                             className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gradient-to-r from-violet-600 to-indigo-600 text-white"
                                         >
-                                            + Thêm
+                                            {t('ai_studio.scenario.add_btn')}
                                         </button>
                                     </div>
 
@@ -547,7 +547,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                         <div className={`text-center py-8 rounded-xl ${isDark ? 'bg-black/20' : 'bg-slate-50'}`}>
                                             <Icon name="users" className="w-10 h-10" />
                                             <p className={`text-sm mt-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                                Thêm nhân vật để AI giữ ngoại hình nhất quán
+                                                {t('ai_studio.scenario.add_characters_for_consistency')}
                                             </p>
                                         </div>
                                     ) : (
@@ -567,7 +567,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                                     updated[idx].name = e.target.value;
                                                                     setCharacters(updated);
                                                                 }}
-                                                                placeholder="Tên nhân vật"
+                                                                placeholder={t('ai_studio.scenario.character_name_placeholder')}
                                                                 className={`w-full px-3 py-2 rounded-lg text-sm ${isDark ? 'bg-black/30 border-white/10 text-white' : 'bg-white border-slate-200'} border`}
                                                             />
                                                             <textarea
@@ -577,7 +577,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                                     updated[idx].description = e.target.value;
                                                                     setCharacters(updated);
                                                                 }}
-                                                                placeholder="Mô tả chi tiết: tuổi, tóc, trang phục, đặc điểm nổi bật..."
+                                                                placeholder={t('ai_studio.scenario.character_desc_placeholder')}
                                                                 rows={2}
                                                                 className={`w-full px-3 py-2 rounded-lg text-sm resize-none ${isDark ? 'bg-black/30 border-white/10 text-white' : 'bg-white border-slate-200'} border`}
                                                             />
@@ -612,12 +612,12 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                             </svg>
-                                            Đang phân tích...
+                                            {t('ai_studio.scenario.analyzing_script')}
                                         </span>
                                     ) : (
                                         <span className="flex items-center justify-center gap-2">
                                             <Icon name="ai" className="w-4 h-4" />
-                                            Phân tích kịch bản
+                                            {t('ai_studio.scenario.analyze_script')}
                                         </span>
                                     )}
                                 </button>
@@ -633,10 +633,10 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                         <Icon name="video" className="w-5 h-5" />
                                     </div>
                                     <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                        Kịch bản trống
+                                        {t('ai_studio.scenario.empty_scenario')}
                                     </h3>
                                     <p className={`text-sm max-w-sm text-center ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
-                                        Nhập kịch bản ở panel bên trái và nhấn "Phân tích" để AI chia thành các scene chuyên nghiệp.
+                                        {t('ai_studio.scenario.enter_script_left_panel')}
                                     </p>
                                 </div>
                             )}
@@ -650,7 +650,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                             type="text"
                                             value={title}
                                             onChange={(e) => setTitle(e.target.value)}
-                                            placeholder="Tiêu đề kịch bản..."
+                                            placeholder={t('ai_studio.scenario.scenario_title_placeholder')}
                                             className={`w-full text-xl font-bold bg-transparent border-none focus:outline-none ${isDark ? 'text-white placeholder-slate-600' : 'text-slate-900 placeholder-slate-400'}`}
                                         />
                                         {aiMetadata && (
@@ -706,7 +706,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                             <div className="flex-1 min-w-0">
                                                                 <div className="flex items-center justify-between mb-2">
                                                                     <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                                                        Cảnh {scene.order}
+                                                                        {t('ai_studio.scenario.scene_number', { number: scene.order })}
                                                                     </h4>
                                                                     <span className={`text-xs px-2 py-1 rounded-lg ${isDark ? 'bg-white/5 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
                                                                         {scene.duration}s
@@ -739,7 +739,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                                         onClick={(e) => e.stopPropagation()}
                                                                         className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-lg text-xs font-medium bg-gradient-to-r from-violet-600 to-indigo-600 text-white"
                                                                     >
-                                                                        Xem kết quả
+                                                                        {t('ai_studio.scenario.view_result')}
                                                                     </a>
                                                                 )}
                                                             </div>
@@ -761,19 +761,19 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                 <div className={`flex items-center justify-between p-4 rounded-2xl ${glassCard}`}>
                                     <div className="flex items-center gap-6">
                                         <div>
-                                            <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Scenes</p>
+                                            <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{t('ai_studio.scenes')}</p>
                                             <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{scenes.length}</p>
                                         </div>
                                         <div className={`w-px h-10 ${isDark ? 'bg-white/10' : 'bg-slate-200'}`} />
                                         <div>
-                                            <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Tổng credits</p>
+                                            <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{t('ai_studio.scenario.total_credits_label')}</p>
                                             <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{totalCredits.toLocaleString()}</p>
                                         </div>
                                         {chainMode === 'frame_chain' && (
                                             <>
                                                 <div className={`w-px h-10 ${isDark ? 'bg-white/10' : 'bg-slate-200'}`} />
                                                 <span className="px-3 py-1 rounded-lg text-xs font-medium bg-amber-500/20 text-amber-400">
-                                                    <Icon name="link" className="w-3.5 h-3.5 inline-block mr-0.5" /> Frame Chain ON
+                                                    <Icon name="link" className="w-3.5 h-3.5 inline-block mr-0.5" /> {t('ai_studio.scenario.frame_chain_on')}
                                                 </span>
                                             </>
                                         )}
@@ -784,7 +784,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                             onClick={handleReset}
                                             className={`px-6 py-3 rounded-xl font-medium ${isDark ? 'bg-white/5 text-slate-300 hover:bg-white/10' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
                                         >
-                                            ← Quay lại
+                                            ← {t('ai_studio.scenario.go_back')}
                                         </button>
                                         <button
                                             onClick={handleGenerate}
@@ -794,7 +794,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                 : isDark ? 'bg-white/5 text-slate-600 cursor-not-allowed' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                                 }`}
                                         >
-                                            Tạo {scenes.length} Video
+                                            {t('ai_studio.scenario.generate_videos', { count: scenes.length })}
                                         </button>
                                     </div>
                                 </div>
@@ -814,10 +814,10 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                             </div>
                                             <div>
                                                 <p className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                                                    {scenario.status === 'queued' ? 'Đang chờ trong hàng đợi...' : scenario.status === 'generating' ? 'Đang tạo video...' : scenario.status === 'completed' ? 'Hoàn thành!' : 'Hoàn thành một phần'}
+                                                    {scenario.status === 'queued' ? t('ai_studio.scenario.waiting_in_queue') : scenario.status === 'generating' ? t('ai_studio.scenario.generating_video') : scenario.status === 'completed' ? t('ai_studio.scenario.completed_label') : t('ai_studio.scenario.partially_completed')}
                                                 </p>
                                                 <p className={`text-sm ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
-                                                    {scenario.status === 'queued' ? 'Các cảnh sẽ được tạo tuần tự' : `${scenario.completed_scenes} / ${scenario.total_scenes} scenes`}
+                                                    {scenario.status === 'queued' ? t('ai_studio.scenario.scenes_generated_sequentially') : t('ai_studio.scenario.done_count', { count: `${scenario.completed_scenes}/${scenario.total_scenes}` })}
                                                 </p>
                                             </div>
                                         </div>
@@ -826,7 +826,7 @@ export default function Scenario({ currentCredits = 0, videoModels = [], imageMo
                                                 onClick={handleReset}
                                                 className="px-6 py-2.5 rounded-xl font-medium bg-gradient-to-r from-violet-600 to-indigo-600 text-white"
                                             >
-                                                Tạo mới
+                                                {t('ai_studio.scenario.create_new')}
                                             </button>
                                         )}
                                     </div>

@@ -31,9 +31,9 @@ export default function Index() {
     return (
         <LandingLayout>
             <SeoHead
-                title="Liên Hệ CLICKAI - Hỗ trợ 24/7"
-                description="Liên hệ với đội ngũ hỗ trợ CLICKAI qua email, điện thoại hoặc form. Hỗ trợ kỹ thuật 24/7, tư vấn giải pháp automation cho doanh nghiệp."
-                keywords="liên hệ clickai, contact, hỗ trợ, support, tư vấn"
+                title={t('contact.seo_title', 'Contact CLICKAI - 24/7 Support')}
+                description={t('contact.seo_description', 'Contact the CLICKAI support team via email, phone or form. 24/7 technical support, automation solution consultation for businesses.')}
+                keywords={t('contact.seo_keywords', 'contact clickai, contact, support, consultation')}
                 url="https://clickai.vn/contact"
             />
             {/* Hero */}

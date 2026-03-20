@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { NodeStatus } from '@/hooks/useExecutionState';
 
 /**
@@ -10,6 +11,7 @@ import { NodeStatus } from '@/hooks/useExecutionState';
 function AssertNode({ data, selected }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const { t } = useTranslation();
 
     const executionState = data?.executionState || NodeStatus.IDLE;
     const isRunning = executionState === NodeStatus.RUNNING;
@@ -27,7 +29,7 @@ function AssertNode({ data, selected }) {
             'enabled': 'Is Enabled',
             'contains': 'Contains Text',
         };
-        return labels[assertType] || 'Assert';
+        return labels[assertType] || t('flows.editor.nodes.assert');
     };
 
     return (
@@ -100,10 +102,10 @@ function AssertNode({ data, selected }) {
                         <h3 className="text-sm font-bold" style={{
                             color: isError ? '#ef4444' : isSuccess ? '#10b981' : isRunning ? '#818cf8' : color
                         }}>
-                            {isError ? '❌ Failed' : isSuccess ? '✓ Passed' : isRunning ? '🔍 Checking...' : '✓ Assert'}
+                            {isError ? t('flows.editor.node_status.failed') : isSuccess ? t('flows.editor.node_status.passed') : isRunning ? t('flows.editor.node_status.checking') : t('flows.editor.nodes.assert')}
                         </h3>
                         <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {data?.label || 'Kiểm Tra'}
+                            {data?.label || t('flows.editor.node_status.check')}
                         </p>
                     </div>
                 </div>

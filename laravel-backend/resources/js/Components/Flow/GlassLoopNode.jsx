@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { NodeStatus } from '@/hooks/useExecutionState';
 
@@ -8,6 +9,7 @@ import { NodeStatus } from '@/hooks/useExecutionState';
  * Layout: Horizontal (Input Left → Outputs Right)
  */
 function GlassLoopNode({ id, data, selected }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
@@ -83,10 +85,10 @@ function GlassLoopNode({ id, data, selected }) {
                     </div>
                     <div className="flex-1">
                         <h3 className="text-sm font-bold" style={{ color }}>
-                            {isRunning ? '⚡ Iterating...' : '🔄 Loop'}
+                            {isRunning ? `⚡ ${t('flows.editor.glass_nodes.iterating')}` : `🔄 ${t('flows.editor.glass_nodes.loop')}`}
                         </h3>
                         <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {data?.label || 'Lặp'}
+                            {data?.label || t('flows.editor.glass_nodes.loop_default_label')}
                         </p>
                     </div>
                     {/* Iteration Counter */}
@@ -122,15 +124,15 @@ function GlassLoopNode({ id, data, selected }) {
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
-                            <span>Completed</span>
+                            <span>{t('flows.editor.glass_nodes.completed')}</span>
                         </div>
                     )}
                 </div>
 
                 {/* Branch Labels */}
                 <div className={`flex justify-between px-4 py-2 text-[10px] font-semibold border-t ${isDark ? 'border-white/5' : 'border-black/5'}`}>
-                    <span style={{ color }}>↻ Each Item</span>
-                    <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>Done →</span>
+                    <span style={{ color }}>{`↻ ${t('flows.editor.glass_nodes.each_item')}`}</span>
+                    <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>{`${t('flows.editor.glass_nodes.done')} →`}</span>
                 </div>
 
                 {/* Progress Bar */}

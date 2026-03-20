@@ -1,16 +1,18 @@
 import { createContext, useContext, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 
 // Context for confirm modal
 const ConfirmContext = createContext(null);
 
 export function ConfirmProvider({ children }) {
+    const { t } = useTranslation();
     const [confirmState, setConfirmState] = useState({
         isOpen: false,
-        title: 'Xác nhận',
-        message: 'Bạn có chắc chắn?',
-        confirmText: 'Xác nhận',
-        cancelText: 'Hủy',
+        title: '',
+        message: '',
+        confirmText: '',
+        cancelText: '',
         type: 'danger',
         resolve: null,
     });
@@ -19,15 +21,15 @@ export function ConfirmProvider({ children }) {
         return new Promise((resolve) => {
             setConfirmState({
                 isOpen: true,
-                title: options.title || 'Xác nhận',
-                message: options.message || 'Bạn có chắc chắn?',
-                confirmText: options.confirmText || 'Xác nhận',
-                cancelText: options.cancelText || 'Hủy',
+                title: options.title || t('common.confirm'),
+                message: options.message || t('common.are_you_sure'),
+                confirmText: options.confirmText || t('common.confirm'),
+                cancelText: options.cancelText || t('common.cancel'),
                 type: options.type || 'danger',
                 resolve,
             });
         });
-    }, []);
+    }, [t]);
 
     const handleConfirm = useCallback(() => {
         if (confirmState.resolve) {
@@ -76,15 +78,20 @@ export default function ConfirmModal({
     isOpen,
     onClose,
     onConfirm,
-    title = 'Xác nhận',
-    message = 'Bạn có chắc chắn?',
-    confirmText = 'Xác nhận',
-    cancelText = 'Hủy',
+    title,
+    message,
+    confirmText,
+    cancelText,
     type = 'danger', // 'danger' | 'warning' | 'info' | 'success'
     icon = null,
     isLoading = false,
 }) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
+    title = title || t('common.confirm');
+    message = message || t('common.are_you_sure');
+    confirmText = confirmText || t('common.confirm');
+    cancelText = cancelText || t('common.cancel');
     const isDark = theme === 'dark';
 
     if (!isOpen) return null;

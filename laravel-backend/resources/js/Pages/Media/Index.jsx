@@ -55,7 +55,7 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
         router.post('/media', formData, {
             forceFormData: true,
             onSuccess: () => {
-                addToast(t('media.upload_success', 'Tải lên thành công'), 'success');
+                addToast(t('media.upload_success'), 'success');
             },
             onFinish: () => {
                 clearInterval(progressInterval);
@@ -107,7 +107,7 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                 onSuccess: () => {
                     setSelectedItems([]);
                     setActiveItem(null);
-                    addToast(t('media.deleted_success', 'Đã xóa thành công'), 'success');
+                    addToast(t('media.deleted_success'), 'success');
                 },
             });
         }
@@ -126,7 +126,7 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
             router.delete(`/media/${id}`, {
                 onSuccess: () => {
                     if (activeItem?.id === id) setActiveItem(null);
-                    addToast(t('media.deleted_success', 'Đã xóa thành công'), 'success');
+                    addToast(t('media.deleted_success'), 'success');
                 },
             });
         }
@@ -161,9 +161,9 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
     const copyUrl = async (url) => {
         try {
             await navigator.clipboard.writeText(url);
-            addToast(t('media.url_copied', 'Đã sao chép URL'), 'success');
+            addToast(t('media.url_copied'), 'success');
         } catch (err) {
-            addToast(t('media.copy_failed', 'Không thể sao chép'), 'error');
+            addToast(t('media.copy_failed'), 'error');
         }
     };
 
@@ -192,11 +192,11 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
-                    addToast(t('media.moved_to_folder', 'File đã được chuyển vào thư mục'), 'success');
+                    addToast(t('media.moved_to_folder'), 'success');
                 },
                 onError: (errors) => {
                     console.error('Move error:', errors);
-                    addToast(t('media.move_error', 'Không thể di chuyển file'), 'error');
+                    addToast(t('media.move_error'), 'error');
                 }
             });
         }
@@ -245,10 +245,10 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                     <div className={`px-6 py-4 border-b flex items-center justify-between ${isDark ? 'bg-[#0a0a0a] border-[#2a2a2a]' : 'bg-white border-gray-200'}`}>
                         <div className="flex items-center gap-4">
                             <h1 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                {t('media.title', 'Thư viện Media')}
+                                {t('media.title')}
                             </h1>
                             <span className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                {media?.total || 0} files
+                                {media?.total || 0} {t('media.files')}
                             </span>
                         </div>
 
@@ -270,7 +270,7 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                             {/* Search */}
                             <div className="w-48">
                                 <SearchInput
-                                    placeholder={t('common.search', 'Tìm kiếm...')}
+                                    placeholder={t('common.search')}
                                     defaultValue={filters?.search}
                                     onKeyDown={(e) => e.key === 'Enter' && applyFilter('search', e.target.value)}
                                     size="sm"
@@ -303,7 +303,7 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                                     ? isDark ? 'bg-white text-black' : 'bg-gray-900 text-white'
                                     : isDark ? 'text-gray-400 hover:text-white hover:bg-[#1a1a1a]' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
                                     }`}
-                                title={t('media.toggle_details', 'Ẩn/Hiện chi tiết')}
+                                title={t('media.toggle_details')}
                             >
                                 <Icon name="media" className="w-4 h-4" />
                             </button>
@@ -314,7 +314,7 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                                 : 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-xl shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-105'
                                 }`}>
                                 <Icon name="upload" className="w-4 h-4" />
-                                {t('media.upload', 'Tải lên')}
+                                {t('media.upload')}
                                 <input type="file" multiple className="hidden" accept="image/*,video/*" onChange={(e) => handleUpload(e.target.files)} />
                             </label>
                         </div>
@@ -334,7 +334,7 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                                     </div>
                                     <div className="flex-1">
                                         <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                            {t('media.uploading', 'Đang tải lên...')} {uploadProgress}%
+                                            {t('media.uploading')} {uploadProgress}%
                                         </p>
                                         <div className={`mt-2 h-1.5 rounded-full overflow-hidden ${isDark ? 'bg-[#2a2a2a]' : 'bg-gray-100'}`}>
                                             <div
@@ -355,7 +355,7 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                                         <Icon name="upload" className={`w-10 h-10 ${isDark ? 'text-gray-400' : 'text-gray-400'}`} />
                                     </div>
                                     <p className={`mt-4 text-lg font-medium text-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                        {t('media.drop_here', 'Thả file vào đây')}
+                                        {t('media.drop_here')}
                                     </p>
                                 </div>
                             </div>
@@ -369,7 +369,7 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                                     className={`flex items-center gap-1 text-sm font-medium ${isDark ? 'text-violet-400 hover:text-violet-300' : 'text-violet-600 hover:text-violet-500'}`}
                                 >
                                     <Icon name="home" className="w-4 h-4" />
-                                    Media
+                                    {t('media.title')}
                                 </button>
                                 <Icon name="chevronRight" className={`w-4 h-4 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
                                 <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -404,7 +404,7 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                                                     {folder}
                                                 </span>
                                                 <span className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                    {t('media.folder', 'Thư mục')}
+                                                    {t('media.folder')}
                                                 </span>
                                             </div>
                                         ))}
@@ -521,12 +521,12 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                                                     <p className={`font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.original_name}</p>
                                                     <div className="flex items-center gap-2 mt-0.5">
                                                         <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                            {item.type === 'image' ? 'Image' : 'Video'}
+                                                            {item.type === 'image' ? t('media.image') : t('media.video')}
                                                         </span>
                                                         {item.source === 'ai_generated' && (
                                                             <span className={`inline-flex items-center gap-1 text-xs ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
                                                                 <Icon name="ai" className="w-3 h-3" />
-                                                                AI
+                                                                {t('media.ai_label')}
                                                             </span>
                                                         )}
                                                     </div>
@@ -544,17 +544,17 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                                         <Icon name="media" className={`w-10 h-10 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
                                     </div>
                                     <h3 className={`mt-6 text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                        {t('media.no_files', 'Chưa có file nào')}
+                                        {t('media.no_files')}
                                     </h3>
                                     <p className={`mt-2 text-sm max-w-sm text-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                        {t('media.upload_first_file', 'Tải lên hoặc kéo thả file vào đây để bắt đầu')}
+                                        {t('media.upload_first_file')}
                                     </p>
                                     <label className={`mt-6 flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold cursor-pointer transition-all duration-300 ${isDark
                                         ? 'bg-white/10 text-white hover:bg-white/20 shadow-lg shadow-black/20 border border-white/10'
                                         : 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-xl shadow-violet-500/25 hover:shadow-violet-500/40 hover:scale-105'
                                         }`}>
                                         <Icon name="upload" className="w-5 h-5" />
-                                        {t('media.upload_files', 'Tải lên file')}
+                                        {t('media.upload_files')}
                                         <input type="file" multiple className="hidden" accept="image/*,video/*" onChange={(e) => handleUpload(e.target.files)} />
                                     </label>
                                 </div>
@@ -647,7 +647,7 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                                     }`}
                             >
                                 <Icon name="folder" className="w-4 h-4 flex-shrink-0" />
-                                <span>{t('media.create_folder', 'Tạo thư mục mới')}</span>
+                                <span>{t('media.create_new_folder')}</span>
                             </button>
                         </div>
                     </div>
@@ -658,7 +658,7 @@ export default function Index({ media, stats, folders = [], filters, storage_pla
                     isOpen={showCreateFolderModal}
                     onClose={() => setShowCreateFolderModal(false)}
                     onSuccess={() => {
-                        addToast(t('media.folder_created', 'Thư mục đã được tạo'), 'success');
+                        addToast(t('media.folder_created'), 'success');
                     }}
                     isDark={isDark}
                 />

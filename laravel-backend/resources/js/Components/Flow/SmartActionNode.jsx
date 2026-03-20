@@ -1,5 +1,6 @@
 import { memo, useState, useMemo } from 'react';
 import { Handle, Position } from 'reactflow';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { NodeStatus } from '@/hooks/useExecutionState';
 
@@ -14,6 +15,7 @@ import { NodeStatus } from '@/hooks/useExecutionState';
  * - Configurable timeout/retry settings
  */
 function SmartActionNode({ data, selected, id }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     const [isExpanded, setIsExpanded] = useState(false);
@@ -51,75 +53,75 @@ function SmartActionNode({ data, selected, id }) {
     const selector = useMemo(() => {
         if (resourceId) return { type: 'id', value: resourceId, icon: '#' };
         if (text) return { type: 'text', value: text, icon: 'T' };
-        if (coordinates) return { type: 'coords', value: `(${coordinates.x}, ${coordinates.y})`, icon: '📍' };
-        if (bounds) return { type: 'bounds', value: bounds, icon: '⬜' };
-        return { type: 'auto', value: 'Auto-detect', icon: '✨' };
+        if (coordinates) return { type: 'coords', value: `(${coordinates.x}, ${coordinates.y})`, icon: 'XY' };
+        if (bounds) return { type: 'bounds', value: bounds, icon: '[]' };
+        return { type: 'auto', value: 'Auto', icon: 'A' };
     }, [resourceId, text, coordinates, bounds]);
 
     // Color scheme based on action type
     const colors = useMemo(() => {
         const colorMap = {
             // Basic actions
-            open_app: { primary: '#10b981', name: 'emerald', label: 'Open App' },
-            launch_app: { primary: '#10b981', name: 'emerald', label: 'Launch App' },
-            tap: { primary: '#3b82f6', name: 'blue', label: 'Tap' },
-            click: { primary: '#3b82f6', name: 'blue', label: 'Click' },
-            long_tap: { primary: '#6366f1', name: 'indigo', label: 'Long Tap' },
-            long_press: { primary: '#6366f1', name: 'indigo', label: 'Long Press' },
-            long_click: { primary: '#6366f1', name: 'indigo', label: 'Long Click' },
-            double_tap: { primary: '#8b5cf6', name: 'violet', label: 'Double Tap' },
-            text_input: { primary: '#a855f7', name: 'purple', label: 'Type Text' },
-            set_text: { primary: '#a855f7', name: 'purple', label: 'Set Text' },
-            scroll: { primary: '#f59e0b', name: 'amber', label: 'Scroll' },
-            scroll_up: { primary: '#f59e0b', name: 'amber', label: 'Scroll Up' },
-            scroll_down: { primary: '#f59e0b', name: 'amber', label: 'Scroll Down' },
-            scroll_left: { primary: '#f59e0b', name: 'amber', label: 'Scroll Left' },
-            scroll_right: { primary: '#f59e0b', name: 'amber', label: 'Scroll Right' },
-            swipe: { primary: '#06b6d4', name: 'cyan', label: 'Swipe' },
-            swipe_left: { primary: '#06b6d4', name: 'cyan', label: 'Swipe Left' },
-            swipe_right: { primary: '#06b6d4', name: 'cyan', label: 'Swipe Right' },
-            swipe_up: { primary: '#06b6d4', name: 'cyan', label: 'Swipe Up' },
-            swipe_down: { primary: '#06b6d4', name: 'cyan', label: 'Swipe Down' },
-            back: { primary: '#ec4899', name: 'pink', label: 'Back' },
-            home: { primary: '#ec4899', name: 'pink', label: 'Home' },
-            focus: { primary: '#8b5cf6', name: 'violet', label: 'Focus' },
-            assert: { primary: '#22c55e', name: 'green', label: 'Assert' },
-            wait: { primary: '#6b7280', name: 'gray', label: 'Wait' },
-            repeat_click: { primary: '#8b5cf6', name: 'violet', label: 'Repeat Click' },
+            open_app: { primary: '#10b981', name: 'emerald', label: t('flows.editor.nodes.open_app') },
+            launch_app: { primary: '#10b981', name: 'emerald', label: t('flows.editor.nodes.open_app') },
+            tap: { primary: '#3b82f6', name: 'blue', label: t('flows.editor.smart_node.tap') },
+            click: { primary: '#3b82f6', name: 'blue', label: t('flows.editor.nodes.click') },
+            long_tap: { primary: '#6366f1', name: 'indigo', label: t('flows.editor.nodes.long_tap') },
+            long_press: { primary: '#6366f1', name: 'indigo', label: t('flows.editor.smart_node.long_press') },
+            long_click: { primary: '#6366f1', name: 'indigo', label: t('flows.editor.smart_node.long_click') },
+            double_tap: { primary: '#8b5cf6', name: 'violet', label: t('flows.editor.nodes.double_tap') },
+            text_input: { primary: '#a855f7', name: 'purple', label: t('flows.editor.nodes.type_text') },
+            set_text: { primary: '#a855f7', name: 'purple', label: t('flows.editor.smart_node.set_text') },
+            scroll: { primary: '#f59e0b', name: 'amber', label: t('flows.editor.nodes.scroll') },
+            scroll_up: { primary: '#f59e0b', name: 'amber', label: t('flows.editor.smart_node.scroll_up') },
+            scroll_down: { primary: '#f59e0b', name: 'amber', label: t('flows.editor.smart_node.scroll_down') },
+            scroll_left: { primary: '#f59e0b', name: 'amber', label: t('flows.editor.smart_node.scroll_left') },
+            scroll_right: { primary: '#f59e0b', name: 'amber', label: t('flows.editor.smart_node.scroll_right') },
+            swipe: { primary: '#06b6d4', name: 'cyan', label: t('flows.editor.nodes.swipe') },
+            swipe_left: { primary: '#06b6d4', name: 'cyan', label: t('flows.editor.config.swipe_left') },
+            swipe_right: { primary: '#06b6d4', name: 'cyan', label: t('flows.editor.config.swipe_right') },
+            swipe_up: { primary: '#06b6d4', name: 'cyan', label: t('flows.editor.config.swipe_up') },
+            swipe_down: { primary: '#06b6d4', name: 'cyan', label: t('flows.editor.config.swipe_down') },
+            back: { primary: '#ec4899', name: 'pink', label: t('flows.editor.config.key_back') },
+            home: { primary: '#ec4899', name: 'pink', label: t('flows.editor.config.key_home') },
+            focus: { primary: '#8b5cf6', name: 'violet', label: t('flows.editor.smart_node.focus') },
+            assert: { primary: '#22c55e', name: 'green', label: t('flows.editor.nodes.assert') },
+            wait: { primary: '#6b7280', name: 'gray', label: t('flows.editor.nodes.wait') },
+            repeat_click: { primary: '#8b5cf6', name: 'violet', label: t('flows.editor.nodes.repeat_click') },
             // Advanced Gestures
-            drag_drop: { primary: '#14b8a6', name: 'teal', label: 'Drag & Drop' },
-            pinch_zoom: { primary: '#f97316', name: 'orange', label: 'Pinch Zoom' },
-            fling: { primary: '#eab308', name: 'yellow', label: 'Fling' },
+            drag_drop: { primary: '#14b8a6', name: 'teal', label: t('flows.editor.nodes.drag_drop') },
+            pinch_zoom: { primary: '#f97316', name: 'orange', label: t('flows.editor.nodes.pinch_zoom') },
+            fling: { primary: '#eab308', name: 'yellow', label: t('flows.editor.nodes.fling') },
             // System Actions
-            recents: { primary: '#0ea5e9', name: 'sky', label: 'Recent Apps' },
-            notifications: { primary: '#f43f5e', name: 'rose', label: 'Notifications' },
-            quick_settings: { primary: '#8b5cf6', name: 'violet', label: 'Quick Settings' },
-            lock_screen: { primary: '#6b7280', name: 'gray', label: 'Lock Screen' },
-            power_dialog: { primary: '#ef4444', name: 'red', label: 'Power Menu' },
+            recents: { primary: '#0ea5e9', name: 'sky', label: t('flows.editor.nodes.recents') },
+            notifications: { primary: '#f43f5e', name: 'rose', label: t('flows.editor.nodes.notifications') },
+            quick_settings: { primary: '#8b5cf6', name: 'violet', label: t('flows.editor.nodes.quick_settings') },
+            lock_screen: { primary: '#6b7280', name: 'gray', label: t('flows.editor.smart_node.lock_screen') },
+            power_dialog: { primary: '#ef4444', name: 'red', label: t('flows.editor.smart_node.power_menu') },
             // Text Operations
-            clear_text: { primary: '#ef4444', name: 'red', label: 'Clear Text' },
-            get_text: { primary: '#22c55e', name: 'green', label: 'Get Text' },
-            append_text: { primary: '#3b82f6', name: 'blue', label: 'Append Text' },
-            select_all: { primary: '#a855f7', name: 'purple', label: 'Select All' },
+            clear_text: { primary: '#ef4444', name: 'red', label: t('flows.editor.nodes.clear_text') },
+            get_text: { primary: '#22c55e', name: 'green', label: t('flows.editor.nodes.get_text') },
+            append_text: { primary: '#3b82f6', name: 'blue', label: t('flows.editor.nodes.append_text') },
+            select_all: { primary: '#a855f7', name: 'purple', label: t('flows.editor.nodes.select_all') },
             // Element Inspection
-            get_bounds: { primary: '#06b6d4', name: 'cyan', label: 'Get Bounds' },
-            is_visible: { primary: '#10b981', name: 'emerald', label: 'Is Visible' },
-            count_elements: { primary: '#f59e0b', name: 'amber', label: 'Count Elements' },
+            get_bounds: { primary: '#06b6d4', name: 'cyan', label: t('flows.editor.nodes.get_bounds') },
+            is_visible: { primary: '#10b981', name: 'emerald', label: t('flows.editor.nodes.is_visible') },
+            count_elements: { primary: '#f59e0b', name: 'amber', label: t('flows.editor.nodes.count_elements') },
             // Media Controls
-            volume_up: { primary: '#3b82f6', name: 'blue', label: 'Volume Up' },
-            volume_down: { primary: '#6b7280', name: 'gray', label: 'Volume Down' },
-            mute: { primary: '#ef4444', name: 'red', label: 'Mute' },
-            media_play_pause: { primary: '#22c55e', name: 'green', label: 'Play/Pause' },
-            media_next: { primary: '#3b82f6', name: 'blue', label: 'Next Track' },
-            media_previous: { primary: '#3b82f6', name: 'blue', label: 'Previous Track' },
+            volume_up: { primary: '#3b82f6', name: 'blue', label: t('flows.editor.nodes.volume_up') },
+            volume_down: { primary: '#6b7280', name: 'gray', label: t('flows.editor.nodes.volume_down') },
+            mute: { primary: '#ef4444', name: 'red', label: t('flows.editor.smart_node.mute') },
+            media_play_pause: { primary: '#22c55e', name: 'green', label: t('flows.editor.nodes.media_play_pause') },
+            media_next: { primary: '#3b82f6', name: 'blue', label: t('flows.editor.smart_node.next_track') },
+            media_previous: { primary: '#3b82f6', name: 'blue', label: t('flows.editor.smart_node.previous_track') },
             // Wait Conditions
-            wait_for_text: { primary: '#8b5cf6', name: 'violet', label: 'Wait for Text' },
-            wait_for_activity: { primary: '#06b6d4', name: 'cyan', label: 'Wait for Activity' },
-            wait_for_package: { primary: '#22c55e', name: 'green', label: 'Wait for App' },
-            wait_idle: { primary: '#6b7280', name: 'gray', label: 'Wait Idle' },
+            wait_for_text: { primary: '#8b5cf6', name: 'violet', label: t('flows.editor.nodes.wait_for_text') },
+            wait_for_activity: { primary: '#06b6d4', name: 'cyan', label: t('flows.editor.nodes.wait_for_activity') },
+            wait_for_package: { primary: '#22c55e', name: 'green', label: t('flows.editor.nodes.wait_for_package') },
+            wait_idle: { primary: '#6b7280', name: 'gray', label: t('flows.editor.nodes.wait_idle') },
         };
-        return colorMap[actionType] || { primary: '#6b7280', name: 'gray', label: 'Action' };
-    }, [actionType]);
+        return colorMap[actionType] || { primary: '#6b7280', name: 'gray', label: t('flows.editor.smart_node.action') };
+    }, [actionType, t]);
 
     // Handle icon based on action type
     const ActionIcon = useMemo(() => {
@@ -464,9 +466,9 @@ function SmartActionNode({ data, selected, id }) {
                             ? 'bg-amber-500 text-white border-amber-600'
                             : 'bg-blue-500 text-white border-blue-600'
                             }`}
-                        title={`${data.probability}% chance to execute`}
+                        title={t('flows.editor.smart_node.probability_tooltip', { percent: data.probability })}
                     >
-                        <span>🎲</span>
+                        <span>%</span>
                         <span>{data.probability}%</span>
                     </div>
                 )}

@@ -27,7 +27,7 @@ export default function Start({ currentCredits = 0, templates = [] }) {
 
     const handleStart = async () => {
         if (!creationMethod) {
-            showToast('Vui lòng chọn phương thức tạo', 'error');
+            showToast(t('ai_studio.scenario.please_choose_method'), 'error');
             return;
         }
 
@@ -43,10 +43,10 @@ export default function Start({ currentCredits = 0, templates = [] }) {
             if (data.success) {
                 router.visit(data.redirect_url);
             } else {
-                showToast(data.error || 'Có lỗi xảy ra', 'error');
+                showToast(data.error || t('ai_studio.scenario.error_occurred', { message: '' }), 'error');
             }
         } catch (error) {
-            showToast('Có lỗi xảy ra: ' + error.message, 'error');
+            showToast(t('ai_studio.scenario.error_occurred', { message: error.message }), 'error');
         } finally {
             setLoading(false);
         }
@@ -55,8 +55,8 @@ export default function Start({ currentCredits = 0, templates = [] }) {
     const creationMethods = [
         {
             id: 'script',
-            title: 'Viết Kịch Bản',
-            description: 'Nhập ý tưởng, AI tự chia thành các cảnh và tạo prompt chuyên nghiệp.',
+            title: t('ai_studio.scenario.write_script'),
+            description: t('ai_studio.scenario.write_script_desc'),
             gradient: 'from-violet-600 to-indigo-600',
             bgGradient: isDark ? 'from-violet-600/10 to-indigo-600/10' : 'from-violet-50 to-indigo-50',
             borderActive: isDark ? 'border-violet-500/60' : 'border-violet-400',
@@ -65,8 +65,8 @@ export default function Start({ currentCredits = 0, templates = [] }) {
         },
         {
             id: 'images',
-            title: 'Từ Ảnh Có Sẵn',
-            description: 'Upload ảnh, AI phân tích và tạo video/slideshow chuyên nghiệp.',
+            title: t('ai_studio.scenario.from_existing_images'),
+            description: t('ai_studio.scenario.from_images_desc'),
             gradient: 'from-emerald-600 to-teal-600',
             bgGradient: isDark ? 'from-emerald-600/10 to-teal-600/10' : 'from-emerald-50 to-teal-50',
             borderActive: isDark ? 'border-emerald-500/60' : 'border-emerald-400',
@@ -75,8 +75,8 @@ export default function Start({ currentCredits = 0, templates = [] }) {
         },
         {
             id: 'template',
-            title: 'Chọn Template',
-            description: 'Mẫu có sẵn cho quảng cáo, giới thiệu sản phẩm, v.v.',
+            title: t('ai_studio.scenario.choose_template'),
+            description: t('ai_studio.scenario.choose_template_desc'),
             gradient: 'from-cyan-600 to-blue-600',
             bgGradient: isDark ? 'from-cyan-600/10 to-blue-600/10' : 'from-cyan-50 to-blue-50',
             borderActive: isDark ? 'border-cyan-500/60' : 'border-cyan-400',
@@ -86,13 +86,13 @@ export default function Start({ currentCredits = 0, templates = [] }) {
     ];
 
     const outputTypes = [
-        { id: 'video', label: 'Video', desc: 'Tạo video từ kịch bản', iconPath: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' },
-        { id: 'image', label: 'Hình ảnh', desc: 'Tạo series ảnh', iconPath: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
+        { id: 'video', label: t('ai_studio.scenario.video_label'), desc: t('ai_studio.scenario.create_video_from_script'), iconPath: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' },
+        { id: 'image', label: t('ai_studio.scenario.images_label'), desc: t('ai_studio.scenario.create_image_series'), iconPath: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
     ];
 
     return (
-        <AppLayout title="Tạo Kịch Bản Mới">
-            <Head title="Tạo Kịch Bản Mới" />
+        <AppLayout title={t('ai_studio.scenario.create_new_scenario_page')}>
+            <Head title={t('ai_studio.scenario.create_new_scenario_page')} />
 
             <div className={`min-h-screen ${isDark ? 'bg-[#0a0a0a]' : 'bg-slate-50'}`}>
                 <div className="max-w-5xl mx-auto px-6 py-8">
@@ -109,10 +109,10 @@ export default function Start({ currentCredits = 0, templates = [] }) {
                             </Link>
                             <div>
                                 <h1 className={`text-2xl font-bold ${themeClasses.textPrimary}`}>
-                                    Tạo Kịch Bản Mới
+                                    {t('ai_studio.scenario.create_new_scenario_page')}
                                 </h1>
                                 <p className={`text-sm ${themeClasses.textMuted}`}>
-                                    Tạo video/ảnh chuyên nghiệp theo kịch bản
+                                    {t('ai_studio.scenario.create_pro_video_images')}
                                 </p>
                             </div>
                         </div>
@@ -126,7 +126,7 @@ export default function Start({ currentCredits = 0, templates = [] }) {
                     {/* Step 1: Output Type */}
                     <div className={`p-6 rounded-2xl ${themeClasses.cardBg} border mb-6`}>
                         <label className={`block text-sm font-bold mb-4 ${themeClasses.textMuted} uppercase tracking-wide`}>
-                            Bước 1: Loại Output
+                            {t('ai_studio.scenario.step_1_output_type')}
                         </label>
                         <div className="grid grid-cols-2 gap-4">
                             {outputTypes.map((opt) => (
@@ -155,7 +155,7 @@ export default function Start({ currentCredits = 0, templates = [] }) {
                     {/* Step 2: Creation Method */}
                     <div className={`p-6 rounded-2xl ${themeClasses.cardBg} border mb-6`}>
                         <label className={`block text-sm font-bold mb-4 ${themeClasses.textMuted} uppercase tracking-wide`}>
-                            Bước 2: Phương Thức Tạo
+                            {t('ai_studio.scenario.step_2_creation_method')}
                         </label>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {creationMethods.map((method) => (
@@ -190,7 +190,7 @@ export default function Start({ currentCredits = 0, templates = [] }) {
                             disabled={!creationMethod || loading}
                             className="px-8 py-3 rounded-xl text-base font-bold bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading ? 'Đang tạo...' : 'Tiếp tục'}
+                            {loading ? t('ai_studio.generating') : t('ai_studio.scenario.continue_btn')}
                         </button>
                     </div>
                 </div>

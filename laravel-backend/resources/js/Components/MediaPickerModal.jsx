@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { mediaApi } from '@/services/api';
 import { Button } from '@/Components/UI';
@@ -24,6 +25,7 @@ export default function MediaPickerModal({
     allowFolderSelection = false,
     fileType = 'any',
 }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
@@ -146,7 +148,7 @@ export default function MediaPickerModal({
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                Chọn từ Thư viện
+                                {t('media.select_from_library')}
                             </h2>
                             {/* Breadcrumb */}
                             <div className="flex items-center gap-2 mt-1">
@@ -156,7 +158,7 @@ export default function MediaPickerModal({
                                     onClick={() => setCurrentFolder(null)}
                                     className={isDark ? 'text-cyan-400 hover:text-cyan-300' : 'text-cyan-600 hover:text-cyan-700'}
                                 >
-                                    Thư viện
+                                    {t('media.library')}
                                 </Button>
                                 {currentFolder && (
                                     <>
@@ -183,7 +185,7 @@ export default function MediaPickerModal({
                     <div className="mt-4 relative">
                         <input
                             type="text"
-                            placeholder="Tìm kiếm..."
+                            placeholder={t('common.search')}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-gray-500 focus:border-cyan-500' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-cyan-500'} border-2 focus:ring-2 focus:ring-cyan-500/20`}
@@ -199,7 +201,7 @@ export default function MediaPickerModal({
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center py-12">
                             <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mb-4" />
-                            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Đang tải...</p>
+                            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('common.loading')}</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -212,7 +214,7 @@ export default function MediaPickerModal({
                                     <svg className={`w-10 h-10 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 17l-5-5m0 0l5-5m-5 5h12" />
                                     </svg>
-                                    <span className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Quay lại</span>
+                                    <span className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('common.back')}</span>
                                 </div>
                             )}
 
@@ -234,7 +236,7 @@ export default function MediaPickerModal({
                                             {folderName}
                                         </span>
                                         <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                            Thư mục
+                                            {t('media.folder')}
                                         </span>
                                     </div>
                                 );
@@ -291,7 +293,7 @@ export default function MediaPickerModal({
                                         </svg>
                                     </div>
                                     <p className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                        Chưa có file nào
+                                        {t('media.no_files')}
                                     </p>
                                 </div>
                             )}
@@ -332,12 +334,12 @@ export default function MediaPickerModal({
                                         {currentFolder.split('/').filter(Boolean).pop()}
                                     </p>
                                     <p className={`text-xs ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
-                                        📂 Chọn folder → Random file khi chạy
+                                        {t('media.select_folder_random')}
                                     </p>
                                 </div>
                             </div>
                         ) : (
-                            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Chọn một file hoặc folder</p>
+                            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('media.select_file_or_folder')}</p>
                         )}
                     </div>
 
@@ -346,7 +348,7 @@ export default function MediaPickerModal({
                             variant="secondary"
                             onClick={onClose}
                         >
-                            Hủy
+                            {t('common.cancel')}
                         </Button>
 
                         {/* Select Folder Button */}
@@ -356,7 +358,7 @@ export default function MediaPickerModal({
                                 onClick={handleSelectFolder}
                                 className="from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-amber-500/30"
                             >
-                                Chọn Folder (Random)
+                                {t('media.select_folder_random_button')}
                             </Button>
                         )}
 
@@ -366,7 +368,7 @@ export default function MediaPickerModal({
                             onClick={handleSelectFile}
                             disabled={!selectedFile}
                         >
-                            Chọn File
+                            {t('media.select_file')}
                         </Button>
                     </div>
                 </div>

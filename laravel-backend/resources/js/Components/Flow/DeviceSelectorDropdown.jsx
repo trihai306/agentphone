@@ -163,7 +163,7 @@ export default function DeviceSelectorDropdown({
                                                     ? 'bg-emerald-500'
                                                     : 'bg-gray-400'
                                                     }`}
-                                                title={device.socket_connected ? 'Recently active' : 'May be offline'}
+                                                title={device.socket_connected ? t('flows.editor.device_selector.recently_active') : t('flows.editor.device_selector.may_be_offline')}
                                             />
 
                                             {/* Accessibility Status Badge */}
@@ -173,14 +173,14 @@ export default function DeviceSelectorDropdown({
                                                         ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                                                         : 'bg-amber-100 text-amber-700 border border-amber-300'
                                                         }`}
-                                                    title="Accessibility Service chưa được bật"
+                                                    title={t('flows.editor.accessibility.not_enabled_short')}
                                                 >
                                                     ⚠ A11Y
                                                 </div>
                                             )}
                                         </div>
                                         <p className={`text-xs truncate ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                            {device.model || device.device_id || 'Unknown model'}
+                                            {device.model || device.device_id || t('flows.editor.device_selector.unknown_model')}
                                         </p>
                                         {device.last_active_at && (
                                             <p className={`text-[10px] mt-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
@@ -196,7 +196,7 @@ export default function DeviceSelectorDropdown({
                                                 ? 'bg-amber-500/20 text-amber-400'
                                                 : 'bg-amber-100 text-amber-700'
                                                 }`}>
-                                                Verifying...
+                                                {t('flows.editor.device_selector.verifying')}
                                             </div>
                                         </div>
                                     )}

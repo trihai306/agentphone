@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useRecordingSync } from '@/hooks/useRecordingSync';
 import { recordingApi } from '@/services/api';
 
@@ -62,6 +63,7 @@ export default function LiveRecordingPanel({
     onClose,
     className = ''
 }) {
+    const { t } = useTranslation();
     const [isMinimized, setIsMinimized] = useState(false);
     const [duration, setDuration] = useState('00:00');
 
@@ -146,7 +148,7 @@ export default function LiveRecordingPanel({
             >
                 <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container/80 backdrop-blur-xl border border-white/10 text-sm text-gray-400">
                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    Recording sync ready
+                    {t('flows.editor.recording.sync_ready')}
                 </div>
             </motion.div>
         );
@@ -170,7 +172,7 @@ export default function LiveRecordingPanel({
                             )}
                         </div>
                         <span className="font-medium text-white">
-                            {isRecording ? 'LIVE RECORDING' : 'Recording Complete'}
+                            {isRecording ? t('flows.editor.recording.live') : t('flows.editor.recording.complete')}
                         </span>
                     </div>
                     <div className="flex items-center gap-1">
@@ -212,7 +214,7 @@ export default function LiveRecordingPanel({
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="text-sm font-medium text-white truncate">
-                                            {activeSession?.deviceName || 'Unknown Device'}
+                                            {activeSession?.deviceName || t('flows.editor.recording.unknown_device')}
                                         </div>
                                         <div className="text-xs text-gray-500">
                                             {activeSession?.deviceModel}
@@ -229,7 +231,7 @@ export default function LiveRecordingPanel({
                                 </div>
                                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5">
                                     <CursorArrowRaysIcon className="w-4 h-4 text-green-400" />
-                                    <span className="text-sm font-medium text-white">{eventCount} events</span>
+                                    <span className="text-sm font-medium text-white">{eventCount} {t('flows.editor.recording.events')}</span>
                                 </div>
                             </div>
 
@@ -264,7 +266,7 @@ export default function LiveRecordingPanel({
                                         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white font-medium hover:from-violet-500 hover:to-blue-500 transition-all"
                                     >
                                         <DocumentArrowDownIcon className="w-5 h-5" />
-                                        Import as Nodes
+                                        {t('flows.editor.recording.import_as_nodes')}
                                     </button>
                                 </div>
                             )}

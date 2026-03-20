@@ -15,15 +15,15 @@ export function ConditionConfig({ data, updateData, updateMultipleData, isDark, 
     const conditionType = data.conditionType || 'variable';
 
     const variableOperators = [
-        { value: '==', label: 'equals' },
-        { value: '!=', label: 'not equals' },
-        { value: '>', label: 'greater than' },
-        { value: '<', label: 'less than' },
-        { value: '>=', label: 'greater or equal' },
-        { value: '<=', label: 'less or equal' },
-        { value: 'contains', label: 'contains' },
-        { value: 'startsWith', label: 'starts with' },
-        { value: 'endsWith', label: 'ends with' },
+        { value: '==', label: t('flows.editor.config.op_equals') },
+        { value: '!=', label: t('flows.editor.config.op_not_equals') },
+        { value: '>', label: t('flows.editor.config.op_greater_than') },
+        { value: '<', label: t('flows.editor.config.op_less_than') },
+        { value: '>=', label: t('flows.editor.config.op_greater_or_equal') },
+        { value: '<=', label: t('flows.editor.config.op_less_or_equal') },
+        { value: 'contains', label: t('flows.editor.config.op_contains') },
+        { value: 'startsWith', label: t('flows.editor.config.op_starts_with') },
+        { value: 'endsWith', label: t('flows.editor.config.op_ends_with') },
     ];
 
     const elementOperators = [
@@ -98,7 +98,7 @@ export function ConditionConfig({ data, updateData, updateMultipleData, isDark, 
             {conditionType === 'variable' && (
                 <>
                     {/* Logic Operator Toggle */}
-                    <ConfigSection title="Logic Operator" isDark={isDark}>
+                    <ConfigSection title={t('flows.editor.config.logic_operator')} isDark={isDark}>
                         <div className="flex gap-2">
                             {['AND', 'OR'].map((op) => {
                                 const isSelected = (data.logicOperator || 'AND') === op;
@@ -122,8 +122,8 @@ export function ConditionConfig({ data, updateData, updateMultipleData, isDark, 
                         </div>
                         <p className={`text-[10px] mt-1.5 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
                             {(data.logicOperator || 'AND') === 'AND'
-                                ? 'Tất cả điều kiện phải đúng'
-                                : 'Chỉ cần một điều kiện đúng'}
+                                ? t('flows.editor.config.all_conditions_must_match')
+                                : t('flows.editor.config.any_condition_must_match')}
                         </p>
                     </ConfigSection>
 
@@ -257,7 +257,7 @@ export function ConditionConfig({ data, updateData, updateMultipleData, isDark, 
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                 </svg>
-                                Thêm Điều Kiện
+                                {t('flows.editor.config.add_condition')}
                             </button>
                         </div>
                     </ConfigSection>

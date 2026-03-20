@@ -1,5 +1,6 @@
 import { memo, useState, useCallback } from 'react';
 import { Handle, Position } from 'reactflow';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { NodeStatus } from '@/hooks/useExecutionState';
 
@@ -8,6 +9,7 @@ import { NodeStatus } from '@/hooks/useExecutionState';
  * Now with Named Output Variables for multi-datasource workflows
  */
 function GlassDataSourceNode({ id, data, selected }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     const [isEditingName, setIsEditingName] = useState(false);
@@ -17,7 +19,7 @@ function GlassDataSourceNode({ id, data, selected }) {
     const isSuccess = executionState === NodeStatus.SUCCESS;
 
     const hasCollection = !!data?.collectionId;
-    const collectionName = data?.collectionName || 'No collection';
+    const collectionName = data?.collectionName || t('flows.editor.glass_nodes.no_collection');
     const collectionIcon = data?.collectionIcon || '📊';
     const recordCount = data?.recordCount || 0;
     const schema = data?.schema || [];
@@ -73,10 +75,10 @@ function GlassDataSourceNode({ id, data, selected }) {
                     </div>
                     <div className="flex-1 min-w-0">
                         <h3 className="text-sm font-bold truncate" style={{ color }}>
-                            {hasCollection ? collectionName : 'Data Source'}
+                            {hasCollection ? collectionName : t('flows.editor.glass_nodes.data_source')}
                         </h3>
                         <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {hasCollection ? `${recordCount} records` : 'Select a collection'}
+                            {hasCollection ? `${recordCount} ${t('flows.editor.glass_nodes.records')}` : t('flows.editor.glass_nodes.select_a_collection')}
                         </p>
                     </div>
                     {hasCollection && (
@@ -97,7 +99,7 @@ function GlassDataSourceNode({ id, data, selected }) {
                             {schema.length > 0 && (
                                 <div className={`p-3 rounded-xl mb-3 ${isDark ? 'bg-black/30' : 'bg-gray-50'}`}>
                                     <p className={`text-[10px] uppercase font-semibold mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                        Output Fields
+                                        {t('flows.editor.glass_nodes.output_fields')}
                                     </p>
                                     <div className="flex flex-wrap gap-1.5">
                                         {schema.slice(0, 4).map((field, idx) => (
@@ -120,7 +122,7 @@ function GlassDataSourceNode({ id, data, selected }) {
                             {/* Named Output Variable */}
                             <div className={`p-3 rounded-xl mb-3 ${isDark ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-amber-50 border border-amber-200'}`}>
                                 <p className={`text-[10px] uppercase font-semibold mb-2 ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
-                                    Output Variable Name
+                                    {t('flows.editor.glass_nodes.output_variable_name')}
                                 </p>
                                 <div className="flex items-center gap-1">
                                     <span className={`text-xs font-mono ${isDark ? 'text-cyan-500' : 'text-cyan-600'}`}>{'{{'}</span>
@@ -159,16 +161,16 @@ function GlassDataSourceNode({ id, data, selected }) {
                                 <div className="flex flex-col gap-1 text-[10px]">
                                     <div className="flex items-center gap-2">
                                         <code className="text-cyan-400 font-mono">{`{{${outputName}}}`}</code>
-                                        <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>→ all records</span>
+                                        <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>→ {t('flows.editor.glass_nodes.all_records')}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <code className="text-cyan-400 font-mono">{`{{${outputName}.count}}`}</code>
-                                        <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>→ record count</span>
+                                        <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>→ {t('flows.editor.glass_nodes.record_count')}</span>
                                     </div>
                                     {schema.length > 0 && (
                                         <div className="flex items-center gap-2">
                                             <code className="text-cyan-400 font-mono">{`{{item.${schema[0]?.name || 'field'}}}`}</code>
-                                            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>→ in loop</span>
+                                            <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>→ {t('flows.editor.glass_nodes.in_loop')}</span>
                                         </div>
                                     )}
                                 </div>
@@ -182,7 +184,7 @@ function GlassDataSourceNode({ id, data, selected }) {
                                     : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
                                     }`}
                             >
-                                Change Collection
+                                {t('flows.editor.glass_nodes.change_collection')}
                             </button>
                         </>
                     ) : (
@@ -195,7 +197,7 @@ function GlassDataSourceNode({ id, data, selected }) {
                                 boxShadow: `0 4px 12px ${color}40`,
                             }}
                         >
-                            📊 Select Collection
+                            📊 {t('flows.editor.glass_nodes.select_collection')}
                         </button>
                     )}
                 </div>

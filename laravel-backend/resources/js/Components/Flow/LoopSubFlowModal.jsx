@@ -12,6 +12,7 @@ import ReactFlow, {
     useReactFlow,
 } from 'reactflow';
 import { useTheme } from '@/Contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/Components/UI';
 import SmartActionNode from './SmartActionNode';
 import GlassConditionNode from './GlassConditionNode';
@@ -112,6 +113,7 @@ const edgeTypes = {
 function LoopSubFlowModal({ isOpen, onClose, loopNode, onSaveSubFlow, selectedDevice, userId }) {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const { t } = useTranslation();
     const reactFlowWrapper = useRef(null);
     const { screenToFlowPosition } = useReactFlow();
 
@@ -291,10 +293,10 @@ function LoopSubFlowModal({ isOpen, onClose, loopNode, onSaveSubFlow, selectedDe
 
                         <div>
                             <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                Loop Sub-Workflow
+                                {t('flows.editor.loop_subflow.title')}
                             </h2>
                             <p className={`text-xs mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                Design actions for each iteration
+                                {t('flows.editor.loop_subflow.subtitle')}
                             </p>
                         </div>
                     </div>
@@ -323,10 +325,10 @@ function LoopSubFlowModal({ isOpen, onClose, loopNode, onSaveSubFlow, selectedDe
                             </div>
                         )}
                         <Button variant="secondary" onClick={onClose}>
-                            Cancel
+                            {t('common.cancel')}
                         </Button>
                         <Button variant="gradient" onClick={handleSave}>
-                            💾 Save
+                            {t('common.save')}
                         </Button>
                     </div>
                 </div>

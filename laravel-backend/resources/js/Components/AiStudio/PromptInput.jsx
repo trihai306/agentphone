@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
-export default function PromptInput({ value, onChange, placeholder = "Mô tả chi tiết những gì bạn muốn tạo...", disabled = false, maxLength = 1000 }) {
+export default function PromptInput({ value, onChange, placeholder, disabled = false, maxLength = 1000 }) {
+    const { t } = useTranslation();
+    const defaultPlaceholder = placeholder || t('ai_studio.prompt_placeholder');
     const textareaRef = useRef(null);
 
     // Auto-grow textarea
@@ -20,7 +23,7 @@ export default function PromptInput({ value, onChange, placeholder = "Mô tả c
                     Prompt
                 </label>
                 <span className={`text-xs ${remainingChars < 100 ? 'text-red-500' : 'text-gray-400'}`}>
-                    {remainingChars} ký tự còn lại
+                    {t('ai_studio.chars_remaining', { count: remainingChars })}
                 </span>
             </div>
 
@@ -28,7 +31,7 @@ export default function PromptInput({ value, onChange, placeholder = "Mô tả c
                 ref={textareaRef}
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                placeholder={placeholder}
+                placeholder={defaultPlaceholder}
                 disabled={disabled}
                 maxLength={maxLength}
                 rows={3}
@@ -40,7 +43,7 @@ export default function PromptInput({ value, onChange, placeholder = "Mô tả c
             />
 
             <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                💡 Tip: Mô tả càng chi tiết, kết quả càng chính xác
+                {t('ai_studio.prompt_tip')}
             </p>
         </div>
     );

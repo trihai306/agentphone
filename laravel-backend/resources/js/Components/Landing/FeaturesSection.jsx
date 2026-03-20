@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import Card, { CardHeader, CardTitle, CardDescription, CardContent } from '@/Components/UI/Card';
 
 /**
@@ -5,8 +6,8 @@ import Card, { CardHeader, CardTitle, CardDescription, CardContent } from '@/Com
  * Features a responsive grid layout with icons, titles, and descriptions
  */
 
-// Feature data for the automation capabilities
-const features = [
+// Feature data for the automation capabilities (icons and colors only, text comes from i18n)
+const featureKeys = [
     {
         id: 'smart-automation',
         icon: (
@@ -24,9 +25,8 @@ const features = [
                 />
             </svg>
         ),
-        title: 'Smart Automation',
-        description:
-            'Intelligent agents that learn and adapt to your workflows. Automate repetitive tasks with AI-powered decision making.',
+        titleKey: 'features.smart_automation',
+        descKey: 'features.smart_automation_desc',
         color: 'blue',
     },
     {
@@ -46,9 +46,8 @@ const features = [
                 />
             </svg>
         ),
-        title: 'Multi-Platform Support',
-        description:
-            'Works seamlessly across web browsers, desktop applications, and cloud services. One agent, unlimited possibilities.',
+        titleKey: 'features.multi_platform',
+        descKey: 'features.multi_platform_desc',
         color: 'indigo',
     },
     {
@@ -68,9 +67,8 @@ const features = [
                 />
             </svg>
         ),
-        title: 'Visual Workflow Builder',
-        description:
-            'Design automation workflows with an intuitive drag-and-drop interface. No coding skills required to get started.',
+        titleKey: 'features.visual_workflow',
+        descKey: 'features.visual_workflow_desc',
         color: 'purple',
     },
     {
@@ -90,9 +88,8 @@ const features = [
                 />
             </svg>
         ),
-        title: 'Secure & Reliable',
-        description:
-            'Enterprise-grade security with encrypted connections. Your data stays safe while agents work 24/7.',
+        titleKey: 'features.secure_reliable',
+        descKey: 'features.secure_reliable_desc',
         color: 'green',
     },
     {
@@ -112,9 +109,8 @@ const features = [
                 />
             </svg>
         ),
-        title: 'Real-Time Monitoring',
-        description:
-            'Track every action with detailed logs and analytics. Get instant notifications when tasks complete or need attention.',
+        titleKey: 'features.real_time_monitoring',
+        descKey: 'features.real_time_monitoring_desc',
         color: 'orange',
     },
     {
@@ -134,9 +130,8 @@ const features = [
                 />
             </svg>
         ),
-        title: 'Easy Integration',
-        description:
-            'Connect with your favorite tools and services through APIs. Extend functionality with custom plugins and webhooks.',
+        titleKey: 'features.easy_integration',
+        descKey: 'features.easy_integration_desc',
         color: 'pink',
     },
 ];
@@ -155,7 +150,8 @@ const colorVariants = {
  * FeatureCard - Individual feature card with icon, title, and description
  */
 function FeatureCard({ feature }) {
-    const { icon, title, description, color } = feature;
+    const { t } = useTranslation();
+    const { icon, titleKey, descKey, color } = feature;
 
     return (
         <Card hover className="group">
@@ -169,12 +165,12 @@ function FeatureCard({ feature }) {
 
                 {/* Title */}
                 <h3 className="mb-3 text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                    {title}
+                    {t(titleKey)}
                 </h3>
 
                 {/* Description */}
                 <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                    {description}
+                    {t(descKey)}
                 </p>
             </CardContent>
         </Card>
@@ -182,6 +178,8 @@ function FeatureCard({ feature }) {
 }
 
 export default function FeaturesSection() {
+    const { t } = useTranslation();
+
     return (
         <section
             id="features"
@@ -199,28 +197,27 @@ export default function FeaturesSection() {
                     {/* Badge */}
                     <div className="mb-4 inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-4 py-1.5 dark:border-indigo-800 dark:bg-indigo-900/30">
                         <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
-                            Powerful Features
+                            {t('features.powerful_features')}
                         </span>
                     </div>
 
                     {/* Title */}
                     <h2 className="mb-4 text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl lg:text-5xl">
-                        Everything You Need to{' '}
+                        {t('features.everything_you_need')}{' '}
                         <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-indigo-400">
-                            Automate
+                            {t('features.automate')}
                         </span>
                     </h2>
 
                     {/* Subtitle */}
                     <p className="mx-auto max-w-2xl text-lg text-gray-600 dark:text-gray-300">
-                        Discover the tools and capabilities that make our automation platform
-                        the choice for businesses worldwide.
+                        {t('features.section_subtitle')}
                     </p>
                 </div>
 
                 {/* Features grid */}
                 <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                    {features.map((feature) => (
+                    {featureKeys.map((feature) => (
                         <FeatureCard key={feature.id} feature={feature} />
                     ))}
                 </div>
@@ -233,7 +230,7 @@ export default function FeaturesSection() {
                                 10K+
                             </div>
                             <div className="text-gray-600 dark:text-gray-300">
-                                Active Users
+                                {t('landing.active_users')}
                             </div>
                         </div>
                         <div className="text-center">
@@ -241,7 +238,7 @@ export default function FeaturesSection() {
                                 5M+
                             </div>
                             <div className="text-gray-600 dark:text-gray-300">
-                                Tasks Automated
+                                {t('features.tasks_automated')}
                             </div>
                         </div>
                         <div className="text-center">
@@ -249,7 +246,7 @@ export default function FeaturesSection() {
                                 99.9%
                             </div>
                             <div className="text-gray-600 dark:text-gray-300">
-                                Uptime
+                                {t('features.uptime')}
                             </div>
                         </div>
                         <div className="text-center">
@@ -257,7 +254,7 @@ export default function FeaturesSection() {
                                 24/7
                             </div>
                             <div className="text-gray-600 dark:text-gray-300">
-                                Support Available
+                                {t('features.support_available')}
                             </div>
                         </div>
                     </div>

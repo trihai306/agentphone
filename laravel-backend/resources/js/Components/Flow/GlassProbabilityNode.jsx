@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { NodeStatus } from '@/hooks/useExecutionState';
 
@@ -13,6 +14,7 @@ import { NodeStatus } from '@/hooks/useExecutionState';
  * - Configurable weights for each path
  */
 function GlassProbabilityNode({ data, selected, id }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
@@ -93,15 +95,17 @@ function GlassProbabilityNode({ data, selected, id }) {
                         ) : isError ? (
                             <span className="text-red-500">✗</span>
                         ) : (
-                            <span>🎲</span>
+                            <svg className="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
                         )}
                     </div>
                     <div className="flex-1">
                         <div className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            {data?.label || 'Probability'}
+                            {data?.label || t('flows.editor.glass_nodes.probability')}
                         </div>
                         <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                            Random Branch
+                            {t('flows.editor.glass_nodes.random_branch')}
                         </div>
                     </div>
                 </div>
@@ -135,7 +139,7 @@ function GlassProbabilityNode({ data, selected, id }) {
 
                 {/* Helper text */}
                 <div className={`mt-3 text-[10px] text-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    Randomly selects one path
+                    {t('flows.editor.glass_nodes.randomly_selects_one_path')}
                 </div>
             </div>
 

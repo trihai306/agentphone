@@ -1,4 +1,7 @@
+import { useTranslation } from 'react-i18next';
+
 export default function ParameterControls({ type = 'image', params, onChange, disabled = false }) {
+    const { t } = useTranslation();
     const updateParam = (key, value) => {
         onChange({ ...params, [key]: value });
     };
@@ -59,8 +62,8 @@ export default function ParameterControls({ type = 'image', params, onChange, di
                         className="w-full"
                     />
                     <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        <span>Nhanh</span>
-                        <span>Chất lượng cao</span>
+                        <span>{t('ai_studio.params.fast')}</span>
+                        <span>{t('ai_studio.params.high_quality')}</span>
                     </div>
                 </div>
 
@@ -73,7 +76,7 @@ export default function ParameterControls({ type = 'image', params, onChange, di
                         type="text"
                         value={params.negative_prompt || ''}
                         onChange={(e) => updateParam('negative_prompt', e.target.value)}
-                        placeholder="Những gì bạn không muốn thấy..."
+                        placeholder={t('ai_studio.negative_prompt_placeholder')}
                         disabled={disabled}
                         className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-white"
                     />

@@ -50,13 +50,13 @@ export function ElementInspectionConfig({ data, updateData, updateMultipleData, 
                     {/* Text */}
                     <div>
                         <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Text Content
+                            {t('flows.editor.config.text')}
                         </label>
                         <input
                             type="text"
                             value={data.text || ''}
                             onChange={(e) => updateData('text', e.target.value)}
-                            placeholder="Element text or {{variable}}..."
+                            placeholder={t('flows.editor.config.element_text_placeholder')}
                             className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-gray-600' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`}
                         />
                     </div>
@@ -64,7 +64,7 @@ export function ElementInspectionConfig({ data, updateData, updateMultipleData, 
                     {/* Resource ID */}
                     <div>
                         <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Resource ID
+                            {t('flows.editor.config.resource_id')}
                         </label>
                         <input
                             type="text"
@@ -78,13 +78,13 @@ export function ElementInspectionConfig({ data, updateData, updateMultipleData, 
                     {/* Content Description */}
                     <div>
                         <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Content Description
+                            {t('flows.editor.config.content_desc')}
                         </label>
                         <input
                             type="text"
                             value={data.contentDescription || ''}
                             onChange={(e) => updateData('contentDescription', e.target.value)}
-                            placeholder="Accessibility label..."
+                            placeholder={t('flows.editor.config.accessibility_label_placeholder')}
                             className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder-gray-600' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`}
                         />
                     </div>
@@ -92,7 +92,7 @@ export function ElementInspectionConfig({ data, updateData, updateMultipleData, 
                     {/* Class Name */}
                     <div>
                         <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            Class Name
+                            {t('flows.editor.config.class_name')}
                         </label>
                         <input
                             type="text"
@@ -115,16 +115,16 @@ export function ElementInspectionConfig({ data, updateData, updateMultipleData, 
                     <div className="space-y-3">
                         <div className={`p-3 rounded-lg ${isDark ? 'bg-cyan-500/10 border border-cyan-500/20' : 'bg-cyan-50 border border-cyan-100'}`}>
                             <p className={`text-sm ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`}>
-                                Get the position and size (bounds) of an element.
+                                {t('flows.editor.config.get_bounds_desc')}
                             </p>
                             <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Returns: left, top, right, bottom, width, height
+                                {t('flows.editor.config.get_bounds_returns')}
                             </p>
                         </div>
 
                         <div>
                             <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Output Variable Name
+                                {t('flows.editor.config.output_variable_name')}
                             </label>
                             <div className="flex items-center gap-2">
                                 <span className={`text-sm font-mono ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{'{{'}</span>
@@ -166,16 +166,16 @@ export function ElementInspectionConfig({ data, updateData, updateMultipleData, 
                     <div className="space-y-3">
                         <div className={`p-3 rounded-lg ${isDark ? 'bg-green-500/10 border border-green-500/20' : 'bg-green-50 border border-green-100'}`}>
                             <p className={`text-sm ${isDark ? 'text-green-400' : 'text-green-600'}`}>
-                                Check if an element is visible on screen.
+                                {t('flows.editor.config.is_visible_desc')}
                             </p>
                             <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Returns: true/false
+                                {t('flows.editor.config.returns_boolean')}
                             </p>
                         </div>
 
                         <div>
                             <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Timeout (ms)
+                                {t('flows.editor.config.timeout')}
                             </label>
                             <input
                                 type="number"
@@ -206,7 +206,7 @@ export function ElementInspectionConfig({ data, updateData, updateMultipleData, 
 
                         <div>
                             <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Output Variable Name
+                                {t('flows.editor.config.output_variable_name')}
                             </label>
                             <div className="flex items-center gap-2">
                                 <span className={`text-sm font-mono ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{'{{'}</span>
@@ -245,16 +245,16 @@ export function ElementInspectionConfig({ data, updateData, updateMultipleData, 
                     <div className="space-y-3">
                         <div className={`p-3 rounded-lg ${isDark ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-amber-50 border border-amber-100'}`}>
                             <p className={`text-sm ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
-                                Count how many elements match the specified criteria.
+                                {t('flows.editor.config.count_elements_desc')}
                             </p>
                             <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Returns: number of matching elements
+                                {t('flows.editor.config.count_elements_returns')}
                             </p>
                         </div>
 
                         <div>
                             <label className={`block text-[10px] font-semibold uppercase mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Output Variable Name
+                                {t('flows.editor.config.output_variable_name')}
                             </label>
                             <div className="flex items-center gap-2">
                                 <span className={`text-sm font-mono ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{'{{'}</span>

@@ -63,7 +63,7 @@ export default function RecordingPanel({
                     <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
                         <span className={`text-sm font-bold ${isDark ? 'text-red-400' : 'text-red-600'}`}>
-                            Recording
+                            {t('flows.editor.recording_panel.recording')}
                         </span>
                         <span className={`text-xs font-mono ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                             {formatDuration(recordingDuration)}
@@ -87,8 +87,8 @@ export default function RecordingPanel({
                         <svg className="w-8 h-8 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
                         </svg>
-                        <p className="text-xs">Waiting for actions...</p>
-                        <p className="text-[10px] mt-1 opacity-70">Interact with the app on your device</p>
+                        <p className="text-xs">{t('flows.editor.recording_panel.waiting_for_actions')}</p>
+                        <p className="text-[10px] mt-1 opacity-70">{t('flows.editor.recording_panel.interact_hint')}</p>
                     </div>
                 ) : (
                     <div className="p-2 space-y-1">
@@ -132,12 +132,12 @@ export default function RecordingPanel({
                         {isRecordingPaused ? (
                             <>
                                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                                Resume
+                                {t('flows.editor.recording_panel.resume')}
                             </>
                         ) : (
                             <>
                                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
-                                Pause
+                                {t('flows.editor.recording_panel.pause')}
                             </>
                         )}
                     </Button>
@@ -150,7 +150,7 @@ export default function RecordingPanel({
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                         </svg>
-                        Undo
+                        {t('common.undo')}
                     </Button>
                     <Button
                         variant="danger"
@@ -158,7 +158,7 @@ export default function RecordingPanel({
                         onClick={stopRecording}
                     >
                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1" /></svg>
-                        Stop
+                        {t('flows.editor.recording_panel.stop')}
                     </Button>
                 </div>
             </div>

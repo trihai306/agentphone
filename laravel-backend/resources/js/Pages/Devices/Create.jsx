@@ -32,7 +32,7 @@ export default function Create() {
     const statusOptions = [
         { value: 'active', label: t('devices.status.online') },
         { value: 'inactive', label: t('devices.status.offline') },
-        { value: 'maintenance', label: 'Maintenance' },
+        { value: 'maintenance', label: t('devices.status.maintenance', 'Maintenance') },
     ];
 
     return (
@@ -93,7 +93,7 @@ export default function Create() {
                             />
 
                             <Select
-                                label={t('common.status', { defaultValue: 'Status' })}
+                                label={t('common.status')}
                                 value={data.status}
                                 onChange={(e) => setData('status', e.target.value)}
                                 options={statusOptions}
@@ -106,7 +106,7 @@ export default function Create() {
                                     {t('common.cancel')}
                                 </Button>
                                 <Button type="submit" disabled={processing}>
-                                    {processing ? t('common.adding', { defaultValue: 'Adding...' }) : t('devices.add_device', { defaultValue: 'Add Device' })}
+                                    {processing ? t('common.adding', { defaultValue: 'Adding...' }) : t('devices.add_device')}
                                 </Button>
                             </div>
                         </form>

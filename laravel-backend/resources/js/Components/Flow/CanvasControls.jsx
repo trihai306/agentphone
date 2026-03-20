@@ -33,14 +33,14 @@ export default function CanvasControls({
         <Panel position="bottom-left" className="!m-4">
             <div className={`flex items-center rounded-xl overflow-hidden shadow-xl border ${isDark ? 'bg-[#1a1a1a] border-[#2a2a2a]' : 'bg-white border-gray-200'}`}>
                 {/* Undo Button */}
-                <Button variant="ghost" size="icon-sm" onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)">
+                <Button variant="ghost" size="icon-sm" onClick={undo} disabled={!canUndo} title={t('flows.editor.toolbar.undo') + ' (Ctrl+Z)'}>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                     </svg>
                 </Button>
 
                 {/* Redo Button */}
-                <Button variant="ghost" size="icon-sm" onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Shift+Z)">
+                <Button variant="ghost" size="icon-sm" onClick={redo} disabled={!canRedo} title={t('flows.editor.toolbar.redo') + ' (Ctrl+Shift+Z)'}>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
                     </svg>
@@ -49,7 +49,7 @@ export default function CanvasControls({
                 <Divider />
 
                 {/* Zoom Out */}
-                <Button variant="ghost" size="icon-sm" onClick={() => zoomOut()} title="Zoom out">
+                <Button variant="ghost" size="icon-sm" onClick={() => zoomOut()} title={t('flows.editor.toolbar.zoom_out')}>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                     </svg>
@@ -58,7 +58,7 @@ export default function CanvasControls({
                 <Divider />
 
                 {/* Zoom In */}
-                <Button variant="ghost" size="icon-sm" onClick={() => zoomIn()} title="Zoom in">
+                <Button variant="ghost" size="icon-sm" onClick={() => zoomIn()} title={t('flows.editor.toolbar.zoom_in')}>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
@@ -67,7 +67,7 @@ export default function CanvasControls({
                 <Divider />
 
                 {/* Fit View */}
-                <Button variant="ghost" size="icon-sm" onClick={() => fitView({ padding: 0.2 })} title="Fit view">
+                <Button variant="ghost" size="icon-sm" onClick={() => fitView({ padding: 0.2 })} title={t('flows.editor.toolbar.fit_view')}>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                     </svg>

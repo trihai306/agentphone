@@ -69,8 +69,8 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
         { label: t('navigation.workflows'), value: stats.workflows || 0, icon: 'credits', color: 'purple', href: '/flows' },
         { label: t('navigation.campaigns'), value: stats.campaigns || 0, icon: 'rocket', color: 'green', href: '/campaigns' },
         { label: t('navigation.jobs'), value: stats.jobs || 0, icon: 'clipboard', color: 'orange', href: '/jobs' },
-        { label: t('profile.media_files', { defaultValue: 'Media Files' }), value: stats.mediaFiles || 0, icon: 'media', color: 'pink', href: '/media' },
-        { label: t('profile.data_collections', { defaultValue: 'Data Collections' }), value: stats.dataCollections || 0, icon: 'database', color: 'cyan', href: '/data-collections' },
+        { label: t('profile.media_files'), value: stats.mediaFiles || 0, icon: 'media', color: 'pink', href: '/media' },
+        { label: t('profile.data_collections'), value: stats.dataCollections || 0, icon: 'database', color: 'cyan', href: '/data-collections' },
     ];
 
     const getColorClasses = (color) => {
@@ -96,7 +96,7 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
                             {t('profile.title')}
                         </h1>
                         <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                            {t('profile.manage_description', { defaultValue: 'Quản lý tài khoản và thông tin cá nhân của bạn' })}
+                            {t('profile.manage_description')}
                         </p>
                     </div>
 
@@ -150,7 +150,7 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
                                                 {formatNumber(stats.aiCredits)}
                                             </p>
                                             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                {t('profile.ai_credits', { defaultValue: 'AI Credits' })}
+                                                {t('profile.ai_credits')}
                                             </p>
                                         </div>
                                         <div>
@@ -158,7 +158,7 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
                                                 {formatNumber(stats.walletBalance)}
                                             </p>
                                             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                {t('profile.wallet_balance', { defaultValue: 'Số dư ví' })} (₫)
+                                                {t('profile.wallet_balance')} (₫)
                                             </p>
                                         </div>
                                     </div>
@@ -166,7 +166,7 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
 
                                 <div className={`mt-4 pt-4 border-t ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
                                     <p className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                        {t('profile.member_since', { defaultValue: 'Thành viên từ' })}
+                                        {t('profile.member_since')}
                                     </p>
                                     <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                         {new Date(user.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: 'long', year: 'numeric' })}
@@ -177,7 +177,7 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
                             {/* Storage Card */}
                             <div className={`p-6 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
                                 <h3 className={`text-sm font-medium uppercase tracking-wider mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    {t('profile.storage', { defaultValue: 'Dung lượng lưu trữ' })}
+                                    {t('profile.storage')}
                                 </h3>
                                 <div className="space-y-3">
                                     <div className="flex justify-between items-center">
@@ -195,7 +195,7 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
                                         ></div>
                                     </div>
                                     <p className={`text-xs ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
-                                        {storagePercent.toFixed(1)}% {t('profile.used', { defaultValue: 'đã sử dụng' })}
+                                        {storagePercent.toFixed(1)}% {t('profile.used')}
                                     </p>
                                 </div>
                             </div>
@@ -204,7 +204,7 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
                             {activePackages.length > 0 && (
                                 <div className={`p-6 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
                                     <h3 className={`text-sm font-medium uppercase tracking-wider mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                        {t('profile.active_packages', { defaultValue: 'Gói dịch vụ đang dùng' })}
+                                        {t('profile.active_packages')}
                                     </h3>
                                     <div className="space-y-3">
                                         {activePackages.map((pkg) => (
@@ -214,12 +214,12 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
                                                         {pkg.name}
                                                     </span>
                                                     <span className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-700'}`}>
-                                                        {t('profile.active', { defaultValue: 'Hoạt động' })}
+                                                        {t('profile.active')}
                                                     </span>
                                                 </div>
                                                 {pkg.expires_at && (
                                                     <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                        {t('profile.expires', { defaultValue: 'Hết hạn' })}: {pkg.expires_at}
+                                                        {t('profile.expires')}: {pkg.expires_at}
                                                     </p>
                                                 )}
                                             </div>
@@ -234,7 +234,7 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
                             {/* Stats Grid */}
                             <div className={`p-6 rounded-xl ${isDark ? 'bg-[#1a1a1a]' : 'bg-white border border-gray-200'}`}>
                                 <h3 className={`text-sm font-medium uppercase tracking-wider mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    {t('profile.activity_overview', { defaultValue: 'Tổng quan hoạt động' })}
+                                    {t('profile.activity_overview')}
                                 </h3>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                     {statsData.map((stat, index) => (
@@ -264,7 +264,7 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                                {t('profile.name', { defaultValue: 'Họ tên' })}
+                                                {t('profile.name')}
                                             </label>
                                             <input
                                                 type="text"
@@ -280,7 +280,7 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
                                         </div>
                                         <div>
                                             <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                                {t('profile.email', { defaultValue: 'Email' })}
+                                                {t('profile.email')}
                                             </label>
                                             <input
                                                 type="email"
@@ -298,7 +298,7 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                                {t('profile.phone', { defaultValue: 'Số điện thoại' })}
+                                                {t('profile.phone')}
                                             </label>
                                             <input
                                                 type="tel"
@@ -312,14 +312,14 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
                                         </div>
                                         <div>
                                             <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                                {t('profile.location', { defaultValue: 'Địa điểm' })}
+                                                {t('profile.location')}
                                             </label>
                                             <input
                                                 type="text"
                                                 name="location"
                                                 value={profileForm.data.location}
                                                 onChange={e => profileForm.setData('location', e.target.value)}
-                                                placeholder="Hà Nội, Việt Nam"
+                                                placeholder={t('profile.location_placeholder')}
                                                 className={`w-full px-4 py-2.5 rounded-lg text-sm ${isDark ? 'bg-[#222] border-[#2a2a2a] text-white placeholder-gray-600' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'
                                                     } border focus:outline-none focus:ring-2 focus:ring-blue-500/50`}
                                             />
@@ -327,13 +327,13 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
                                     </div>
                                     <div>
                                         <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                            {t('profile.bio', { defaultValue: 'Giới thiệu bản thân' })}
+                                            {t('profile.bio')}
                                         </label>
                                         <textarea
                                             value={profileForm.data.bio}
                                             onChange={e => profileForm.setData('bio', e.target.value)}
                                             rows={3}
-                                            placeholder={t('profile.bio_placeholder', { defaultValue: 'Viết vài dòng về bản thân...' })}
+                                            placeholder={t('profile.bio_placeholder')}
                                             className={`w-full px-4 py-2.5 rounded-lg text-sm resize-none ${isDark ? 'bg-[#222] border-[#2a2a2a] text-white placeholder-gray-600' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'
                                                 } border focus:outline-none focus:ring-2 focus:ring-blue-500/50`}
                                         />
@@ -345,7 +345,7 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
                                             className={`px-6 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'
                                                 } disabled:opacity-50`}
                                         >
-                                            {profileForm.processing ? t('common.loading') : t('profile.save_changes', { defaultValue: 'Lưu thay đổi' })}
+                                            {profileForm.processing ? t('common.loading') : t('profile.save_changes')}
                                         </button>
                                     </div>
                                 </form>
@@ -462,7 +462,7 @@ export default function Edit({ user, stats = {}, storage = {}, activePackages = 
                                             className={`px-6 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'
                                                 } disabled:opacity-50`}
                                         >
-                                            {passwordForm.processing ? t('common.loading') : t('profile.update_password', { defaultValue: 'Cập nhật mật khẩu' })}
+                                            {passwordForm.processing ? t('common.loading') : t('profile.update_password')}
                                         </button>
                                     </div>
                                 </form>

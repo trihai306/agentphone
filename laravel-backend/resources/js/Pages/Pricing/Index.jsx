@@ -11,16 +11,16 @@ export default function Index({ packages = [], auth }) {
 
     // FAQ data for structured data
     const faqs = [
-        { question: 'Tôi có thể thay đổi gói sau khi đăng ký không?', answer: 'Có, bạn có thể nâng cấp hoặc hạ cấp gói bất cứ lúc nào.' },
-        { question: 'Phương thức thanh toán nào được chấp nhận?', answer: 'Chúng tôi chấp nhận thanh toán qua thẻ tín dụng/ghi nợ, chuyển khoản ngân hàng, và ví điện tử.' },
-        { question: 'Có thời gian dùng thử miễn phí không?', answer: 'Có! Tất cả các gói đều có 14 ngày dùng thử miễn phí.' },
+        { question: t('pricing.faq_q1', 'Can I change plans after subscribing?'), answer: t('pricing.faq_a1', 'Yes, you can upgrade or downgrade your plan at any time.') },
+        { question: t('pricing.faq_q2', 'What payment methods are accepted?'), answer: t('pricing.faq_a2', 'We accept credit/debit cards, bank transfers, and e-wallets.') },
+        { question: t('pricing.faq_q3', 'Is there a free trial?'), answer: t('pricing.faq_a3', 'Yes! All plans come with a 14-day free trial.') },
     ];
 
     const packageTypes = [
-        { key: 'all', label: t('pricing.all', { defaultValue: 'Tất cả' }), icon: 'grid' },
-        { key: 'subscription', label: t('pricing.subscription', { defaultValue: 'Thuê bao' }), icon: 'refresh' },
-        { key: 'one_time', label: t('pricing.one_time', { defaultValue: 'Mua một lần' }), icon: 'shopping-bag' },
-        { key: 'credits', label: t('pricing.credits', { defaultValue: 'Gói Credits' }), icon: 'zap' },
+        { key: 'all', label: t('pricing.all'), icon: 'grid' },
+        { key: 'subscription', label: t('pricing.subscription'), icon: 'refresh' },
+        { key: 'one_time', label: t('pricing.one_time'), icon: 'shopping-bag' },
+        { key: 'credits', label: t('pricing.credits'), icon: 'zap' },
     ];
 
     const filteredPackages = (packages || []).filter(pkg =>
@@ -38,9 +38,9 @@ export default function Index({ packages = [], auth }) {
     return (
         <LandingLayout>
             <SeoHead
-                title="Bảng giá CLICKAI - Plans phù hợp mọi quy mô doanh nghiệp"
-                description="Lựa chọn gói dịch vụ CLICKAI phù hợp với nhu cầu. Dùng thử miễn phí 14 ngày, hỗ trợ 24/7, nâng cấp bất cứ lúc nào. Giá minh bạch, không phí ẩn."
-                keywords="bảng giá clickai, pricing, gói dịch vụ, subscription, automation pricing"
+                title={t('pricing.seo_title', 'CLICKAI Pricing - Plans for every business size')}
+                description={t('pricing.seo_description', 'Choose the right CLICKAI plan. 14-day free trial, 24/7 support, upgrade anytime. Transparent pricing, no hidden fees.')}
+                keywords={t('pricing.seo_keywords', 'clickai pricing, pricing, service plans, subscription, automation pricing')}
                 url="https://clickai.vn/pricing"
                 structuredData={schemas.faqPage(faqs)}
             />
@@ -59,18 +59,18 @@ export default function Index({ packages = [], auth }) {
                             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            {t('pricing.transparent', { defaultValue: 'Giá cả minh bạch - Không phí ẩn' })}
+                            {t('pricing.transparent')}
                         </span>
 
                         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-6 tracking-tight">
-                            {t('pricing.hero_title_1', { defaultValue: 'Chọn gói phù hợp với' })}
+                            {t('pricing.hero_title_1')}
                             <span className="block bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
-                                {t('pricing.hero_title_2', { defaultValue: 'nhu cầu của bạn' })}
+                                {t('pricing.hero_title_2')}
                             </span>
                         </h1>
 
                         <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-10">
-                            {t('pricing.hero_desc', { defaultValue: 'Quản lý thiết bị thông minh, tự động hóa workflow, tiết kiệm thời gian. Bắt đầu miễn phí - nâng cấp bất cứ lúc nào.' })}
+                            {t('pricing.hero_desc')}
                         </p>
 
                         {/* Billing Toggle */}
@@ -82,7 +82,7 @@ export default function Index({ packages = [], auth }) {
                                     : 'text-gray-300 hover:text-white'
                                     }`}
                             >
-                                {t('pricing.monthly', { defaultValue: 'Hàng tháng' })}
+                                {t('pricing.monthly')}
                             </button>
                             <button
                                 onClick={() => setBillingPeriod('yearly')}
@@ -91,7 +91,7 @@ export default function Index({ packages = [], auth }) {
                                     : 'text-gray-300 hover:text-white'
                                     }`}
                             >
-                                {t('pricing.yearly', { defaultValue: 'Hàng năm' })}
+                                {t('pricing.yearly')}
                                 <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-xs font-bold rounded-full shadow-lg">
                                     -20%
                                 </span>
@@ -144,8 +144,8 @@ export default function Index({ packages = [], auth }) {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                                 </svg>
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t('pricing.no_packages', { defaultValue: 'Chưa có gói dịch vụ nào' })}</h3>
-                            <p className="text-gray-600 dark:text-gray-400">{t('pricing.come_back_later', { defaultValue: 'Vui lòng quay lại sau.' })}</p>
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t('pricing.no_packages')}</h3>
+                            <p className="text-gray-600 dark:text-gray-400">{t('pricing.come_back_later')}</p>
                         </div>
                     )}
                 </div>
@@ -156,10 +156,10 @@ export default function Index({ packages = [], auth }) {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                            {t('pricing.compare_features', { defaultValue: 'So sánh tính năng' })}
+                            {t('pricing.compare_features')}
                         </h2>
                         <p className="text-xl text-gray-600 dark:text-gray-400">
-                            {t('pricing.compare_desc', { defaultValue: 'Xem chi tiết tính năng của từng gói' })}
+                            {t('pricing.compare_desc')}
                         </p>
                     </div>
 
@@ -173,10 +173,10 @@ export default function Index({ packages = [], auth }) {
             <div className="bg-gray-50 dark:bg-gray-900 py-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-                        <TrustItem icon="users" value="10,000+" label={t('pricing.trust_users', { defaultValue: 'Người dùng tin tưởng' })} />
-                        <TrustItem icon="devices" value="50,000+" label={t('pricing.trust_devices', { defaultValue: 'Thiết bị được quản lý' })} />
-                        <TrustItem icon="uptime" value="99.9%" label={t('pricing.trust_uptime', { defaultValue: 'Uptime đảm bảo' })} />
-                        <TrustItem icon="support" value="24/7" label={t('pricing.trust_support', { defaultValue: 'Hỗ trợ kỹ thuật' })} />
+                        <TrustItem icon="users" value="10,000+" label={t('pricing.trust_users')} />
+                        <TrustItem icon="devices" value="50,000+" label={t('pricing.trust_devices')} />
+                        <TrustItem icon="uptime" value="99.9%" label={t('pricing.trust_uptime')} />
+                        <TrustItem icon="support" value="24/7" label={t('pricing.trust_support')} />
                     </div>
                 </div>
             </div>
@@ -186,29 +186,29 @@ export default function Index({ packages = [], auth }) {
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-                            {t('pricing.faq_title', { defaultValue: 'Câu hỏi thường gặp' })}
+                            {t('pricing.faq_title')}
                         </h2>
                     </div>
                     <div className="space-y-4">
                         <FAQItem
-                            question="Tôi có thể thay đổi gói sau khi đăng ký không?"
-                            answer="Có, bạn có thể nâng cấp hoặc hạ cấp gói bất cứ lúc nào. Thay đổi sẽ được áp dụng ngay lập tức và phần chênh lệch sẽ được tính theo ngày sử dụng."
+                            question={t('pricing.faq_q1', 'Can I change plans after subscribing?')}
+                            answer={t('pricing.faq_a1_full', 'Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately and the difference is prorated.')}
                         />
                         <FAQItem
-                            question="Phương thức thanh toán nào được chấp nhận?"
-                            answer="Chúng tôi chấp nhận thanh toán qua thẻ tín dụng/ghi nợ (Visa, MasterCard), chuyển khoản ngân hàng, và ví điện tử (MoMo, ZaloPay, VNPay)."
+                            question={t('pricing.faq_q2', 'What payment methods are accepted?')}
+                            answer={t('pricing.faq_a2_full', 'We accept credit/debit cards (Visa, MasterCard), bank transfers, and e-wallets (MoMo, ZaloPay, VNPay).')}
                         />
                         <FAQItem
-                            question="Có thời gian dùng thử miễn phí không?"
-                            answer="Có! Tất cả các gói đều có 14 ngày dùng thử miễn phí. Không cần nhập thẻ tín dụng để bắt đầu."
+                            question={t('pricing.faq_q3', 'Is there a free trial?')}
+                            answer={t('pricing.faq_a3_full', 'Yes! All plans come with a 14-day free trial. No credit card required to start.')}
                         />
                         <FAQItem
-                            question="Tôi có thể hủy đăng ký bất cứ lúc nào không?"
-                            answer="Hoàn toàn có thể. Bạn có thể hủy đăng ký từ cài đặt tài khoản. Không có phí hủy và bạn vẫn được sử dụng đến hết chu kỳ thanh toán."
+                            question={t('pricing.faq_q4', 'Can I cancel anytime?')}
+                            answer={t('pricing.faq_a4', 'Absolutely. You can cancel from your account settings. No cancellation fees and you can use until the end of your billing cycle.')}
                         />
                         <FAQItem
-                            question="Credits là gì và hoạt động như thế nào?"
-                            answer="Credits là đơn vị để sử dụng các tính năng nâng cao như AI automation, batch processing. 1 credit = 1 action. Credits không hết hạn và có thể mua thêm bất cứ lúc nào."
+                            question={t('pricing.faq_q5', 'What are credits and how do they work?')}
+                            answer={t('pricing.faq_a5', 'Credits are units for using advanced features like AI automation, batch processing. 1 credit = 1 action. Credits never expire and can be purchased anytime.')}
                         />
                     </div>
                 </div>
@@ -219,17 +219,17 @@ export default function Index({ packages = [], auth }) {
                 <div className="absolute inset-0 bg-black/20"></div>
                 <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
-                        {t('pricing.cta_title', { defaultValue: 'Bắt đầu miễn phí ngay hôm nay' })}
+                        {t('pricing.cta_title')}
                     </h2>
                     <p className="text-xl text-white/90 mb-8">
-                        {t('pricing.cta_desc', { defaultValue: 'Tham gia cùng hàng ngàn người dùng đang quản lý thiết bị một cách thông minh' })}
+                        {t('pricing.cta_desc')}
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Link
                             href="/register"
                             className="inline-flex items-center px-8 py-4 bg-white text-purple-600 font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:bg-gray-50 transition-all duration-300 transform hover:-translate-y-1"
                         >
-                            <span>{t('pricing.free_trial_cta', { defaultValue: 'Dùng thử 14 ngày miễn phí' })}</span>
+                            <span>{t('pricing.free_trial_cta')}</span>
                             <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                             </svg>
@@ -241,7 +241,7 @@ export default function Index({ packages = [], auth }) {
                             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                             </svg>
-                            <span>{t('pricing.contact_cta', { defaultValue: 'Liên hệ tư vấn' })}</span>
+                            <span>{t('pricing.contact_cta')}</span>
                         </Link>
                     </div>
                 </div>
@@ -274,10 +274,11 @@ function PricingCard({ package: pkg, billingPeriod, onSelect, index }) {
     const monthlyPrice = pkg.type === 'subscription' ? price : null;
     const yearlyTotal = billingPeriod === 'yearly' && pkg.type === 'subscription' ? price * 12 : null;
 
+    const { t } = useTranslation();
     const typeLabels = {
-        subscription: { label: 'Thuê bao', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
-        one_time: { label: 'Một lần', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
-        credits: { label: 'Credits', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },
+        subscription: { label: t('pricing.subscription'), color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+        one_time: { label: t('pricing.one_time'), color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+        credits: { label: t('pricing.credits'), color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },
     };
 
     const typeInfo = typeLabels[pkg.type] || typeLabels.subscription;
@@ -357,10 +358,10 @@ function PricingCard({ package: pkg, billingPeriod, onSelect, index }) {
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                             <span className="text-sm text-gray-500 dark:text-gray-400">
                                 {pkg.type === 'subscription'
-                                    ? '/tháng'
+                                    ? `/${t('pricing.per_month', 'month')}`
                                     : pkg.type === 'credits'
-                                        ? `cho ${pkg.credits?.toLocaleString()} credits`
-                                        : 'trọn đời'
+                                        ? `${pkg.credits?.toLocaleString()} credits`
+                                        : t('pricing.lifetime', 'lifetime')
                                 }
                             </span>
                             {pkg.discount_percent && (
@@ -371,7 +372,7 @@ function PricingCard({ package: pkg, billingPeriod, onSelect, index }) {
                         </div>
                         {yearlyTotal && (
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Tiết kiệm {formatCompactPrice(yearlyTotal * 0.25)}đ/năm
+                                {t('pricing.save_yearly', { amount: `${formatCompactPrice(yearlyTotal * 0.25)}đ` })}
                             </p>
                         )}
                     </div>
@@ -384,7 +385,7 @@ function PricingCard({ package: pkg, billingPeriod, onSelect, index }) {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                 </svg>
                                 <span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
-                                    {pkg.max_devices === -1 ? 'Unlimited' : `${pkg.max_devices} thiết bị`}
+                                    {pkg.max_devices === -1 ? t('packages.unlimited') : `${pkg.max_devices} ${t('packages.devices')}`}
                                 </span>
                             </div>
                         )}
@@ -394,7 +395,7 @@ function PricingCard({ package: pkg, billingPeriod, onSelect, index }) {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
                                 <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                                    {pkg.duration_days} ngày
+                                    {pkg.duration_days} {t('packages.days')}
                                 </span>
                             </div>
                         )}
@@ -414,7 +415,7 @@ function PricingCard({ package: pkg, billingPeriod, onSelect, index }) {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                                 <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
-                                    {pkg.trial_days} ngày thử
+                                    {pkg.trial_days} {t('packages.trial_days')}
                                 </span>
                             </div>
                         )}
@@ -424,7 +425,7 @@ function PricingCard({ package: pkg, billingPeriod, onSelect, index }) {
                     {pkg.features && pkg.features.length > 0 && (
                         <div className="space-y-2">
                             <h4 className="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wide">
-                                Tính năng bao gồm
+                                {t('packages.features_included')}
                             </h4>
                             <ul className="space-y-1.5">
                                 {(showAllFeatures ? pkg.features : pkg.features.slice(0, 4)).map((feature, idx) => (
@@ -444,7 +445,7 @@ function PricingCard({ package: pkg, billingPeriod, onSelect, index }) {
                                     }}
                                     className="flex items-center gap-1 ml-6 text-xs text-purple-600 dark:text-purple-400 font-medium hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
                                 >
-                                    <span>{showAllFeatures ? 'Ẩn bớt' : `+${pkg.features.length - 4} tính năng`}</span>
+                                    <span>{showAllFeatures ? t('common.show_less', 'Show less') : `+${pkg.features.length - 4} ${t('packages.features')}`}</span>
                                     <svg
                                         className={`w-3 h-3 transition-transform duration-300 ${showAllFeatures ? 'rotate-180' : ''}`}
                                         fill="none"
@@ -468,12 +469,12 @@ function PricingCard({ package: pkg, billingPeriod, onSelect, index }) {
                             : 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100'
                             }`}
                     >
-                        {pkg.is_trial ? 'Dùng thử' : pkg.price === 0 ? 'Miễn phí' : 'Chọn gói này'}
+                        {pkg.is_trial ? t('packages.trial') : pkg.price === 0 ? t('packages.get_started_free') : t('pricing.choose_plan')}
                     </button>
 
                     {pkg.active_subscribers > 0 && (
                         <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">
-                            <span className="font-medium text-gray-700 dark:text-gray-300">{pkg.active_subscribers}</span> người đang dùng
+                            <span className="font-medium text-gray-700 dark:text-gray-300">{pkg.active_subscribers}</span> {t('packages.users')}
                         </p>
                     )}
                 </div>
@@ -500,6 +501,7 @@ function PackageIcon({ icon, className = '' }) {
 }
 
 function ComparisonTable({ packages }) {
+    const { t } = useTranslation();
     if (!packages || packages.length === 0) return null;
 
     // Collect all unique features
@@ -510,13 +512,13 @@ function ComparisonTable({ packages }) {
             <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700">
                     <th className="py-4 px-6 text-left text-sm font-semibold text-gray-900 dark:text-white">
-                        Tính năng
+                        {t('packages.features')}
                     </th>
                     {packages.slice(0, 4).map((pkg) => (
                         <th key={pkg.id} className="py-4 px-6 text-center">
                             <div className="font-bold text-gray-900 dark:text-white">{pkg.name}</div>
                             <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                {formatCurrency(pkg.price)}/{pkg.type === 'subscription' ? 'tháng' : 'lần'}
+                                {formatCurrency(pkg.price)}/{pkg.type === 'subscription' ? t('pricing.per_month', 'month') : t('pricing.per_time', 'time')}
                             </div>
                         </th>
                     ))}
@@ -524,15 +526,15 @@ function ComparisonTable({ packages }) {
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 <tr>
-                    <td className="py-4 px-6 text-sm text-gray-600 dark:text-gray-400">Số thiết bị tối đa</td>
+                    <td className="py-4 px-6 text-sm text-gray-600 dark:text-gray-400">{t('pricing.max_devices', 'Max devices')}</td>
                     {packages.slice(0, 4).map((pkg) => (
                         <td key={pkg.id} className="py-4 px-6 text-center font-medium text-gray-900 dark:text-white">
-                            {pkg.max_devices === -1 ? 'Không giới hạn' : pkg.max_devices || '-'}
+                            {pkg.max_devices === -1 ? t('packages.unlimited') : pkg.max_devices || '-'}
                         </td>
                     ))}
                 </tr>
                 <tr>
-                    <td className="py-4 px-6 text-sm text-gray-600 dark:text-gray-400">Credits hàng tháng</td>
+                    <td className="py-4 px-6 text-sm text-gray-600 dark:text-gray-400">{t('pricing.monthly_credits', 'Monthly credits')}</td>
                     {packages.slice(0, 4).map((pkg) => (
                         <td key={pkg.id} className="py-4 px-6 text-center font-medium text-gray-900 dark:text-white">
                             {pkg.credits ? pkg.credits.toLocaleString() : '-'}

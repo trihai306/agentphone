@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function ModelSelector({ type = 'image', models = [], value, onChange, disabled = false }) {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
 
     const selectedModel = models.find(m => m.id === value);
@@ -8,7 +10,7 @@ export default function ModelSelector({ type = 'image', models = [], value, onCh
     return (
         <div className="relative">
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Chọn AI Model
+                {t('ai_studio.select_ai_model')}
             </label>
 
             <button
@@ -29,11 +31,11 @@ export default function ModelSelector({ type = 'image', models = [], value, onCh
                                 {selectedModel.name}
                             </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                {selectedModel.credits_cost} credits/{type === 'image' ? 'ảnh' : 'giây'}
+                                {selectedModel.credits_cost} credits/{type === 'image' ? t('ai_studio.per_image') : t('ai_studio.per_second')}
                             </div>
                         </>
                     ) : (
-                        <span className="text-gray-400">Chọn model...</span>
+                        <span className="text-gray-400">{t('ai_studio.select_model')}...</span>
                     )}
                 </div>
                 <svg

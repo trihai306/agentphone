@@ -208,7 +208,7 @@ export default function Header({ title, userName, setSidebarOpen }) {
                                 ? 'hover:bg-[#1a1a1a]'
                                 : 'hover:bg-gray-100'
                                 }`}
-                            title={t('header.contact_zalo', { defaultValue: 'Liên hệ qua Zalo' })}
+                            title={t('header.contact_zalo')}
                         >
                             <img src="/images/icons/zalo.png" alt="Zalo" className="w-6 h-6 rounded" />
                         </a>
@@ -221,7 +221,7 @@ export default function Header({ title, userName, setSidebarOpen }) {
                                 ? 'hover:bg-[#1a1a1a]'
                                 : 'hover:bg-gray-100'
                                 }`}
-                            title={t('header.contact_facebook', { defaultValue: 'Liên hệ qua Facebook' })}
+                            title={t('header.contact_facebook')}
                         >
                             <img src="/images/icons/messenger.png" alt="Messenger" className="w-6 h-6 rounded" />
                         </a>
@@ -282,11 +282,11 @@ export default function Header({ title, userName, setSidebarOpen }) {
                                         }`}>
                                         <div>
                                             <h3 className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                                {t('notifications.title', { defaultValue: 'Notifications' })}
+                                                {t('notifications.title')}
                                             </h3>
                                             {unreadCount > 0 && (
                                                 <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                    {unreadCount} {t('notifications.unread', { defaultValue: 'unread' })}
+                                                    {unreadCount} {t('notifications.unread')}
                                                 </p>
                                             )}
                                         </div>
@@ -297,7 +297,7 @@ export default function Header({ title, userName, setSidebarOpen }) {
                                                 onClick={handleMarkAllAsRead}
                                                 className={isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}
                                             >
-                                                {t('notifications.mark_all_read', { defaultValue: 'Mark all read' })}
+                                                {t('notifications.mark_all_read')}
                                             </Button>
                                         )}
                                     </div>
@@ -312,7 +312,7 @@ export default function Header({ title, userName, setSidebarOpen }) {
                                                     </svg>
                                                 </div>
                                                 <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                                    {t('notifications.empty', { defaultValue: 'No notifications' })}
+                                                    {t('notifications.empty')}
                                                 </p>
                                             </div>
                                         ) : (
@@ -371,7 +371,7 @@ export default function Header({ title, userName, setSidebarOpen }) {
                                                 className={`block w-full text-center text-xs font-medium ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
                                                     }`}
                                             >
-                                                {t('notifications.view_all', { defaultValue: 'View all notifications' })}
+                                                {t('notifications.view_all')}
                                             </Link>
                                         </div>
                                     )}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { router } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/Contexts/ThemeContext';
 import { Button } from '@/Components/UI';
 
@@ -7,6 +8,7 @@ import { Button } from '@/Components/UI';
  * CreateJobModal - Modal tạo job với multi-workflow và repeat
  */
 export default function CreateJobModal({ isOpen, onClose, devices = [], flows = [] }) {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
 
@@ -112,8 +114,8 @@ export default function CreateJobModal({ isOpen, onClose, devices = [], flows = 
                                 <span className="text-xl">🚀</span>
                             </div>
                             <div>
-                                <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Tạo Job</h2>
-                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Chọn thiết bị, kịch bản và số lần chạy</p>
+                                <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('jobs.create_job')}</h2>
+                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('jobs.create.select_device_flow_repeat')}</p>
                             </div>
                         </div>
                         <Button variant="ghost" size="icon-sm" onClick={onClose}>✕</Button>
@@ -128,7 +130,7 @@ export default function CreateJobModal({ isOpen, onClose, devices = [], flows = 
                                     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${selectedDevice ? 'bg-emerald-500 text-white' : isDark ? 'bg-white/10' : 'bg-gray-200'}`}>
                                         {selectedDevice ? '✓' : '1'}
                                     </div>
-                                    <span className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Thiết Bị</span>
+                                    <span className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('jobs.device_panel.device')}</span>
                                     <span className={`text-xs px-1.5 py-0.5 rounded ${isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600'}`}>{onlineDevices.length}</span>
                                 </div>
 
@@ -136,7 +138,7 @@ export default function CreateJobModal({ isOpen, onClose, devices = [], flows = 
                                     type="text"
                                     value={deviceSearch}
                                     onChange={e => setDeviceSearch(e.target.value)}
-                                    placeholder="🔍 Tìm..."
+                                    placeholder={`🔍 ${t('common.search')}...`}
                                     className={`w-full px-3 py-2 rounded-lg text-sm mb-2 ${isDark ? 'bg-white/5 border-white/10 text-white placeholder:text-gray-600' : 'bg-white border-gray-200'} border focus:outline-none focus:ring-1 focus:ring-violet-500`}
                                 />
 
@@ -150,14 +152,14 @@ export default function CreateJobModal({ isOpen, onClose, devices = [], flows = 
                                         >
                                             <span className="text-xl">📱</span>
                                             <div className="flex-1 min-w-0">
-                                                <p className={`text-sm font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{device.name || 'Thiết bị'}</p>
+                                                <p className={`text-sm font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{device.name || t('jobs.device_panel.device')}</p>
                                                 <p className={`text-xs truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{device.model}</p>
                                             </div>
                                             {selectedDevice?.id === device.id && <span className="text-emerald-500 text-sm">✓</span>}
                                         </button>
                                     ))}
                                     {filteredDevices.length === 0 && (
-                                        <p className={`text-center py-4 text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Không có thiết bị</p>
+                                        <p className={`text-center py-4 text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('jobs.create.no_devices')}</p>
                                     )}
                                 </div>
                             </div>
@@ -168,8 +170,8 @@ export default function CreateJobModal({ isOpen, onClose, devices = [], flows = 
                                     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${selectedFlows.length > 0 ? 'bg-violet-500 text-white' : isDark ? 'bg-white/10' : 'bg-gray-200'}`}>
                                         {selectedFlows.length > 0 ? '✓' : '2'}
                                     </div>
-                                    <span className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Thứ Tự Chạy</span>
-                                    <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{selectedFlows.length} đã chọn</span>
+                                    <span className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('jobs.create.execution_order')}</span>
+                                    <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{selectedFlows.length} {t('jobs.create.selected')}</span>
                                 </div>
 
                                 <div className="space-y-1.5 max-h-48 overflow-y-auto mb-3">
@@ -187,14 +189,14 @@ export default function CreateJobModal({ isOpen, onClose, devices = [], flows = 
                                         </div>
                                     )) : (
                                         <div className={`text-center py-6 border-2 border-dashed rounded-xl ${isDark ? 'border-white/10 text-gray-500' : 'border-gray-200 text-gray-400'}`}>
-                                            <p className="text-sm">← Chọn từ danh sách</p>
+                                            <p className="text-sm">← {t('jobs.create.select_from_list')}</p>
                                         </div>
                                     )}
                                 </div>
 
                                 {selectedFlows.length > 1 && (
                                     <p className={`text-xs text-center ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
-                                        ⚡ Chạy tuần tự: 1 → 2 → ...
+                                        {t('jobs.create.sequential_run')}
                                     </p>
                                 )}
                             </div>
@@ -203,15 +205,15 @@ export default function CreateJobModal({ isOpen, onClose, devices = [], flows = 
                             <div className={`rounded-2xl p-4 ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
                                 <div className="flex items-center gap-2 mb-3">
                                     <span className="text-lg">⚡</span>
-                                    <span className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Kịch Bản</span>
-                                    <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{flows.length} có sẵn</span>
+                                    <span className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('jobs.create.scripts')}</span>
+                                    <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{flows.length} {t('jobs.create.available')}</span>
                                 </div>
 
                                 <input
                                     type="text"
                                     value={flowSearch}
                                     onChange={e => setFlowSearch(e.target.value)}
-                                    placeholder="🔍 Tìm..."
+                                    placeholder={`🔍 ${t('common.search')}...`}
                                     className={`w-full px-3 py-2 rounded-lg text-sm mb-2 ${isDark ? 'bg-white/5 border-white/10 text-white placeholder:text-gray-600' : 'bg-white border-gray-200'} border focus:outline-none focus:ring-1 focus:ring-violet-500`}
                                 />
 
@@ -226,12 +228,12 @@ export default function CreateJobModal({ isOpen, onClose, devices = [], flows = 
                                             <div className="flex-1 min-w-0">
                                                 <p className={`text-sm font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{flow.name}</p>
                                             </div>
-                                            <span className={`text-xs px-1.5 py-0.5 rounded ${isDark ? 'bg-violet-500/20 text-violet-400' : 'bg-violet-100 text-violet-600'}`}>+ Thêm</span>
+                                            <span className={`text-xs px-1.5 py-0.5 rounded ${isDark ? 'bg-violet-500/20 text-violet-400' : 'bg-violet-100 text-violet-600'}`}>+ {t('jobs.create.add')}</span>
                                         </button>
                                     ))}
                                     {availableFlows.length === 0 && (
                                         <p className={`text-center py-4 text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                            {flows.length === 0 ? 'Chưa có workflow' : 'Đã chọn hết'}
+                                            {flows.length === 0 ? t('jobs.create.no_workflows') : t('jobs.create.all_selected')}
                                         </p>
                                     )}
                                 </div>
@@ -243,8 +245,8 @@ export default function CreateJobModal({ isOpen, onClose, devices = [], flows = 
                             <div className="flex items-center gap-3">
                                 <span className="text-2xl">🔄</span>
                                 <div>
-                                    <p className={`font-semibold text-sm ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>Lặp lại</p>
-                                    <p className={`text-xs ${isDark ? 'text-amber-400/70' : 'text-amber-600'}`}>Chạy lại toàn bộ workflow chain</p>
+                                    <p className={`font-semibold text-sm ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>{t('jobs.create.repeat')}</p>
+                                    <p className={`text-xs ${isDark ? 'text-amber-400/70' : 'text-amber-600'}`}>{t('jobs.create.repeat_desc')}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -264,7 +266,7 @@ export default function CreateJobModal({ isOpen, onClose, devices = [], flows = 
                                     onClick={() => setRepeatCount(Math.min(100, repeatCount + 1))}
                                     className={`w-8 h-8 rounded-lg font-bold ${isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white hover:bg-gray-100 text-gray-700'}`}
                                 >+</button>
-                                <span className={`text-sm ml-2 ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>lần</span>
+                                <span className={`text-sm ml-2 ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>{t('jobs.create.times')}</span>
                             </div>
                         </div>
                     </div>
@@ -273,18 +275,18 @@ export default function CreateJobModal({ isOpen, onClose, devices = [], flows = 
                     <div className={`px-6 py-4 border-t flex items-center justify-between shrink-0 ${isDark ? 'bg-white/5 border-white/10' : 'bg-gray-50 border-gray-100'}`}>
                         <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                             {selectedDevice && selectedFlows.length > 0
-                                ? `📱 ${selectedDevice.name} • ${selectedFlows.length} workflow${repeatCount > 1 ? ` • x${repeatCount} lần` : ''}`
-                                : 'Chọn thiết bị và ít nhất 1 workflow'}
+                                ? `${selectedDevice.name} • ${selectedFlows.length} workflow${repeatCount > 1 ? ` • x${repeatCount} ${t('jobs.create.times')}` : ''}`
+                                : t('jobs.create.select_device_and_workflow')}
                         </div>
 
                         <div className="flex gap-2">
-                            <Button variant="ghost" onClick={onClose}>Hủy</Button>
+                            <Button variant="ghost" onClick={onClose}>{t('common.cancel')}</Button>
                             <Button
                                 variant="gradient"
                                 onClick={handleSubmit}
                                 disabled={!selectedDevice || selectedFlows.length === 0 || isSubmitting}
                             >
-                                {isSubmitting ? 'Đang tạo...' : `🚀 Chạy ${repeatCount > 1 ? `(${repeatCount}x)` : ''}`}
+                                {isSubmitting ? t('common.creating') : `${t('jobs.create.run')} ${repeatCount > 1 ? `(${repeatCount}x)` : ''}`}
                             </Button>
                         </div>
                     </div>

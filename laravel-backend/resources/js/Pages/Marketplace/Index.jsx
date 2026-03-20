@@ -19,7 +19,7 @@ export default function Index({ listings = { data: [] }, filters = {}, stats = {
 
     // Categories as horizontal tabs
     const categories = [
-        { id: 'all', name: t('common.all', 'Tất cả'), icon: 'fire' },
+        { id: 'all', name: t('common.all'), icon: 'fire' },
         { id: 'tiktok', name: 'TikTok', icon: 'music' },
         { id: 'facebook', name: 'Facebook', icon: 'globe' },
         { id: 'instagram', name: 'Instagram', icon: 'camera' },
@@ -73,8 +73,8 @@ export default function Index({ listings = { data: [] }, filters = {}, stats = {
     ];
 
     return (
-        <AppLayout title={t('marketplace.title', 'Chợ Chia Sẻ')}>
-            <Head title={t('marketplace.title', 'Chợ Chia Sẻ')} />
+        <AppLayout title={t('marketplace.title')}>
+            <Head title={t('marketplace.title')} />
 
             <div className={`min-h-screen ${isDark ? 'bg-[#0a0a0a]' : 'bg-gray-50'}`}>
                 {/* Hero Section with Gradient */}
@@ -87,10 +87,10 @@ export default function Index({ listings = { data: [] }, filters = {}, stats = {
                         <div className="flex items-center justify-between mb-8">
                             <div>
                                 <h1 className={`text-4xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    {t('marketplace.title', 'Chợ Chia Sẻ')}
+                                    {t('marketplace.title')}
                                 </h1>
                                 <p className={`mt-2 text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                    Khám phá {stats?.total_listings || 0}+ campaigns từ cộng đồng
+                                    {t('marketplace.discover_campaigns', { count: stats?.total_listings || 0 })}
                                 </p>
                             </div>
                             <Link
@@ -100,7 +100,7 @@ export default function Index({ listings = { data: [] }, filters = {}, stats = {
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                 </svg>
-                                Đăng bán
+                                {t('marketplace.sell')}
                             </Link>
                         </div>
 
@@ -112,7 +112,7 @@ export default function Index({ listings = { data: [] }, filters = {}, stats = {
                                 </svg>
                                 <input
                                     type="text"
-                                    placeholder="Tìm kiếm campaigns, TikTok automation, e-commerce..."
+                                    placeholder={t('marketplace.search_placeholder')}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className={`w-full pl-14 pr-32 py-4 text-base bg-transparent ${isDark ? 'text-white placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'} focus:outline-none`}
@@ -121,7 +121,7 @@ export default function Index({ listings = { data: [] }, filters = {}, stats = {
                                     type="submit"
                                     className="absolute right-2 px-6 py-2.5 text-sm font-semibold rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:shadow-lg transition-all"
                                 >
-                                    Tìm kiếm
+                                    {t('common.search')}
                                 </button>
                             </div>
                         </form>
@@ -153,15 +153,15 @@ export default function Index({ listings = { data: [] }, filters = {}, stats = {
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-3">
                             <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{listings?.total || 0}</span> kết quả
+                                <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{listings?.total || 0}</span> {t('common.results')}
                             </span>
 
                             {/* Price Filter Pills */}
                             <div className={`flex rounded-xl overflow-hidden ${isDark ? 'bg-white/5 border border-white/10' : 'bg-gray-100'}`}>
                                 {[
-                                    { value: 'all', label: 'Tất cả' },
-                                    { value: 'free', label: '🆓 Miễn phí' },
-                                    { value: 'paid', label: 'Trả phí' },
+                                    { value: 'all', label: t('common.all') },
+                                    { value: 'free', label: t('marketplace.free') },
+                                    { value: 'paid', label: t('marketplace.paid') },
                                 ].map((option) => (
                                     <button
                                         key={option.value}
@@ -183,11 +183,11 @@ export default function Index({ listings = { data: [] }, filters = {}, stats = {
                             onChange={(e) => handleFilterChange('sort', e.target.value)}
                             className={`px-4 py-2 rounded-xl text-sm ${isDark ? 'bg-white/5 border-white/10 text-gray-300' : 'bg-white border-gray-200 text-gray-700'} border focus:outline-none`}
                         >
-                            <option value="popular">Phổ biến</option>
-                            <option value="newest">✨ Mới nhất</option>
-                            <option value="rating">⭐ Đánh giá cao</option>
-                            <option value="price_low">Giá thấp → cao</option>
-                            <option value="price_high">Giá cao → thấp</option>
+                            <option value="popular">{t('marketplace.sort_popular')}</option>
+                            <option value="newest">{t('marketplace.sort_newest')}</option>
+                            <option value="rating">{t('marketplace.sort_rating')}</option>
+                            <option value="price_low">{t('marketplace.sort_price_low')}</option>
+                            <option value="price_high">{t('marketplace.sort_price_high')}</option>
                         </select>
                     </div>
 
@@ -212,7 +212,7 @@ export default function Index({ listings = { data: [] }, filters = {}, stats = {
                                                 ? 'bg-emerald-500/90 text-white'
                                                 : 'bg-white/90 text-gray-900'
                                                 }`}>
-                                                {listing.price_type === 'free' ? 'MIỄN PHÍ' : `${formatVND(listing.price)} đ`}
+                                                {listing.price_type === 'free' ? t('marketplace.free') : `${formatVND(listing.price)} đ`}
                                             </span>
                                         </div>
 
@@ -275,16 +275,16 @@ export default function Index({ listings = { data: [] }, filters = {}, stats = {
                                 </svg>
                             </div>
                             <h3 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                Không tìm thấy kết quả
+                                {t('marketplace.no_results')}
                             </h3>
                             <p className={`text-sm mb-8 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                                Thử từ khóa khác hoặc xóa bộ lọc
+                                {t('marketplace.no_results_hint')}
                             </p>
                             <button
                                 onClick={() => router.get('/marketplace')}
                                 className="px-8 py-3 text-sm font-semibold rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 text-white"
                             >
-                                Xem tất cả
+                                {t('common.view_all')}
                             </button>
                         </div>
                     )}
@@ -294,15 +294,15 @@ export default function Index({ listings = { data: [] }, filters = {}, stats = {
                         <div className="mt-10 flex items-center justify-center gap-3">
                             {listings?.prev_page_url && (
                                 <Link href={listings.prev_page_url} className={`px-5 py-2.5 text-sm font-medium rounded-xl ${isDark ? 'bg-white/5 text-gray-400 hover:bg-white/10' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-                                    ← Trước
+                                    {t('common.previous')}
                                 </Link>
                             )}
                             <span className={`px-4 py-2 text-sm font-medium ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                Trang {listings?.current_page} / {listings?.last_page}
+                                {t('marketplace.page_info', { current: listings?.current_page, total: listings?.last_page })}
                             </span>
                             {listings?.next_page_url && (
                                 <Link href={listings.next_page_url} className="px-5 py-2.5 text-sm font-semibold rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 text-white">
-                                    Tiếp →
+                                    {t('common.next')}
                                 </Link>
                             )}
                         </div>
