@@ -32,6 +32,20 @@ object WebRTCManager {
     private var localVideoTrack: VideoTrack? = null
     private var videoCapturer: ScreenCapturerAndroid? = null
 
+    // EglBase instances (must be released to avoid native memory leak)
+    private var encoderEglBase: EglBase? = null
+    private var decoderEglBase: EglBase? = null
+
+    // Video source and helper (must be disposed to avoid leak)
+    private var surfaceTextureHelper: SurfaceTextureHelper? = null
+    private var videoSource: VideoSource? = null
+
+    // Shared OkHttpClient (avoid creating per-call instances)
+    private val httpClient = OkHttpClient.Builder()
+        .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .build()
+
     // State
     private var isStreaming = false
     private var viewerUserId: Int? = null
@@ -61,13 +75,15 @@ object WebRTCManager {
         PeerConnectionFactory.initialize(initOptions)
 
         // Create factory with H.264 codec
+        encoderEglBase = EglBase.create()
+        decoderEglBase = EglBase.create()
         val encoderFactory = DefaultVideoEncoderFactory(
-            EglBase.create().eglBaseContext,
+            encoderEglBase!!.eglBaseContext,
             true, // enableIntelVp8Encoder
             true  // enableH264HighProfile
         )
         val decoderFactory = DefaultVideoDecoderFactory(
-            EglBase.create().eglBaseContext
+            decoderEglBase!!.eglBaseContext
         )
 
         peerConnectionFactory = PeerConnectionFactory.builder()
@@ -153,15 +169,15 @@ object WebRTCManager {
         )
 
         // Create video source and track
-        val videoSource = factory.createVideoSource(videoCapturer!!.isScreencast)
-        val surfaceTextureHelper = SurfaceTextureHelper.create(
+        videoSource = factory.createVideoSource(videoCapturer!!.isScreencast)
+        surfaceTextureHelper = SurfaceTextureHelper.create(
             "ScreenCaptureThread",
-            EglBase.create().eglBaseContext
+            (encoderEglBase ?: EglBase.create()).eglBaseContext
         )
-        videoCapturer?.initialize(surfaceTextureHelper, contextRef!!, videoSource.capturerObserver)
+        videoCapturer?.initialize(surfaceTextureHelper, contextRef!!, videoSource!!.capturerObserver)
         videoCapturer?.startCapture(screenWidth, screenHeight, 30) // 30 FPS
 
-        localVideoTrack = factory.createVideoTrack("screen_track", videoSource)
+        localVideoTrack = factory.createVideoTrack("screen_track", videoSource!!)
         localVideoTrack?.setEnabled(true)
 
         // Add track to peer connection
@@ -251,6 +267,12 @@ object WebRTCManager {
         videoCapturer?.dispose()
         videoCapturer = null
 
+        surfaceTextureHelper?.dispose()
+        surfaceTextureHelper = null
+
+        videoSource?.dispose()
+        videoSource = null
+
         localVideoTrack?.dispose()
         localVideoTrack = null
 
@@ -281,7 +303,6 @@ object WebRTCManager {
                     put("signal_data", data)
                 }
 
-                val client = OkHttpClient()
                 val request = Request.Builder()
                     .url("$baseUrl/webrtc/signal")
                     .addHeader("Authorization", "Bearer $token")
@@ -290,7 +311,7 @@ object WebRTCManager {
                     .post(payload.toString().toRequestBody("application/json".toMediaTypeOrNull()))
                     .build()
 
-                val response = client.newCall(request).execute()
+                val response = httpClient.newCall(request).execute()
                 if (response.isSuccessful) {
                     Log.d(TAG, "Signaling data sent: $type")
                 } else {
@@ -312,6 +333,12 @@ object WebRTCManager {
         stopStreaming()
         peerConnectionFactory?.dispose()
         peerConnectionFactory = null
+        encoderEglBase?.release()
+        encoderEglBase = null
+        decoderEglBase?.release()
+        decoderEglBase = null
+        httpClient.dispatcher.executorService.shutdown()
+        httpClient.connectionPool.evictAll()
         contextRef = null
         scope.cancel()
     }

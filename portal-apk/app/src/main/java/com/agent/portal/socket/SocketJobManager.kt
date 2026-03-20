@@ -21,9 +21,12 @@ import com.agent.portal.streaming.ScreenStreamService
 import com.agent.portal.streaming.WebRTCManager
 import kotlinx.coroutines.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
 import java.lang.ref.WeakReference
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * WebSocket Manager using Pusher for receiving and executing jobs from server
@@ -42,6 +45,13 @@ object SocketJobManager {
 
     private const val TAG = "SocketJobManager"
 
+    // Shared OkHttpClient with proper timeouts (reuse connections, avoid creating per-call)
+    private val httpClient = OkHttpClient.Builder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .build()
+
     // Pusher connection
     private var pusher: Pusher? = null
     private var deviceChannel: Channel? = null
@@ -53,11 +63,12 @@ object SocketJobManager {
     private val isConnected = AtomicBoolean(false)
     private val isInitialized = AtomicBoolean(false)
     private val channelsSubscribed = AtomicBoolean(false)
+    private val privateChannelSubscribed = AtomicBoolean(false)
     
     // Auto-reconnect
-    private var reconnectAttempts = 0
+    private val reconnectAttempts = AtomicInteger(0)
     private val maxReconnectAttempts = 10
-    private var isIntentionalDisconnect = false
+    private val isIntentionalDisconnect = AtomicBoolean(false)
     private var reconnectJob: kotlinx.coroutines.Job? = null
 
     // Accessibility status check
@@ -79,7 +90,7 @@ object SocketJobManager {
     private var contextRef: WeakReference<Context>? = null
 
     // Callbacks
-    private val jobListeners = mutableListOf<JobListener>()
+    private val jobListeners = java.util.concurrent.CopyOnWriteArrayList<JobListener>()
 
     // Gson for JSON parsing
     private val gson = Gson()
@@ -156,9 +167,9 @@ object SocketJobManager {
                         // Use HttpClientFactory with CustomDns for emulator DNS resolution
                         val client = com.agent.portal.utils.HttpClientFactory.create()
                         val request = okhttp3.Request.Builder().url(testUrl).head().build()
-                        val response = client.newCall(request).execute()
-                        Log.i(TAG, "✅ HTTPS test successful: ${response.code}")
-                        response.close()
+                        client.newCall(request).execute().use { response ->
+                            Log.i(TAG, "✅ HTTPS test successful: ${response.code}")
+                        }
                     } catch (e: Exception) {
                         Log.e(TAG, "❌ HTTPS connectivity test failed: ${e.message}", e)
                     }
@@ -347,6 +358,7 @@ object SocketJobManager {
      * Subscribe to private device channel for direct commands
      */
     private fun subscribeToPrivateChannel() {
+        if (privateChannelSubscribed.get()) return
         if (deviceId == null) return
 
         // Use private-device.{id} format to match Laravel PrivateChannel('device.{id}')
@@ -579,16 +591,22 @@ object SocketJobManager {
             }
         }
 
+        privateChannelSubscribed.set(true)
     }
 
     /**
      * Disconnect from Pusher server
      */
     fun disconnect() {
-        isIntentionalDisconnect = true
+        isIntentionalDisconnect.set(true)
         reconnectJob?.cancel()
         reconnectJob = null
-        
+
+        // Stop screen streaming if active
+        isScreenStreaming.set(false)
+        screenshotStreamJob?.cancel()
+        screenshotStreamJob = null
+
         scope.launch {
             try {
                 // Unsubscribe from channel (automatically unbinds all events)
@@ -597,12 +615,13 @@ object SocketJobManager {
                 }
                 deviceChannel = null
                 presenceChannel = null
-                
+
                 // Disconnect from Pusher
                 pusher?.disconnect()
                 pusher = null
                 isConnected.set(false)
                 channelsSubscribed.set(false)
+                privateChannelSubscribed.set(false)
                 isInitialized.set(false)
                 Log.i(TAG, "Disconnected from Pusher (intentional)")
             } catch (e: Exception) {
@@ -621,6 +640,10 @@ object SocketJobManager {
      */
     fun addJobListener(listener: JobListener) {
         jobListeners.add(listener)
+    }
+
+    fun removeJobListener(listener: JobListener) {
+        jobListeners.remove(listener)
     }
     /**
      * Publish custom event to Laravel backend via HTTP API
@@ -656,13 +679,9 @@ object SocketJobManager {
                 // Use production API URL from NetworkUtils
                 val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
 
-                // Send HTTP POST request with longer timeout for large payloads
-                val client = okhttp3.OkHttpClient.Builder()
-                    .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-                    .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
-                    .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-                    .build()
-                    
+                // Send HTTP POST request using shared client
+                val client = httpClient
+
                 val json = gson.toJson(enrichedData)
                 val payloadSizeKb = json.length / 1024
                 
@@ -680,16 +699,14 @@ object SocketJobManager {
                     .build()
 
                 Log.i(TAG, "📤 Sending $eventName (${payloadSizeKb}KB)...")
-                val response = client.newCall(request).execute()
-                
-                if (response.isSuccessful) {
-                    Log.i(TAG, "✅ Published $eventName (${payloadSizeKb}KB)")
-                } else {
-                    val body = response.body?.string()?.take(200) ?: "no body"
-                    Log.e(TAG, "❌ Failed to publish $eventName: ${response.code} - $body")
+                client.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        Log.i(TAG, "✅ Published $eventName (${payloadSizeKb}KB)")
+                    } else {
+                        val body = response.body?.string()?.take(200) ?: "no body"
+                        Log.e(TAG, "❌ Failed to publish $eventName: ${response.code} - $body")
+                    }
                 }
-                
-                response.close()
             } catch (e: Exception) {
                 Log.e(TAG, "❌ Exception publishing '$eventName': ${e.message}", e)
             }
@@ -796,7 +813,7 @@ object SocketJobManager {
                 }
 
                 // Send HTTP POST request
-                val client = okhttp3.OkHttpClient()
+                val client = httpClient
                 val json = gson.toJson(actionData)
                 val requestBody = okhttp3.RequestBody.create(
                     "application/json".toMediaTypeOrNull(),
@@ -811,16 +828,14 @@ object SocketJobManager {
                     .addHeader("Accept", "application/json")
                     .build()
 
-                val response = client.newCall(request).execute()
-
-                if (response.isSuccessful) {
-                    val hasScreenshot = event.screenshotPath != null
-                    Log.d(TAG, "📤 Published action: ${event.eventType} #${event.sequenceNumber} (screenshot: $hasScreenshot)")
-                } else {
-                    Log.w(TAG, "Failed to publish action: ${response.code}")
+                client.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        val hasScreenshot = event.screenshotPath != null
+                        Log.d(TAG, "📤 Published action: ${event.eventType} #${event.sequenceNumber} (screenshot: $hasScreenshot)")
+                    } else {
+                        Log.w(TAG, "Failed to publish action: ${response.code}")
+                    }
                 }
-
-                response.close()
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to publish action event", e)
             }
@@ -836,10 +851,10 @@ object SocketJobManager {
         Log.i(TAG, "✓ Connected to Pusher server")
 
         // Reset reconnect counter on successful connection
-        reconnectAttempts = 0
+        reconnectAttempts.set(0)
         reconnectJob?.cancel()
         reconnectJob = null
-        isIntentionalDisconnect = false
+        isIntentionalDisconnect.set(false)
 
         // Notify backend that device is online
         notifyDeviceStatus("online")
@@ -866,7 +881,7 @@ object SocketJobManager {
         }
 
         // Auto-reconnect if not intentional disconnect
-        if (!isIntentionalDisconnect) {
+        if (!isIntentionalDisconnect.get()) {
             scheduleReconnect()
         }
     }
@@ -875,23 +890,23 @@ object SocketJobManager {
      * Schedule reconnection with exponential backoff
      */
     private fun scheduleReconnect() {
-        if (reconnectAttempts >= maxReconnectAttempts) {
+        if (reconnectAttempts.get() >= maxReconnectAttempts) {
             Log.e(TAG, "❌ Max reconnect attempts ($maxReconnectAttempts) reached. Giving up.")
-            reconnectAttempts = 0
+            reconnectAttempts.set(0)
             return
         }
-        
-        reconnectAttempts++
-        val delayMs = minOf(1000L * (1 shl (reconnectAttempts - 1)), 30000L) // Exponential backoff, max 30s
-        
-        Log.i(TAG, "⏳ Scheduling reconnect attempt $reconnectAttempts/$maxReconnectAttempts in ${delayMs}ms")
-        
+
+        val attempt = reconnectAttempts.incrementAndGet()
+        val delayMs = minOf(1000L * (1 shl (attempt - 1)), 30000L) // Exponential backoff, max 30s
+
+        Log.i(TAG, "⏳ Scheduling reconnect attempt $attempt/$maxReconnectAttempts in ${delayMs}ms")
+
         reconnectJob?.cancel()
         reconnectJob = scope.launch {
             kotlinx.coroutines.delay(delayMs)
-            
-            if (!isConnected.get() && !isIntentionalDisconnect) {
-                Log.i(TAG, "🔄 Attempting reconnect ($reconnectAttempts/$maxReconnectAttempts)...")
+
+            if (!isConnected.get() && !isIntentionalDisconnect.get()) {
+                Log.i(TAG, "🔄 Attempting reconnect (${reconnectAttempts.get()}/$maxReconnectAttempts)...")
                 reconnect()
             }
         }
@@ -906,7 +921,9 @@ object SocketJobManager {
         pusher = null
         deviceChannel = null
         presenceChannel = null
-        
+        channelsSubscribed.set(false)
+        privateChannelSubscribed.set(false)
+
         // Reconnect
         connect()
     }
@@ -941,7 +958,7 @@ object SocketJobManager {
                     "timestamp" to System.currentTimeMillis()
                 )
 
-                val client = okhttp3.OkHttpClient()
+                val client = httpClient
                 val json = gson.toJson(payload)
                 val requestBody = okhttp3.RequestBody.create(
                     "application/json".toMediaTypeOrNull(),
@@ -956,15 +973,13 @@ object SocketJobManager {
                     .addHeader("Accept", "application/json")
                     .build()
 
-                val response = client.newCall(request).execute()
-                
-                if (response.isSuccessful) {
-                    Log.i(TAG, "📡 Device status updated: $status")
-                } else {
-                    Log.w(TAG, "Failed to update device status: ${response.code}")
+                client.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        Log.i(TAG, "📡 Device status updated: $status")
+                    } else {
+                        Log.w(TAG, "Failed to update device status: ${response.code}")
+                    }
                 }
-                
-                response.close()
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to notify device status", e)
             }
@@ -1416,7 +1431,7 @@ object SocketJobManager {
                 message?.let { payload["message"] = it }
                 errorBranchTarget?.let { payload["error_branch_target"] = it }
 
-                val client = okhttp3.OkHttpClient()
+                val client = httpClient
                 val json = gson.toJson(payload)
                 val requestBody = okhttp3.RequestBody.create(
                     "application/json".toMediaTypeOrNull(),
@@ -1431,15 +1446,13 @@ object SocketJobManager {
                     .addHeader("Accept", "application/json")
                     .build()
 
-                val response = client.newCall(request).execute()
-
-                if (response.isSuccessful) {
-                    Log.d(TAG, "📊 Progress reported: $actionId [$status]")
-                } else {
-                    Log.w(TAG, "Failed to report progress: ${response.code}")
+                client.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        Log.d(TAG, "📊 Progress reported: $actionId [$status]")
+                    } else {
+                        Log.w(TAG, "Failed to report progress: ${response.code}")
+                    }
                 }
-
-                response.close()
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to report test run progress", e)
             }
@@ -1512,7 +1525,7 @@ object SocketJobManager {
             
             val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
             
-            val client = okhttp3.OkHttpClient()
+            val client = httpClient
             val request = okhttp3.Request.Builder()
                 .url("$apiUrl/jobs/pending?device_id=$devId")
                 .addHeader("Authorization", "Bearer $token")
@@ -1520,35 +1533,35 @@ object SocketJobManager {
                 .get()
                 .build()
             
-            val response = client.newCall(request).execute()
-            if (response.isSuccessful) {
-                val body = response.body?.string()
-                if (body != null) {
-                    val result = gson.fromJson(body, PendingJobsResponse::class.java)
-                    if (result.success && result.jobs.isNotEmpty()) {
-                        Log.i(TAG, "📥 Fetched ${result.jobs.size} pending jobs from API")
-                        result.jobs.forEach { jobData ->
-                            // Convert to Job and add to queue if not already queued
-                            if (!jobQueue.containsKey(jobData.id.toString())) {
-                                val job = Job(
-                                    id = jobData.id.toString(),
-                                    type = "workflow",
-                                    priority = when {
-                                        jobData.priority >= 9 -> JobPriority.IMMEDIATE
-                                        jobData.priority >= 7 -> JobPriority.HIGH
-                                        jobData.priority >= 4 -> JobPriority.NORMAL
-                                        else -> JobPriority.LOW
-                                    },
-                                    actionConfigUrl = "$apiUrl/jobs/${jobData.id}/config"
-                                )
-                                jobQueue[job.id] = job
-                                pendingJobQueue.offer(job)
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    val body = response.body?.string()
+                    if (body != null) {
+                        val result = gson.fromJson(body, PendingJobsResponse::class.java)
+                        if (result.success && result.jobs.isNotEmpty()) {
+                            Log.i(TAG, "📥 Fetched ${result.jobs.size} pending jobs from API")
+                            result.jobs.forEach { jobData ->
+                                // Convert to Job and add to queue if not already queued
+                                if (!jobQueue.containsKey(jobData.id.toString())) {
+                                    val job = Job(
+                                        id = jobData.id.toString(),
+                                        type = "workflow",
+                                        priority = when {
+                                            jobData.priority >= 9 -> JobPriority.IMMEDIATE
+                                            jobData.priority >= 7 -> JobPriority.HIGH
+                                            jobData.priority >= 4 -> JobPriority.NORMAL
+                                            else -> JobPriority.LOW
+                                        },
+                                        actionConfigUrl = "$apiUrl/jobs/${jobData.id}/config"
+                                    )
+                                    jobQueue[job.id] = job
+                                    pendingJobQueue.offer(job)
+                                }
                             }
                         }
                     }
                 }
             }
-            response.close()
         } catch (e: Exception) {
             Log.e(TAG, "Failed to fetch pending jobs", e)
         }
@@ -1679,7 +1692,7 @@ object SocketJobManager {
                 "timestamp" to System.currentTimeMillis()
             )
 
-            val client = okhttp3.OkHttpClient()
+            val client = httpClient
             val json = gson.toJson(payload)
             val requestBody = okhttp3.RequestBody.create(
                 "application/json".toMediaTypeOrNull(),
@@ -1694,15 +1707,13 @@ object SocketJobManager {
                 .addHeader("Accept", "application/json")
                 .build()
 
-            val response = client.newCall(request).execute()
-            
-            if (response.isSuccessful) {
-                Log.i(TAG, "✅ Job result reported: $jobId → ${if (success) "completed" else "failed"}")
-            } else {
-                Log.w(TAG, "⚠️ Failed to report job result: ${response.code}")
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    Log.i(TAG, "✅ Job result reported: $jobId → ${if (success) "completed" else "failed"}")
+                } else {
+                    Log.w(TAG, "⚠️ Failed to report job result: ${response.code}")
+                }
             }
-            
-            response.close()
         } catch (e: Exception) {
             Log.e(TAG, "❌ Error reporting job result", e)
         }
@@ -2316,7 +2327,7 @@ object SocketJobManager {
                     "accessibility_enabled" to accessibilityEnabled
                 )
                 
-                val client = okhttp3.OkHttpClient()
+                val client = httpClient
                 val json = gson.toJson(payload)
                 val requestBody = okhttp3.RequestBody.create(
                     "application/json".toMediaTypeOrNull(),
@@ -2331,15 +2342,13 @@ object SocketJobManager {
                     .addHeader("Accept", "application/json")
                     .build()
                 
-                val response = client.newCall(request).execute()
-                
-                if (response.isSuccessful) {
-                    Log.i(TAG, "✅ Accessibility check result sent to backend")
-                } else {
-                    Log.w(TAG, "Failed to send accessibility result: ${response.code}")
+                client.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        Log.i(TAG, "✅ Accessibility check result sent to backend")
+                    } else {
+                        Log.w(TAG, "Failed to send accessibility result: ${response.code}")
+                    }
                 }
-                
-                response.close()
             } catch (e: Exception) {
                 Log.e(TAG, "Error handling accessibility check", e)
             }
@@ -2357,19 +2366,98 @@ object SocketJobManager {
     private val STREAM_JPEG_QUALITY = 40
     private val STREAM_MAX_WIDTH = 360
 
+    // Stream viewer tracking
+    private var streamViewerUserId: Int = 0
+
     /**
      * Handle stream.start event - browser wants to view this device's screen
-     * The browser will poll /screenshot on the APK's HTTP server directly
-     * No heavy capture/relay needed here
+     * Captures frames via accessibility service and POSTs them to the backend
      */
     private fun handleStreamStart(data: String) {
         scope.launch {
             try {
                 val json = org.json.JSONObject(data)
-                val viewerUserId = json.optInt("viewer_user_id", 0)
-                Log.i(TAG, "📹 Stream start requested by userId=$viewerUserId (browser will poll HTTP server)")
+                streamViewerUserId = json.optInt("viewer_user_id", 0)
+                Log.i(TAG, "📹 Stream start - capturing frames for userId=$streamViewerUserId")
+
+                if (isScreenStreaming.getAndSet(true)) {
+                    Log.w(TAG, "📹 Already streaming, ignoring duplicate start")
+                    return@launch
+                }
+
+                screenshotStreamJob = scope.launch(Dispatchers.IO) {
+                    val accessibilityService = com.agent.portal.accessibility.PortalAccessibilityService.instance
+                    if (accessibilityService == null) {
+                        Log.e(TAG, "📹 No accessibility service, cannot stream")
+                        isScreenStreaming.set(false)
+                        return@launch
+                    }
+
+                    val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
+                    val context = contextRef?.get()
+                    val token = context?.let { com.agent.portal.auth.SessionManager(it).getSession()?.token } ?: ""
+
+                    while (isActive && isScreenStreaming.get()) {
+                        try {
+                            // Capture screenshot
+                            val bitmap = accessibilityService.takeScreenshotBitmap()
+                            if (bitmap != null) {
+                                // Scale down for faster transfer
+                                val scaleFactor = if (bitmap.width > STREAM_MAX_WIDTH * 3) 3 else 2
+                                val scaledWidth = bitmap.width / scaleFactor
+                                val scaledHeight = bitmap.height / scaleFactor
+                                val scaled = android.graphics.Bitmap.createScaledBitmap(
+                                    bitmap,
+                                    scaledWidth,
+                                    scaledHeight,
+                                    true
+                                )
+
+                                // Compress to JPEG
+                                val stream = java.io.ByteArrayOutputStream()
+                                scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, STREAM_JPEG_QUALITY, stream)
+                                val base64Frame = android.util.Base64.encodeToString(stream.toByteArray(), android.util.Base64.NO_WRAP)
+
+                                // Save dimensions before recycling
+                                val frameWidth = scaled.width
+                                val frameHeight = scaled.height
+                                scaled.recycle()
+                                if (scaled !== bitmap) bitmap.recycle()
+
+                                // Send frame to backend
+                                val body = okhttp3.RequestBody.create(
+                                    "application/json".toMediaTypeOrNull(),
+                                    org.json.JSONObject().apply {
+                                        put("frame", base64Frame)
+                                        put("width", frameWidth)
+                                        put("height", frameHeight)
+                                    }.toString()
+                                )
+
+                                val request = okhttp3.Request.Builder()
+                                    .url("$apiUrl/devices/stream/frame")
+                                    .addHeader("Authorization", "Bearer $token")
+                                    .addHeader("Accept", "application/json")
+                                    .post(body)
+                                    .build()
+
+                                httpClient.newCall(request).execute().use { response ->
+                                    if (!response.isSuccessful) {
+                                        Log.w(TAG, "📹 Frame send failed: ${response.code}")
+                                    }
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "📹 Frame capture/send error", e)
+                        }
+
+                        // ~3 FPS
+                        delay(STREAM_FRAME_INTERVAL_MS)
+                    }
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "📹 Error handling stream.start", e)
+                isScreenStreaming.set(false)
             }
         }
     }
@@ -2378,7 +2466,10 @@ object SocketJobManager {
      * Handle stream.stop event - browser stopped viewing
      */
     private fun handleStreamStop() {
-        Log.i(TAG, "📹 Stream stop received")
+        Log.i(TAG, "📹 Stream stop requested")
+        isScreenStreaming.set(false)
+        screenshotStreamJob?.cancel()
+        screenshotStreamJob = null
     }
 
 
@@ -2455,7 +2546,7 @@ object SocketJobManager {
                     "ping_id" to pingId
                 )
                 
-                val client = okhttp3.OkHttpClient()
+                val client = httpClient
                 val json = gson.toJson(payload)
                 val requestBody = okhttp3.RequestBody.create(
                     "application/json".toMediaTypeOrNull(),
@@ -2470,16 +2561,14 @@ object SocketJobManager {
                     .addHeader("Accept", "application/json")
                     .build()
                 
-                val response = client.newCall(request).execute()
-                
-                if (response.isSuccessful) {
-                    val responseBody = response.body?.string()
-                    Log.i(TAG, "✅ PONG sent successfully! Response: ${responseBody?.take(100)}")
-                } else {
-                    Log.w(TAG, "❌ Failed to send pong: ${response.code}")
+                client.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        val responseBody = response.body?.string()
+                        Log.i(TAG, "✅ PONG sent successfully! Response: ${responseBody?.take(100)}")
+                    } else {
+                        Log.w(TAG, "❌ Failed to send pong: ${response.code}")
+                    }
                 }
-                
-                response.close()
             } catch (e: Exception) {
                 Log.e(TAG, "Error handling ping request", e)
             }
@@ -2614,7 +2703,7 @@ object SocketJobManager {
                     "apps" to appsList
                 )
                 
-                val client = okhttp3.OkHttpClient()
+                val client = httpClient
                 val json = gson.toJson(payload)
                 Log.i(TAG, "📤 Sending apps:result (${json.length / 1024}KB)...")
                 
@@ -2631,16 +2720,14 @@ object SocketJobManager {
                     .addHeader("Accept", "application/json")
                     .build()
                 
-                val response = client.newCall(request).execute()
-                
-                if (response.isSuccessful) {
-                    Log.i(TAG, "✅ Apps list result sent to backend successfully")
-                } else {
-                    Log.w(TAG, "Failed to send apps result: ${response.code}")
+                client.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        Log.i(TAG, "✅ Apps list result sent to backend successfully")
+                    } else {
+                        Log.w(TAG, "Failed to send apps result: ${response.code}")
+                    }
                 }
-                
-                response.close()
-                
+
             } catch (e: Exception) {
                 Log.e(TAG, "Error getting installed apps", e)
                 
@@ -2660,7 +2747,7 @@ object SocketJobManager {
                             "error" to (e.message ?: "Unknown error")
                         )
                         
-                        val client = okhttp3.OkHttpClient()
+                        val client = httpClient
                         val json = gson.toJson(payload)
                         val requestBody = okhttp3.RequestBody.create(
                             "application/json".toMediaTypeOrNull(),
@@ -2675,7 +2762,7 @@ object SocketJobManager {
                             .addHeader("Accept", "application/json")
                             .build()
                         
-                        client.newCall(request).execute().close()
+                        client.newCall(request).execute().use { /* fire and forget */ }
                     }
                 } catch (err: Exception) {
                     Log.e(TAG, "Failed to send error to backend", err)

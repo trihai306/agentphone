@@ -159,7 +159,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         try {
-            val appKey = "clickai-key"
+            val appKey = com.agent.portal.utils.NetworkUtils.PUSHER_APP_KEY
             val socketUrl = com.agent.portal.utils.NetworkUtils.getSocketUrl()
             val host = com.agent.portal.utils.NetworkUtils.getSocketHost()
             val port = com.agent.portal.utils.NetworkUtils.getSocketPort()

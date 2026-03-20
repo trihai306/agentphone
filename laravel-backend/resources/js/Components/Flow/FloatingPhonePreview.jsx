@@ -23,6 +23,8 @@ export default function FloatingPhonePreview({ device, userId }) {
     const [status, setStatus] = useState('idle');
     const channelRef = useRef(null);
     const streamTimeoutRef = useRef(null);
+    const retryCountRef = useRef(0);
+    const MAX_RETRIES = 5;
 
     // Drag state
     const [isDragging, setIsDragging] = useState(false);
@@ -93,13 +95,13 @@ export default function FloatingPhonePreview({ device, userId }) {
                 streamTimeoutRef.current = setTimeout(() => {
                     setStatus('error');
                     setConnected(false);
-                }, 5000);
+                }, 8000);
             }
         });
 
         streamTimeoutRef.current = setTimeout(() => {
-            if (status !== 'live') setStatus('error');
-        }, 10000);
+            setStatus(prev => prev !== 'live' ? 'error' : prev);
+        }, 12000);
     }, [device?.id, userId]);
 
     const stopStream = useCallback(() => {
@@ -116,6 +118,27 @@ export default function FloatingPhonePreview({ device, userId }) {
     }, [device?.id, minimized]);
 
     useEffect(() => () => stopStream(), []);
+
+    // Auto-retry on error
+    useEffect(() => {
+        if (status === 'error' && retryCountRef.current < MAX_RETRIES && !minimized) {
+            const timer = setTimeout(() => {
+                retryCountRef.current++;
+                handleRetry();
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+        if (status === 'live') retryCountRef.current = 0;
+    }, [status, minimized]);
+
+    // Periodic keepalive to ensure phone keeps sending frames
+    useEffect(() => {
+        if (!device?.id || minimized || status !== 'live') return;
+        const interval = setInterval(() => {
+            axios.post(`/api/devices/${device.id}/stream/start`).catch(() => {});
+        }, 15000);
+        return () => clearInterval(interval);
+    }, [device?.id, minimized, status]);
 
     const handleRetry = () => {
         stopStream();

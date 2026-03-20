@@ -198,7 +198,7 @@ class LoginActivity : AppCompatActivity() {
     private fun connectToSocket(socketUrl: String, authToken: String) {
         try {
             // Pusher/Soketi credentials
-            val appKey = "clickai-key"
+            val appKey = com.agent.portal.utils.NetworkUtils.PUSHER_APP_KEY
             
             // Parse socket URL from NetworkUtils
             val host = com.agent.portal.utils.NetworkUtils.getSocketHost()

@@ -114,7 +114,9 @@ class OverlayService : Service() {
                 stopSelf()
             }
             else -> {
-                // Default: just start the service
+                // Default / sticky restart with null intent: reset state
+                showBounds = false
+                showIndexes = false
                 startForeground(NOTIFICATION_ID, createNotification())
             }
         }

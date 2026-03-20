@@ -718,7 +718,7 @@ class FloatingRecordingService : Service() {
         Log.i(TAG, "stopRecording result: success=${result.success}, events=$eventCount")
 
         // Show feedback
-        Handler(Looper.getMainLooper()).post {
+        handler.post {
             if (result.success) {
                 val durationSec = result.duration / 1000
                 Toast.makeText(this, "✓ Recording stopped • ${result.eventCount} events • ${durationSec}s", Toast.LENGTH_LONG).show()

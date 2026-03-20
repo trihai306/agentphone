@@ -743,7 +743,18 @@ class PortalAccessibilityService : AccessibilityService() {
                 }
                 screenshotInProgress.set(true)
             }
-            
+
+            // Add a safety reset after 10 seconds in case callback never fires
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                synchronized(screenshotLock) {
+                    if (screenshotInProgress.get()) {
+                        Log.w(TAG, "Screenshot timeout - resetting state")
+                        screenshotInProgress.set(false)
+                        notifyAllScreenshotCallbacks(null, callback)
+                    }
+                }
+            }, 10000)
+
             takeScreenshot(
                 Display.DEFAULT_DISPLAY,
                 screenshotExecutor,
@@ -814,6 +825,8 @@ class PortalAccessibilityService : AccessibilityService() {
         takeScreenshot { bitmap ->
             if (continuation.isActive) {
                 continuation.resume(bitmap, onCancellation = { bitmap?.recycle() })
+            } else {
+                bitmap?.recycle()
             }
         }
     }
@@ -871,6 +884,7 @@ class PortalAccessibilityService : AccessibilityService() {
                     window.root?.let { rootNode ->
                         val result = searchNode(rootNode)
                         if (result != null) {
+                            rootNode.recycle()  // recycle root before returning
                             return result
                         }
                         rootNode.recycle()
@@ -1254,20 +1268,37 @@ class PortalAccessibilityService : AccessibilityService() {
 
         val latch = CountDownLatch(1)
         var success = false
+        var dispatchResult = false
 
-        dispatchGesture(gesture, object : GestureResultCallback() {
-            override fun onCompleted(gestureDescription: GestureDescription?) {
-                success = true
+        // CRITICAL: dispatchGesture must be called from main thread
+        val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+        mainHandler.post {
+            dispatchResult = dispatchGesture(gesture, object : GestureResultCallback() {
+                override fun onCompleted(gestureDescription: GestureDescription?) {
+                    success = true
+                    latch.countDown()
+                }
+
+                override fun onCancelled(gestureDescription: GestureDescription?) {
+                    success = false
+                    latch.countDown()
+                }
+            }, mainHandler)
+
+            if (!dispatchResult) {
                 latch.countDown()
             }
+        }
 
-            override fun onCancelled(gestureDescription: GestureDescription?) {
-                success = false
-                latch.countDown()
-            }
-        }, null)
+        val completed = latch.await(durationMs + 2000, TimeUnit.MILLISECONDS)
 
-        latch.await(durationMs + 2000, TimeUnit.MILLISECONDS)
+        if (!completed) {
+            return ActionResult(false, "Long press gesture timed out")
+        }
+
+        if (!dispatchResult) {
+            return ActionResult(false, "Long press gesture dispatch failed")
+        }
 
         return if (success) {
             ActionResult(true, "Long pressed at ($x, $y)")

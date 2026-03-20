@@ -10,8 +10,10 @@ import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import com.agent.portal.overlay.OverlayService
 import java.lang.ref.WeakReference
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -51,13 +53,13 @@ object RecordingManager {
     private var contextRef: WeakReference<Context>? = null
 
     // Screenshot capture enabled flag
-    private var screenshotEnabled = true
+    @Volatile private var screenshotEnabled = true
 
     // Auto-upload to Python backend enabled flag
-    private var autoUploadEnabled = false
+    @Volatile private var autoUploadEnabled = false
 
     // Real-time upload enabled flag (upload each event immediately)
-    private var realTimeUploadEnabled = false
+    @Volatile private var realTimeUploadEnabled = false
 
     // Python backend URL for uploads
     private var pythonBackendUrl: String? = null
@@ -79,10 +81,10 @@ object RecordingManager {
 
     // Metrics tracking
     private var metricsStartTime = 0L
-    private var totalEventsProcessed = 0
-    private var screenshotSuccessCount = 0
-    private var screenshotFailureCount = 0
-    private val eventTypeCountMap = mutableMapOf<String, Int>()
+    private val totalEventsProcessed = AtomicInteger(0)
+    private val screenshotSuccessCount = AtomicInteger(0)
+    private val screenshotFailureCount = AtomicInteger(0)
+    private val eventTypeCountMap = ConcurrentHashMap<String, Int>()
 
     /**
      * Recording state enum
@@ -577,11 +579,6 @@ object RecordingManager {
             return false
         }
 
-        if (eventBuffer.size >= MAX_BUFFER_SIZE) {
-            Log.w(TAG, "Event buffer full, discarding event")
-            return false
-        }
-
         // Get app name for better display
         val context = contextRef?.get()
         val appName = if (context != null && event.packageName.isNotEmpty()) {
@@ -595,11 +592,17 @@ object RecordingManager {
             appName = appName
         )
 
-        // Add event to buffer first (fast)
-        eventBuffer.add(eventWithSequence)
-        
+        // Add event to buffer with atomic size check
+        synchronized(eventBuffer) {
+            if (eventBuffer.size >= MAX_BUFFER_SIZE) {
+                Log.w(TAG, "Event buffer full, discarding event")
+                return false
+            }
+            eventBuffer.add(eventWithSequence)
+        }
+
         // Update metrics
-        totalEventsProcessed++
+        totalEventsProcessed.incrementAndGet()
         eventTypeCountMap[event.eventType] = (eventTypeCountMap[event.eventType] ?: 0) + 1
         
         Log.d(TAG, "Event added: ${event.eventType} (${eventBuffer.size} total)")
@@ -640,7 +643,7 @@ object RecordingManager {
             if (screenshotPath != null) {
                 // Update event with screenshot path
                 updateEventScreenshot(event.sequenceNumber, screenshotPath)
-                screenshotSuccessCount++
+                screenshotSuccessCount.incrementAndGet()
                 Log.d(TAG, "Screenshot captured for event #${event.sequenceNumber}")
 
                 // Upload to backend in real-time if enabled
@@ -649,7 +652,7 @@ object RecordingManager {
                     Log.d(TAG, "Real-time upload triggered for event #${event.sequenceNumber}")
                 }
             } else {
-                screenshotFailureCount++
+                screenshotFailureCount.incrementAndGet()
                 Log.w(TAG, "Screenshot capture failed for event #${event.sequenceNumber}")
             }
             // Call completion callback
@@ -744,12 +747,12 @@ object RecordingManager {
         } else 0L
         
         return RecordingMetrics(
-            totalEvents = totalEventsProcessed,
-            screenshotSuccessCount = screenshotSuccessCount,
-            screenshotFailureCount = screenshotFailureCount,
+            totalEvents = totalEventsProcessed.get(),
+            screenshotSuccessCount = screenshotSuccessCount.get(),
+            screenshotFailureCount = screenshotFailureCount.get(),
             eventTypeBreakdown = eventTypeCountMap.toMap(),
             durationMs = duration,
-            eventsPerSecond = if (duration > 0) (totalEventsProcessed * 1000.0 / duration) else 0.0
+            eventsPerSecond = if (duration > 0) (totalEventsProcessed.get() * 1000.0 / duration) else 0.0
         )
     }
 
@@ -767,7 +770,7 @@ object RecordingManager {
                     relativeTimestamp = System.currentTimeMillis() - recordingStartTime.get()
                 )
                 eventBuffer.add(eventWithSequence)
-                totalEventsProcessed++
+                totalEventsProcessed.incrementAndGet()
                 eventTypeCountMap[pendingScroll.eventType] = (eventTypeCountMap[pendingScroll.eventType] ?: 0) + 1
                 Log.i(TAG, "✓ Timer flushed scroll: ${pendingScroll.eventType} (${eventBuffer.size} total)")
                 
@@ -791,7 +794,7 @@ object RecordingManager {
                     relativeTimestamp = System.currentTimeMillis() - recordingStartTime.get()
                 )
                 eventBuffer.add(eventWithSequence)
-                totalEventsProcessed++
+                totalEventsProcessed.incrementAndGet()
                 eventTypeCountMap[pendingText.eventType] = (eventTypeCountMap[pendingText.eventType] ?: 0) + 1
                 Log.i(TAG, "✓ Timer flushed text: ${pendingText.eventType} (${eventBuffer.size} total)")
                 
@@ -814,9 +817,9 @@ object RecordingManager {
     // ========== Private Helper Methods ==========
 
     private fun resetMetrics() {
-        totalEventsProcessed = 0
-        screenshotSuccessCount = 0
-        screenshotFailureCount = 0
+        totalEventsProcessed.set(0)
+        screenshotSuccessCount.set(0)
+        screenshotFailureCount.set(0)
         eventTypeCountMap.clear()
     }
 

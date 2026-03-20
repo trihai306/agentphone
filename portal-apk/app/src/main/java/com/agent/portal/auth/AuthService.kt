@@ -83,13 +83,12 @@ class AuthService(private val context: Context) {
                 .build()
             
             Log.d(TAG, "Sending login request to: $loginUrl")
-            Log.d(TAG, "Request body: $json")
+            Log.d(TAG, "Login request sent")
             
             client.newCall(request).execute().use { response ->
                 val responseBody = response.body?.string() ?: ""
                 
-                Log.d(TAG, "Login response code: ${response.code}")
-                Log.d(TAG, "Login response body: $responseBody")
+                Log.d(TAG, "Login response received: ${response.code}")
                 
                 if (response.isSuccessful) {
                     val loginResponse = gson.fromJson(responseBody, LoginResponse::class.java)

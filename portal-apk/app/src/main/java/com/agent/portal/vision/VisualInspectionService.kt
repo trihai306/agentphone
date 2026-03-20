@@ -10,9 +10,6 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.google.mlkit.vision.objects.ObjectDetection
 import com.google.mlkit.vision.objects.ObjectDetector
 import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions
-import com.google.mlkit.vision.label.ImageLabeling
-import com.google.mlkit.vision.label.ImageLabeler
-import com.google.mlkit.vision.label.defaults.ImageLabelerOptions
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
@@ -43,14 +40,6 @@ object VisualInspectionService {
             .enableClassification()
             .build()
         ObjectDetection.getClient(options)
-    }
-    
-    // ML Kit Image Labeler for classification
-    private val imageLabeler: ImageLabeler by lazy {
-        val options = ImageLabelerOptions.Builder()
-            .setConfidenceThreshold(0.7f)
-            .build()
-        ImageLabeling.getClient(options)
     }
     
     /**
@@ -475,6 +464,5 @@ object VisualInspectionService {
     fun close() {
         textRecognizer.close()
         objectDetector.close()
-        imageLabeler.close()
     }
 }

@@ -145,10 +145,22 @@ class QuickActionsService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
-        super.onDestroy()
+        // Cancel any running animations first
+        bubbleBinding?.root?.animate()?.cancel()
+        panelBinding?.root?.animate()?.cancel()
+
+        // Synchronously remove views
+        try { bubbleBinding?.root?.let { windowManager?.removeView(it) } } catch (_: Exception) {}
+        try { panelBinding?.root?.let { windowManager?.removeView(it) } } catch (_: Exception) {}
+
         stopPulseAnimation()
-        hideQuickActions()
+        bubbleBinding = null
+        panelBinding = null
+        isQuickActionsVisible = false
+        isExpanded = false
         instance = null
+
+        super.onDestroy()
     }
 
     private fun createNotificationChannel() {

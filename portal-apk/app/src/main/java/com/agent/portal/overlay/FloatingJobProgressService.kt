@@ -19,7 +19,6 @@ import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.animation.AccelerateDecelerateInterpolator
@@ -352,47 +351,6 @@ class FloatingJobProgressService : Service() {
             // Update notification
             val notificationManager = getSystemService(NotificationManager::class.java)
             notificationManager.notify(NOTIFICATION_ID, createNotification())
-        }
-    }
-
-    private fun setupTouchListener(params: WindowManager.LayoutParams) {
-        overlayView?.setOnTouchListener { view, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    overlayWidth = view.width
-                    overlayHeight = view.height
-                    initialX = params.x
-                    initialY = params.y
-                    initialTouchX = event.rawX
-                    initialTouchY = event.rawY
-                    isDragging = false
-                    false
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    val deltaX = (event.rawX - initialTouchX).toInt()
-                    val deltaY = (event.rawY - initialTouchY).toInt()
-
-                    if (kotlin.math.abs(deltaX) > 10 || kotlin.math.abs(deltaY) > 10) {
-                        isDragging = true
-                    }
-
-                    if (isDragging) {
-                        params.x = initialX + deltaX
-                        params.y = initialY + deltaY
-                        windowManager?.updateViewLayout(overlayView, params)
-                        true
-                    } else {
-                        false
-                    }
-                }
-                MotionEvent.ACTION_UP -> {
-                    if (isDragging) {
-                        snapToEdge(params)
-                    }
-                    isDragging
-                }
-                else -> false
-            }
         }
     }
 

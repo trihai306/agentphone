@@ -140,6 +140,9 @@ class JobExecutor(context: Context) {
 
                 // Execute action with MERGED data context (primary + variable)
                 val result = executeAction(action, mergedData)
+                if (actionResults.size >= 500) {
+                    actionResults.removeAt(0) // Keep last 500 results
+                }
                 actionResults.add(result)
 
                 // Handle action result
@@ -1766,31 +1769,45 @@ class JobExecutor(context: Context) {
                     val nodes = rootNode.findAccessibilityNodeInfosByViewId(resourceId)
                     foundNode = nodes.firstOrNull()
                     foundNodeText = foundNode?.text?.toString()
-                    if (foundNode != null && assertType != "not_exists") break
+                    nodes.filter { it != foundNode }.forEach { try { it.recycle() } catch (_: Exception) {} }
+                    if (foundNode != null && assertType != "not_exists") {
+                        rootNode.recycle()
+                        break
+                    }
                 }
-                
+
                 // Try by text if no resourceId match
                 if (foundNode == null && !text.isNullOrBlank()) {
                     val nodes = rootNode.findAccessibilityNodeInfosByText(text)
                     foundNode = nodes.firstOrNull { it.text?.toString()?.equals(text, ignoreCase = true) == true }
                     foundNodeText = foundNode?.text?.toString()
-                    if (foundNode != null && assertType != "not_exists") break
+                    nodes.filter { it != foundNode }.forEach { try { it.recycle() } catch (_: Exception) {} }
+                    if (foundNode != null && assertType != "not_exists") {
+                        rootNode.recycle()
+                        break
+                    }
                 }
-                
+
                 // Try by targetSelector as text
                 if (foundNode == null && !targetSelector.isNullOrBlank() && targetSelector != resourceId && targetSelector != text) {
                     val nodes = rootNode.findAccessibilityNodeInfosByText(targetSelector)
                     foundNode = nodes.firstOrNull()
                     foundNodeText = foundNode?.text?.toString()
-                    if (foundNode != null && assertType != "not_exists") break
+                    nodes.filter { it != foundNode }.forEach { try { it.recycle() } catch (_: Exception) {} }
+                    if (foundNode != null && assertType != "not_exists") {
+                        rootNode.recycle()
+                        break
+                    }
                 }
-                
+
                 // For not_exists, break immediately if not found
                 if (assertType == "not_exists" && foundNode == null) {
+                    rootNode.recycle()
                     break
                 }
+                rootNode.recycle()
             }
-            
+
             delay(200) // Poll interval
         }
         
@@ -1903,15 +1920,24 @@ class JobExecutor(context: Context) {
                 if (!resourceId.isNullOrBlank()) {
                     val nodes = rootNode.findAccessibilityNodeInfosByViewId(resourceId)
                     foundNode = nodes.firstOrNull()
-                    if (foundNode != null) break
+                    nodes.filter { it != foundNode }.forEach { try { it.recycle() } catch (_: Exception) {} }
+                    if (foundNode != null) {
+                        rootNode.recycle()
+                        break
+                    }
                 }
-                
+
                 // Try text
                 if (foundNode == null && !text.isNullOrBlank()) {
                     val nodes = rootNode.findAccessibilityNodeInfosByText(text)
                     foundNode = nodes.firstOrNull { it.text?.toString()?.equals(text, ignoreCase = true) == true }
-                    if (foundNode != null) break
+                    nodes.filter { it != foundNode }.forEach { try { it.recycle() } catch (_: Exception) {} }
+                    if (foundNode != null) {
+                        rootNode.recycle()
+                        break
+                    }
                 }
+                rootNode.recycle()
             }
             delay(200)
         }
@@ -2011,23 +2037,35 @@ class JobExecutor(context: Context) {
                 if (!resourceId.isNullOrBlank()) {
                     val nodes = rootNode.findAccessibilityNodeInfosByViewId(resourceId)
                     foundNode = nodes.firstOrNull()
-                    if (foundNode != null) break
+                    nodes.filter { it != foundNode }.forEach { try { it.recycle() } catch (_: Exception) {} }
+                    if (foundNode != null) {
+                        rootNode.recycle()
+                        break
+                    }
                 }
-                
+
                 // Try text
                 if (foundNode == null && !text.isNullOrBlank()) {
                     val nodes = rootNode.findAccessibilityNodeInfosByText(text)
                     foundNode = nodes.firstOrNull { it.text?.toString()?.equals(text, ignoreCase = true) == true }
-                    if (foundNode != null) break
+                    nodes.filter { it != foundNode }.forEach { try { it.recycle() } catch (_: Exception) {} }
+                    if (foundNode != null) {
+                        rootNode.recycle()
+                        break
+                    }
                 }
-                
+
                 // Try contentDescription
                 if (foundNode == null && !contentDescription.isNullOrBlank()) {
                     foundNode = findNodeByContentDescription(contentDescription, rootNode, fuzzyMatch = false, ignoreCase = true)
-                    if (foundNode != null) break
+                    if (foundNode != null) {
+                        rootNode.recycle()
+                        break
+                    }
                 }
+                rootNode.recycle()
             }
-            
+
             delay(pollInterval)
         }
         
@@ -2171,14 +2209,16 @@ class JobExecutor(context: Context) {
                 val currentActivity = currentWindow?.root?.className?.toString() ?: ""
                 if (currentActivity.contains(activity)) {
                     found = true
+                    rootNode.recycle()
                     break
                 }
+                rootNode.recycle()
             }
             delay(pollInterval)
         }
-        
+
         val timeSpent = System.currentTimeMillis() - startTime
-        
+
         return if (found) {
             Log.d(TAG, "✅ WaitForActivity: Found '$activity' after ${timeSpent}ms")
             ActionResult(
@@ -2238,14 +2278,16 @@ class JobExecutor(context: Context) {
                 val currentPackage = rootNode.packageName?.toString()
                 if (currentPackage == packageName) {
                     found = true
+                    rootNode.recycle()
                     break
                 }
+                rootNode.recycle()
             }
             delay(pollInterval)
         }
-        
+
         val timeSpent = System.currentTimeMillis() - startTime
-        
+
         return if (found) {
             Log.d(TAG, "✅ WaitForPackage: Found '$packageName' after ${timeSpent}ms")
             ActionResult(
@@ -2449,8 +2491,8 @@ class JobExecutor(context: Context) {
         Log.d(TAG, "   [smart] Best match: score=${best?.score}, id=${best?.node?.viewIdResourceName?.takeLast(30)}")
         
         // Recycle non-selected candidates
-        candidates.filter { it != best }.forEach { 
-            // Note: we can't recycle here as nodes may be parents of each other
+        candidates.filter { it.node != best?.node }.forEach {
+            try { it.node.recycle() } catch (_: Exception) {}
         }
         
         return best?.node

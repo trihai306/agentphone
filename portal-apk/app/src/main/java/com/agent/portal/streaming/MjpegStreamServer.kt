@@ -151,6 +151,8 @@ class MjpegStreamServer(
         }
 
         var image: Image? = null
+        var bitmap: Bitmap? = null
+        var croppedBitmap: Bitmap? = null
         try {
             image = reader.acquireLatestImage() ?: return
             lastFrameTime = now
@@ -162,26 +164,28 @@ class MjpegStreamServer(
             val rowPadding = rowStride - pixelStride * streamWidth
 
             // Create bitmap from image
-            val bitmap = Bitmap.createBitmap(
+            bitmap = Bitmap.createBitmap(
                 streamWidth + rowPadding / pixelStride,
                 streamHeight,
                 Bitmap.Config.ARGB_8888
             )
-            bitmap.copyPixelsFromBuffer(buffer)
+            bitmap!!.copyPixelsFromBuffer(buffer)
 
             // Crop to exact size (remove padding)
-            val croppedBitmap = if (rowPadding > 0) {
-                Bitmap.createBitmap(bitmap, 0, 0, streamWidth, streamHeight).also {
-                    bitmap.recycle()
+            croppedBitmap = if (rowPadding > 0) {
+                Bitmap.createBitmap(bitmap!!, 0, 0, streamWidth, streamHeight).also {
+                    bitmap?.recycle()
+                    bitmap = null
                 }
             } else {
-                bitmap
+                bitmap.also { bitmap = null }
             }
 
             // Compress to JPEG
             val outputStream = ByteArrayOutputStream()
-            croppedBitmap.compress(Bitmap.CompressFormat.JPEG, jpegQuality, outputStream)
-            croppedBitmap.recycle()
+            croppedBitmap?.compress(Bitmap.CompressFormat.JPEG, jpegQuality, outputStream)
+            croppedBitmap?.recycle()
+            croppedBitmap = null
 
             val jpegBytes = outputStream.toByteArray()
             currentFrame.set(jpegBytes)
@@ -190,6 +194,8 @@ class MjpegStreamServer(
             Log.e(TAG, "Error processing frame", e)
         } finally {
             image?.close()
+            bitmap?.let { if (!it.isRecycled) it.recycle() }
+            croppedBitmap?.let { if (!it.isRecycled) it.recycle() }
         }
     }
 

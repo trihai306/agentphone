@@ -10,6 +10,7 @@ object NetworkUtils {
     /**
      * Production host - deployed server
      */
+    const val PUSHER_APP_KEY = "clickai-key"
     const val PROD_HOST = "clickai.lionsoftware.cloud"
     internal const val PROD_IP = "103.142.24.24"  // IP for emulator (DNS issue workaround)
     

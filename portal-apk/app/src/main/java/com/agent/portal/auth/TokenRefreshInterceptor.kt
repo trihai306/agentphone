@@ -33,18 +33,16 @@ class TokenRefreshInterceptor(private val context: Context) : Interceptor {
         // If 401 Unauthorized and has Authorization header, try to refresh token
         if (response.code == 401 && originalRequest.header("Authorization") != null) {
             Log.w(TAG, "Received 401, attempting token refresh...")
-            
-            response.close() // Close the original response
-            
+
             // Get new token
             val sessionManager = SessionManager(context)
             val oldToken = sessionManager.getToken()
-            
+
             if (oldToken.isNullOrEmpty()) {
                 Log.e(TAG, "No token to refresh")
                 return response
             }
-            
+
             // Attempt to refresh token
             val newToken = try {
                 runBlocking {
@@ -54,32 +52,38 @@ class TokenRefreshInterceptor(private val context: Context) : Interceptor {
                 Log.e(TAG, "Token refresh failed: ${e.message}", e)
                 null
             }
-            
+
             if (newToken != null) {
                 // Update session with new token
                 val session = sessionManager.getSession()
                 session?.let {
                     sessionManager.saveSession(it.copy(token = newToken))
-                    Log.i(TAG, "✅ Token refreshed successfully")
+                    Log.i(TAG, "Token refreshed successfully")
                 }
-                
+
+                // Close old response before retrying with new token
+                response.close()
+
                 // Retry original request with new token
                 val newRequest = originalRequest.newBuilder()
                     .header("Authorization", "Bearer $newToken")
                     .build()
-                
+
                 return chain.proceed(newRequest)
             } else {
-                Log.e(TAG, "❌ Token refresh failed, user needs to re-login")
+                Log.e(TAG, "Token refresh failed, user needs to re-login")
                 // Clear session
                 sessionManager.clearSession()
-                
+
                 // Send broadcast to notify MainActivity to show message and logout
                 val intent = android.content.Intent(ACTION_TOKEN_EXPIRED)
                 context.sendBroadcast(intent)
+
+                // Return the original (unclosed) response so caller can handle it
+                return response
             }
         }
-        
+
         return response
     }
     

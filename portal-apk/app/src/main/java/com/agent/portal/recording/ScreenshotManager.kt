@@ -646,15 +646,18 @@ object ScreenshotManager {
             return null
         }
         
+        var lastCropped: Bitmap? = null
         return try {
             // Phase 1: Crop large region around tap point
             var cropped = Bitmap.createBitmap(bitmap, left, top, cropWidth, cropHeight)
+            lastCropped = cropped
             Log.d(TAG, "📐 Phase 1: Cropped ${cropWidth}x${cropHeight} region at ($tapX, $tapY)")
-            
+
             // Phase 2: Smart content detection - find actual icon boundaries
             cropped = smartCropContent(cropped)
+            lastCropped = cropped
             Log.d(TAG, "🎯 Phase 2: Smart detected icon ${cropped.width}x${cropped.height}")
-            
+
             // Phase 3: Resize to max 100px for consistent icon size
             val maxIconSize = 100
             if (cropped.width > maxIconSize || cropped.height > maxIconSize) {
@@ -664,9 +667,10 @@ object ScreenshotManager {
                 val scaled = Bitmap.createScaledBitmap(cropped, newWidth, newHeight, true)
                 if (scaled != cropped) cropped.recycle()
                 cropped = scaled
+                lastCropped = cropped
                 Log.d(TAG, "📏 Phase 3: Resized to ${newWidth}x${newHeight}")
             }
-            
+
             // Encode to PNG base64
             val outputStream = java.io.ByteArrayOutputStream()
             cropped.compress(Bitmap.CompressFormat.PNG, 90, outputStream)
@@ -674,11 +678,13 @@ object ScreenshotManager {
                 outputStream.toByteArray(),
                 android.util.Base64.NO_WRAP
             )
-            
+
             cropped.recycle()
+            lastCropped = null
             Log.d(TAG, "🖼️ Icon ready: ${iconBase64.length / 1024}KB")
             iconBase64
         } catch (e: Exception) {
+            lastCropped?.let { if (!it.isRecycled) it.recycle() }
             Log.w(TAG, "Failed to crop icon at coordinates: ${e.message}")
             null
         }
@@ -740,15 +746,18 @@ object ScreenshotManager {
         val safeWidth = width.coerceIn(1, bitmap.width - safeLeft)
         val safeHeight = height.coerceIn(1, bitmap.height - safeTop)
         
+        var lastCropped: Bitmap? = null
         return try {
             // Crop the icon region
             var cropped = Bitmap.createBitmap(bitmap, safeLeft, safeTop, safeWidth, safeHeight)
-            
+            lastCropped = cropped
+
             // ========== SMART CONTENT DETECTION ==========
             // Use edge detection to find actual content and crop tighter
             cropped = smartCropContent(cropped)
+            lastCropped = cropped
             Log.d(TAG, "📐 Smart crop: ${safeWidth}x${safeHeight} -> ${cropped.width}x${cropped.height}")
-            
+
             // ========== RESIZE TO MAX 100px ==========
             val maxIconSize = 100
             if (cropped.width > maxIconSize || cropped.height > maxIconSize) {
@@ -758,9 +767,10 @@ object ScreenshotManager {
                 val scaled = Bitmap.createScaledBitmap(cropped, newWidth, newHeight, true)
                 if (scaled != cropped) cropped.recycle()
                 cropped = scaled
+                lastCropped = cropped
                 Log.d(TAG, "📏 Resized icon: ${safeWidth}x${safeHeight} -> ${newWidth}x${newHeight}")
             }
-            
+
             // Encode to PNG base64 (high quality, transparency support)
             val outputStream = java.io.ByteArrayOutputStream()
             cropped.compress(Bitmap.CompressFormat.PNG, 90, outputStream)
@@ -768,11 +778,13 @@ object ScreenshotManager {
                 outputStream.toByteArray(),
                 android.util.Base64.NO_WRAP
             )
-            
+
             cropped.recycle()
+            lastCropped = null
             Log.d(TAG, "🖼️ Icon cropped: ${iconBase64.length / 1024}KB")
             iconBase64
         } catch (e: Exception) {
+            lastCropped?.let { if (!it.isRecycled) it.recycle() }
             Log.w(TAG, "Failed to crop icon: ${e.message}")
             null
         }

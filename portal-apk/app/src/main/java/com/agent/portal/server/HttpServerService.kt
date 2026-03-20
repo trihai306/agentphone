@@ -66,7 +66,7 @@ class HttpServerService : Service() {
 
     // API Key settings
     private var apiKey: String? = null
-    private var apiKeyEnabled: Boolean = false
+    private var apiKeyEnabled: Boolean = true
 
     override fun onCreate() {
         super.onCreate()
@@ -80,7 +80,7 @@ class HttpServerService : Service() {
      */
     private fun loadApiKeySettings() {
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        apiKeyEnabled = prefs.getBoolean(KEY_API_KEY_ENABLED, false)
+        apiKeyEnabled = prefs.getBoolean(KEY_API_KEY_ENABLED, true)
         apiKey = prefs.getString(KEY_API_KEY, null)
 
         if (apiKeyEnabled && apiKey == null) {
@@ -157,7 +157,7 @@ class HttpServerService : Service() {
                 // Get Soketi config from NetworkUtils
                 val soketiHost = com.agent.portal.utils.NetworkUtils.getSocketHost()
                 val soketiPort = com.agent.portal.utils.NetworkUtils.getSocketPort()
-                val soketiKey = "clickai-key"
+                val soketiKey = com.agent.portal.utils.NetworkUtils.PUSHER_APP_KEY
                 val encrypted = com.agent.portal.utils.NetworkUtils.isSocketEncrypted()
                 
                 // Initialize and connect
@@ -274,8 +274,8 @@ class HttpServerService : Service() {
 
             Log.d(TAG, "Request: $method $uri")
 
-            // Check API key authentication (skip for /ping and /api/key endpoints)
-            if (apiKeyEnabled && uri != "/ping" && !uri.startsWith("/api/key")) {
+            // Check API key authentication (skip only for /ping and /api/key/status)
+            if (apiKeyEnabled && uri != "/ping" && uri != "/api/key/status") {
                 val authResult = checkApiKeyAuth(session)
                 if (authResult != null) {
                     return authResult
@@ -361,7 +361,7 @@ class HttpServerService : Service() {
                 )
             }
 
-            if (providedKey != apiKey) {
+            if (!java.security.MessageDigest.isEqual(providedKey.toByteArray(), apiKey!!.toByteArray())) {
                 Log.w(TAG, "Invalid API key provided")
                 return newFixedLengthResponse(
                     Response.Status.FORBIDDEN,
@@ -387,8 +387,7 @@ class HttpServerService : Service() {
                 gson.toJson(mapOf(
                     "status" to "success",
                     "data" to mapOf(
-                        "enabled" to apiKeyEnabled,
-                        "key" to if (apiKeyEnabled) apiKey else null
+                        "enabled" to apiKeyEnabled
                     )
                 ))
             )
@@ -860,6 +859,35 @@ class HttpServerService : Service() {
             }
         }
 
+        /**
+         * Validate backend URL to prevent SSRF attacks.
+         * Only allows https://clickai.lionsoftware.cloud or local dev addresses.
+         */
+        private fun isAllowedBackendUrl(url: String): Boolean {
+            return try {
+                val parsed = java.net.URL(url)
+                val host = parsed.host?.lowercase() ?: return false
+                val allowedHosts = setOf(
+                    "clickai.lionsoftware.cloud",
+                    "localhost",
+                    "127.0.0.1",
+                    "10.0.2.2"
+                )
+                if (host in allowedHosts) {
+                    // Production host must use https
+                    if (host == "clickai.lionsoftware.cloud") {
+                        parsed.protocol == "https"
+                    } else {
+                        true
+                    }
+                } else {
+                    false
+                }
+            } catch (e: Exception) {
+                false
+            }
+        }
+
         private fun serviceUnavailableResponse(): Response {
             return newFixedLengthResponse(
                 Response.Status.SERVICE_UNAVAILABLE,
@@ -1214,6 +1242,20 @@ class HttpServerService : Service() {
 
             val enabled = data["enabled"] as? Boolean ?: false
             val backendUrl = data["backend_url"] as? String
+
+            // Validate backend_url to prevent SSRF
+            if (enabled && backendUrl != null) {
+                if (!isAllowedBackendUrl(backendUrl)) {
+                    return newFixedLengthResponse(
+                        Response.Status.FORBIDDEN,
+                        "application/json",
+                        gson.toJson(mapOf(
+                            "status" to "error",
+                            "error" to "Invalid backend_url. Only https://clickai.lionsoftware.cloud or localhost/127.0.0.1/10.0.2.2 are allowed."
+                        ))
+                    )
+                }
+            }
 
             return if (enabled && backendUrl != null) {
                 RecordingManager.setRealTimeUploadEnabled(true, backendUrl)
