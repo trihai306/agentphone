@@ -4,219 +4,120 @@ namespace App\Services;
 
 use App\Models\Device;
 use Illuminate\Support\Facades\Redis;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Redis-based Device Presence Service
- * 
- * Optimized for 5000+ devices with minimal DB writes.
- * Uses Redis SET with TTL for real-time presence tracking.
+ * Simple Redis-based Device Presence Service
+ *
+ * ONE mechanism: APK sends HTTP heartbeat every 30s → Redis SETEX with 90s TTL
+ * Device is online if key exists, offline if expired. That's it.
  */
 class DevicePresenceService
 {
-    // Redis key patterns
-    private const KEY_ONLINE_DEVICES = 'device:online:%d'; // %d = user_id
-    private const KEY_DEVICE_INFO = 'device:info:%s';       // %s = device_id
-    private const KEY_DEVICE_ALIVE = 'device:alive:%s';     // %s = device_id (per-device TTL)
-
-    // TTL in seconds
-    private const PRESENCE_TTL = 180;       // Per-device alive key (3 minutes)
-    private const SET_TTL = 600;            // Set TTL (10 minutes, longer as safety net)
+    private const HEARTBEAT_TTL = 90; // seconds
+    private const KEY_PREFIX = 'device:heartbeat:';
 
     /**
-     * Mark a device as online
+     * Record heartbeat from device - this is THE ONLY way to mark online
      */
-    public function markOnline(int $userId, string $deviceId, ?int $deviceDbId = null): void
+    public function heartbeat(string $deviceId, int $userId, ?int $dbId = null): void
     {
-        $setKey = sprintf(self::KEY_ONLINE_DEVICES, $userId);
-        $deviceKey = sprintf(self::KEY_DEVICE_ALIVE, $deviceId);
-
-        // Add device to user's online set
-        Redis::sadd($setKey, $deviceId);
-        Redis::expire($setKey, self::SET_TTL);
-
-        // Per-device TTL key - expires individually
-        Redis::setex($deviceKey, self::PRESENCE_TTL, '1');
-
-        // Store device info for quick lookup
-        if ($deviceDbId) {
-            $infoKey = sprintf(self::KEY_DEVICE_INFO, $deviceId);
-            Redis::hset($infoKey, 'user_id', $userId, 'db_id', $deviceDbId);
-            Redis::expire($infoKey, self::PRESENCE_TTL);
-        }
-
-        Log::debug("Device marked online via Redis: {$deviceId}");
+        $key = self::KEY_PREFIX . $deviceId;
+        $data = json_encode([
+            'user_id' => $userId,
+            'db_id' => $dbId,
+            'timestamp' => now()->timestamp,
+        ]);
+        Redis::setex($key, self::HEARTBEAT_TTL, $data);
     }
 
     /**
-     * Mark a device as offline
-     */
-    public function markOffline(int $userId, string $deviceId): void
-    {
-        $key = sprintf(self::KEY_ONLINE_DEVICES, $userId);
-        Redis::srem($key, $deviceId);
-
-        // Clean up per-device alive key
-        $deviceKey = sprintf(self::KEY_DEVICE_ALIVE, $deviceId);
-        Redis::del($deviceKey);
-
-        // Clean up device info
-        $infoKey = sprintf(self::KEY_DEVICE_INFO, $deviceId);
-        Redis::del($infoKey);
-
-        Log::debug("Device marked offline via Redis: {$deviceId}");
-    }
-
-    /**
-     * Get all online device IDs for a user
-     */
-    public function getOnlineDevices(int $userId): array
-    {
-        $key = sprintf(self::KEY_ONLINE_DEVICES, $userId);
-        return Redis::smembers($key) ?: [];
-    }
-
-    /**
-     * Check if a specific device is online
+     * Check if device is online (key exists = online, expired = offline)
      */
     public function isOnline(int $userId, string $deviceId): bool
     {
-        $setKey = sprintf(self::KEY_ONLINE_DEVICES, $userId);
-        $deviceKey = sprintf(self::KEY_DEVICE_ALIVE, $deviceId);
-
-        // Check both set membership AND per-device alive key
-        return (bool) Redis::sismember($setKey, $deviceId) && (bool) Redis::exists($deviceKey);
+        return (bool) Redis::exists(self::KEY_PREFIX . $deviceId);
     }
 
     /**
-     * Get online count for a user
+     * Mark device offline immediately (e.g., user logout)
+     */
+    public function markOffline(int $userId, string $deviceId): void
+    {
+        Redis::del(self::KEY_PREFIX . $deviceId);
+    }
+
+    /**
+     * Get all online devices for a user
+     * Scans Redis keys matching the heartbeat pattern and filters by user_id
+     */
+    public function getOnlineDevices(int $userId): array
+    {
+        // Get all user's devices from DB, check which have active heartbeat
+        $devices = Device::where('user_id', $userId)->pluck('device_id')->toArray();
+        $online = [];
+        foreach ($devices as $deviceId) {
+            $data = Redis::get(self::KEY_PREFIX . $deviceId);
+            if ($data) {
+                $parsed = json_decode($data, true);
+                if (($parsed['user_id'] ?? null) == $userId) {
+                    $online[] = $deviceId;
+                }
+            }
+        }
+        return $online;
+    }
+
+    /**
+     * Get online count for user
      */
     public function getOnlineCount(int $userId): int
     {
-        $key = sprintf(self::KEY_ONLINE_DEVICES, $userId);
-        return (int) Redis::scard($key);
+        return count($this->getOnlineDevices($userId));
     }
 
     /**
-     * Refresh presence TTL (called during heartbeat)
+     * Sync online status to database (called by scheduler, less frequently needed now)
      */
+    public function syncToDatabase(): void
+    {
+        $devices = Device::where('socket_connected', true)->get();
+        foreach ($devices as $device) {
+            if (!Redis::exists(self::KEY_PREFIX . $device->device_id)) {
+                $device->update(['socket_connected' => false]);
+            }
+        }
+    }
+
+    // Keep backward-compatible methods that delegate to new system
+    public function markOnline(int $userId, string $deviceId, ?int $dbId = null): void
+    {
+        $this->heartbeat($deviceId, $userId, $dbId);
+    }
+
     public function refreshPresence(int $userId, string $deviceId): void
     {
-        $setKey = sprintf(self::KEY_ONLINE_DEVICES, $userId);
-        $deviceKey = sprintf(self::KEY_DEVICE_ALIVE, $deviceId);
-
-        // Only refresh if device is in the set
-        if (Redis::sismember($setKey, $deviceId)) {
-            Redis::expire($setKey, self::SET_TTL);
-            Redis::setex($deviceKey, self::PRESENCE_TTL, '1');
-
-            $infoKey = sprintf(self::KEY_DEVICE_INFO, $deviceId);
-            Redis::expire($infoKey, self::PRESENCE_TTL);
+        // Just extend the TTL if key exists
+        if (Redis::exists(self::KEY_PREFIX . $deviceId)) {
+            Redis::expire(self::KEY_PREFIX . $deviceId, self::HEARTBEAT_TTL);
         }
     }
 
-    /**
-     * Mark all devices offline for a user (channel vacated)
-     */
     public function markAllOffline(int $userId): void
     {
-        $key = sprintf(self::KEY_ONLINE_DEVICES, $userId);
-
-        // Get all device IDs before deleting
-        $deviceIds = Redis::smembers($key) ?: [];
-
-        // Delete the set
-        Redis::del($key);
-
-        // Clean up per-device alive keys and device info keys
-        foreach ($deviceIds as $deviceId) {
-            $deviceKey = sprintf(self::KEY_DEVICE_ALIVE, $deviceId);
-            Redis::del($deviceKey);
-            $infoKey = sprintf(self::KEY_DEVICE_INFO, $deviceId);
-            Redis::del($infoKey);
+        $devices = Device::where('user_id', $userId)->pluck('device_id')->toArray();
+        foreach ($devices as $deviceId) {
+            Redis::del(self::KEY_PREFIX . $deviceId);
         }
-
-        Log::debug("All devices marked offline for user: {$userId}");
     }
 
-    /**
-     * Sync Redis presence state to database
-     * Called by scheduler every minute
-     * 
-     * @return int Number of devices synced
-     */
-    public function syncToDatabase(): int
-    {
-        $syncedCount = 0;
-
-        try {
-            // Get all online device keys
-            $keys = Redis::keys('device:online:*');
-            $onlineDeviceIds = [];
-
-            foreach ($keys as $key) {
-                // Remove prefix if present (Laravel may add prefix)
-                $cleanKey = str_replace(config('database.redis.options.prefix', ''), '', $key);
-                $deviceIds = Redis::smembers($cleanKey);
-                if ($deviceIds) {
-                    $onlineDeviceIds = array_merge($onlineDeviceIds, $deviceIds);
-                }
-            }
-
-            $onlineDeviceIds = array_unique($onlineDeviceIds);
-
-            if (empty($onlineDeviceIds)) {
-                // No devices online - mark all as offline
-                Device::where('socket_connected', true)
-                    ->update([
-                        'socket_connected' => false,
-                        'status' => Device::STATUS_INACTIVE,
-                    ]);
-                return 0;
-            }
-
-            // Use transaction for consistency
-            DB::transaction(function () use ($onlineDeviceIds, &$syncedCount) {
-                // Mark online devices
-                $syncedCount = Device::whereIn('device_id', $onlineDeviceIds)
-                    ->update([
-                        'socket_connected' => true,
-                        'status' => Device::STATUS_ACTIVE,
-                        'last_active_at' => now(),
-                    ]);
-
-                // Mark offline devices (not in Redis)
-                Device::whereNotIn('device_id', $onlineDeviceIds)
-                    ->where('socket_connected', true)
-                    ->update([
-                        'socket_connected' => false,
-                        'status' => Device::STATUS_INACTIVE,
-                    ]);
-            });
-
-            Log::info("Device presence synced to DB: {$syncedCount} online");
-
-        } catch (\Exception $e) {
-            Log::error("Device presence sync failed: " . $e->getMessage());
-        }
-
-        return $syncedCount;
-    }
-
-    /**
-     * Get online devices with full details for a user
-     */
-    public function getOnlineDevicesWithDetails(int $userId): \Illuminate\Database\Eloquent\Collection
+    public function getOnlineDevicesWithDetails(int $userId): array
     {
         $onlineIds = $this->getOnlineDevices($userId);
-
-        if (empty($onlineIds)) {
-            return collect();
-        }
-
+        if (empty($onlineIds)) return [];
         return Device::where('user_id', $userId)
             ->whereIn('device_id', $onlineIds)
-            ->get();
+            ->get()
+            ->toArray();
     }
 }

@@ -22,16 +22,14 @@ $trackRun = function ($command) {
 // =============================================
 
 Schedule::command('devices:sync-presence')
-    ->everyThirtySeconds()  // Increased from everyMinute to reduce race condition window (TTL is 60s)
+    ->everyMinute()  // Less critical now - Redis heartbeat TTL is source of truth
     ->onSuccess(fn() => Cache::put('schedule_last_run:devices:sync-presence', ['time' => now()->format('d/m H:i:s'), 'status' => 'success'], now()->addHours(24)));
 
 Schedule::command('jobs:dispatch-scheduled')
     ->everyMinute()
     ->onSuccess(fn() => Cache::put('schedule_last_run:jobs:dispatch-scheduled', ['time' => now()->format('d/m H:i:s'), 'status' => 'success'], now()->addHours(24)));
 
-Schedule::command('devices:check-online-status')
-    ->everyMinute()
-    ->onSuccess(fn() => Cache::put('schedule_last_run:devices:check-online-status', ['time' => now()->format('d/m H:i:s'), 'status' => 'success'], now()->addHours(24)));
+// REMOVED: devices:check-online-status - Redis TTL handles this automatically now
 
 // =============================================
 // DATA CLEANUP (Daily at 3 AM)

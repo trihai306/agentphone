@@ -203,12 +203,15 @@ class DeviceController extends Controller
 
     /**
      * Heartbeat endpoint for APK to report alive status
+     *
+     * Simple: APK calls every 30s → Redis SETEX 90s TTL → online if key exists
      */
     public function heartbeat(Request $request): JsonResponse
     {
         $request->validate(['device_id' => 'required|string']);
 
-        $device = $this->deviceService->findByDeviceId($request->user(), $request->input('device_id'));
+        $user = $request->user();
+        $device = $this->deviceService->findByDeviceId($user, $request->input('device_id'));
 
         if (!$device) {
             return response()->json([
@@ -217,7 +220,11 @@ class DeviceController extends Controller
             ]);
         }
 
-        $this->deviceService->handleHeartbeat($device, $request->ip());
+        // Record heartbeat in Redis (single source of truth for online status)
+        $this->presenceService->heartbeat($device->device_id, $user->id, $device->id);
+
+        // Update last_active_at in DB (lightweight, no status logic)
+        $device->update(['last_active_at' => now()]);
 
         return response()->json([
             'success' => true,

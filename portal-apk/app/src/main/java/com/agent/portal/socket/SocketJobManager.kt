@@ -79,6 +79,9 @@ object SocketJobManager {
     // Test-run polling fallback (in case socket events don't arrive)
     private var testRunPollingJob: kotlinx.coroutines.Job? = null
 
+    // HTTP heartbeat loop (primary online detection, 30s interval)
+    private var heartbeatJob: kotlinx.coroutines.Job? = null
+
     // Job management
     private val jobQueue = ConcurrentHashMap<String, Job>()
     private val executingJobs = ConcurrentHashMap<String, Job>()
@@ -257,6 +260,9 @@ object SocketJobManager {
 
                 // Connect
                 pusher?.connect()
+
+                // Start heartbeat regardless of socket connection status
+                startHeartbeatLoop()
 
                 // Subscribe to device channel
                 subscribeToDeviceChannel()
@@ -630,6 +636,7 @@ object SocketJobManager {
         isIntentionalDisconnect.set(true)
         reconnectJob?.cancel()
         reconnectJob = null
+        stopHeartbeatLoop()
 
         // Stop screen streaming if active
         isScreenStreaming.set(false)
@@ -873,6 +880,73 @@ object SocketJobManager {
 
 
     // ================================================================================
+    // HTTP Heartbeat (Primary Online Detection)
+    // ================================================================================
+
+    /**
+     * Start lightweight HTTP heartbeat every 30 seconds.
+     * This is the PRIMARY mechanism for device online detection.
+     * Backend uses Redis SETEX with 90s TTL - if heartbeat stops, device auto-offlines.
+     */
+    private fun startHeartbeatLoop() {
+        heartbeatJob?.cancel()
+        heartbeatJob = scope.launch {
+            while (isActive) {
+                try {
+                    sendHeartbeat()
+                } catch (e: Exception) {
+                    Log.d(TAG, "Heartbeat failed: ${e.message}")
+                }
+                delay(30_000) // 30 seconds
+            }
+        }
+    }
+
+    private fun stopHeartbeatLoop() {
+        heartbeatJob?.cancel()
+        heartbeatJob = null
+    }
+
+    private suspend fun sendHeartbeat() {
+        val id = deviceId ?: return
+        val context = contextRef?.get() ?: return
+        val sessionManager = com.agent.portal.auth.SessionManager(context)
+        val token = sessionManager.getSession()?.token ?: return
+
+        val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
+        val isRecording = try {
+            com.agent.portal.recording.RecordingManager.isActivelyRecording()
+        } catch (e: Exception) {
+            false
+        }
+        val json = gson.toJson(mapOf(
+            "device_id" to id,
+            "socket_connected" to isConnected.get(),
+            "is_recording" to isRecording
+        ))
+
+        val requestBody = okhttp3.RequestBody.create(
+            "application/json".toMediaTypeOrNull(),
+            json
+        )
+
+        val request = okhttp3.Request.Builder()
+            .url("$apiUrl/heartbeat")
+            .post(requestBody)
+            .addHeader("Authorization", "Bearer $token")
+            .addHeader("Accept", "application/json")
+            .build()
+
+        withContext(Dispatchers.IO) {
+            httpClient.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    Log.d(TAG, "Heartbeat OK")
+                }
+            }
+        }
+    }
+
+    // ================================================================================
     // Event Handlers
     // ================================================================================
 
@@ -894,6 +968,9 @@ object SocketJobManager {
         // Start polling for pending test runs (fallback for socket events)
         startTestRunPolling()
 
+        // Start 30s heartbeat loop (primary online detection)
+        startHeartbeatLoop()
+
         scope.launch(Dispatchers.Main) {
             jobListeners.forEach { it.onConnected() }
         }
@@ -905,9 +982,10 @@ object SocketJobManager {
         // Notify backend that device is offline
         notifyDeviceStatus("offline")
 
-        // Stop polling and accessibility check when disconnected
+        // Stop polling, accessibility check, and heartbeat when disconnected
         stopTestRunPolling()
         stopAccessibilityStatusCheck()
+        stopHeartbeatLoop()
 
         scope.launch(Dispatchers.Main) {
             jobListeners.forEach { it.onDisconnected() }

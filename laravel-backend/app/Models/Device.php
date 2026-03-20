@@ -105,36 +105,19 @@ class Device extends Model
     }
 
     /**
-     * Check if device is currently online via Redis (preferred)
-     * Falls back to DB-based check if Redis unavailable
-     * 
-     * @param int $minutes DEPRECATED - now uses fixed 90s window (60s Redis TTL + 30s grace)
+     * Check if device is currently online via Redis heartbeat key
+     * Simple: key exists = online, expired = offline
      */
     public function isOnline(?int $minutes = null): bool
     {
-        // Try Redis first (O(1) operation) - primary source of truth
         try {
-            $key = sprintf('device:online:%d', $this->user_id);
-            if (Redis::sismember($key, $this->device_id)) {
-                return true;
-            }
+            $presenceService = app(\App\Services\DevicePresenceService::class);
+            return $presenceService->isOnline($this->user_id, $this->device_id);
         } catch (\Exception $e) {
-            // Redis unavailable, fall back to DB check
-            \Log::warning("Redis unavailable for device presence check: {$e->getMessage()}");
+            // Fallback to DB if Redis is down
+            return $this->socket_connected ||
+                   ($this->last_active_at && $this->last_active_at->diffInSeconds(now()) < 90);
         }
-
-        // Fallback: Socket connected flag (synced from Redis every 30s)
-        if ($this->socket_connected) {
-            return true;
-        }
-
-        // Fallback: Activity-based check with TIGHT 90-second tolerance
-        // 90s = 60s Redis TTL + 30s grace period for heartbeat delays
-        if ($this->last_active_at && $this->last_active_at->gte(now()->subSeconds(90))) {
-            return true;
-        }
-
-        return false;
     }
 
     /**
@@ -142,12 +125,7 @@ class Device extends Model
      */
     public function isOnlineViaRedis(): bool
     {
-        try {
-            $key = sprintf('device:online:%d', $this->user_id);
-            return (bool) Redis::sismember($key, $this->device_id);
-        } catch (\Exception $e) {
-            return false;
-        }
+        return $this->isOnline();
     }
 
     /**
@@ -156,8 +134,8 @@ class Device extends Model
     public static function getOnlineForUser(int $userId): \Illuminate\Database\Eloquent\Collection
     {
         try {
-            $key = sprintf('device:online:%d', $userId);
-            $onlineIds = Redis::smembers($key) ?: [];
+            $presenceService = app(\App\Services\DevicePresenceService::class);
+            $onlineIds = $presenceService->getOnlineDevices($userId);
 
             if (!empty($onlineIds)) {
                 return static::where('user_id', $userId)
@@ -166,10 +144,10 @@ class Device extends Model
             }
         } catch (\Exception $e) {
             // Fall back to DB-based check
+            return static::where('user_id', $userId)->online()->get();
         }
 
-        // Fallback: Use DB scope
-        return static::where('user_id', $userId)->online()->get();
+        return new \Illuminate\Database\Eloquent\Collection();
     }
 
     /**
