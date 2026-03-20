@@ -33,6 +33,7 @@ class FlowService
             'double_tap' => 'double_tap',
             'long_press' => 'long_press',
             'long_click' => 'long_press',
+            'long_tap' => 'long_press',
 
             // Scroll actions
             'scroll' => 'scroll',
@@ -41,41 +42,86 @@ class FlowService
             'scroll_left' => 'scroll',
             'scroll_right' => 'scroll',
             'swipe' => 'swipe',
+            'swipe_up' => 'swipe',
+            'swipe_down' => 'swipe',
+            'swipe_left' => 'swipe',
+            'swipe_right' => 'swipe',
 
             // Text input
             'text_input' => 'text_input',
             'input_text' => 'text_input',
             'type' => 'text_input',
+            'clear_text' => 'clear_text',
+            'get_text' => 'get_text',
+            'append_text' => 'append_text',
+            'select_all' => 'select_all',
 
             // Navigation/Control
             'wait' => 'wait',
             'delay' => 'wait',
             'back' => 'press_key',
             'home' => 'press_key',
+            'key_event' => 'press_key',
             'recents' => 'recents',
+            'notifications' => 'notifications',
+            'quick_settings' => 'quick_settings',
             'screenshot' => 'screenshot',
             'start_app' => 'start_app',
             'launch_app' => 'start_app',
+            'open_app' => 'start_app',
+
+            // Media/Volume keys
+            'volume_up' => 'volume_up',
+            'volume_down' => 'volume_down',
+            'media_play_pause' => 'media_play_pause',
+            'mute' => 'mute',
+            'media_next' => 'media_next',
+            'media_previous' => 'media_previous',
+
+            // Advanced gestures
+            'repeat_click' => 'repeat_click',
+            'drag_drop' => 'drag_drop',
+            'pinch_zoom' => 'pinch_zoom',
+            'fling' => 'fling',
+
+            // Element inspection
+            'get_bounds' => 'get_bounds',
+            'is_visible' => 'is_visible',
+            'count_elements' => 'count_elements',
 
             // Assertions & Conditions
             'assert' => 'assert',
             'element_check' => 'element_check',
             'wait_for_element' => 'wait_for_element',
+            'wait_for_text' => 'wait_for_text',
+            'wait_for_activity' => 'wait_for_activity',
+            'wait_for_package' => 'wait_for_package',
+            'wait_idle' => 'wait_idle',
 
-            // Non-executable nodes (return null)
+            // File handling
+            'file_input' => 'file_input',
+            'upload_file' => 'file_input',
+
+            // Non-executable nodes (return null = skip during traversal)
             'start' => null,
             'end' => null,
             'loop' => null,
             'loopStart' => null,
             'loopEnd' => null,
             'dataSource' => null,
+            'data_source' => null,
             'condition' => null,
+            'probability' => null,  // Structural node, skip during execution
             'variable' => null,
             'input' => null,
             'output' => null,
+            'ai_process' => null,   // AI nodes are processed server-side, not by APK
+            'ai_call' => null,
         ];
 
-        return $mapping[$nodeType] ?? $nodeType;
+        // Return null for unknown types instead of passing through
+        // (passthrough causes APK deserialization crash on unknown ActionType enum values)
+        return $mapping[$nodeType] ?? null;
     }
 
     /**
@@ -178,7 +224,115 @@ class FlowService
                     'filename' => $nodeData['filename'] ?? null,
                 ];
 
+            // Text manipulation actions - need element selector params
+            case 'clear_text':
+            case 'get_text':
+            case 'append_text':
+            case 'select_all':
+                return [
+                    'resourceId' => $actionData['resourceId'] ?? null,
+                    'contentDescription' => $actionData['contentDescription'] ?? null,
+                    'text' => $actionData['text'] ?? null,
+                    'x' => $this->getCoordinate($actionData, 'x'),
+                    'y' => $this->getCoordinate($actionData, 'y'),
+                ];
+
+            // Advanced gestures
+            case 'repeat_click':
+                return [
+                    'x' => $this->getCoordinate($actionData, 'x'),
+                    'y' => $this->getCoordinate($actionData, 'y'),
+                    'count' => $actionData['count'] ?? $nodeData['count'] ?? 3,
+                    'interval' => $actionData['interval'] ?? $nodeData['interval'] ?? 500,
+                    'resourceId' => $actionData['resourceId'] ?? null,
+                    'text' => $actionData['text'] ?? null,
+                ];
+
+            case 'drag_drop':
+                return [
+                    'fromX' => $actionData['fromX'] ?? $actionData['startX'] ?? $this->getCoordinate($actionData, 'x'),
+                    'fromY' => $actionData['fromY'] ?? $actionData['startY'] ?? $this->getCoordinate($actionData, 'y'),
+                    'toX' => $actionData['toX'] ?? $actionData['endX'] ?? 0,
+                    'toY' => $actionData['toY'] ?? $actionData['endY'] ?? 0,
+                    'duration' => $actionData['duration'] ?? 500,
+                ];
+
+            case 'pinch_zoom':
+                return [
+                    'centerX' => $actionData['centerX'] ?? $this->getCoordinate($actionData, 'x'),
+                    'centerY' => $actionData['centerY'] ?? $this->getCoordinate($actionData, 'y'),
+                    'scale' => $actionData['scale'] ?? $nodeData['scale'] ?? 2.0,
+                    'duration' => $actionData['duration'] ?? 500,
+                ];
+
+            case 'fling':
+                return [
+                    'direction' => $actionData['direction'] ?? $nodeData['direction'] ?? 'up',
+                    'startX' => $actionData['startX'] ?? $this->getCoordinate($actionData, 'x'),
+                    'startY' => $actionData['startY'] ?? $this->getCoordinate($actionData, 'y'),
+                    'speed' => $actionData['speed'] ?? 5000,
+                ];
+
+            // Element inspection actions
+            case 'get_bounds':
+            case 'is_visible':
+            case 'count_elements':
+                return [
+                    'resourceId' => $actionData['resourceId'] ?? null,
+                    'contentDescription' => $actionData['contentDescription'] ?? null,
+                    'text' => $actionData['text'] ?? null,
+                    'className' => $actionData['className'] ?? null,
+                ];
+
+            // Wait actions with element/text/activity targets
+            case 'wait_for_text':
+                return [
+                    'text' => $actionData['text'] ?? $nodeData['text'] ?? '',
+                    'timeout' => $actionData['timeout'] ?? $nodeData['timeout'] ?? 10000,
+                    'resourceId' => $actionData['resourceId'] ?? null,
+                ];
+
+            case 'wait_for_activity':
+                return [
+                    'activity' => $actionData['activity'] ?? $nodeData['activity'] ?? '',
+                    'package_name' => $actionData['packageName'] ?? $nodeData['packageName'] ?? '',
+                    'timeout' => $actionData['timeout'] ?? $nodeData['timeout'] ?? 10000,
+                ];
+
+            case 'wait_for_package':
+                return [
+                    'package_name' => $actionData['packageName'] ?? $nodeData['packageName'] ?? '',
+                    'timeout' => $actionData['timeout'] ?? $nodeData['timeout'] ?? 10000,
+                ];
+
+            case 'wait_idle':
+                return [
+                    'timeout' => $actionData['timeout'] ?? $nodeData['timeout'] ?? 5000,
+                ];
+
+            // File input
+            case 'file_input':
+                return [
+                    'file_url' => $nodeData['fileUrl'] ?? $nodeData['file_url'] ?? null,
+                    'file_path' => $nodeData['filePath'] ?? $nodeData['file_path'] ?? null,
+                    'mime_type' => $nodeData['mimeType'] ?? $nodeData['mime_type'] ?? null,
+                ];
+
+            // System actions (no params needed)
+            case 'notifications':
+            case 'quick_settings':
+            case 'recents':
+            case 'volume_up':
+            case 'volume_down':
+            case 'media_play_pause':
+            case 'mute':
+            case 'media_next':
+            case 'media_previous':
+                return [];
+
             default:
+                // Safe fallback: return nodeData but log warning
+                \Illuminate\Support\Facades\Log::warning("Unknown action type in extractActionParams: {$actionType}");
                 return $nodeData;
         }
     }
