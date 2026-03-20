@@ -406,7 +406,22 @@ class UserTest extends TestCase
     {
         $user = new User();
 
-        $this->assertEquals(['name', 'email', 'password', 'workflow_state'], $user->getFillable());
+        $this->assertEquals([
+            'name',
+            'email',
+            'password',
+            'workflow_state',
+            'storage_plan_id',
+            'avatar',
+            'phone',
+            'bio',
+            'location',
+            'timezone',
+            'language',
+            'social_links',
+            'preferences',
+            'ai_credits',
+        ], $user->getFillable());
     }
 
     /**

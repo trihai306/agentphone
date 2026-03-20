@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Device;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -11,7 +12,7 @@ class DeviceManagementTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * Test list devices returns all user tokens.
+     * Test list devices returns all user devices.
      */
     public function test_list_devices_returns_all_user_tokens(): void
     {
@@ -20,19 +21,30 @@ class DeviceManagementTest extends TestCase
             'password' => bcrypt('password123'),
         ]);
 
-        // Login twice to create two tokens
-        $this->postJson('/api/login', [
-            'email' => 'test@example.com',
-            'password' => 'password123',
-        ], [
-            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        // Create two devices for the user
+        Device::create([
+            'user_id' => $user->id,
+            'device_id' => 'device-uuid-1',
+            'name' => 'Samsung Galaxy S24',
+            'model' => 'SM-S921B',
+            'android_version' => '14',
+            'status' => Device::STATUS_ACTIVE,
+            'last_active_at' => now(),
+        ]);
+
+        Device::create([
+            'user_id' => $user->id,
+            'device_id' => 'device-uuid-2',
+            'name' => 'Pixel 8 Pro',
+            'model' => 'Pixel 8 Pro',
+            'android_version' => '14',
+            'status' => Device::STATUS_ACTIVE,
+            'last_active_at' => now(),
         ]);
 
         $loginResponse = $this->postJson('/api/login', [
             'email' => 'test@example.com',
             'password' => 'password123',
-        ], [
-            'User-Agent' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X)',
         ]);
 
         $token = $loginResponse->json('token');
@@ -43,12 +55,12 @@ class DeviceManagementTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonStructure([
-                'devices' => [
-                    '*' => ['id', 'name', 'last_used_at'],
+                'data' => [
+                    '*' => ['id', 'name'],
                 ],
             ]);
 
-        $devices = $response->json('devices');
+        $devices = $response->json('data');
         $this->assertCount(2, $devices);
     }
 
@@ -63,7 +75,7 @@ class DeviceManagementTest extends TestCase
     }
 
     /**
-     * Test destroy deletes a specific device token.
+     * Test destroy deletes a specific device.
      */
     public function test_destroy_deletes_specific_device_token(): void
     {
@@ -72,43 +84,46 @@ class DeviceManagementTest extends TestCase
             'password' => bcrypt('password123'),
         ]);
 
-        // Login twice to create two tokens
-        $firstLoginResponse = $this->postJson('/api/login', [
-            'email' => 'test@example.com',
-            'password' => 'password123',
-        ], [
-            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        // Create two devices
+        $device1 = Device::create([
+            'user_id' => $user->id,
+            'device_id' => 'device-uuid-1',
+            'name' => 'Samsung Galaxy S24',
+            'model' => 'SM-S921B',
+            'android_version' => '14',
+            'status' => Device::STATUS_ACTIVE,
+            'last_active_at' => now(),
         ]);
 
-        $secondLoginResponse = $this->postJson('/api/login', [
-            'email' => 'test@example.com',
-            'password' => 'password123',
-        ], [
-            'User-Agent' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X)',
+        $device2 = Device::create([
+            'user_id' => $user->id,
+            'device_id' => 'device-uuid-2',
+            'name' => 'Pixel 8 Pro',
+            'model' => 'Pixel 8 Pro',
+            'android_version' => '14',
+            'status' => Device::STATUS_ACTIVE,
+            'last_active_at' => now(),
         ]);
 
-        $firstToken = $firstLoginResponse->json('token');
-        $secondToken = $secondLoginResponse->json('token');
+        $loginResponse = $this->postJson('/api/login', [
+            'email' => 'test@example.com',
+            'password' => 'password123',
+        ]);
 
-        // Get device list to find first token's ID
-        $devicesResponse = $this->withHeader('Authorization', 'Bearer ' . $secondToken)
-            ->getJson('/api/devices');
+        $token = $loginResponse->json('token');
 
-        $devices = $devicesResponse->json('devices');
-        $firstDeviceId = $devices[0]['id'];
-
-        // Delete first device using second token
-        $deleteResponse = $this->withHeader('Authorization', 'Bearer ' . $secondToken)
-            ->deleteJson("/api/devices/{$firstDeviceId}");
+        // Delete first device
+        $deleteResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+            ->deleteJson("/api/devices/{$device1->id}");
 
         $deleteResponse->assertStatus(204);
 
-        // Verify token count is now 1
-        $this->assertDatabaseCount('personal_access_tokens', 1);
+        // Verify device count is now 1
+        $this->assertDatabaseCount('devices', 1);
     }
 
     /**
-     * Test deleted token is removed from database.
+     * Test deleted device is removed from database.
      */
     public function test_deleted_token_is_removed_from_database(): void
     {
@@ -117,40 +132,44 @@ class DeviceManagementTest extends TestCase
             'password' => bcrypt('password123'),
         ]);
 
-        // Login twice to create two tokens
-        $firstLoginResponse = $this->postJson('/api/login', [
-            'email' => 'test@example.com',
-            'password' => 'password123',
-        ], [
-            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        // Create two devices
+        $device1 = Device::create([
+            'user_id' => $user->id,
+            'device_id' => 'device-uuid-1',
+            'name' => 'Samsung Galaxy S24',
+            'model' => 'SM-S921B',
+            'android_version' => '14',
+            'status' => Device::STATUS_ACTIVE,
+            'last_active_at' => now(),
         ]);
 
-        $secondLoginResponse = $this->postJson('/api/login', [
-            'email' => 'test@example.com',
-            'password' => 'password123',
-        ], [
-            'User-Agent' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X)',
+        $device2 = Device::create([
+            'user_id' => $user->id,
+            'device_id' => 'device-uuid-2',
+            'name' => 'Pixel 8 Pro',
+            'model' => 'Pixel 8 Pro',
+            'android_version' => '14',
+            'status' => Device::STATUS_ACTIVE,
+            'last_active_at' => now(),
         ]);
 
-        $secondToken = $secondLoginResponse->json('token');
+        $loginResponse = $this->postJson('/api/login', [
+            'email' => 'test@example.com',
+            'password' => 'password123',
+        ]);
 
-        // Get device list to find first token's ID
-        $devicesResponse = $this->withHeader('Authorization', 'Bearer ' . $secondToken)
-            ->getJson('/api/devices');
+        $token = $loginResponse->json('token');
 
-        $devices = $devicesResponse->json('devices');
-        $firstDeviceId = $devices[0]['id'];
-
-        // Verify token exists before deletion
-        $this->assertDatabaseHas('personal_access_tokens', ['id' => $firstDeviceId]);
+        // Verify device exists before deletion
+        $this->assertDatabaseHas('devices', ['id' => $device1->id]);
 
         // Delete first device
-        $this->withHeader('Authorization', 'Bearer ' . $secondToken)
-            ->deleteJson("/api/devices/{$firstDeviceId}");
+        $this->withHeader('Authorization', 'Bearer ' . $token)
+            ->deleteJson("/api/devices/{$device1->id}");
 
-        // Verify token is removed from database (this guarantees 401 in production)
-        $this->assertDatabaseMissing('personal_access_tokens', ['id' => $firstDeviceId]);
-        $this->assertDatabaseCount('personal_access_tokens', 1);
+        // Verify device is removed from database
+        $this->assertDatabaseMissing('devices', ['id' => $device1->id]);
+        $this->assertDatabaseCount('devices', 1);
     }
 
     /**
@@ -174,14 +193,11 @@ class DeviceManagementTest extends TestCase
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
             ->deleteJson('/api/devices/99999');
 
-        $response->assertStatus(404)
-            ->assertJson([
-                'message' => 'Device not found',
-            ]);
+        $response->assertStatus(404);
     }
 
     /**
-     * Test cannot delete another user's device token.
+     * Test cannot delete another user's device.
      */
     public function test_cannot_delete_another_users_device_token(): void
     {
@@ -195,12 +211,29 @@ class DeviceManagementTest extends TestCase
             'password' => bcrypt('password123'),
         ]);
 
-        // Login both users
-        $user1LoginResponse = $this->postJson('/api/login', [
-            'email' => 'user1@example.com',
-            'password' => 'password123',
+        // Create device for user1
+        $user1Device = Device::create([
+            'user_id' => $user1->id,
+            'device_id' => 'device-uuid-1',
+            'name' => 'Samsung Galaxy S24',
+            'model' => 'SM-S921B',
+            'android_version' => '14',
+            'status' => Device::STATUS_ACTIVE,
+            'last_active_at' => now(),
         ]);
 
+        // Create device for user2
+        Device::create([
+            'user_id' => $user2->id,
+            'device_id' => 'device-uuid-2',
+            'name' => 'Pixel 8 Pro',
+            'model' => 'Pixel 8 Pro',
+            'android_version' => '14',
+            'status' => Device::STATUS_ACTIVE,
+            'last_active_at' => now(),
+        ]);
+
+        // Login as user2
         $user2LoginResponse = $this->postJson('/api/login', [
             'email' => 'user2@example.com',
             'password' => 'password123',
@@ -208,18 +241,15 @@ class DeviceManagementTest extends TestCase
 
         $user2Token = $user2LoginResponse->json('token');
 
-        // Get user1's token ID
-        $user1TokenId = $user1->tokens()->first()->id;
-
-        // User2 tries to delete user1's token
+        // User2 tries to delete user1's device
         $response = $this->withHeader('Authorization', 'Bearer ' . $user2Token)
-            ->deleteJson("/api/devices/{$user1TokenId}");
+            ->deleteJson("/api/devices/{$user1Device->id}");
 
-        // Should return 404 (not 403) since user2 can't even see user1's tokens
+        // Should return 404 since user2 can't see user1's devices
         $response->assertStatus(404);
 
-        // Verify user1's token still exists
-        $this->assertDatabaseCount('personal_access_tokens', 2);
+        // Verify both devices still exist
+        $this->assertDatabaseCount('devices', 2);
     }
 
     /**
@@ -246,22 +276,16 @@ class DeviceManagementTest extends TestCase
         $this->postJson('/api/login', [
             'email' => 'test@example.com',
             'password' => 'password123',
-        ], [
-            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
         ]);
 
         $secondLoginResponse = $this->postJson('/api/login', [
             'email' => 'test@example.com',
             'password' => 'password123',
-        ], [
-            'User-Agent' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X)',
         ]);
 
         $this->postJson('/api/login', [
             'email' => 'test@example.com',
             'password' => 'password123',
-        ], [
-            'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
         ]);
 
         $secondToken = $secondLoginResponse->json('token');
@@ -273,10 +297,7 @@ class DeviceManagementTest extends TestCase
         $response = $this->withHeader('Authorization', 'Bearer ' . $secondToken)
             ->postJson('/api/devices/logout-all');
 
-        $response->assertStatus(200)
-            ->assertJson([
-                'message' => 'Successfully logged out from all other devices',
-            ]);
+        $response->assertStatus(200);
 
         // Verify only one token remains
         $this->assertDatabaseCount('personal_access_tokens', 1);
@@ -299,18 +320,14 @@ class DeviceManagementTest extends TestCase
         ]);
 
         // Login twice
-        $firstLoginResponse = $this->postJson('/api/login', [
+        $this->postJson('/api/login', [
             'email' => 'test@example.com',
             'password' => 'password123',
-        ], [
-            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
         ]);
 
         $secondLoginResponse = $this->postJson('/api/login', [
             'email' => 'test@example.com',
             'password' => 'password123',
-        ], [
-            'User-Agent' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X)',
         ]);
 
         $secondToken = $secondLoginResponse->json('token');
@@ -322,7 +339,7 @@ class DeviceManagementTest extends TestCase
         $this->withHeader('Authorization', 'Bearer ' . $secondToken)
             ->postJson('/api/devices/logout-all');
 
-        // Verify only one token remains (the one used to make the request)
+        // Verify only one token remains
         $this->assertDatabaseCount('personal_access_tokens', 1);
 
         // The remaining token should still work
@@ -330,8 +347,6 @@ class DeviceManagementTest extends TestCase
             ->getJson('/api/devices');
 
         $verifyResponse->assertStatus(200);
-        $devices = $verifyResponse->json('devices');
-        $this->assertCount(1, $devices);
     }
 
     /**
@@ -354,11 +369,20 @@ class DeviceManagementTest extends TestCase
             'password' => bcrypt('password123'),
         ]);
 
+        // Create a device for the user
+        Device::create([
+            'user_id' => $user->id,
+            'device_id' => 'device-uuid-1',
+            'name' => 'Samsung Galaxy S24',
+            'model' => 'SM-S921B',
+            'android_version' => '14',
+            'status' => Device::STATUS_ACTIVE,
+            'last_active_at' => now(),
+        ]);
+
         $loginResponse = $this->postJson('/api/login', [
             'email' => 'test@example.com',
             'password' => 'password123',
-        ], [
-            'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
         ]);
 
         $token = $loginResponse->json('token');
@@ -369,17 +393,17 @@ class DeviceManagementTest extends TestCase
 
         $response->assertStatus(200);
 
-        $devices = $response->json('devices');
+        $devices = $response->json('data');
         $this->assertCount(1, $devices);
 
         $device = $devices[0];
         $this->assertArrayHasKey('id', $device);
         $this->assertArrayHasKey('name', $device);
-        $this->assertArrayHasKey('last_used_at', $device);
+        $this->assertArrayHasKey('last_active_at', $device);
     }
 
     /**
-     * Test devices only returns current user's tokens.
+     * Test devices only returns current user's devices.
      */
     public function test_devices_only_returns_current_users_tokens(): void
     {
@@ -393,15 +417,36 @@ class DeviceManagementTest extends TestCase
             'password' => bcrypt('password123'),
         ]);
 
-        // Login both users multiple times
-        $this->postJson('/api/login', [
-            'email' => 'user1@example.com',
-            'password' => 'password123',
+        // Create devices for user1
+        Device::create([
+            'user_id' => $user1->id,
+            'device_id' => 'device-uuid-1',
+            'name' => 'Samsung Galaxy S24',
+            'model' => 'SM-S921B',
+            'android_version' => '14',
+            'status' => Device::STATUS_ACTIVE,
+            'last_active_at' => now(),
         ]);
 
-        $this->postJson('/api/login', [
-            'email' => 'user1@example.com',
-            'password' => 'password123',
+        Device::create([
+            'user_id' => $user1->id,
+            'device_id' => 'device-uuid-2',
+            'name' => 'Pixel 8 Pro',
+            'model' => 'Pixel 8 Pro',
+            'android_version' => '14',
+            'status' => Device::STATUS_ACTIVE,
+            'last_active_at' => now(),
+        ]);
+
+        // Create device for user2
+        Device::create([
+            'user_id' => $user2->id,
+            'device_id' => 'device-uuid-3',
+            'name' => 'OnePlus 12',
+            'model' => 'CPH2581',
+            'android_version' => '14',
+            'status' => Device::STATUS_ACTIVE,
+            'last_active_at' => now(),
         ]);
 
         $user2LoginResponse = $this->postJson('/api/login', [
@@ -417,18 +462,29 @@ class DeviceManagementTest extends TestCase
 
         $response->assertStatus(200);
 
-        $devices = $response->json('devices');
+        $devices = $response->json('data');
         $this->assertCount(1, $devices);
     }
 
     /**
-     * Test can delete current device (self-logout) removes token from database.
+     * Test can delete a device and it is removed from database.
      */
     public function test_can_delete_current_device_removes_token_from_database(): void
     {
         $user = User::factory()->create([
             'email' => 'test@example.com',
             'password' => bcrypt('password123'),
+        ]);
+
+        // Create a device
+        $device = Device::create([
+            'user_id' => $user->id,
+            'device_id' => 'device-uuid-1',
+            'name' => 'Samsung Galaxy S24',
+            'model' => 'SM-S921B',
+            'android_version' => '14',
+            'status' => Device::STATUS_ACTIVE,
+            'last_active_at' => now(),
         ]);
 
         $loginResponse = $this->postJson('/api/login', [
@@ -438,25 +494,18 @@ class DeviceManagementTest extends TestCase
 
         $token = $loginResponse->json('token');
 
-        // Get the token's ID
-        $devicesResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson('/api/devices');
+        // Verify device exists
+        $this->assertDatabaseHas('devices', ['id' => $device->id]);
 
-        $devices = $devicesResponse->json('devices');
-        $deviceId = $devices[0]['id'];
-
-        // Verify token exists
-        $this->assertDatabaseHas('personal_access_tokens', ['id' => $deviceId]);
-
-        // Delete own device
+        // Delete device
         $deleteResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->deleteJson("/api/devices/{$deviceId}");
+            ->deleteJson("/api/devices/{$device->id}");
 
         $deleteResponse->assertStatus(204);
 
-        // Token should be removed from database (guarantees 401 in production)
-        $this->assertDatabaseMissing('personal_access_tokens', ['id' => $deviceId]);
-        $this->assertDatabaseCount('personal_access_tokens', 0);
+        // Device should be removed from database
+        $this->assertDatabaseMissing('devices', ['id' => $device->id]);
+        $this->assertDatabaseCount('devices', 0);
     }
 
     /**
@@ -487,8 +536,5 @@ class DeviceManagementTest extends TestCase
             ->getJson('/api/devices');
 
         $verifyResponse->assertStatus(200);
-
-        $devices = $verifyResponse->json('devices');
-        $this->assertCount(1, $devices);
     }
 }

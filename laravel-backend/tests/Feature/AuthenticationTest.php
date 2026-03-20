@@ -11,9 +11,9 @@ class AuthenticationTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * Test login creates token with device name from User-Agent.
+     * Test login creates token and returns user info.
      */
-    public function test_login_creates_token_with_device_name(): void
+    public function test_login_creates_token_with_user_info(): void
     {
         $user = User::factory()->create([
             'email' => 'test@example.com',
@@ -30,16 +30,15 @@ class AuthenticationTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonStructure([
                 'token',
-                'device',
+                'user' => ['id', 'email', 'name'],
             ]);
 
         // Verify token was created
         $this->assertDatabaseCount('personal_access_tokens', 1);
 
-        // Verify device name contains expected parts
         $responseData = $response->json();
         $this->assertNotEmpty($responseData['token']);
-        $this->assertNotEmpty($responseData['device']);
+        $this->assertEquals('test@example.com', $responseData['user']['email']);
     }
 
     /**
@@ -62,7 +61,6 @@ class AuthenticationTest extends TestCase
                 'message' => 'Invalid credentials',
             ]);
 
-        // Verify no token was created
         $this->assertDatabaseCount('personal_access_tokens', 0);
     }
 
@@ -132,7 +130,6 @@ class AuthenticationTest extends TestCase
             'password' => bcrypt('password123'),
         ]);
 
-        // Login to get token
         $loginResponse = $this->postJson('/api/login', [
             'email' => 'test@example.com',
             'password' => 'password123',
@@ -140,7 +137,6 @@ class AuthenticationTest extends TestCase
 
         $token = $loginResponse->json('token');
 
-        // Use token to access protected route
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
             ->getJson('/api/user');
 
@@ -172,34 +168,6 @@ class AuthenticationTest extends TestCase
     }
 
     /**
-     * Test login with missing User-Agent defaults to Unknown Device.
-     */
-    public function test_login_with_missing_user_agent_defaults_to_unknown_device(): void
-    {
-        $user = User::factory()->create([
-            'email' => 'test@example.com',
-            'password' => bcrypt('password123'),
-        ]);
-
-        $response = $this->postJson('/api/login', [
-            'email' => 'test@example.com',
-            'password' => 'password123',
-        ], [
-            'User-Agent' => '',
-        ]);
-
-        $response->assertStatus(200)
-            ->assertJsonStructure([
-                'token',
-                'device',
-            ]);
-
-        // Device name should contain "Unknown" parts
-        $device = $response->json('device');
-        $this->assertStringContainsString('Unknown', $device);
-    }
-
-    /**
      * Test multiple logins create multiple tokens.
      */
     public function test_multiple_logins_create_multiple_tokens(): void
@@ -209,7 +177,6 @@ class AuthenticationTest extends TestCase
             'password' => bcrypt('password123'),
         ]);
 
-        // First login (desktop)
         $this->postJson('/api/login', [
             'email' => 'test@example.com',
             'password' => 'password123',
@@ -217,7 +184,6 @@ class AuthenticationTest extends TestCase
             'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         ]);
 
-        // Second login (mobile)
         $this->postJson('/api/login', [
             'email' => 'test@example.com',
             'password' => 'password123',
@@ -225,12 +191,11 @@ class AuthenticationTest extends TestCase
             'User-Agent' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15',
         ]);
 
-        // Verify two tokens were created
         $this->assertDatabaseCount('personal_access_tokens', 2);
     }
 
     /**
-     * Test login with mobile User-Agent creates token with mobile device name.
+     * Test login with mobile User-Agent.
      */
     public function test_login_with_mobile_user_agent(): void
     {
@@ -246,11 +211,8 @@ class AuthenticationTest extends TestCase
             'User-Agent' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1',
         ]);
 
-        $response->assertStatus(200);
-
-        $device = $response->json('device');
-        // Device name should contain iOS or iPhone-related info
-        $this->assertNotEmpty($device);
+        $response->assertStatus(200)
+            ->assertJsonStructure(['token', 'user']);
     }
 
     /**
@@ -266,13 +228,10 @@ class AuthenticationTest extends TestCase
         $response = $this->postJson('/api/login', [
             'email' => 'test@example.com',
             'password' => 'password123',
-        ], [
-            'User-Agent' => 'TestBrowser/1.0',
         ]);
 
         $response->assertStatus(200);
 
-        // Verify token exists in database for this user
         $this->assertDatabaseHas('personal_access_tokens', [
             'tokenable_type' => User::class,
             'tokenable_id' => $user->id,

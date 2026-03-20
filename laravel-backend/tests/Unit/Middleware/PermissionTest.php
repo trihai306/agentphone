@@ -11,6 +11,7 @@ use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\Exceptions\UnauthorizedException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
@@ -28,7 +29,7 @@ class PermissionTest extends TestCase
         $user->assignRole('admin');
 
         $request = $this->createAuthenticatedRequest($user);
-        $middleware = new RoleMiddleware(app());
+        $middleware = new RoleMiddleware();
 
         $response = $middleware->handle(
             $request,
@@ -52,7 +53,7 @@ class PermissionTest extends TestCase
         $user->assignRole('editor');
 
         $request = $this->createAuthenticatedRequest($user);
-        $middleware = new RoleMiddleware(app());
+        $middleware = new RoleMiddleware();
 
         $this->expectException(HttpException::class);
 
@@ -74,7 +75,7 @@ class PermissionTest extends TestCase
         Role::create(['name' => 'admin', 'guard_name' => 'web']);
 
         $request = $this->createAuthenticatedRequest($user);
-        $middleware = new RoleMiddleware(app());
+        $middleware = new RoleMiddleware();
 
         $this->expectException(HttpException::class);
 
@@ -98,7 +99,7 @@ class PermissionTest extends TestCase
         $user->assignRole('super-admin');
 
         $request = $this->createAuthenticatedRequest($user);
-        $middleware = new RoleMiddleware(app());
+        $middleware = new RoleMiddleware();
 
         $response = $middleware->handle(
             $request,
@@ -121,7 +122,7 @@ class PermissionTest extends TestCase
         $user->givePermissionTo('edit-users');
 
         $request = $this->createAuthenticatedRequest($user);
-        $middleware = new PermissionMiddleware(app());
+        $middleware = new PermissionMiddleware();
 
         $response = $middleware->handle(
             $request,
@@ -145,7 +146,7 @@ class PermissionTest extends TestCase
         $user->givePermissionTo('view-users');
 
         $request = $this->createAuthenticatedRequest($user);
-        $middleware = new PermissionMiddleware(app());
+        $middleware = new PermissionMiddleware();
 
         $this->expectException(HttpException::class);
 
@@ -167,7 +168,7 @@ class PermissionTest extends TestCase
         Permission::create(['name' => 'edit-users', 'guard_name' => 'web']);
 
         $request = $this->createAuthenticatedRequest($user);
-        $middleware = new PermissionMiddleware(app());
+        $middleware = new PermissionMiddleware();
 
         $this->expectException(HttpException::class);
 
@@ -191,7 +192,7 @@ class PermissionTest extends TestCase
         $user->givePermissionTo('delete-users');
 
         $request = $this->createAuthenticatedRequest($user);
-        $middleware = new PermissionMiddleware(app());
+        $middleware = new PermissionMiddleware();
 
         $response = $middleware->handle(
             $request,
@@ -216,7 +217,7 @@ class PermissionTest extends TestCase
         $user->assignRole('admin');
 
         $request = $this->createAuthenticatedRequest($user);
-        $middleware = new PermissionMiddleware(app());
+        $middleware = new PermissionMiddleware();
 
         $response = $middleware->handle(
             $request,
@@ -240,7 +241,7 @@ class PermissionTest extends TestCase
         $user->assignRole('admin');
 
         $request = $this->createAuthenticatedRequest($user);
-        $middleware = new RoleOrPermissionMiddleware(app());
+        $middleware = new RoleOrPermissionMiddleware();
 
         $response = $middleware->handle(
             $request,
@@ -264,7 +265,7 @@ class PermissionTest extends TestCase
         $user->givePermissionTo('manage-users');
 
         $request = $this->createAuthenticatedRequest($user);
-        $middleware = new RoleOrPermissionMiddleware(app());
+        $middleware = new RoleOrPermissionMiddleware();
 
         $response = $middleware->handle(
             $request,
@@ -287,7 +288,7 @@ class PermissionTest extends TestCase
         Permission::create(['name' => 'manage-users', 'guard_name' => 'web']);
 
         $request = $this->createAuthenticatedRequest($user);
-        $middleware = new RoleOrPermissionMiddleware(app());
+        $middleware = new RoleOrPermissionMiddleware();
 
         $this->expectException(HttpException::class);
 
@@ -311,7 +312,7 @@ class PermissionTest extends TestCase
         $user->givePermissionTo('edit-users');
 
         $request = $this->createAuthenticatedRequest($user);
-        $middleware = new PermissionMiddleware(app());
+        $middleware = new PermissionMiddleware();
 
         $response = $middleware->handle(
             $request,
@@ -332,10 +333,13 @@ class PermissionTest extends TestCase
     {
         Role::create(['name' => 'admin', 'guard_name' => 'web']);
 
-        $request = Request::create('/test', 'GET');
-        $middleware = new RoleMiddleware(app());
+        // Ensure no user is logged in
+        \Illuminate\Support\Facades\Auth::guard('web')->logout();
 
-        $this->expectException(HttpException::class);
+        $request = Request::create('/test', 'GET');
+        $middleware = new RoleMiddleware();
+
+        $this->expectException(UnauthorizedException::class);
 
         $middleware->handle(
             $request,
@@ -434,6 +438,9 @@ class PermissionTest extends TestCase
      */
     protected function createAuthenticatedRequest(User $user): Request
     {
+        // Spatie middleware uses Auth::guard()->user(), so we must log the user in via Auth
+        \Illuminate\Support\Facades\Auth::guard('web')->login($user);
+
         $request = Request::create('/test', 'GET');
         $request->setUserResolver(function () use ($user) {
             return $user;
