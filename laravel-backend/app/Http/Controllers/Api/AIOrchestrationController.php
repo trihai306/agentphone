@@ -282,41 +282,69 @@ Rules:
 - Include wait nodes between actions (500-2000ms)
 PROMPT;
 
-        try {
-            $service = app(\App\Services\AIOrchestrationService::class);
-            $result = $service->execute([
-                'provider' => $provider,
-                'model' => $provider === 'gemini' ? 'gemini-2.0-flash' : null,
-                'system_prompt' => $systemPrompt,
-                'prompt' => $request->input('description'),
-                'response_format' => 'json',
-                'temperature' => 0.3,
-                'max_tokens' => 4000,
-                'api_token' => config("services.{$provider}.key") ?: $request->input('api_token'),
-            ]);
+        // Get API token: from request, env, or config
+        $apiToken = $request->input('api_token')
+            ?: config("services.{$provider}.key")
+            ?: env('GEMINI_API_KEY')
+            ?: env('GOOGLE_AI_API_KEY')
+            ?: env('GOOGLE_AI_KEY');
 
-            // Parse the response to extract nodes/edges JSON
+        if (!$apiToken) {
+            return response()->json([
+                'success' => false,
+                'error' => 'No API key configured. Set GEMINI_API_KEY in .env or pass api_token in request.',
+            ], 422);
+        }
+
+        try {
+            // Call Gemini directly via HTTP (simple, no reasoning loop needed)
+            $model = match ($provider) {
+                'gemini' => 'gemini-2.0-flash',
+                'openai' => 'gpt-4o-mini',
+                default => 'gemini-2.0-flash',
+            };
+
+            $messages = [
+                ['role' => 'user', 'content' => $systemPrompt . "\n\nUser request: " . $request->input('description')],
+            ];
+
+            $service = app(\App\Services\AIOrchestrationService::class);
+
+            // Use the existing callLLM via reflection (it's protected)
+            $reflection = new \ReflectionMethod($service, 'callLLM');
+            $reflection->setAccessible(true);
+            $result = $reflection->invoke($service, $provider, $model, $apiToken, $messages, [], 0.3, 4000, 0.9);
+
             $content = $result['content'] ?? '';
 
-            // Try to extract JSON from the response
-            if (preg_match('/\{[\s\S]*"nodes"[\s\S]*\}/', $content, $matches)) {
+            // Try to extract JSON from the response (handle markdown code blocks)
+            $content = preg_replace('/```json\s*/', '', $content);
+            $content = preg_replace('/```\s*/', '', $content);
+            $content = trim($content);
+
+            $flowData = json_decode($content, true);
+            if (!$flowData && preg_match('/\{[\s\S]*"nodes"[\s\S]*\}/s', $content, $matches)) {
                 $flowData = json_decode($matches[0], true);
-                if ($flowData && isset($flowData['nodes'])) {
-                    return response()->json([
-                        'success' => true,
-                        'nodes' => $flowData['nodes'],
-                        'edges' => $flowData['edges'] ?? [],
-                    ]);
-                }
+            }
+
+            if ($flowData && isset($flowData['nodes'])) {
+                return response()->json([
+                    'success' => true,
+                    'nodes' => $flowData['nodes'],
+                    'edges' => $flowData['edges'] ?? [],
+                    'provider' => $provider,
+                    'model' => $model,
+                ]);
             }
 
             return response()->json([
                 'success' => false,
                 'error' => 'Could not parse AI response into workflow format',
-                'raw' => $content,
+                'raw' => substr($content, 0, 500),
             ], 422);
 
         } catch (\Exception $e) {
+            Log::error('AI Generate Flow failed', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'error' => $e->getMessage(),
