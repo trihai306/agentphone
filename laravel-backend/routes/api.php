@@ -170,6 +170,18 @@ Route::middleware('auth:sanctum')->group(function () {
     // Workflow test-run progress reporting (APK sends real-time action status)
     Route::prefix('workflow')->group(function () {
         Route::post('/test-run/progress', [\App\Http\Controllers\FlowController::class, 'reportTestRunProgress']);
+
+        // APK polls for pending test runs (fallback when socket event doesn't arrive)
+        Route::get('/test-run/pending/{device_id}', function (Request $request, string $device_id) {
+            $cacheKey = "test_run:pending:{$device_id}";
+            $payload = \Illuminate\Support\Facades\Cache::get($cacheKey);
+            if (!$payload) {
+                return response()->json(['pending' => false]);
+            }
+            // Consume the test run (one-time delivery)
+            \Illuminate\Support\Facades\Cache::forget($cacheKey);
+            return response()->json(['pending' => true, 'payload' => $payload]);
+        });
     });
 
     // Workflow listener management (for APK recording prerequisite check)
@@ -177,6 +189,36 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/check', [\App\Http\Controllers\Api\RecordingEventController::class, 'checkListener']);
         Route::post('/register', [\App\Http\Controllers\Api\RecordingEventController::class, 'registerListener']);
         Route::post('/unregister', [\App\Http\Controllers\Api\RecordingEventController::class, 'unregisterListener']);
+    });
+
+    // Debug: Test broadcast to device (for diagnosing socket delivery issues)
+    Route::post('/devices/{device_id}/test-broadcast', function (Request $request, string $device_id) {
+        $user = $request->user();
+        $device = $user->devices()->where('device_id', $device_id)->first();
+        if (!$device) {
+            return response()->json(['error' => 'Device not found'], 404);
+        }
+        $payload = [
+            'test' => true,
+            'message' => $request->input('message', 'ping from debug endpoint'),
+            'timestamp' => now()->timestamp * 1000,
+        ];
+        $eventType = $request->input('event_type', 'workflow:test');
+        try {
+            broadcast(new \App\Events\DispatchJobToDevice($device, $payload, $eventType));
+            return response()->json([
+                'success' => true,
+                'channel' => 'private-device.' . $device->device_id,
+                'event' => $eventType,
+                'payload' => $payload,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ], 500);
+        }
     });
 
     // AI Orchestration API (for AI Agent node)

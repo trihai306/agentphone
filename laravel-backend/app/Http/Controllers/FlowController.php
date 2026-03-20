@@ -412,7 +412,7 @@ class FlowController extends Controller
             'variables' => [],
             'timestamp' => now()->timestamp * 1000,
             // Progress callback URL for APK to report action status
-            'progress_url' => config('app.url') . '/api/test-run/progress',
+            'progress_url' => config('app.url') . '/api/workflow/test-run/progress',
         ];
 
         // Broadcast workflow:test event to device
@@ -421,12 +421,26 @@ class FlowController extends Controller
             'device_id' => $device->device_id,
             'device_name' => $device->name,
             'actions_count' => count($actions),
-            'channel' => 'device.' . $device->device_id,
+            'channel' => 'private-device.' . $device->device_id,
         ]);
 
-        broadcast(new \App\Events\DispatchJobToDevice($device, $payload, 'workflow:test'))->toOthers();
+        // Store in Redis as fallback (APK polls this if socket event doesn't arrive)
+        $cacheKey = "test_run:pending:{$device->device_id}";
+        \Illuminate\Support\Facades\Cache::put($cacheKey, $payload, now()->addMinutes(2));
+        Log::info('Test run cached in Redis', ['key' => $cacheKey]);
 
-        Log::info('Test run started successfully', ['flow_id' => $flow->id]);
+        try {
+            broadcast(new \App\Events\DispatchJobToDevice($device, $payload, 'workflow:test'));
+
+            Log::info('Test run broadcast sent successfully', ['flow_id' => $flow->id]);
+        } catch (\Exception $e) {
+            Log::error('Test run broadcast FAILED (Redis fallback available)', [
+                'flow_id' => $flow->id,
+                'device_id' => $device->device_id,
+                'error' => $e->getMessage(),
+            ]);
+            // Don't return error - Redis fallback is available for APK polling
+        }
 
         return response()->json([
             'success' => true,

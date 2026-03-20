@@ -75,6 +75,9 @@ object SocketJobManager {
     private var accessibilityCheckJob: kotlinx.coroutines.Job? = null
     private var lastAccessibilityStatus: Boolean? = null
 
+    // Test-run polling fallback (in case socket events don't arrive)
+    private var testRunPollingJob: kotlinx.coroutines.Job? = null
+
     // Job management
     private val jobQueue = ConcurrentHashMap<String, Job>()
     private val executingJobs = ConcurrentHashMap<String, Job>()
@@ -386,7 +389,10 @@ object SocketJobManager {
                     "job:resume" -> handleResumeJob(event.data)
                     "config:update" -> handleConfigUpdate(event.data)
                     "recording.stop_requested" -> handleRecordingStopRequested(event.data)
-                    "workflow:test" -> handleWorkflowTest(event.data)
+                    "workflow:test" -> {
+                        // Handled by explicit bind - skip to avoid duplicate
+                        Log.d(TAG, "workflow:test in onEvent - explicit bind handles this")
+                    }
                     "inspect:elements" -> {
                         Log.w(TAG, "🔍 INSPECT:ELEMENTS received via main onEvent!")
                         handleInspectElements(event.data ?: "")
@@ -484,10 +490,20 @@ object SocketJobManager {
             override fun onAuthenticationFailure(message: String?, e: Exception?) {}
         })
 
-        // NOTE: workflow:test is handled by the global event handler in onEvent()
-        // Note: workflow:test, inspect:elements, check:accessibility are handled by global handler
-        // Do NOT bind separately here to avoid duplicate event processing
-
+        // Explicit bind for workflow:test - test run from web Flow Editor
+        deviceChannel?.bind("workflow:test", object : com.pusher.client.channel.PrivateChannelEventListener {
+            override fun onEvent(event: PusherEvent) {
+                Log.w(TAG, "🧪 EXPLICIT BIND: workflow:test received!")
+                Log.i(TAG, "📥 workflow:test data: ${event.data?.take(300)}")
+                handleWorkflowTest(event.data ?: "")
+            }
+            override fun onSubscriptionSucceeded(channelName: String) {
+                Log.i(TAG, "✅ workflow:test bind succeeded on: $channelName")
+            }
+            override fun onAuthenticationFailure(message: String?, e: Exception?) {
+                Log.e(TAG, "❌ workflow:test auth failed: $message", e)
+            }
+        })
 
         // DEPRECATED: visual:inspect is now handled by inspect:elements (unified API)
         // Keep binding to avoid "unhandled event" warnings but do nothing
@@ -578,7 +594,9 @@ object SocketJobManager {
             Log.d(TAG, "🌐 GLOBAL: Received event: ${event?.eventName}")
             // Route events silently - only log errors
             when (event?.eventName) {
-                "workflow:test" -> handleWorkflowTest(event.data ?: "")
+                "workflow:test" -> {
+                    Log.d(TAG, "🌐 GLOBAL: workflow:test - handled by explicit bind")
+                }
                 "inspect:elements" -> {
                     Log.w(TAG, "🔍 GLOBAL: inspect:elements - already handled by explicit bind")
                 }
@@ -862,6 +880,9 @@ object SocketJobManager {
         // Start periodic accessibility status check
         startAccessibilityStatusCheck()
 
+        // Start polling for pending test runs (fallback for socket events)
+        startTestRunPolling()
+
         scope.launch(Dispatchers.Main) {
             jobListeners.forEach { it.onConnected() }
         }
@@ -873,7 +894,8 @@ object SocketJobManager {
         // Notify backend that device is offline
         notifyDeviceStatus("offline")
 
-        // Stop accessibility check when disconnected
+        // Stop polling and accessibility check when disconnected
+        stopTestRunPolling()
         stopAccessibilityStatusCheck()
 
         scope.launch(Dispatchers.Main) {
@@ -3040,6 +3062,56 @@ object SocketJobManager {
      * Start periodic accessibility status check (every 60 seconds)
      * Notifies backend when status changes
      */
+    /**
+     * Poll backend for pending test runs (fallback when socket events don't arrive)
+     * Polls every 5 seconds, stops when disconnected
+     */
+    private fun startTestRunPolling() {
+        testRunPollingJob?.cancel()
+
+        testRunPollingJob = scope.launch {
+            while (isConnected.get() && !isIntentionalDisconnect.get()) {
+                try {
+                    val id = deviceId ?: continue
+                    val context = contextRef?.get() ?: continue
+                    val sessionManager = com.agent.portal.auth.SessionManager(context)
+                    val token = sessionManager.getSession()?.token ?: continue
+
+                    val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
+                    val request = okhttp3.Request.Builder()
+                        .url("$apiUrl/workflow/test-run/pending/$id")
+                        .get()
+                        .addHeader("Authorization", "Bearer $token")
+                        .addHeader("Accept", "application/json")
+                        .build()
+
+                    val response = httpClient.newCall(request).execute()
+                    if (response.isSuccessful) {
+                        val body = response.body?.string()
+                        if (body != null) {
+                            val json = gson.fromJson(body, Map::class.java)
+                            val pending = json["pending"] as? Boolean ?: false
+                            if (pending) {
+                                val payload = gson.toJson(json["payload"])
+                                Log.w(TAG, "🔄 POLL: Found pending test run via polling fallback!")
+                                handleWorkflowTest(payload)
+                            }
+                        }
+                    }
+                    response.close()
+                } catch (e: Exception) {
+                    Log.d(TAG, "Test-run poll error: ${e.message}")
+                }
+                kotlinx.coroutines.delay(5000) // Poll every 5 seconds
+            }
+        }
+    }
+
+    private fun stopTestRunPolling() {
+        testRunPollingJob?.cancel()
+        testRunPollingJob = null
+    }
+
     private fun startAccessibilityStatusCheck() {
         // Cancel existing job if any
         stopAccessibilityStatusCheck()
