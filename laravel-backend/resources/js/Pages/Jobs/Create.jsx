@@ -23,12 +23,25 @@ export default function Create({ flows = [], devices = [], dataCollections = [] 
         if (!selectedDevice || !selectedFlow) return;
 
         setIsSubmitting(true);
-        router.post('/jobs', {
+
+        // Build payload - include data_collection_id if the flow has a data source node
+        const payload = {
             name: `${selectedFlow.name} - ${new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`,
             device_id: selectedDevice.id,
             flow_id: selectedFlow.id,
             priority: 5,
-        }, {
+            execution_mode: 'sequential',
+        };
+
+        // Check if the selected flow has data_collection info (from nodes or metadata)
+        const dataSourceNode = selectedFlow.nodes?.find(n => n.type === 'data_source');
+        if (dataSourceNode?.data?.collectionId) {
+            payload.data_collection_id = dataSourceNode.data.collectionId;
+        } else if (selectedFlow.data_collection_id) {
+            payload.data_collection_id = selectedFlow.data_collection_id;
+        }
+
+        router.post('/jobs', payload, {
             onFinish: () => setIsSubmitting(false),
         });
     };

@@ -107,6 +107,11 @@ class JobTask extends Model
 
         // Update parent job counters
         $this->workflowJob->increment('completed_tasks');
+
+        // Update parent workflow item counters
+        if ($this->job_workflow_item_id) {
+            $this->workflowItem->increment('completed_tasks');
+        }
     }
 
     /**
@@ -126,6 +131,11 @@ class JobTask extends Model
 
         // Update parent job counters
         $this->workflowJob->increment('failed_tasks');
+
+        // Update parent workflow item counters
+        if ($this->job_workflow_item_id) {
+            $this->workflowItem->increment('failed_tasks');
+        }
     }
 
     /**

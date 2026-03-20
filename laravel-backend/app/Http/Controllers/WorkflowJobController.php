@@ -197,58 +197,61 @@ class WorkflowJobController extends Controller
                 'current_workflow_index' => 0,
             ]);
 
+            // Use FlowService graph traversal for correct execution order
+            // This ensures tasks follow the actual flow graph (edges, branches, loops)
+            // instead of arbitrary DB insertion order
+            $flowService = app(\App\Services\FlowService::class);
+
             if ($isMultiWorkflow) {
-                // Create workflow items for each flow in order
                 foreach ($flowIds as $index => $flowId) {
                     $flow = $flows->firstWhere('id', $flowId);
-                    $nodes = $flow->nodes()->orderBy('id')->get();
+                    $actions = $flowService->traverseFlowForActions($flow);
 
                     $workflowItem = JobWorkflowItem::create([
                         'workflow_job_id' => $job->id,
                         'flow_id' => $flowId,
                         'sequence' => $index,
                         'status' => JobWorkflowItem::STATUS_PENDING,
-                        'total_tasks' => $nodes->count(),
+                        'total_tasks' => count($actions),
                     ]);
 
-                    // Create tasks for this workflow item
-                    $sequence = 1;
-                    foreach ($nodes as $node) {
+                    // Create tasks in graph traversal order
+                    foreach ($actions as $seq => $action) {
+                        $flowNode = $flow->nodes()->where('node_id', $action['id'])->first();
                         JobTask::create([
                             'workflow_job_id' => $job->id,
                             'job_workflow_item_id' => $workflowItem->id,
-                            'flow_node_id' => $node->id,
-                            'node_id' => $node->node_id,
-                            'node_type' => $node->type,
-                            'node_label' => $node->label,
-                            'sequence' => $sequence++,
+                            'flow_node_id' => $flowNode?->id,
+                            'node_id' => $action['id'],
+                            'node_type' => $action['type'],
+                            'node_label' => $action['params']['label'] ?? ucfirst($action['type']) . ' #' . ($seq + 1),
+                            'sequence' => $seq + 1,
                             'status' => JobTask::STATUS_PENDING,
-                            'input_data' => $node->data,
+                            'input_data' => $action['params'],
                         ]);
                     }
                 }
 
                 $job->update(['total_tasks' => $job->tasks()->count()]);
             } else {
-                // Single workflow mode (backward compatible)
                 $flow = $flows->first();
-                $nodes = $flow->nodes()->orderBy('id')->get();
-                $sequence = 1;
+                $actions = $flowService->traverseFlowForActions($flow);
 
-                foreach ($nodes as $node) {
+                foreach ($actions as $seq => $action) {
+                    $flowNode = $flow->nodes()->where('node_id', $action['id'])->first();
                     JobTask::create([
                         'workflow_job_id' => $job->id,
-                        'flow_node_id' => $node->id,
-                        'node_id' => $node->node_id,
-                        'node_type' => $node->type,
-                        'node_label' => $node->label,
-                        'sequence' => $sequence++,
+                        'flow_node_id' => $flowNode?->id,
+                        'node_id' => $action['id'],
+                        'node_type' => $action['type'],
+                        'node_label' => $action['params']['label'] ?? ucfirst($action['type']) . ' #' . ($seq + 1),
+                        'sequence' => $seq + 1,
                         'status' => JobTask::STATUS_PENDING,
-                        'input_data' => $node->data,
+                        'input_data' => $action['params'],
                     ]);
                 }
 
-                $job->update(['total_tasks' => $sequence - 1]);
+                $job->update(['total_tasks' => count($actions)]);
             }
 
             return $job;
@@ -314,8 +317,9 @@ class WorkflowJobController extends Controller
             }
         }
 
-        // Get nodes for task creation
-        $nodes = $flow->nodes()->orderBy('id')->get();
+        // Use FlowService graph traversal for correct execution order
+        $flowService = app(\App\Services\FlowService::class);
+        $actions = $flowService->traverseFlowForActions($flow);
 
         foreach ($validated['device_ids'] as $deviceId) {
             $device = Device::where('id', $deviceId)
@@ -343,22 +347,22 @@ class WorkflowJobController extends Controller
                 'config' => [],
             ]);
 
-            // Create tasks from flow nodes
-            $sequence = 1;
-            foreach ($nodes as $node) {
+            // Create tasks in graph traversal order
+            foreach ($actions as $seq => $action) {
+                $flowNode = $flow->nodes()->where('node_id', $action['id'])->first();
                 JobTask::create([
                     'workflow_job_id' => $job->id,
-                    'flow_node_id' => $node->id,
-                    'node_id' => $node->node_id,
-                    'node_type' => $node->type,
-                    'node_label' => $node->label,
-                    'sequence' => $sequence++,
+                    'flow_node_id' => $flowNode?->id,
+                    'node_id' => $action['id'],
+                    'node_type' => $action['type'],
+                    'node_label' => $action['params']['label'] ?? ucfirst($action['type']) . ' #' . ($seq + 1),
+                    'sequence' => $seq + 1,
                     'status' => JobTask::STATUS_PENDING,
-                    'input_data' => $node->data,
+                    'input_data' => $action['params'],
                 ]);
             }
 
-            $job->update(['total_tasks' => $sequence - 1]);
+            $job->update(['total_tasks' => count($actions)]);
             JobLog::info($job, "Batch job created with {$job->total_tasks} tasks");
 
             // Dispatch if device online (verified via Redis)

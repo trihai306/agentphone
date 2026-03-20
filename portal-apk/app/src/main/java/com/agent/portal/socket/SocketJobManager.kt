@@ -20,6 +20,7 @@ import com.pusher.client.connection.ConnectionStateChange
 import com.agent.portal.streaming.ScreenStreamService
 import com.agent.portal.streaming.WebRTCManager
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.withLock
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import java.lang.ref.WeakReference
@@ -84,7 +85,17 @@ object SocketJobManager {
     
     // Sequential execution - only one job at a time
     private val executionMutex = kotlinx.coroutines.sync.Mutex()
-    private val pendingJobQueue = java.util.concurrent.LinkedBlockingQueue<Job>()
+    private val pendingJobQueue = java.util.concurrent.PriorityBlockingQueue<Job>(11, compareBy {
+        when (it.priority) {
+            JobPriority.IMMEDIATE -> 0
+            JobPriority.HIGH -> 1
+            JobPriority.NORMAL -> 2
+            JobPriority.LOW -> 3
+        }
+    })
+
+    // Current executor reference for pause/resume
+    private var currentExecutor: JobExecutor? = null
 
     // Coroutine scope
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
@@ -1075,6 +1086,7 @@ object SocketJobManager {
 
             executingJobs[jobId]?.let { job ->
                 job.status = JobStatus.PAUSED
+                currentExecutor?.pause()
                 Log.i(TAG, "⏸ Paused job: $jobId")
             }
 
@@ -1093,6 +1105,7 @@ object SocketJobManager {
 
             executingJobs[jobId]?.let { job ->
                 job.status = JobStatus.EXECUTING
+                currentExecutor?.resume()
                 Log.i(TAG, "▶️ Resumed job: $jobId")
             }
 
@@ -1174,11 +1187,12 @@ object SocketJobManager {
                 return
             }
             
-            // Execute actions in background
+            // Execute actions in background, acquiring mutex to prevent concurrent execution
             scope.launch {
+                executionMutex.withLock {
                 try {
                     val executor = JobExecutor(context)
-                    
+
                     Log.i(TAG, "🚀 Starting test run with ${actionsRaw.size} actions")
                     
                     // Show job progress overlay for test run
@@ -1408,12 +1422,13 @@ object SocketJobManager {
                     
                 } catch (e: Exception) {
                     Log.e(TAG, "Test run failed", e)
-                    
+
                     // Hide overlay on error too
                     withContext(Dispatchers.Main) {
                         FloatingJobProgressService.hide(context)
                     }
                 }
+                } // executionMutex.withLock
             }
             
         } catch (e: Exception) {
@@ -1623,6 +1638,7 @@ object SocketJobManager {
             }
 
             val executor = JobExecutor(context)
+            currentExecutor = executor
             val result = executor.execute(job, actionConfig)
 
             job.status = if (result.success) JobStatus.COMPLETED else JobStatus.FAILED
@@ -1675,12 +1691,14 @@ object SocketJobManager {
 
             withContext(Dispatchers.Main) {
                 jobListeners.forEach { it.onJobFailed(job, e.message ?: "Unknown error") }
-                
+
                 // Hide overlay if no more jobs
                 if (jobQueue.isEmpty() && executingJobs.isEmpty()) {
                     FloatingJobProgressService.hide(context)
                 }
             }
+        } finally {
+            currentExecutor = null
         }
     }
 

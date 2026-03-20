@@ -133,7 +133,7 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
         debouncedSave,
         manualSave,
         saveName,
-    } = useFlowPersistence({ flow, autoSaveEnabled: false });
+    } = useFlowPersistence({ flow, autoSaveEnabled: true, autoSaveDelay: 2000 });
 
     // ===== Canvas Interaction State (TODO: extract to useFlowCanvas) =====
     const [selectedNode, setSelectedNode] = useState(null);
@@ -747,59 +747,15 @@ function FlowEditor({ flow, mediaFiles = [], dataCollections = [] }) {
                     }
                 });
 
-                // Listen for workflow action progress (real-time node highlighting)
-                userChannel.listen('.workflow.action.progress', (event) => {
-
-                    // Only process events for current flow
-                    if (event.flow_id !== flow.id) return;
-
-                    // Update node execution state
-                    setNodes(currentNodes =>
-                        currentNodes.map(node => {
-                            // Check if this is the active action node
-                            if (node.id === event.action_id) {
-                                return {
-                                    ...node,
-                                    data: {
-                                        ...node.data,
-                                        executionState: event.status === 'running' ? 'running'
-                                            : event.status === 'success' ? 'success'
-                                                : event.status === 'error' ? 'error'
-                                                    : event.status === 'skipped' ? 'error'
-                                                        : 'idle',
-                                    }
-                                };
-                            }
-                            // Reset previous running nodes to pending if still running
-                            if (node.data?.executionState === 'running' && event.status === 'running') {
-                                return {
-                                    ...node,
-                                    data: {
-                                        ...node.data,
-                                        executionState: 'pending',
-                                    }
-                                };
-                            }
-                            return node;
-                        })
-                    );
-
-                    // Show progress toast
-                    if (event.status === 'error') {
-                        addToast(t('flows.editor.action_failed', { error: event.message || t('common.unknown_error') }), 'error');
-                    }
-                });
-
                 return () => {
                     userChannel.stopListening('.device.accessibility.changed');
                     userChannel.stopListening('.device.status.changed');
-                    userChannel.stopListening('.workflow.action.progress');
                 };
             }
         } catch (error) {
             console.warn('Echo not available for user events:', error);
         }
-    }, [props.auth?.user?.id, selectedDevice?.device_id, addToast, flow.id, setNodes]);
+    }, [props.auth?.user?.id, selectedDevice?.device_id, addToast]);
 
     // Note: saveFlow and debouncedSave are now provided by useFlowPersistence hook
 

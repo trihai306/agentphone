@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Link, router, Head } from '@inertiajs/react';
+import { Link, router, Head, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/Components/UI/ConfirmModal';
@@ -36,9 +36,24 @@ export default function Index({ jobs, stats, deviceStats = [], devices = [], flo
     const { showConfirm } = useConfirm();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const { auth } = usePage().props;
 
     const [search, setSearch] = useState(filters.search || '');
     const [showDevicePanel, setShowDevicePanel] = useState(true);
+
+    // Real-time job status updates via WebSocket
+    useEffect(() => {
+        if (!window.Echo || !auth?.user?.id) return;
+
+        const channel = window.Echo.private(`user.${auth.user.id}`);
+        channel.listen('.job.status.changed', () => {
+            router.reload({ only: ['jobs', 'stats'], preserveScroll: true });
+        });
+
+        return () => {
+            window.Echo.leave(`user.${auth.user.id}`);
+        };
+    }, [auth?.user?.id]);
 
     // Debounced search
     const debouncedSearch = useDebounce((value) => {

@@ -8,6 +8,7 @@ use App\Models\JobTask;
 use App\Models\WorkflowJob;
 use App\Services\JobDispatchService;
 use Illuminate\Http\JsonResponse;
+use App\Events\JobStatusChanged;
 use Illuminate\Http\Request;
 
 /**
@@ -43,6 +44,8 @@ class JobApiController extends Controller
     {
         $job->markAsStarted();
         JobLog::info($job, 'Job execution started on device');
+
+        broadcast(new JobStatusChanged($job->fresh()))->toOthers();
 
         return response()->json(['success' => true, 'message' => 'Job started']);
     }
@@ -92,6 +95,8 @@ class JobApiController extends Controller
                 break;
         }
 
+        broadcast(new JobStatusChanged($job->fresh()))->toOthers();
+
         return response()->json([
             'success' => true,
             'job_progress' => $job->fresh()->progress,
@@ -121,6 +126,8 @@ class JobApiController extends Controller
             $job->markAsFailed($validated['error_message'] ?? 'Execution failed');
             JobLog::error($job, "Job failed: {$validated['error_message']}");
         }
+
+        broadcast(new JobStatusChanged($job->fresh()))->toOthers();
 
         return response()->json([
             'success' => true,

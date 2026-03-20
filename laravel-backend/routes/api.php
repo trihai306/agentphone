@@ -244,12 +244,12 @@ Route::post('/pusher/webhooks', [\App\Http\Controllers\PusherWebhookController::
 
 // Job API endpoints for APK
 Route::prefix('jobs')->group(function () {
-    // Get job action config (APK calls this when receiving job:new)
-    Route::get('/{job}/config', [\App\Http\Controllers\Api\JobApiController::class, 'getConfig'])
-        ->name('api.jobs.config');
-
     // APK reports job progress
     Route::middleware('auth:sanctum')->group(function () {
+        // Get job action config (APK calls this when receiving job:new)
+        Route::get('/{job}/config', [\App\Http\Controllers\Api\JobApiController::class, 'getConfig'])
+            ->name('api.jobs.config');
+
         // Today's job statistics for APK dashboard
         Route::get('/stats/today', [\App\Http\Controllers\Api\JobApiController::class, 'getTodayStats']);
 

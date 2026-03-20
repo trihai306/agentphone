@@ -50,8 +50,8 @@ class FlowService
             // Navigation/Control
             'wait' => 'wait',
             'delay' => 'wait',
-            'back' => 'back',
-            'home' => 'home',
+            'back' => 'press_key',
+            'home' => 'press_key',
             'recents' => 'recents',
             'screenshot' => 'screenshot',
             'start_app' => 'start_app',
@@ -154,6 +154,23 @@ class FlowService
             case 'wait':
                 return [
                     'duration' => $nodeData['duration'] ?? $nodeData['delay'] ?? 1000,
+                ];
+
+            case 'press_key':
+                // Ensure keyCode is set for back/home shortcut nodes
+                $key = $nodeData['key'] ?? $nodeData['keyCode'] ?? null;
+                if (!$key) {
+                    // Infer from original node type stored in nodeData
+                    $originalType = $nodeData['originalType'] ?? $nodeData['eventType'] ?? '';
+                    if (str_contains($originalType, 'back')) {
+                        $key = 'KEYCODE_BACK';
+                    } elseif (str_contains($originalType, 'home')) {
+                        $key = 'KEYCODE_HOME';
+                    }
+                }
+                return [
+                    'key' => $key,
+                    'keyCode' => $key,
                 ];
 
             case 'screenshot':
@@ -262,6 +279,8 @@ class FlowService
 
             // Build action with interpolated params
             $nodeData = $this->parseNodeData($node->data);
+            // Inject original node type for press_key inference (back/home → KEYCODE)
+            $nodeData['originalType'] = $node->type;
             $action = $this->buildAction($node, $actionType, $nodeData, $adjacency);
 
             // Interpolate variables in params (for non-loop actions)

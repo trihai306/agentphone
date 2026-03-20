@@ -43,7 +43,15 @@ class JobExecutor(context: Context) {
     private val actionResults = mutableListOf<ActionResult>()
     private val templateMatcher = TemplateMatchingService()
     private val gson = Gson()
-    
+
+    // Pause/Resume support
+    @Volatile
+    var isPaused = false
+        private set
+
+    fun pause() { isPaused = true }
+    fun resume() { isPaused = false }
+
     // HTTP client for progress reporting
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(5, TimeUnit.SECONDS)
@@ -81,6 +89,12 @@ class JobExecutor(context: Context) {
 
             // Execute each action sequentially with MERGED data
             for ((index, action) in config.actions.withIndex()) {
+
+                // Check for pause
+                while (isPaused) {
+                    Log.i(TAG, "⏸️ Job paused, waiting...")
+                    delay(500)
+                }
 
                 Log.d(TAG, "Action ${index + 1}/${config.actions.size}: ${action.type}")
 
