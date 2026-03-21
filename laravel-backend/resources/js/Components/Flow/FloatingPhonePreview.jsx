@@ -77,7 +77,9 @@ export default function FloatingPhonePreview({ device, userId }) {
         retryCountRef.current = 0;
     }, [device?.id]);
 
-    // ─── HTTP polling stream ─────────────────────────────────
+    // ─── SSE (Server-Sent Events) stream ──────────────────────
+    const eventSourceRef = useRef(null);
+
     const startStream = useCallback(() => {
         if (!device?.device_id || !userId) {
             setStatus('error');
@@ -85,34 +87,37 @@ export default function FloatingPhonePreview({ device, userId }) {
         }
         setStatus('connecting');
 
-        // Tell backend to start (web route uses session auth)
+        // Tell backend to start capturing on APK
         axios.post(`/screen/${device.device_id}/start`).catch(() => {});
 
-        // Start polling for frames (adaptive interval)
-        if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-        let lastFrame = null;
-        const pollFrame = async () => {
-            try {
-                const res = await axios.get(`/api/devices/${device.device_id}/screen/frame`);
-                if (res.data.frame && res.data.frame !== lastFrame) {
-                    lastFrame = res.data.frame;
-                    setFrameData(`data:image/jpeg;base64,${res.data.frame}`);
-                    setConnected(true);
-                    setStatus('live');
-                }
-            } catch (e) {
-                // ignore
+        // Open SSE connection — single persistent connection, server pushes frames
+        if (eventSourceRef.current) eventSourceRef.current.close();
+        const sse = new EventSource(`/api/devices/${device.device_id}/screen/stream`);
+        eventSourceRef.current = sse;
+
+        sse.addEventListener('frame', (e) => {
+            if (e.data) {
+                setFrameData(`data:image/jpeg;base64,${e.data}`);
+                setConnected(true);
+                setStatus('live');
+            }
+        });
+
+        sse.onerror = () => {
+            // SSE auto-reconnects, but track status
+            if (status === 'connecting') {
+                // Still haven't received first frame
             }
         };
-        pollIntervalRef.current = setInterval(pollFrame, 800);
 
-        // Timeout if no frame after 15s
+        // Timeout if no frame after 20s
         streamTimeoutRef.current = setTimeout(() => {
             setStatus(prev => prev !== 'live' ? 'error' : prev);
-        }, 15000);
+        }, 20000);
     }, [device?.device_id, userId]);
 
     const stopStream = useCallback(() => {
+        if (eventSourceRef.current) { eventSourceRef.current.close(); eventSourceRef.current = null; }
         if (pollIntervalRef.current) { clearInterval(pollIntervalRef.current); pollIntervalRef.current = null; }
         if (streamTimeoutRef.current) { clearTimeout(streamTimeoutRef.current); streamTimeoutRef.current = null; }
         if (device?.device_id) axios.post(`/screen/${device.device_id}/stop`).catch(() => {});
@@ -138,12 +143,12 @@ export default function FloatingPhonePreview({ device, userId }) {
         if (status === 'live') retryCountRef.current = 0;
     }, [status, minimized]);
 
-    // Periodic keepalive to ensure phone keeps sending frames
+    // Keepalive: refresh Redis flag so APK keeps streaming
     useEffect(() => {
         if (!device?.device_id || minimized || status !== 'live') return;
         const interval = setInterval(() => {
             axios.post(`/screen/${device.device_id}/start`).catch(() => {});
-        }, 15000);
+        }, 60000); // Every 60s (Redis flag TTL is 2min)
         return () => clearInterval(interval);
     }, [device?.device_id, minimized, status]);
 

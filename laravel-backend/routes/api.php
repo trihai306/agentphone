@@ -274,11 +274,62 @@ Route::middleware('auth:sanctum')->group(function () {
 // AI model listing (public - no auth required for browsing models)
 Route::get('/ai/models/{provider}', [AIOrchestrationController::class, 'getModels']);
 
-// Screen frame polling (no auth - device_id UUID is unique enough, browser polls this via setInterval)
+// Screen frame polling (legacy fallback)
 Route::get('/devices/{device_id}/screen/frame', function (Request $request, string $device_id) {
     $frame = \Illuminate\Support\Facades\Redis::get('screen:frame:' . $device_id);
     if (!$frame) return response()->json(['frame' => null]);
     return response()->json(['frame' => $frame]);
+});
+
+// SSE (Server-Sent Events) stream — single persistent connection, pushes frames instantly
+Route::get('/devices/{device_id}/screen/stream', function (Request $request, string $device_id) {
+    return response()->stream(function () use ($device_id) {
+        $lastHash = '';
+        $idle = 0;
+
+        // Send SSE headers
+        echo "retry: 3000\n\n";
+        ob_flush();
+        flush();
+
+        while (true) {
+            $frame = \Illuminate\Support\Facades\Redis::get('screen:frame:' . $device_id);
+
+            if ($frame) {
+                // Simple hash to detect changes (first 100 chars is enough)
+                $hash = md5(substr($frame, 0, 100));
+
+                if ($hash !== $lastHash) {
+                    $lastHash = $hash;
+                    $idle = 0;
+                    echo "event: frame\ndata: {$frame}\n\n";
+                    ob_flush();
+                    flush();
+                }
+            }
+
+            // Keep-alive comment every 15s of idle
+            $idle++;
+            if ($idle > 50) { // 50 * 300ms = 15s
+                echo ": keepalive\n\n";
+                ob_flush();
+                flush();
+                $idle = 0;
+            }
+
+            // Check if connection is still alive
+            if (connection_aborted()) {
+                break;
+            }
+
+            usleep(300000); // 300ms — check Redis 3x/second
+        }
+    }, 200, [
+        'Content-Type' => 'text/event-stream',
+        'Cache-Control' => 'no-cache, no-store, must-revalidate',
+        'Connection' => 'keep-alive',
+        'X-Accel-Buffering' => 'no', // Disable nginx buffering
+    ]);
 });
 
 // Pusher/Soketi auth endpoint for presence channels (requires auth)
