@@ -90,28 +90,22 @@ export default function FloatingPhonePreview({ device, userId }) {
         // Tell backend to start capturing
         axios.post(`/screen/${device.device_id}/start`).catch(() => {});
 
-        // Poll with ETag — server returns 304 when frame unchanged (zero bandwidth)
+        // Poll for frames using fetch (simpler than axios, no CSRF needed for public GET)
         if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-        lastEtagRef.current = null;
 
         pollIntervalRef.current = setInterval(async () => {
             try {
-                const headers = {};
-                if (lastEtagRef.current) headers['If-None-Match'] = lastEtagRef.current;
-
-                const res = await axios.get(`/api/devices/${device.device_id}/screen/frame`, { headers });
-
-                if (res.status === 200 && res.data.frame) {
-                    lastEtagRef.current = res.headers?.etag || null;
-                    setFrameData(`data:image/jpeg;base64,${res.data.frame}`);
-                    setConnected(true);
-                    setStatus('live');
+                const res = await fetch(`/api/devices/${device.device_id}/screen/frame`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.frame) {
+                        setFrameData(`data:image/jpeg;base64,${data.frame}`);
+                        setConnected(true);
+                        setStatus('live');
+                    }
                 }
-                // 304 = same frame, do nothing (saves bandwidth)
             } catch (e) {
-                if (e.response?.status !== 304) {
-                    // Real error, not just "same frame"
-                }
+                // Network error, ignore
             }
         }, 600);
 
