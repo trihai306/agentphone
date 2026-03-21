@@ -77,8 +77,8 @@ export default function FloatingPhonePreview({ device, userId }) {
         retryCountRef.current = 0;
     }, [device?.id]);
 
-    // ─── SSE (Server-Sent Events) stream ──────────────────────
-    const eventSourceRef = useRef(null);
+    // ─── HTTP polling with ETag dedup ─────────────────────────
+    const lastEtagRef = useRef(null);
 
     const startStream = useCallback(() => {
         if (!device?.device_id || !userId) {
@@ -87,37 +87,40 @@ export default function FloatingPhonePreview({ device, userId }) {
         }
         setStatus('connecting');
 
-        // Tell backend to start capturing on APK
+        // Tell backend to start capturing
         axios.post(`/screen/${device.device_id}/start`).catch(() => {});
 
-        // Open SSE connection — single persistent connection, server pushes frames
-        if (eventSourceRef.current) eventSourceRef.current.close();
-        const sse = new EventSource(`/api/devices/${device.device_id}/screen/stream`);
-        eventSourceRef.current = sse;
+        // Poll with ETag — server returns 304 when frame unchanged (zero bandwidth)
+        if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+        lastEtagRef.current = null;
 
-        sse.addEventListener('frame', (e) => {
-            if (e.data) {
-                setFrameData(`data:image/jpeg;base64,${e.data}`);
-                setConnected(true);
-                setStatus('live');
+        pollIntervalRef.current = setInterval(async () => {
+            try {
+                const headers = {};
+                if (lastEtagRef.current) headers['If-None-Match'] = lastEtagRef.current;
+
+                const res = await axios.get(`/api/devices/${device.device_id}/screen/frame`, { headers });
+
+                if (res.status === 200 && res.data.frame) {
+                    lastEtagRef.current = res.headers?.etag || null;
+                    setFrameData(`data:image/jpeg;base64,${res.data.frame}`);
+                    setConnected(true);
+                    setStatus('live');
+                }
+                // 304 = same frame, do nothing (saves bandwidth)
+            } catch (e) {
+                if (e.response?.status !== 304) {
+                    // Real error, not just "same frame"
+                }
             }
-        });
+        }, 600);
 
-        sse.onerror = () => {
-            // SSE auto-reconnects, but track status
-            if (status === 'connecting') {
-                // Still haven't received first frame
-            }
-        };
-
-        // Timeout if no frame after 20s
         streamTimeoutRef.current = setTimeout(() => {
             setStatus(prev => prev !== 'live' ? 'error' : prev);
-        }, 20000);
+        }, 30000);
     }, [device?.device_id, userId]);
 
     const stopStream = useCallback(() => {
-        if (eventSourceRef.current) { eventSourceRef.current.close(); eventSourceRef.current = null; }
         if (pollIntervalRef.current) { clearInterval(pollIntervalRef.current); pollIntervalRef.current = null; }
         if (streamTimeoutRef.current) { clearTimeout(streamTimeoutRef.current); streamTimeoutRef.current = null; }
         if (device?.device_id) axios.post(`/screen/${device.device_id}/stop`).catch(() => {});
@@ -131,24 +134,21 @@ export default function FloatingPhonePreview({ device, userId }) {
 
     useEffect(() => () => stopStream(), []);
 
-    // Auto-retry on error
+    // Auto-retry
     useEffect(() => {
         if (status === 'error' && retryCountRef.current < MAX_RETRIES && !minimized) {
-            const timer = setTimeout(() => {
-                retryCountRef.current++;
-                handleRetry();
-            }, 3000);
+            const timer = setTimeout(() => { retryCountRef.current++; handleRetry(); }, 5000);
             return () => clearTimeout(timer);
         }
         if (status === 'live') retryCountRef.current = 0;
     }, [status, minimized]);
 
-    // Keepalive: refresh Redis flag so APK keeps streaming
+    // Keepalive: refresh Redis flag
     useEffect(() => {
         if (!device?.device_id || minimized || status !== 'live') return;
         const interval = setInterval(() => {
             axios.post(`/screen/${device.device_id}/start`).catch(() => {});
-        }, 60000); // Every 60s (Redis flag TTL is 2min)
+        }, 90000);
         return () => clearInterval(interval);
     }, [device?.device_id, minimized, status]);
 
