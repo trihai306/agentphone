@@ -2544,16 +2544,32 @@ object SocketJobManager {
 
     private var screenPollingJob: kotlinx.coroutines.Job? = null
 
+    // Previous frame hash for differential comparison
+    private var lastFrameHash: Long = 0L
+    private var lastFrameSentAt: Long = 0L
+    private val KEYFRAME_INTERVAL_MS = 5000L // Force send every 5s even if no change
+
     private fun handleScreenStartHTTP(data: String) {
         if (screenPollingJob?.isActive == true) {
             Log.w(TAG, "📹 Already streaming via HTTP polling, ignoring")
             return
         }
 
+        lastFrameHash = 0L
+        lastFrameSentAt = 0L
+
         screenPollingJob = scope.launch(Dispatchers.IO) {
-            val accessibilityService = com.agent.portal.accessibility.PortalAccessibilityService.instance
+            // Wait for accessibility service with retry
+            var accessibilityService = com.agent.portal.accessibility.PortalAccessibilityService.instance
+            var retries = 0
+            while (accessibilityService == null && retries < 10 && isActive) {
+                retries++
+                Log.d(TAG, "📹 Waiting for accessibility service... ($retries/10)")
+                delay(2000)
+                accessibilityService = com.agent.portal.accessibility.PortalAccessibilityService.instance
+            }
             if (accessibilityService == null) {
-                Log.e(TAG, "📹 No accessibility service for HTTP streaming")
+                Log.e(TAG, "📹 No accessibility service after 20s, giving up")
                 return@launch
             }
 
@@ -2562,24 +2578,52 @@ object SocketJobManager {
             val token = com.agent.portal.auth.SessionManager(context).getSession()?.token ?: return@launch
             val apiUrl = com.agent.portal.utils.NetworkUtils.getApiBaseUrl()
 
-            Log.i(TAG, "📹 Starting HTTP screen streaming for device=$id")
+            Log.i(TAG, "📹 Starting smart differential streaming for device=$id")
 
             while (isActive) {
                 try {
                     val bitmap = accessibilityService.takeScreenshotBitmap()
                     if (bitmap != null) {
-                        // Scale down
-                        val scale = if (bitmap.width > 600) 3 else 2
+                        // Scale down to small size (240px wide for preview)
+                        val targetWidth = 240
+                        val scaleFactor = bitmap.width.toFloat() / targetWidth
+                        val targetHeight = (bitmap.height / scaleFactor).toInt()
                         val scaled = android.graphics.Bitmap.createScaledBitmap(
-                            bitmap, bitmap.width / scale, bitmap.height / scale, true
+                            bitmap, targetWidth, targetHeight, false // false = faster, less quality
                         )
+                        bitmap.recycle()
 
+                        // Calculate simple hash to detect changes
+                        // Sample 50 pixels across the image for fast comparison
+                        var hash = 0L
+                        val step = maxOf(1, (scaled.width * scaled.height) / 50)
+                        for (i in 0 until scaled.width * scaled.height step step) {
+                            val x = i % scaled.width
+                            val y = i / scaled.width
+                            if (y < scaled.height) {
+                                hash = hash * 31 + scaled.getPixel(x, y).toLong()
+                            }
+                        }
+
+                        val now = System.currentTimeMillis()
+                        val isKeyframe = (now - lastFrameSentAt) >= KEYFRAME_INTERVAL_MS
+                        val hasChanged = hash != lastFrameHash
+
+                        if (!hasChanged && !isKeyframe) {
+                            // Screen unchanged, skip this frame
+                            scaled.recycle()
+                            delay(300) // Check again in 300ms
+                            continue
+                        }
+
+                        // Compress to JPEG
                         val stream = java.io.ByteArrayOutputStream()
-                        scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 40, stream)
+                        scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 35, stream)
                         val base64 = android.util.Base64.encodeToString(stream.toByteArray(), android.util.Base64.NO_WRAP)
-
                         scaled.recycle()
-                        if (scaled !== bitmap) bitmap.recycle()
+
+                        lastFrameHash = hash
+                        lastFrameSentAt = now
 
                         // POST frame to backend
                         val body = okhttp3.RequestBody.create(
@@ -2593,11 +2637,15 @@ object SocketJobManager {
                             .build()
 
                         httpClient.newCall(request).execute().close()
+
+                        if (isKeyframe && !hasChanged) {
+                            Log.d(TAG, "📹 Keyframe sent (no change)")
+                        }
                     }
                 } catch (e: Exception) {
-                    Log.d(TAG, "📹 HTTP frame error: ${e.message}")
+                    Log.d(TAG, "📹 Frame error: ${e.message}")
                 }
-                delay(500) // 2 FPS
+                delay(300) // Check every 300ms but only send if changed
             }
         }
     }

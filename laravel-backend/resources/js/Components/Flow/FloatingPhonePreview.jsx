@@ -88,12 +88,14 @@ export default function FloatingPhonePreview({ device, userId }) {
         // Tell backend to start (web route uses session auth)
         axios.post(`/screen/${device.device_id}/start`).catch(() => {});
 
-        // Start polling for frames
+        // Start polling for frames (adaptive interval)
         if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-        pollIntervalRef.current = setInterval(async () => {
+        let lastFrame = null;
+        const pollFrame = async () => {
             try {
                 const res = await axios.get(`/api/devices/${device.device_id}/screen/frame`);
-                if (res.data.frame) {
+                if (res.data.frame && res.data.frame !== lastFrame) {
+                    lastFrame = res.data.frame;
                     setFrameData(`data:image/jpeg;base64,${res.data.frame}`);
                     setConnected(true);
                     setStatus('live');
@@ -101,7 +103,8 @@ export default function FloatingPhonePreview({ device, userId }) {
             } catch (e) {
                 // ignore
             }
-        }, 500);
+        };
+        pollIntervalRef.current = setInterval(pollFrame, 800);
 
         // Timeout if no frame after 15s
         streamTimeoutRef.current = setTimeout(() => {
