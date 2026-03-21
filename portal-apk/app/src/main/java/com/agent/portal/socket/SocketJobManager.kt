@@ -2582,19 +2582,23 @@ object SocketJobManager {
 
             while (isActive) {
                 try {
-                    val bitmap = accessibilityService.takeScreenshotBitmap()
-                    if (bitmap != null) {
+                    val hwBitmap = accessibilityService.takeScreenshotBitmap()
+                    if (hwBitmap != null) {
+                        // Convert HARDWARE bitmap to SOFTWARE for pixel access
+                        val bitmap = hwBitmap.copy(android.graphics.Bitmap.Config.ARGB_8888, false)
+                        hwBitmap.recycle()
+                        if (bitmap == null) continue
+
                         // Scale down to small size (240px wide for preview)
                         val targetWidth = 240
                         val scaleFactor = bitmap.width.toFloat() / targetWidth
                         val targetHeight = (bitmap.height / scaleFactor).toInt()
                         val scaled = android.graphics.Bitmap.createScaledBitmap(
-                            bitmap, targetWidth, targetHeight, false // false = faster, less quality
+                            bitmap, targetWidth, targetHeight, false
                         )
                         bitmap.recycle()
 
                         // Calculate simple hash to detect changes
-                        // Sample 50 pixels across the image for fast comparison
                         var hash = 0L
                         val step = maxOf(1, (scaled.width * scaled.height) / 50)
                         for (i in 0 until scaled.width * scaled.height step step) {
